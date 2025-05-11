@@ -10,6 +10,7 @@ import { getMaxAllowedTokens, truncateMessages } from '../utils/context-window'
 import { isReasoningModel } from '../utils/registry'
 import { handleStreamFinish } from './handle-stream-finish'
 import { BaseStreamConfig } from './types'
+import { LetterText } from 'lucide-react'
 
 // Function to check if a message contains ask_question tool invocation
 function containsAskQuestionTool(message: CoreMessage) {

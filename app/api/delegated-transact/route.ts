@@ -22,25 +22,43 @@ export async function GET(req: NextRequest) {
     const weiBig = BigInt("1000000000000000000");
     const hex = ethers.toQuantity(weiBig);
     console.log("hex", hex)
+    console.log(evmWallet?.id || '')
+
 
     const {signature, encoding} = await privy.walletApi.ethereum.signMessage({
         walletId: evmWallet?.id || '',
         message: 'Hello world'
     });
+
     const { price, decimals } = await fetchEthUsdPrice();
     console.log('Price: ', price, 'Decimals: ', decimals);
+    
+    const options = {
+      method: 'GET',
+      headers: {
+        'privy-app-id': process.env.NEXT_PUBLIC_PRIVY_APP_ID || '',
+        Authorization: 'Basic ' + process.env.PRIVY_SIGNING_KEY || ''
+      }
+    };
+    
+    fetch('https://api.privy.io/v1/wallets/' + evmWallet?.id + '/balance?asset=eth&chain=ethereum&include_currency=usd', options)
+      .then(response => response.json())
+      .then(response => console.log(response))
+      .catch(err => console.error(err));
+    
 
-    const { hash } = await privy.walletApi.ethereum.sendTransaction({
-        walletId: evmWallet?.id || '',
-        caip2: `eip155:11155111`,
-        transaction: {
-        to: '0xa9516C8AA7425D6190345a038eB8C4799C786Bb8',
-        value: 1,   
-        chainId: 11155111                   
-        },
-        idempotencyKey: 'unique-key=' // unique key for this transaction
+    const hash = ''
+    // const { hash } = await privy.walletApi.ethereum.sendTransaction({
+    //     walletId: evmWallet?.id || '',
+    //     caip2: `eip155:11155111`,
+    //     transaction: {
+    //     to: '0xa9516C8AA7425D6190345a038eB8C4799C786Bb8',
+    //     value: 1,   
+    //     chainId: 11155111                   
+    //     },
+    //     idempotencyKey: 'unique-key=' // unique key for this transaction
 
-    });
+    // });
     console.log('Transaction send, hash: ', hash);
       
       
