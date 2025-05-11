@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
     const walletAddress = await getUserEvmWalletAddress()
     
     const balances = await getWalletBalances(walletAddress);
+    
     return NextResponse.json(balances);
   } catch (error) {
     console.error('Error fetching wallet balances:', error);

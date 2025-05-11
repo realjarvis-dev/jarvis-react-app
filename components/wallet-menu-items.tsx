@@ -39,6 +39,7 @@ export function WalletMenuItems() {
   useEffect(() => {
     if (evmReady) {
       const evmWalletToDelegate = evmWallets.find((wallet) => wallet.walletClientType === 'privy');
+      console.log('evmWalletToDelegate', evmWalletToDelegate)
       setEvmWalletToDelegate(evmWalletToDelegate);
     }
   }, [evmReady])

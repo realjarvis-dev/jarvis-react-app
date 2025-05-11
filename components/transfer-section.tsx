@@ -41,7 +41,6 @@ export function TransferSection({
       break
     case 'result':
       const toolResult = tool.result as PrivyTransferResult
-      console.log(toolResult) // Keep console.log as it was there
       if (toolResult.status === 'success' || toolResult.hash) {
         statusDisplay = (
           <div>
