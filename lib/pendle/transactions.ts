@@ -89,6 +89,7 @@ export async function getSwapTransaction(
     }
 
     console.log('Swap transaction data fetched successfully')
+    console.log("Response", response)
     return response.data.tx
   } catch (error: any) {
     console.error('Error fetching swap transaction:', error.message)
@@ -117,7 +118,7 @@ export async function executeSwapTransaction(
     //   throw new Error('PRIVATE_KEY environment variable is not set.')
     // }
     console.log('Sending transaction...')
-    console.log('txData', txData)
+    // console.log('txData', txData)
     const to = txData.to
     const from = txData.from
 
@@ -149,7 +150,8 @@ export async function executeSwapTransaction(
         from: `0x${fromAddress}` as `0x${string}`,
         chainId: chainId,
         value: `0x${valueHex}` as `0x${string}`,
-        data: `0x${dataHex}` as `0x${string}`
+        data: `0x${dataHex}` as `0x${string}`,
+        gasLimit: 650000,
       },
       idempotencyKey: uuidv4() // unique key for this transaction
     })
