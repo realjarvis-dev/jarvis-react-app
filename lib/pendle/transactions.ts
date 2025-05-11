@@ -140,10 +140,6 @@ export async function executeSwapTransaction(
     const valueHex = quantity.replace(/^0x/, '')
     const dataHex = (data as string).replace(/^0x/, '')
     const fromAddress = (from as string).replace(/^0x/, '')
-    console.log('toAddress', toAddress)
-    console.log('fromAddress', fromAddress)
-    console.log('valueHex', valueHex)
-    console.log('dataHex', dataHex)
 
     const { hash } = await privy.walletApi.ethereum.sendTransaction({
       walletId: evmWallet!.id,
