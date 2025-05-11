@@ -1,5 +1,6 @@
 import { ethers } from "ethers";
 import { getUserEvmWalletAddress } from '../privy/client'
+import { getTokenBalance } from "../alchemy/get-token-balance";
 // ERC20 standard interface
 const ERC20_ABI = [
   "function balanceOf(address) view returns (uint256)",
@@ -129,31 +130,33 @@ export async function getWalletBalances(
     const ethBalance = await provider.getBalance(walletAddress);
     const formattedEthBalance = ethers.formatEther(ethBalance);
     
-    // Start with our known tokens
-    let tokenAddresses = new Set(KNOWN_TOKENS.map(addr => addr.toLowerCase()));
+    // // Start with our known tokens
+    // let tokenAddresses = new Set(KNOWN_TOKENS.map(addr => addr.toLowerCase()));
     
-    // // Try to discover additional tokens
-    // try {
-    //   const discoveredTokens = await discoverTokens(walletAddress, provider);
-    //   discoveredTokens.forEach(addr => tokenAddresses.add(addr));
-    // } catch (error) {
-    //   console.error("Token discovery failed, using only known tokens");
-    // }
+    // // // Try to discover additional tokens
+    // // try {
+    // //   const discoveredTokens = await discoverTokens(walletAddress, provider);
+    // //   discoveredTokens.forEach(addr => tokenAddresses.add(addr));
+    // // } catch (error) {
+    // //   console.error("Token discovery failed, using only known tokens");
+    // // }
     
-    // Get data for all tokens in parallel
-    const tokenDataPromises = Array.from(tokenAddresses).map(addr => 
-      getTokenData(addr, walletAddress, provider)
-    );
-    const tokenDataResults = await Promise.all(tokenDataPromises);
+    // // Get data for all tokens in parallel
+    // const tokenDataPromises = Array.from(tokenAddresses).map(addr => 
+    //   getTokenData(addr, walletAddress, provider)
+    // );
+    // const tokenDataResults = await Promise.all(tokenDataPromises);
     
-    // Filter out null results (tokens with zero balance or errors)
-    const tokenData = tokenDataResults.filter(data => data !== null) as TokenData[];
+    // // Filter out null results (tokens with zero balance or errors)
+    // const tokenData = tokenDataResults.filter(data => data !== null) as TokenData[];
     
-    // Sort by balance value (descending)
-    tokenData.sort((a, b) => {
-      // Simple string comparison for sorting (not perfect but works for most cases)
-      return parseFloat(b.balance) - parseFloat(a.balance);
-    });
+    // // Sort by balance value (descending)
+    // tokenData.sort((a, b) => {
+    //   // Simple string comparison for sorting (not perfect but works for most cases)
+    //   return parseFloat(b.balance) - parseFloat(a.balance);
+    // });
+
+    const tokenData = await getTokenBalance(walletAddress)
     
     // Add ETH to the tokens array
     const formattedTokens: TokenData[] = [
