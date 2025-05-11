@@ -54,6 +54,7 @@ export const privyTransferTool = tool({
         transaction: {
           to: `0x${addressWithoutPrefix}`,
           value: amountInWei,
+          gasLimit: 21000,
           chainId: NetworkConfig.chainId
         },
         idempotencyKey: idempotencyKey // unique key for this transaction

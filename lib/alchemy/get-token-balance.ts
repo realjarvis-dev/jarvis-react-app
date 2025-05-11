@@ -1,60 +1,57 @@
-import { TokenBalance } from 'alchemy-sdk'
-import { alchemy } from './client'
+import { TokenBalance } from 'alchemy-sdk';
+import { ethers } from "ethers";
+import { alchemy } from './client';
 
-export const getTokenBalance = async (address: string) => {
+export interface TokenData {
+  address: string;
+  name:    string;
+  symbol:  string;
+  balance: string;      // human-readable
+}
+
+export async function getTokenBalance(address: string): Promise<TokenData[]> {
   try {
-    // Get token balances
-    const balances = await alchemy.core.getTokenBalances(address)
+    /* ── 1. ERC-20 balances ─────────────────────────────────────────── */
+    const { tokenBalances }  = await alchemy.core.getTokenBalances(
+      address
+    );
 
-    // Remove tokens with zero balance
-    const nonZeroBalances = balances.tokenBalances.filter(
-      (token: TokenBalance) => {
-        return (
-          token.tokenBalance !==
-          '0x0000000000000000000000000000000000000000000000000000000000000000'
-        )
-      }
-    )
+    /* ── 2. Keep only non-zero balances ─────────────────────────────── */
+    const nonZero = tokenBalances.filter(
+      (tb: TokenBalance) => BigInt(tb.tokenBalance || "0x0") !== BigInt(0)
+    );
 
-    // Process all tokens in parallel using Promise.all
-    const tokenDetailsPromises = nonZeroBalances.map(async token => {
-      // Get metadata of token
-      const metadata = await alchemy.core.getTokenMetadata(
-        token.contractAddress
-      )
+    /* ── 3. Get metadata for each token ─────────────────────────────── */
+    const metaPromises = nonZero.map(tb => 
+      alchemy.core.getTokenMetadata(tb.contractAddress)
+    );
+    const metas = await Promise.all(metaPromises);
 
-      // Compute token balance in human-readable format
-      let formattedBalance = '0'
-      if (token.tokenBalance && metadata.decimals) {
-        // Convert hex to decimal and adjust for decimals
-        const balance = parseInt(token.tokenBalance, 16)
-        formattedBalance = (balance / Math.pow(10, metadata.decimals)).toFixed(
-          2
-        )
-      }
-
+    /* ── 4. Format ERC-20 balances ──────────────────────────────────── */
+    const erc20: TokenData[] = nonZero.map((tb, i) => {
+      const meta   = metas[i];
+      const rawBig = BigInt(tb.tokenBalance || "0x0");
       return {
-        address: token.contractAddress,
-        name: metadata.name || '',
-        balance: formattedBalance,
-        symbol: metadata.symbol || ''
-      }
-    })
+        address : tb.contractAddress,
+        name    : meta.name    ?? "Unknown",
+        symbol  : meta.symbol  ?? "UNK",
+        balance : ethers.formatUnits(rawBig, meta.decimals ?? 18)
+      };
+    });
 
-    // Wait for all promises to resolve
-    const tokenDetails = await Promise.all(tokenDetailsPromises)
+    /* ── 5. Native ETH balance ──────────────────────────────────────── */
+    const nativeWei = await alchemy.core.getBalance(address, "latest");
+    const ethToken: TokenData = {
+      address : ethers.ZeroAddress,     // 0x000…000
+      name    : "Ether",
+      symbol  : "ETH",
+      balance : ethers.formatEther(nativeWei.toString())
+    };
 
-    // Log results for debugging
-    tokenDetails.forEach(token => {
-      console.log(
-        `${token.address}. ${token.name}: ${token.balance} ${token.symbol}`
-      )
-    })
-
-    return tokenDetails
-  } catch (error) {
-    console.error('Error in getTokenBalance:', error)
-    // throw error
-    return []
+    /* ── 6. Combine and return ──────────────────────────────────────── */
+    return [ethToken, ...erc20];
+  } catch (err) {
+    console.error("Error in getTokenBalance:", err);
+    return [];
   }
 }
