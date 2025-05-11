@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { ethers } from 'ethers'
 import { SimplifiedPendleMarket } from '../types/pendle'
+import { getUserEvmWalletAddress } from '../privy/client'
 
 // Define the quote response type from the API
 export interface SwapQuoteResponse {
@@ -59,11 +60,17 @@ export async function getQuote(
       throw new Error(`Invalid ETH amount: ${amountInEth}`);
     }
     
-    // Use environment variable for receiver address, error if not set
-    if (!process.env.WALLET_ADDRESS) {
-      throw new Error("WALLET_ADDRESS environment variable is not set.");
+    // // Use environment variable for receiver address, error if not set
+    // if (!process.env.WALLET_ADDRESS) {
+    //   throw new Error("WALLET_ADDRESS environment variable is not set.");
+    // }
+    const evmWalletAddress = await getUserEvmWalletAddress();
+    if (!evmWalletAddress) {
+      throw new Error('EVM wallet not found')
     }
-    const RECEIVER = process.env.WALLET_ADDRESS;
+
+
+    const RECEIVER = evmWalletAddress;
     
     // Format the URL
     const url = `${BASE_URL}/sdk/${chainId}/markets/${marketAddress}/swap`;

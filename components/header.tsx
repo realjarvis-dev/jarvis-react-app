@@ -38,15 +38,15 @@ export const Header: React.FC = () => {
     }) => {
       try {
 
-        const { user, isNewUser } = params
+        const { user, isNewUser, wasAlreadyAuthenticated } = params
         console.log('Login complete in Header:', params)
 
 
-        // if (isNewUser) {
-        //   setShowWelcomePopup(true)
-        // }
+        if (!wasAlreadyAuthenticated) {
+          setShowWelcomePopup(true)
+        }
         // always show welcome popup, for demo purposes
-        setShowWelcomePopup(true)
+        // setShowWelcomePopup(true)
         // if (solWallet?.delegated && solWallet.address) {
         //   delegateWallet({ address: solWallet.address, chainType: 'solana' })
         // }

@@ -3,6 +3,8 @@ import { PrivyClient, AuthTokenClaims } from "@privy-io/server-auth";
 import { getUserEvmWalletAddress, getUserSolWalletAddress, getUserWallet, privy } from "@/lib/privy/client";
 import { WalletWithMetadata } from "@privy-io/server-auth";
 import { fetchEthUsdPrice } from "@/lib/tools/privy-transfer";
+import { ethers } from "ethers";
+
 export async function GET(req: NextRequest) {
 
   const evmWallet: WalletWithMetadata | undefined = await getUserWallet('ethereum');
@@ -15,6 +17,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "No evm wallet" }, { status: 401 });
   }
   try {
+
+
+    const weiBig = BigInt("1000000000000000000");
+    const hex = ethers.toQuantity(weiBig);
+    console.log("hex", hex)
+
     const {signature, encoding} = await privy.walletApi.ethereum.signMessage({
         walletId: evmWallet?.id || '',
         message: 'Hello world'

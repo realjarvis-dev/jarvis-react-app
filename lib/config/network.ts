@@ -10,5 +10,5 @@ export const MainnetConfig = {
     chainId: 1,
     scanLink: 'etherscan.io'
 }
-
-export const NetworkConfig = process.env.NODE_ENV === 'production' ? MainnetConfig : SepoliaConfig;
+console.log('process.env.TEST_NET_ENV', process.env.TEST_NET_ENV)
+export const NetworkConfig = process.env.TEST_NET_ENV === 'production' ? MainnetConfig : SepoliaConfig;

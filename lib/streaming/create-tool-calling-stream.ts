@@ -45,7 +45,7 @@ export function createToolCallingStreamResponse(config: BaseStreamConfig) {
           userSolWallet: config.userSolWallet
         })
 
-        console.log('researcherConfig', researcherConfig)
+        // console.log('researcherConfig', researcherConfig)
 
         const result = streamText({
           ...researcherConfig,
