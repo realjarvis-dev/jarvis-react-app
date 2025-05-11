@@ -89,7 +89,7 @@ export async function getSwapTransaction(
     }
 
     console.log('Swap transaction data fetched successfully')
-    console.log("Response", response)
+    console.log('Response', response)
     return response.data.tx
   } catch (error: any) {
     console.error('Error fetching swap transaction:', error.message)
@@ -117,6 +117,14 @@ export async function executeSwapTransaction(
     // if (!process.env.PRIVATE_KEY) {
     //   throw new Error('PRIVATE_KEY environment variable is not set.')
     // }
+    const provider = new ethers.JsonRpcProvider(process.env.ETH_RPC_URL || 'http://127.0.0.1:8545')
+    console.log(process.env.ETH_RPC_URL)
+    const block = await provider.getBlock('latest')
+    const baseFee = block?.baseFeePerGas
+    console.log('baseFee', baseFee)
+    const maxFee = baseFee ? BigInt(baseFee) * BigInt(2) : BigInt(1010690044) // ~2× base fee
+    const priority = ethers.parseUnits('1', 'gwei') // 1 gwei tip
+
     console.log('Sending transaction...')
     // console.log('txData', txData)
     const to = txData.to
@@ -132,6 +140,8 @@ export async function executeSwapTransaction(
     if (!evmWallet.id) {
       throw new Error('EVM wallet ID not found')
     }
+    const correctNonce = await provider.getTransactionCount(txData.from as `0x${string}`, "pending");
+
 
     const weiBig = BigInt(value || '0')
     const quantity = ethers.toQuantity(weiBig)
@@ -142,29 +152,35 @@ export async function executeSwapTransaction(
     const dataHex = (data as string).replace(/^0x/, '')
     const fromAddress = (from as string).replace(/^0x/, '')
 
-    const { hash } = await privy.walletApi.ethereum.sendTransaction({
-      walletId: evmWallet!.id,
-      caip2: `eip155:1`,
-      transaction: {
-        to: `0x${toAddress}` as `0x${string}`,
-        from: `0x${fromAddress}` as `0x${string}`,
-        chainId: chainId,
-        value: `0x${valueHex}` as `0x${string}`,
-        data: `0x${dataHex}` as `0x${string}`,
-        gasLimit: 650000,
-      },
-      idempotencyKey: uuidv4() // unique key for this transaction
-    })
+    const { signedTransaction, encoding } =
+      await privy.walletApi.ethereum.signTransaction({
+        walletId: evmWallet!.id,
+        // caip2: `eip155:1`,
+        transaction: {
+          to: `0x${toAddress}` as `0x${string}`,
+          from: `0x${fromAddress}` as `0x${string}`,
+          chainId: chainId,
+          value: `0x${valueHex}` as `0x${string}`,
+          data: `0x${dataHex}` as `0x${string}`,
+          gasLimit: 650000, //650000
+          maxFeePerGas: ethers.toQuantity(maxFee + priority) as `0x${string}`,
+          maxPriorityFeePerGas: ethers.toQuantity(priority) as `0x${string}`,
+          nonce: correctNonce
+        },
+        idempotencyKey: uuidv4() // unique key for this transaction
+      })
 
-    // // const tx = await wallet.sendTransaction(txData)
-    // console.log('Transaction sent. Hash:', tx.hash)
-
-    // // Wait for transaction to be confirmed
-    // await tx.wait()
-    // console.log('Transaction confirmed.')
+    const txResponse = await provider.broadcastTransaction(signedTransaction)
+    // 4. Inspect the response
+    console.log('Transaction hash:', txResponse.hash)
+    // You can then wait for confirmation:
+    const receipt = await txResponse.wait()
+    if (receipt) {
+      console.log('Mined in block', receipt.blockNumber)
+    }
 
     return {
-      hash: hash
+      hash: txResponse.hash
     }
   } catch (error: any) {
     console.error('Error executing transaction:', error.message)
