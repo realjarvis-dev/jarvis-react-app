@@ -32,7 +32,7 @@ function useKeyboardAvoidance(ref: RefObject<HTMLTextAreaElement>): void {
     // Handle VirtualKeyboard API if available
     if ('virtualKeyboard' in navigator) {
       // @ts-ignore - VirtualKeyboard API may not be in types yet
-      navigator.virtualKeyboard.overlaysContent = true
+      navigator.virtualKeyboard.overlaysContent = false
 
       const updateInset = () => {
         const rootStyle = document.documentElement.style
@@ -291,7 +291,8 @@ export function ChatPanel({
     <div
       className={cn(
         'w-full bg-background group/form-container shrink-0 flex justify-center',
-        'sticky bottom-0 px-4 sm:px-4 md:px-4',
+        // 'sticky bottom-0 px-4 sm:px-4 md:px-4',
+        'h-[100dvh] px-4 sm:px-4 md:px-4',
         'pb-[calc(var(--keyboard-inset,0px)+env(safe-area-inset-bottom,4px))]'
       )}
       style={{
@@ -415,10 +416,10 @@ export function ChatPanel({
               onFocus={e => {
                 setShowEmptyScreen(true)
                 // Ensure we don't scroll when focused on mobile
-                e.preventDefault()
-                if (e.target) {
-                  e.target.focus({ preventScroll: true })
-                }
+                // e.preventDefault()
+                // if (e.target) {
+                //   e.target.focus({ preventScroll: true })
+                // }
                 // Add a slight delay before scrolling to fix mobile keyboard issues
                 setTimeout(() => {
                   const scrollContainer =
