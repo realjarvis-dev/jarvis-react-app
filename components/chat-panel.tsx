@@ -233,14 +233,19 @@ export function ChatPanel({
             ) : evmAddress && solAddress && isNewUser ? (
               <div>
                 <CopyableWalletAddress
+                  walletAddress={''}
+                  className="justify-center"
+                  walletAddressNotAvailableText='Congrats! Your wallet has been created.'
+                />
+                <CopyableWalletAddress
                   walletAddress={evmAddress}
                   className="justify-center"
-                  walletAddressIntroText="🎉 Congrats! Your wallets have been successfully created. EVM wallet address:"
+                  walletAddressIntroText="EVM wallet:"
                 />
                 <CopyableWalletAddress
                   walletAddress={solAddress}
                   className="justify-center"
-                  walletAddressIntroText="Your Solana wallet address:"
+                  walletAddressIntroText="Solana wallet:"
                 />
               </div>
             ) : evmAddress && solAddress ? (
@@ -248,12 +253,12 @@ export function ChatPanel({
                 <CopyableWalletAddress
                   walletAddress={evmAddress}
                   className="justify-center"
-                  walletAddressIntroText="Your EVM wallet address:"
+                  walletAddressIntroText="EVM wallet:"
                 />
                 <CopyableWalletAddress
                   walletAddress={solAddress}
                   className="justify-center"
-                  walletAddressIntroText="Your Solana wallet address:"
+                  walletAddressIntroText="Solana wallet:"
                 />
               </div>
             ) : null}
