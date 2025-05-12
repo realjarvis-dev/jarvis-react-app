@@ -200,10 +200,10 @@ export function ChatPanel({
     <div
       className={cn(
         'w-full bg-background group/form-container shrink-0 flex justify-center',
-        'sticky bottom-0 px-0 sm:px-2 md:px-4 pb-4'
+        'sticky bottom-0 px-4 sm:px-4 md:px-4 pb-4'
       )}
     >
-      <div className="w-full max-w-3xl px-0">
+      <div className="w-full max-w-3xl">
         {messages.length === 0 && (
           <div className="mb-2 sm:mb-4 md:mb-6 lg:mb-10 flex flex-col items-center gap-1 sm:gap-2 md:gap-4 w-full min-h-[180px] sm:min-h-[200px]">
             <IconLogo className="size-8 sm:size-10 md:size-12 text-muted-foreground" />
@@ -235,7 +235,7 @@ export function ChatPanel({
                 <CopyableWalletAddress
                   walletAddress={''}
                   className="justify-center"
-                  walletAddressNotAvailableText='Congrats! Your wallet has been created.'
+                  walletAddressNotAvailableText="Congrats! Your wallet has been created."
                 />
                 <CopyableWalletAddress
                   walletAddress={evmAddress}
@@ -293,7 +293,7 @@ export function ChatPanel({
               spellCheck={false}
               value={input}
               disabled={isLoading || isToolInvocationInProgress()}
-              className="resize-none w-full min-h-[38px] sm:min-h-[48px] bg-transparent border-0 p-1.5 sm:p-2 md:p-4 text-xs sm:text-sm placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+              className="resize-none w-full min-h-[38px] sm:min-h-[48px] bg-transparent border-0 p-3 sm:p-3 md:p-4 text-sm placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               onChange={e => {
                 handleInputChange(e)
                 setShowEmptyScreen(e.target.value.length === 0)
@@ -319,8 +319,8 @@ export function ChatPanel({
             />
 
             {/* Bottom menu area */}
-            <div className="flex items-center justify-between p-1 sm:p-2 md:p-3 text-[10px] sm:text-xs md:text-sm">
-              <div className="flex items-center gap-0.5 sm:gap-1 md:gap-2 overflow-hidden">
+            <div className="flex items-center justify-between p-3 sm:p-3 md:p-3 text-[10px] sm:text-xs md:text-sm">
+              <div className="flex items-center gap-2 sm:gap-2 md:gap-2 overflow-hidden">
                 <ModelSelector models={models || []} />
                 <SearchModeToggle />
               </div>
