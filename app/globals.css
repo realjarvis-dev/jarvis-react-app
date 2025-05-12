@@ -114,45 +114,5 @@
   }
   body {
     @apply bg-background text-foreground;
-    /* Prevent iOS bouncing effect that can cause layout issues with keyboards */
-    overscroll-behavior: none;
-  }
-}
-
-/* Styles to help with mobile keyboard handling */
-@supports (-webkit-touch-callout: none) {
-  /* iOS specific styling */
-  body {
-    /* Prevent content from being pushed up when virtual keyboard appears */
-    height: -webkit-fill-available;
-    min-height: -webkit-fill-available;
-    position: relative;
-    width: 100%;
-  }
-
-  /* Fix for iOS when keyboard is visible */
-  body.keyboard-active {
-    height: calc(100vh - var(--keyboard-inset, 0px));
-    overflow: hidden;
-  }
-
-  #scroll-container {
-    /* Allow scrolling within the container */
-    overflow-y: auto;
-    /* Take remaining height */
-    height: calc(
-      100vh - var(--keyboard-inset, 0px) - env(safe-area-inset-bottom, 0px) -
-        70px
-    );
-    /* Add momentum-based scrolling for iOS */
-    -webkit-overflow-scrolling: touch;
-  }
-
-  /* Keep form inputs visible above keyboard */
-  .keyboard-active {
-    position: fixed !important;
-    bottom: var(--keyboard-inset, 0px) !important;
-    z-index: 100;
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px) !important;
   }
 }
