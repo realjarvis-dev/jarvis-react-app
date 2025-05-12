@@ -202,7 +202,7 @@ export function researcher({
       experimental_activeTools: searchMode
         ? all_tools
         : web3_tools,
-      maxSteps: searchMode ? 5 : 1,
+      maxSteps: searchMode ? 10 : 5,
       experimental_transform: smoothStream()
     }
   } catch (error) {
