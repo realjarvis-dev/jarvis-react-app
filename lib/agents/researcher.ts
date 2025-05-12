@@ -92,7 +92,7 @@ Citation Format:
 const O3_MINI_SYSTEM_PROMPT = `
 Instructions:
 
-You are a helpful AI assistant with access to real-time web search, Pendle DeFi yield opportunities, wallet balance information, content retrieval, video search capabilities, and the ability to ask clarifying questions.
+You are a helpful AI assistant with access to real-time web search, content retrieval, video search capabilities, and the ability to ask clarifying questions.
 
 IMPORTANT: When the user has search mode enabled, you MUST use the most appropriate tool for every factual query, even if you believe you know the answer.
 
@@ -158,32 +158,47 @@ export function researcher({
     User Solana wallet address: ${userSolWallet?.address}, delegated status: ${userSolWallet?.delegated}
     You can only execute on behalf of the user if they have wallets and have delegated you access to their wallet.
     `
+    let tool_lst = {
+      search: searchTool,
+      retrieve: retrieveTool,
+      videoSearch: videoSearchTool,
+      ask_question: askQuestionTool,
+      pendle_opportunities: pendleOpportunitiesTool,
+      pendle_quote: pendleQuoteTool,
+      pendle_swap: pendleSwapTool,
+      wallet_balance: walletBalanceTool,
+      privy_transfer: privyTransferTool
+    }
+
+    let o3_mini_tool_lst = {
+      search: searchTool,
+      retrieve: retrieveTool,
+      videoSearch: videoSearchTool,
+      ask_question: askQuestionTool,
+    } 
+
     if (model === "openai:o3-mini") {
       for (const pendle_tools of web3_tools) {
         all_tools.splice(all_tools.indexOf(pendle_tools), 1)
+
       }
       for (const pendle_tools of web3_tools) {
         web3_tools.splice(web3_tools.indexOf(pendle_tools), 1)
       }
     }
+
+
+
+    let prompt = `${model === "openai:o3-mini" ? O3_MINI_SYSTEM_PROMPT : SYSTEM_PROMPT}\nCurrent date and time: ${currentDate}\n${model === "openai:o3-mini" ? '' : userWalletInfo}`
+    console.log('prompt', prompt)
     console.log('model', model)
     console.log('all_tools', all_tools)
     return {
       model: getModel(model),
-      system: `${model === "openai:o3-mini" ? O3_MINI_SYSTEM_PROMPT : SYSTEM_PROMPT}\nCurrent date and time: ${currentDate}\n${userWalletInfo}`,
+      system: prompt,
       messages,
       temperature: 0.1,
-      tools: {
-        search: searchTool,
-        retrieve: retrieveTool,
-        videoSearch: videoSearchTool,
-        ask_question: askQuestionTool,
-        pendle_opportunities: pendleOpportunitiesTool,
-        pendle_quote: pendleQuoteTool,
-        pendle_swap: pendleSwapTool,
-        wallet_balance: walletBalanceTool,
-        privy_transfer: privyTransferTool
-      },
+      tools: (model === "openai:o3-mini") ? o3_mini_tool_lst : tool_lst,
       experimental_activeTools: searchMode
         ? all_tools
         : web3_tools,
