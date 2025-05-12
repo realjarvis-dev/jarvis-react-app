@@ -12,7 +12,7 @@ import {
 import { Message } from 'ai'
 import { ArrowUp, ChevronDown, MessageCirclePlus, Square } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { RefObject, useEffect, useRef, useState } from 'react'
 import Textarea from 'react-textarea-autosize'
 import { toast } from 'sonner'
 import { useWalletAddresses } from '../lib/hooks/use-evm-and-sol-addresses'
@@ -25,6 +25,94 @@ import { SearchModeToggle } from './search-mode-toggle'
 import { Button } from './ui/button'
 import { IconLogo } from './ui/icons'
 import { WelcomeMessage } from './welcome-messages'
+
+// Custom hook for keyboard avoidance on mobile
+function useKeyboardAvoidance(ref: RefObject<HTMLTextAreaElement>): void {
+  useEffect(() => {
+    // Handle VirtualKeyboard API if available
+    if ('virtualKeyboard' in navigator) {
+      // @ts-ignore - VirtualKeyboard API may not be in types yet
+      navigator.virtualKeyboard.overlaysContent = true
+
+      const updateInset = () => {
+        const rootStyle = document.documentElement.style
+        // @ts-ignore - VirtualKeyboard API may not be in types yet
+        const keyboardHeight = navigator.virtualKeyboard.boundingRect.height
+
+        if (keyboardHeight > 0) {
+          rootStyle.setProperty('--keyboard-inset', `${keyboardHeight}px`)
+
+          // When keyboard appears, scroll to the input
+          setTimeout(() => {
+            const scrollContainer = document.getElementById('scroll-container')
+            if (scrollContainer && ref.current) {
+              scrollContainer.scrollTo({
+                top: scrollContainer.scrollHeight,
+                behavior: 'smooth'
+              })
+            }
+          }, 100)
+        } else {
+          rootStyle.setProperty('--keyboard-inset', '0px')
+        }
+      }
+
+      // @ts-ignore - VirtualKeyboard API may not be in types yet
+      navigator.virtualKeyboard.addEventListener('geometrychange', updateInset)
+
+      return () => {
+        // @ts-ignore - VirtualKeyboard API may not be in types yet
+        navigator.virtualKeyboard.removeEventListener(
+          'geometrychange',
+          updateInset
+        )
+      }
+    }
+
+    // Focus with preventScroll to avoid unwanted scrolling
+    const handleFocus = () => {
+      if (ref.current) {
+        ref.current.focus({ preventScroll: true })
+      }
+    }
+
+    // Handle window resize for keyboard appearance on iOS
+    const handleResize = () => {
+      // iOS doesn't fire virtualKeyboard events, so we have to detect
+      // keyboard appearance by window resize
+      const isKeyboardVisible = window.innerHeight < window.outerHeight * 0.8
+
+      if (isKeyboardVisible) {
+        // Scroll to bottom of the chat container after a short delay
+        setTimeout(() => {
+          const scrollContainer = document.getElementById('scroll-container')
+          if (scrollContainer) {
+            scrollContainer.scrollTo({
+              top: scrollContainer.scrollHeight,
+              behavior: 'smooth'
+            })
+          }
+        }, 300)
+      }
+    }
+
+    window.addEventListener('resize', handleResize)
+
+    // Apply focus prevention when textarea is focused
+    const handleTextareaFocus = () => {
+      if (ref.current) {
+        ref.current.focus({ preventScroll: true })
+      }
+    }
+
+    ref.current?.addEventListener('focus', handleTextareaFocus)
+
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      ref.current?.removeEventListener('focus', handleTextareaFocus)
+    }
+  }, [ref])
+}
 
 interface ChatPanelProps {
   input: string
@@ -76,6 +164,9 @@ export function ChatPanel({
   // Generate a deterministic seed for welcome message based on date
   // This will change each day but remain consistent throughout the day
   const welcomeSeed = useRef(new Date().getDate()).current
+
+  // Apply keyboard avoidance hook
+  useKeyboardAvoidance(inputRef)
 
   const handleCompositionStart = () => setIsComposing(true)
 
@@ -200,8 +291,15 @@ export function ChatPanel({
     <div
       className={cn(
         'w-full bg-background group/form-container shrink-0 flex justify-center',
-        'sticky bottom-0 px-4 sm:px-4 md:px-4 pb-4'
+        'sticky bottom-0 px-4 sm:px-4 md:px-4',
+        'pb-[calc(var(--keyboard-inset,0px)+env(safe-area-inset-bottom,4px))]'
       )}
+      style={{
+        // This ensures the panel stays at the bottom on mobile
+        position: 'sticky',
+        bottom: 0,
+        zIndex: 30
+      }}
     >
       <div className="w-full max-w-3xl">
         {messages.length === 0 && (
@@ -314,7 +412,25 @@ export function ChatPanel({
                   textarea.form?.requestSubmit()
                 }
               }}
-              onFocus={() => setShowEmptyScreen(true)}
+              onFocus={e => {
+                setShowEmptyScreen(true)
+                // Ensure we don't scroll when focused on mobile
+                e.preventDefault()
+                if (e.target) {
+                  e.target.focus({ preventScroll: true })
+                }
+                // Add a slight delay before scrolling to fix mobile keyboard issues
+                setTimeout(() => {
+                  const scrollContainer =
+                    document.getElementById('scroll-container')
+                  if (scrollContainer) {
+                    scrollContainer.scrollTo({
+                      top: scrollContainer.scrollHeight,
+                      behavior: 'smooth'
+                    })
+                  }
+                }, 100)
+              }}
               onBlur={() => setShowEmptyScreen(false)}
             />
 
