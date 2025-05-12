@@ -47,28 +47,28 @@ export function EmptyScreen({
 }) {
   return (
     <div className={`w-full transition-all min-h-[150px] ${className}`}>
-      <div className="bg-background p-1 sm:p-1.5 md:p-2 lg:p-4">
-        <div className="mt-1 sm:mt-1.5 md:mt-2 flex flex-col items-start space-y-2 sm:space-y-2 md:space-y-2 mb-1 sm:mb-1.5 md:mb-4">
+      <div className="bg-background p-1.5 sm:p-2 md:p-2 lg:p-4">
+        <div className="mt-2 sm:mt-2 md:mt-2 flex flex-col items-start space-y-3 sm:space-y-3 md:space-y-3 mb-2 sm:mb-2 md:mb-4">
           {exampleMessages.map((message, index) => (
             <Button
               key={index}
               variant="link"
-              className="h-auto p-0 text-[11px] sm:text-xs md:text-sm lg:text-base whitespace-normal text-left flex items-start"
+              className="h-auto p-0 text-[12px] sm:text-xs md:text-sm lg:text-base whitespace-normal text-left flex items-start"
               name={message.message}
               onClick={async () => {
                 submitMessage(message.message)
               }}
             >
               <ArrowRight
-                size={12}
-                className="mr-1 sm:mr-1.5 md:mr-2 text-muted-foreground shrink-0 min-w-[12px]"
+                size={14}
+                className="mr-2 sm:mr-2 md:mr-2 text-muted-foreground shrink-0 min-w-[14px]"
               />
               <message.icon
-                size={12}
-                className="mr-1 sm:mr-1.5 md:mr-2 text-muted-foreground shrink-0 min-w-[12px]"
+                size={14}
+                className="mr-2 sm:mr-2 md:mr-2 text-muted-foreground shrink-0 min-w-[14px]"
                 aria-label={message.iconAriaLabel}
               />
-              <span className="text-left line-clamp-3 max-w-[350px] sm:max-w-none break-all sm:break-normal">
+              <span className="text-left line-clamp-3 max-w-[270px] sm:max-w-none break-all sm:break-normal">
                 {message.heading}
               </span>
             </Button>
