@@ -64,7 +64,7 @@ export function EmptyScreen({
                 className="mr-2 sm:mr-2 md:mr-2 text-muted-foreground shrink-0 min-w-[14px]"
               />
               <message.icon
-                size={14}
+                size={22}
                 className="mr-2 sm:mr-2 md:mr-2 text-muted-foreground shrink-0 min-w-[14px]"
                 aria-label={message.iconAriaLabel}
               />
