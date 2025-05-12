@@ -55,6 +55,7 @@ export default async function RootLayout({
           'min-h-screen flex flex-col font-sans antialiased',
           fontSans.variable
         )}
+        suppressHydrationWarning
       >
         <ThemeProvider
           attribute="class"
@@ -63,17 +64,15 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           <WrappedPrivyProvider>
-            
-              <SidebarProvider defaultOpen={false}>
-                <AppSidebar />
-                <div className="flex flex-col flex-1">
-                  <Header />
-                  <main className="flex flex-1 min-h-0">
-                    <ArtifactRoot>{children}</ArtifactRoot>
-                  </main>
-                </div>
-              </SidebarProvider>
-            
+            <SidebarProvider defaultOpen={false}>
+              <AppSidebar />
+              <div className="flex flex-col flex-1">
+                <Header />
+                <main className="flex flex-1 min-h-0">
+                  <ArtifactRoot>{children}</ArtifactRoot>
+                </main>
+              </div>
+            </SidebarProvider>
           </WrappedPrivyProvider>
           <Toaster />
           <Analytics />

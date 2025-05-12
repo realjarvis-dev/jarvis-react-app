@@ -17,6 +17,7 @@ export const pendleOpportunitiesTool = tool({
   }),
   execute: async ({ max_results = 10, apy_gte, apy_lte }) => {
     const all = await getPendleMarkets()
+    console.log(max_results, apy_gte, apy_lte)
     let filtered = all
     if (apy_gte !== undefined) filtered = filtered.filter(o => o.impliedApy >= apy_gte)
     if (apy_lte !== undefined) filtered = filtered.filter(o => o.impliedApy <= apy_lte)
