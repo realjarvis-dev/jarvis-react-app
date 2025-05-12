@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
-import { getUserEvmWalletAddress } from '../privy/client'
 import { getTokenBalance } from "../alchemy/get-token-balance";
+import { getUserEvmWalletAddress } from '../privy/client';
 // ERC20 standard interface
 const ERC20_ABI = [
   "function balanceOf(address) view returns (uint256)",
@@ -115,7 +115,7 @@ async function discoverTokens(walletAddress: string, provider: ethers.JsonRpcPro
 // Main function to get all token balances
 export async function getWalletBalances(
   walletAddressParam?: string,
-  rpcUrl: string = process.env.ETH_RPC_URL || 'http://127.0.0.1:8545'
+  // rpcUrl: string = process.env.ETH_RPC_URL || 'http://127.0.0.1:8545'
 ): Promise<WalletBalanceResult> {
   // Use provided wallet address or environment variable
   const walletAddress = walletAddressParam || await getUserEvmWalletAddress();
@@ -123,12 +123,12 @@ export async function getWalletBalances(
     throw new Error("No wallet address provided and user does not have EVM wallet.");
   }
   
-  const provider = new ethers.JsonRpcProvider(rpcUrl);
+  // const provider = new ethers.JsonRpcProvider(rpcUrl);
   
   try {
     // Get ETH balance
-    const ethBalance = await provider.getBalance(walletAddress);
-    const formattedEthBalance = ethers.formatEther(ethBalance);
+    // const ethBalance = await provider.getBalance(walletAddress);
+    // const formattedEthBalance = ethers.formatEther(ethBalance);
     
     // // Start with our known tokens
     // let tokenAddresses = new Set(KNOWN_TOKENS.map(addr => addr.toLowerCase()));
@@ -159,19 +159,19 @@ export async function getWalletBalances(
     const tokenData = await getTokenBalance(walletAddress)
     
     // Add ETH to the tokens array
-    const formattedTokens: TokenData[] = [
-      {
-        symbol: "ETH",
-        balance: formattedEthBalance,
-        name: "Ethereum",
-        address: "0x0000000000000000000000000000000000000000" // Zero address for ETH
-      },
-      ...tokenData
-    ];
+    // const formattedTokens: TokenData[] = [
+    //   {
+    //     symbol: "ETH",
+    //     balance: formattedEthBalance,
+    //     name: "Ethereum",
+    //     address: "0x0000000000000000000000000000000000000000" // Zero address for ETH
+    //   },
+    //   ...tokenData
+    // ];
     
     // Create the final result object
     return {
-      tokens: formattedTokens
+      tokens: tokenData
     };
   } catch (error) {
     console.error("Error fetching wallet balances:", error);

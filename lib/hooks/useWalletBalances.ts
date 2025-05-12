@@ -37,7 +37,7 @@ export function useWalletBalances(walletAddress?: string) {
     // Add a small delay for the initial fetch
     const timer = setTimeout(() => {
       fetchBalances()
-    }, 500)
+    }, 0)
 
     return () => clearTimeout(timer)
   }, [fetchBalances])
