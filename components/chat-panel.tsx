@@ -2,12 +2,19 @@
 
 import { Model } from '@/lib/types/models'
 import { cn } from '@/lib/utils'
-import { usePrivy } from '@privy-io/react-auth'
+import {
+  WalletWithMetadata,
+  useHeadlessDelegatedActions,
+  usePrivy,
+  useSolanaWallets,
+  useWallets
+} from '@privy-io/react-auth'
 import { Message } from 'ai'
 import { ArrowUp, ChevronDown, MessageCirclePlus, Square } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import Textarea from 'react-textarea-autosize'
+import { toast } from 'sonner'
 import { useWalletAddresses } from '../lib/hooks/use-evm-and-sol-addresses'
 import { useArtifact } from './artifact/artifact-context'
 import { CopyableWalletAddress } from './copyable-wallet-address'
@@ -18,8 +25,6 @@ import { SearchModeToggle } from './search-mode-toggle'
 import { Button } from './ui/button'
 import { IconLogo } from './ui/icons'
 import { WelcomeMessage } from './welcome-messages'
-import { WalletWithMetadata, useHeadlessDelegatedActions, useWallets, useSolanaWallets } from '@privy-io/react-auth'
-import { toast } from 'sonner'
 
 interface ChatPanelProps {
   input: string
@@ -50,6 +55,7 @@ export function ChatPanel({
   isAutoScroll
 }: ChatPanelProps) {
   const [showEmptyScreen, setShowEmptyScreen] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const router = useRouter()
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const isFirstRender = useRef(true)
@@ -64,7 +70,7 @@ export function ChatPanel({
   const { wallets: evmWallets, ready: evmReady } = useWallets()
   const { wallets: solanaWallets, ready: solanaReady } = useSolanaWallets()
   const [isNewUser, setIsNewUser] = useState(false)
-  const [ walletAddress, setWalletAddress ] = useState('')
+  const [walletAddress, setWalletAddress] = useState('')
   const { close: closeArtifact } = useArtifact()
   const { delegateWallet } = useHeadlessDelegatedActions()
   // Generate a deterministic seed for welcome message based on date
@@ -129,8 +135,6 @@ export function ChatPanel({
       const isFirstLogin = now.getTime() - created.getTime() < 60_000
       setIsNewUser(isFirstLogin)
       setWalletAddress(user.wallet?.address || '')
-
-
     }
   }, [ready, authenticated, user])
 
@@ -147,12 +151,16 @@ export function ChatPanel({
     const isFirstLogin = now.getTime() - created.getTime() < 120_000
     // always delegate, for demo purposes
     if (evmReady && solanaReady && isFirstLogin) {
-      const evmWallet = user.linkedAccounts.find((wallet) => {
+      const evmWallet = user.linkedAccounts.find(wallet => {
         if (wallet.type == 'wallet') {
-          return wallet.walletClientType === 'privy' && wallet.chainType === 'ethereum' && wallet.connectorType === 'embedded'
+          return (
+            wallet.walletClientType === 'privy' &&
+            wallet.chainType === 'ethereum' &&
+            wallet.connectorType === 'embedded'
+          )
         }
-      }) as WalletWithMetadata | undefined;
-      console.log("evmReady", evmReady)
+      }) as WalletWithMetadata | undefined
+      console.log('evmReady', evmReady)
       console.log(evmWallets)
       console.log('evmWallet in chat panel', evmWallet)
 
@@ -161,7 +169,6 @@ export function ChatPanel({
       ) as WalletWithMetadata | undefined
 
       if (evmWallet?.address && !evmWallet.delegated) {
-
         console.log('evmWallet delegated')
         delegateWallet({ address: evmWallet.address, chainType: 'ethereum' })
         toast.success('EVM wallet delegated')
@@ -174,6 +181,9 @@ export function ChatPanel({
     }
   }, [evmReady, solanaReady, authenticated, ready])
 
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Add scroll to bottom handler
   const handleScrollToBottom = () => {
@@ -189,167 +199,173 @@ export function ChatPanel({
   return (
     <div
       className={cn(
-        'w-full bg-background group/form-container shrink-0',
-        messages.length > 0 ? 'sticky bottom-0 px-2 pb-4' : 'px-6'
+        'w-full bg-background group/form-container shrink-0 flex justify-center',
+        'sticky bottom-0 px-0 sm:px-2 md:px-4 pb-4'
       )}
     >
-      {messages.length === 0 && (
-        <div className="mb-10 flex flex-col items-center gap-4">
-          <IconLogo className="size-12 text-muted-foreground" />
-          {!ready && (
-            <div>
-              <CopyableWalletAddressSkeleton className="justify-center" />
-              <CopyableWalletAddressSkeleton className="justify-center" />
-            </div>
-          )}
-          {ready && !authenticated && (
-            <div>
-              <CopyableWalletAddress
-                walletAddress=""
-                className="justify-center"
-                walletAddressNotAvailableText="Please sign in"
-              />
-              <CopyableWalletAddress
-                walletAddress=""
-                className="justify-center"
-                walletAddressNotAvailableText="We will create/retrieve your wallets"
-              />
-            </div>
-          )}
-          {evmAddress && solAddress && isNewUser && (
-            <div>
-              <CopyableWalletAddress
-                walletAddress={evmAddress}
-                className="justify-center"
-                walletAddressIntroText="🎉 Congrats! Your wallets have been successfully created. EVM wallet address:"
-              />
-              <CopyableWalletAddress
-                walletAddress={solAddress}
-                className="justify-center"
-                walletAddressIntroText="Your Solana wallet address:"
-              />
-            </div>
-          )}
-          {evmAddress && solAddress && !isNewUser && (
-            <div>
-              <CopyableWalletAddress
-                walletAddress={evmAddress}
-                className="justify-center"
-                walletAddressIntroText="Your EVM wallet address:"
-              />
-              <CopyableWalletAddress
-                walletAddress={solAddress}
-                className="justify-center"
-                walletAddressIntroText="Your Solana wallet address:"
-              />
-            </div>
-          )}
-          <WelcomeMessage seed={welcomeSeed} />
-        </div>
-      )}
-      <form
-        onSubmit={handleSubmit}
-        className={cn('max-w-3xl w-full mx-auto relative')}
-      >
-        {/* Add scroll-down button to ChatPanel right top - show when not auto scrolling */}
-        {!isAutoScroll && messages.length > 0 && (
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className="absolute -top-10 right-4 z-20 size-8 rounded-full shadow-md"
-            onClick={handleScrollToBottom}
-            title="Scroll to bottom"
-          >
-            <ChevronDown size={16} />
-          </Button>
+      <div className="w-full max-w-3xl px-0">
+        {messages.length === 0 && (
+          <div className="mb-2 sm:mb-4 md:mb-6 lg:mb-10 flex flex-col items-center gap-1 sm:gap-2 md:gap-4 w-full min-h-[180px] sm:min-h-[200px]">
+            <IconLogo className="size-8 sm:size-10 md:size-12 text-muted-foreground" />
+            {!mounted ? (
+              <div>
+                <CopyableWalletAddressSkeleton className="justify-center" />
+                <CopyableWalletAddressSkeleton className="justify-center" />
+              </div>
+            ) : !ready ? (
+              <div>
+                <CopyableWalletAddressSkeleton className="justify-center" />
+                <CopyableWalletAddressSkeleton className="justify-center" />
+              </div>
+            ) : ready && !authenticated ? (
+              <div>
+                <CopyableWalletAddress
+                  walletAddress=""
+                  className="justify-center"
+                  walletAddressNotAvailableText="Please sign in"
+                />
+                <CopyableWalletAddress
+                  walletAddress=""
+                  className="justify-center"
+                  walletAddressNotAvailableText="We will create/retrieve your wallets"
+                />
+              </div>
+            ) : evmAddress && solAddress && isNewUser ? (
+              <div>
+                <CopyableWalletAddress
+                  walletAddress={''}
+                  className="justify-center"
+                  walletAddressNotAvailableText='Congrats! Your wallet has been created.'
+                />
+                <CopyableWalletAddress
+                  walletAddress={evmAddress}
+                  className="justify-center"
+                  walletAddressIntroText="EVM wallet:"
+                />
+                <CopyableWalletAddress
+                  walletAddress={solAddress}
+                  className="justify-center"
+                  walletAddressIntroText="Solana wallet:"
+                />
+              </div>
+            ) : evmAddress && solAddress ? (
+              <div>
+                <CopyableWalletAddress
+                  walletAddress={evmAddress}
+                  className="justify-center"
+                  walletAddressIntroText="EVM wallet:"
+                />
+                <CopyableWalletAddress
+                  walletAddress={solAddress}
+                  className="justify-center"
+                  walletAddressIntroText="Solana wallet:"
+                />
+              </div>
+            ) : null}
+            {mounted && <WelcomeMessage seed={welcomeSeed} />}
+          </div>
         )}
+        <form onSubmit={handleSubmit} className={cn('w-full relative')}>
+          {/* Add scroll-down button to ChatPanel right top - show when not auto scrolling */}
+          {!isAutoScroll && messages.length > 0 && (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="absolute -top-10 right-4 z-20 size-8 rounded-full shadow-md"
+              onClick={handleScrollToBottom}
+              title="Scroll to bottom"
+            >
+              <ChevronDown size={16} />
+            </Button>
+          )}
 
-        <div className="relative flex flex-col w-full gap-2 bg-muted rounded-3xl border border-input">
-          <Textarea
-            ref={inputRef}
-            name="input"
-            rows={2}
-            maxRows={5}
-            tabIndex={0}
-            onCompositionStart={handleCompositionStart}
-            onCompositionEnd={handleCompositionEnd}
-            placeholder="Ask a question..."
-            spellCheck={false}
-            value={input}
-            disabled={isLoading || isToolInvocationInProgress()}
-            className="resize-none w-full min-h-12 bg-transparent border-0 p-4 text-sm placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-            onChange={e => {
-              handleInputChange(e)
-              setShowEmptyScreen(e.target.value.length === 0)
-            }}
-            onKeyDown={e => {
-              if (
-                e.key === 'Enter' &&
-                !e.shiftKey &&
-                !isComposing &&
-                !enterDisabled
-              ) {
-                if (input.trim().length === 0) {
+          <div className="relative flex flex-col w-full gap-0.5 sm:gap-1 md:gap-2 bg-muted rounded-3xl border border-input min-h-[60px] sm:min-h-[80px]">
+            <Textarea
+              ref={inputRef}
+              name="input"
+              rows={1}
+              maxRows={5}
+              tabIndex={0}
+              onCompositionStart={handleCompositionStart}
+              onCompositionEnd={handleCompositionEnd}
+              placeholder="Ask a question..."
+              spellCheck={false}
+              value={input}
+              disabled={isLoading || isToolInvocationInProgress()}
+              className="resize-none w-full min-h-[38px] sm:min-h-[48px] bg-transparent border-0 p-1.5 sm:p-2 md:p-4 text-xs sm:text-sm placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+              onChange={e => {
+                handleInputChange(e)
+                setShowEmptyScreen(e.target.value.length === 0)
+              }}
+              onKeyDown={e => {
+                if (
+                  e.key === 'Enter' &&
+                  !e.shiftKey &&
+                  !isComposing &&
+                  !enterDisabled
+                ) {
+                  if (input.trim().length === 0) {
+                    e.preventDefault()
+                    return
+                  }
                   e.preventDefault()
-                  return
+                  const textarea = e.target as HTMLTextAreaElement
+                  textarea.form?.requestSubmit()
                 }
-                e.preventDefault()
-                const textarea = e.target as HTMLTextAreaElement
-                textarea.form?.requestSubmit()
-              }
-            }}
-            onFocus={() => setShowEmptyScreen(true)}
-            onBlur={() => setShowEmptyScreen(false)}
-          />
+              }}
+              onFocus={() => setShowEmptyScreen(true)}
+              onBlur={() => setShowEmptyScreen(false)}
+            />
 
-          {/* Bottom menu area */}
-          <div className="flex items-center justify-between p-3">
-            <div className="flex items-center gap-2">
-              <ModelSelector models={models || []} />
-              <SearchModeToggle />
-            </div>
-            <div className="flex items-center gap-2">
-              {messages.length > 0 && (
+            {/* Bottom menu area */}
+            <div className="flex items-center justify-between p-1 sm:p-2 md:p-3 text-[10px] sm:text-xs md:text-sm">
+              <div className="flex items-center gap-0.5 sm:gap-1 md:gap-2 overflow-hidden">
+                <ModelSelector models={models || []} />
+                <SearchModeToggle />
+              </div>
+              <div className="flex items-center gap-1 sm:gap-2">
+                {messages.length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleNewChat}
+                    className="shrink-0 rounded-full group"
+                    type="button"
+                    disabled={isLoading || isToolInvocationInProgress()}
+                  >
+                    <MessageCirclePlus className="size-4 group-hover:rotate-12 transition-all" />
+                  </Button>
+                )}
                 <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handleNewChat}
-                  className="shrink-0 rounded-full group"
-                  type="button"
-                  disabled={isLoading || isToolInvocationInProgress()}
+                  type={isLoading ? 'button' : 'submit'}
+                  size={'icon'}
+                  variant={'outline'}
+                  className={cn(isLoading && 'animate-pulse', 'rounded-full')}
+                  disabled={
+                    (input.length === 0 && !isLoading) ||
+                    isToolInvocationInProgress()
+                  }
+                  onClick={isLoading ? stop : undefined}
                 >
-                  <MessageCirclePlus className="size-4 group-hover:rotate-12 transition-all" />
+                  {isLoading ? <Square size={20} /> : <ArrowUp size={20} />}
                 </Button>
-              )}
-              <Button
-                type={isLoading ? 'button' : 'submit'}
-                size={'icon'}
-                variant={'outline'}
-                className={cn(isLoading && 'animate-pulse', 'rounded-full')}
-                disabled={
-                  (input.length === 0 && !isLoading) ||
-                  isToolInvocationInProgress()
-                }
-                onClick={isLoading ? stop : undefined}
-              >
-                {isLoading ? <Square size={20} /> : <ArrowUp size={20} />}
-              </Button>
+              </div>
             </div>
           </div>
-        </div>
 
-        {messages.length === 0 && (
-          <EmptyScreen
-            submitMessage={message => {
-              handleInputChange({
-                target: { value: message }
-              } as React.ChangeEvent<HTMLTextAreaElement>)
-            }}
-            className={cn(showEmptyScreen ? 'visible' : 'invisible')}
-          />
-        )}
-      </form>
+          {messages.length === 0 && mounted && (
+            <EmptyScreen
+              submitMessage={message => {
+                handleInputChange({
+                  target: { value: message }
+                } as React.ChangeEvent<HTMLTextAreaElement>)
+              }}
+              className={cn(showEmptyScreen ? 'visible' : 'invisible')}
+            />
+          )}
+        </form>
+      </div>
     </div>
   )
 }

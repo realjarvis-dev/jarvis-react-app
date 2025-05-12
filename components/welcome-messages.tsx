@@ -1,7 +1,7 @@
 // Array of welcome messages to display
 const welcomeMessages = [
   'Maximize your yield potential!',
-  "Global opportunities in your wallet!",
+  'Global opportunities in your wallet!',
   'Amplify your crypto experience!',
   'Unlock endless opportunities with your wallet!'
 ]
@@ -45,7 +45,9 @@ export function WelcomeMessage({
   const message = getWelcomeMessage(index)
 
   return (
-    <p className={`text-center text-3xl font-semibold ${className}`}>
+    <p
+      className={`text-center text-base sm:text-lg md:text-2xl lg:text-3xl font-semibold w-full ${className} max-w-full px-0 sm:px-1 md:px-2 lg:px-4 min-h-[30px] sm:min-h-[40px] break-words`}
+    >
       {message}
     </p>
   )
