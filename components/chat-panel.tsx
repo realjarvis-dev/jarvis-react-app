@@ -55,6 +55,7 @@ export function ChatPanel({
   isAutoScroll
 }: ChatPanelProps) {
   const [showEmptyScreen, setShowEmptyScreen] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const router = useRouter()
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const isFirstRender = useRef(true)
@@ -180,6 +181,10 @@ export function ChatPanel({
     }
   }, [evmReady, solanaReady, authenticated, ready])
 
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   // Add scroll to bottom handler
   const handleScrollToBottom = () => {
     const scrollContainer = document.getElementById('scroll-container')
@@ -202,13 +207,17 @@ export function ChatPanel({
         {messages.length === 0 && (
           <div className="mb-2 sm:mb-4 md:mb-6 lg:mb-10 flex flex-col items-center gap-1 sm:gap-2 md:gap-4 w-full min-h-[180px] sm:min-h-[200px]">
             <IconLogo className="size-8 sm:size-10 md:size-12 text-muted-foreground" />
-            {!ready && (
+            {!mounted ? (
               <div>
                 <CopyableWalletAddressSkeleton className="justify-center" />
                 <CopyableWalletAddressSkeleton className="justify-center" />
               </div>
-            )}
-            {ready && !authenticated && (
+            ) : !ready ? (
+              <div>
+                <CopyableWalletAddressSkeleton className="justify-center" />
+                <CopyableWalletAddressSkeleton className="justify-center" />
+              </div>
+            ) : ready && !authenticated ? (
               <div>
                 <CopyableWalletAddress
                   walletAddress=""
@@ -221,8 +230,7 @@ export function ChatPanel({
                   walletAddressNotAvailableText="We will create/retrieve your wallets"
                 />
               </div>
-            )}
-            {evmAddress && solAddress && isNewUser && (
+            ) : evmAddress && solAddress && isNewUser ? (
               <div>
                 <CopyableWalletAddress
                   walletAddress={evmAddress}
@@ -235,8 +243,7 @@ export function ChatPanel({
                   walletAddressIntroText="Your Solana wallet address:"
                 />
               </div>
-            )}
-            {evmAddress && solAddress && !isNewUser && (
+            ) : evmAddress && solAddress ? (
               <div>
                 <CopyableWalletAddress
                   walletAddress={evmAddress}
@@ -249,8 +256,8 @@ export function ChatPanel({
                   walletAddressIntroText="Your Solana wallet address:"
                 />
               </div>
-            )}
-            <WelcomeMessage seed={welcomeSeed} />
+            ) : null}
+            {mounted && <WelcomeMessage seed={welcomeSeed} />}
           </div>
         )}
         <form onSubmit={handleSubmit} className={cn('w-full relative')}>
@@ -342,7 +349,7 @@ export function ChatPanel({
             </div>
           </div>
 
-          {messages.length === 0 && (
+          {messages.length === 0 && mounted && (
             <EmptyScreen
               submitMessage={message => {
                 handleInputChange({

@@ -40,11 +40,11 @@ export function CopyableWalletAddress({
     return (
       <div
         className={cn(
-          'flex items-center gap-0.5 sm:gap-1 md:gap-2 text-[8px] sm:text-xs md:text-sm text-muted-foreground flex-wrap justify-center min-h-[20px] px-0 sm:px-1 md:px-2 w-full',
+          'flex items-center gap-0.5 sm:gap-1 md:gap-2 text-[8px] sm:text-xs md:text-sm text-muted-foreground flex-wrap sm:flex-nowrap justify-center min-h-[20px] px-0 sm:px-1 md:px-2 w-full',
           className
         )}
       >
-        <span className="text-center break-all max-w-[280px]">
+        <span className="text-center break-all sm:break-normal sm:whitespace-nowrap max-w-[280px] sm:max-w-none">
           {walletAddressNotAvailableText || 'Wallet address not available.'}
         </span>
       </div>
@@ -59,18 +59,18 @@ export function CopyableWalletAddress({
   return (
     <div
       className={cn(
-        'flex items-center gap-0.5 sm:gap-1 md:gap-2 text-[8px] sm:text-xs md:text-sm text-muted-foreground flex-wrap justify-center min-h-[20px] px-0 sm:px-1 md:px-2 w-full',
+        'flex items-center gap-0.5 sm:gap-1 md:gap-2 text-[8px] sm:text-xs md:text-sm text-muted-foreground flex-wrap sm:flex-nowrap justify-center min-h-[20px] px-0 sm:px-1 md:px-2 w-full',
         className
       )}
     >
-      <span className="text-center break-all max-w-[240px]">
+      <span className="text-center break-all sm:break-normal sm:whitespace-nowrap max-w-[240px] sm:max-w-none">
         {walletAddressIntroText || 'Your wallet address:'} {shortAddress}
       </span>
       <Button
         onClick={onCopy}
         variant="ghost"
         size="icon"
-        className="size-5 sm:size-6"
+        className="size-5 sm:size-6 shrink-0"
         aria-label="Copy wallet address"
         disabled={typeof navigator === 'undefined' || !navigator.clipboard}
       >
