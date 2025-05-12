@@ -46,6 +46,9 @@ function useKeyboardAvoidance(ref: RefObject<HTMLTextAreaElement>): void {
           setTimeout(() => {
             const scrollContainer = document.getElementById('scroll-container')
             if (scrollContainer && ref.current) {
+              // Make sure the input stays in view
+              ref.current.scrollIntoView({ block: 'end', behavior: 'smooth' })
+              // Also scroll container to bottom to show recent messages
               scrollContainer.scrollTo({
                 top: scrollContainer.scrollHeight,
                 behavior: 'smooth'
@@ -86,7 +89,10 @@ function useKeyboardAvoidance(ref: RefObject<HTMLTextAreaElement>): void {
         // Scroll to bottom of the chat container after a short delay
         setTimeout(() => {
           const scrollContainer = document.getElementById('scroll-container')
-          if (scrollContainer) {
+          if (scrollContainer && ref.current) {
+            // Make sure the input stays in view
+            ref.current.scrollIntoView({ block: 'end', behavior: 'smooth' })
+            // Also scroll container to bottom
             scrollContainer.scrollTo({
               top: scrollContainer.scrollHeight,
               behavior: 'smooth'
@@ -144,8 +150,10 @@ export function ChatPanel({
 }: ChatPanelProps) {
   const [showEmptyScreen, setShowEmptyScreen] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [isKeyboardActive, setIsKeyboardActive] = useState(false)
   const router = useRouter()
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const formContainerRef = useRef<HTMLDivElement>(null)
   const isFirstRender = useRef(true)
   const [isComposing, setIsComposing] = useState(false) // Composition state
   const [enterDisabled, setEnterDisabled] = useState(false) // Disable Enter after composition ends
@@ -167,6 +175,55 @@ export function ChatPanel({
 
   // Apply keyboard avoidance hook
   useKeyboardAvoidance(inputRef)
+
+  // Handle keyboard visibility detection
+  useEffect(() => {
+    // iOS doesn't reliably provide keyboard events, so detect by window size changes
+    const detectKeyboard = () => {
+      const isVisible = window.innerHeight < window.outerHeight * 0.8
+      setIsKeyboardActive(isVisible)
+
+      if (formContainerRef.current) {
+        if (isVisible) {
+          formContainerRef.current.classList.add('keyboard-active')
+          document.body.classList.add('keyboard-active')
+        } else {
+          formContainerRef.current.classList.remove('keyboard-active')
+          document.body.classList.remove('keyboard-active')
+        }
+      }
+    }
+
+    window.addEventListener('resize', detectKeyboard)
+
+    // Also handle input focus/blur
+    const handleFocus = () => {
+      setIsKeyboardActive(true)
+      if (formContainerRef.current) {
+        formContainerRef.current.classList.add('keyboard-active')
+        document.body.classList.add('keyboard-active')
+      }
+    }
+
+    const handleBlur = () => {
+      setTimeout(() => {
+        setIsKeyboardActive(false)
+        if (formContainerRef.current) {
+          formContainerRef.current.classList.remove('keyboard-active')
+          document.body.classList.remove('keyboard-active')
+        }
+      }, 100)
+    }
+
+    inputRef.current?.addEventListener('focus', handleFocus)
+    inputRef.current?.addEventListener('blur', handleBlur)
+
+    return () => {
+      window.removeEventListener('resize', detectKeyboard)
+      inputRef.current?.removeEventListener('focus', handleFocus)
+      inputRef.current?.removeEventListener('blur', handleBlur)
+    }
+  }, [])
 
   const handleCompositionStart = () => setIsComposing(true)
 
@@ -289,16 +346,17 @@ export function ChatPanel({
 
   return (
     <div
+      ref={formContainerRef}
       className={cn(
         'w-full bg-background group/form-container shrink-0 flex justify-center',
-        'sticky bottom-0 px-4 sm:px-4 md:px-4',
-        'pb-[calc(var(--keyboard-inset,0px)+env(safe-area-inset-bottom,4px))]'
+        'fixed bottom-0 left-0 right-0 px-4 sm:px-4 md:px-4',
+        'pb-[calc(var(--keyboard-inset,0px)+env(safe-area-inset-bottom,4px))]',
+        isKeyboardActive && 'keyboard-active'
       )}
       style={{
-        // This ensures the panel stays at the bottom on mobile
-        position: 'sticky',
-        bottom: 0,
-        zIndex: 30
+        // This ensures the panel stays at the bottom on mobile and above keyboard
+        zIndex: 50,
+        transform: 'translateZ(0)' // Force GPU acceleration for smoother animations
       }}
     >
       <div className="w-full max-w-3xl">
@@ -395,6 +453,27 @@ export function ChatPanel({
               onChange={e => {
                 handleInputChange(e)
                 setShowEmptyScreen(e.target.value.length === 0)
+
+                // Keep the input visible while typing
+                if (e.target) {
+                  // Use requestAnimationFrame to ensure smooth scrolling during typing
+                  requestAnimationFrame(() => {
+                    const scrollContainer =
+                      document.getElementById('scroll-container')
+                    if (scrollContainer) {
+                      // Keep the input in view
+                      e.target.scrollIntoView({
+                        block: 'end',
+                        behavior: 'smooth'
+                      })
+                      // Also make sure we're at the bottom of messages
+                      scrollContainer.scrollTo({
+                        top: scrollContainer.scrollHeight,
+                        behavior: 'auto'
+                      })
+                    }
+                  })
+                }
               }}
               onKeyDown={e => {
                 if (
@@ -411,23 +490,57 @@ export function ChatPanel({
                   const textarea = e.target as HTMLTextAreaElement
                   textarea.form?.requestSubmit()
                 }
+
+                // Also keep input visible on each keypress
+                if (e.target) {
+                  setTimeout(() => {
+                    const scrollContainer =
+                      document.getElementById('scroll-container')
+                    if (scrollContainer && e.target) {
+                      scrollContainer.scrollTo({
+                        top: scrollContainer.scrollHeight,
+                        behavior: 'auto'
+                      })
+                    }
+                  }, 0)
+                }
               }}
               onFocus={e => {
                 setShowEmptyScreen(true)
+
+                // Force position fixed to ensure input stays above keyboard
+                const formContainer = e.target.closest(
+                  '.group\\/form-container'
+                )
+                if (formContainer) {
+                  formContainer.classList.add('fixed')
+                  formContainer.classList.remove('sticky')
+                }
+
                 // Ensure we don't scroll when focused on mobile
                 e.preventDefault()
                 if (e.target) {
                   e.target.focus({ preventScroll: true })
                 }
+
                 // Add a slight delay before scrolling to fix mobile keyboard issues
                 setTimeout(() => {
                   const scrollContainer =
                     document.getElementById('scroll-container')
                   if (scrollContainer) {
+                    // First make sure container is at bottom
                     scrollContainer.scrollTo({
                       top: scrollContainer.scrollHeight,
                       behavior: 'smooth'
                     })
+
+                    // Then make sure input is visible
+                    if (e.target) {
+                      e.target.scrollIntoView({
+                        block: 'end',
+                        behavior: 'smooth'
+                      })
+                    }
                   }
                 }, 100)
               }}
