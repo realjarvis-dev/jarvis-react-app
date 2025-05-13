@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button'
 import { clearChats } from '@/lib/actions/chat'
 import { toast } from 'sonner'
 import { Spinner } from './ui/spinner'
+import { usePrivy } from '@privy-io/react-auth'
 
 type ClearHistoryProps = {
   empty: boolean
@@ -24,6 +25,18 @@ type ClearHistoryProps = {
 export function ClearHistory({ empty }: ClearHistoryProps) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const { ready, authenticated, user } = usePrivy()
+
+  if (!ready) {
+    return <Spinner />
+  }
+  
+  if (ready && !authenticated) {
+    return null
+  }
+
+  const userId = user!.id
+
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
@@ -46,7 +59,7 @@ export function ClearHistory({ empty }: ClearHistoryProps) {
             onClick={event => {
               event.preventDefault()
               startTransition(async () => {
-                const result = await clearChats()
+                const result = await clearChats(userId)
                 if (result?.error) {
                   toast.error(result.error)
                 } else {

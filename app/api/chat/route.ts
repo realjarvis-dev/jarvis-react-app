@@ -3,7 +3,7 @@ import { createToolCallingStreamResponse } from '@/lib/streaming/create-tool-cal
 import { Model } from '@/lib/types/models'
 import { isProviderEnabled } from '@/lib/utils/registry'
 import { cookies } from 'next/headers'
-
+import { getUserWallet } from '@/lib/privy/client'
 export const maxDuration = 30
 
 const DEFAULT_MODEL: Model = {
@@ -15,11 +15,12 @@ const DEFAULT_MODEL: Model = {
   toolCallType: 'native'
 }
 
-export async function POST(req: Request) {
+export async function POST(request: Request) {
   try {
-    const { messages, id: chatId } = await req.json()
-    const referer = req.headers.get('referer')
+    const { messages, id: chatId } = await request.json()
+    const referer = request.headers.get('referer')
     const isSharePage = referer?.includes('/share/')
+    const userId = request.headers.get('x-user-id') || 'anonymous'
 
     if (isSharePage) {
       return new Response('Chat API is not available on share pages', {
@@ -55,6 +56,10 @@ export async function POST(req: Request) {
       )
     }
 
+    const userEvmWallet = await getUserWallet('ethereum')
+    const userSolWallet = await getUserWallet('solana')
+
+
     const supportsToolCalling = selectedModel.toolCallType === 'native'
     console.log('supportsToolCalling', supportsToolCalling)
     return supportsToolCalling
@@ -62,13 +67,19 @@ export async function POST(req: Request) {
           messages,
           model: selectedModel,
           chatId,
-          searchMode
+          searchMode,
+          userId,
+          userEvmWallet,
+          userSolWallet
         })
       : createManualToolStreamResponse({
           messages,
           model: selectedModel,
           chatId,
-          searchMode
+          searchMode,
+          userId,
+          userEvmWallet,
+          userSolWallet
         })
   } catch (error) {
     console.error('API route error:', error)

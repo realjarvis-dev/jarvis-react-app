@@ -133,7 +133,7 @@ export function ChatMessages({
               addToolResult={addToolResult}
             />
           ) : (
-            <Spinner />
+            <Spinner className="mb-4" />
           ))}
         <div ref={anchorRef} />
       </div>

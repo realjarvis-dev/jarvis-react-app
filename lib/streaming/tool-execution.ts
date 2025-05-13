@@ -5,10 +5,10 @@ import {
   generateText,
   JSONValue
 } from 'ai'
-import { z } from 'zod'
 import { searchSchema } from '../schema/search'
-import { pendleOpportunitiesTool } from '../tools/pendle'
+import { pendleOpportunitiesTool, pendleQuoteTool, pendleSwapTool } from '../tools/pendle'
 import { search } from '../tools/search'
+import { walletBalanceTool } from '../tools/wallet'
 import { ExtendedCoreMessage } from '../types'
 import { getModel } from '../utils/registry'
 import { parseToolCallXml } from './parse-tool-call'
@@ -17,6 +17,18 @@ interface ToolExecutionResult {
   toolCallDataAnnotation: ExtendedCoreMessage | null
   toolCallMessages: CoreMessage[]
 }
+
+// Deserialize the wallet schema to string
+const walletSchemaString = JSON.stringify(walletBalanceTool.parameters, null, 2)
+
+// Deserialize the pendle schema to string
+const pendleSchemaString = JSON.stringify(pendleOpportunitiesTool.parameters, null, 2)
+const pendleQuoteSchemaString = JSON.stringify(pendleQuoteTool.parameters, null, 2)
+const pendleSwapSchemaString = JSON.stringify(pendleSwapTool.parameters, null, 2)
+
+// Helper to get search schema as a string for inclusion in prompt
+// Convert the zod schema to a JSON schema object
+const searchSchemaString = JSON.stringify(searchSchema, null, 2)
 
 export async function executeToolCall(
   coreMessages: CoreMessage[],
@@ -28,25 +40,6 @@ export async function executeToolCall(
   if (!searchMode) {
     return { toolCallDataAnnotation: null, toolCallMessages: [] }
   }
-
-  // Convert Zod schema to string representation for both tools
-  const searchSchemaString = Object.entries(searchSchema.shape)
-    .map(([key, value]) => {
-      const description = value.description
-      const isOptional = value instanceof z.ZodOptional
-      return `- ${key}${isOptional ? ' (optional)' : ''}: ${description}`
-    })
-    .join('\n')
-
-  const pendleSchemaString = Object.entries(pendleOpportunitiesTool.parameters.shape)
-    .map(([key, value]) => {
-      const description = value.description
-      const isOptional = value instanceof z.ZodOptional
-      return `- ${key}${isOptional ? ' (optional)' : ''}: ${description}`
-    })
-    .join('\n')
-
-  const defaultMaxResults = model?.includes('ollama') ? 5 : 20
 
   // Generate tool selection using XML format
   const toolSelectionResponse = await generateText({
@@ -66,6 +59,9 @@ export async function executeToolCall(
 
             Available tools:
             - pendle_opportunities: Use when the user asks about Pendle yield opportunities farming on Ethereum. This tool returns a list of current Pendle opportunities with APY and liquidity information.
+            - pendle_quote: Use when the user wants to get a quote for swapping ETH to a Pendle token (PT or YT).
+            - pendle_swap: Use when the user wants to execute a swap transaction from ETH to a Pendle token (PT or YT).
+            - wallet_balance: Use when the user asks about their wallet balance, token holdings, or specific token balance. This tool returns the user's cryptocurrency balances.
             - search: Use for general web search queries. ONLY USE IF YOU ARE UNAWARE OF THE INFORMATION OR THE OTHER TOOLS ARE NOT APPROPRIATE.
             
 
@@ -74,6 +70,15 @@ export async function executeToolCall(
 
             Pendle opportunities parameters:
             ${pendleSchemaString}
+            
+            Pendle quote parameters:
+            ${pendleQuoteSchemaString}
+            
+            Pendle swap parameters:
+            ${pendleSwapSchemaString}
+            
+            Wallet balance parameters:
+            ${walletSchemaString}
 
             If you don't need a tool, respond with <tool_call><tool></tool></tool_call>`,
     messages: coreMessages
@@ -89,6 +94,27 @@ export async function executeToolCall(
   // If not search, try pendle tool
   if (!toolName || toolName === '') {
     toolCall = parseToolCallXml(toolSelectionResponse.text, pendleOpportunitiesTool.parameters)
+    toolName = toolCall.tool
+    toolParams = toolCall.parameters
+  }
+  
+  // If not pendle opportunities, try pendle quote tool
+  if (!toolName || toolName === '') {
+    toolCall = parseToolCallXml(toolSelectionResponse.text, pendleQuoteTool.parameters)
+    toolName = toolCall.tool
+    toolParams = toolCall.parameters
+  }
+  
+  // If not pendle quote, try pendle swap tool
+  if (!toolName || toolName === '') {
+    toolCall = parseToolCallXml(toolSelectionResponse.text, pendleSwapTool.parameters)
+    toolName = toolCall.tool
+    toolParams = toolCall.parameters
+  }
+  
+  // If not pendle, try wallet balance tool
+  if (!toolName || toolName === '') {
+    toolCall = parseToolCallXml(toolSelectionResponse.text, walletBalanceTool.parameters)
     toolName = toolCall.tool
     toolParams = toolCall.parameters
   }
@@ -141,6 +167,70 @@ export async function executeToolCall(
     } else {
       toolResults = null
     }
+  } else if (toolName === 'pendle_quote') {
+    // Type guard for pendle quote tool
+    if (
+      toolParams &&
+      typeof toolParams === 'object' &&
+      'market_address' in toolParams &&
+      'token_out_address' in toolParams &&
+      'market_name' in toolParams &&
+      'token_type' in toolParams &&
+      (toolParams.token_type === 'pt' || toolParams.token_type === 'yt')
+    ) {
+      toolResults = await pendleQuoteTool.execute(
+        toolParams as {
+          market_address: string;
+          token_out_address: string;
+          market_name: string;
+          token_type: 'pt' | 'yt';
+        },
+        { toolCallId: 'pendle_quote', messages: [] }
+      )
+    } else {
+      toolResults = null
+    }
+  } else if (toolName === 'pendle_swap') {
+    // Type guard for pendle swap tool
+    if (
+      toolParams &&
+      typeof toolParams === 'object' &&
+      'market_address' in toolParams &&
+      'token_out_address' in toolParams &&
+      'amount_in_eth' in toolParams
+    ) {
+      // Ensure slippage has a default value if not provided
+      const swapParams = {
+        market_address: toolParams.market_address as string,
+        token_out_address: toolParams.token_out_address as string,
+        amount_in_eth: toolParams.amount_in_eth as string,
+        slippage: ('slippage' in toolParams && typeof toolParams.slippage === 'number') 
+          ? toolParams.slippage as number 
+          : 0.01 // Default slippage of 1%
+      };
+      
+      toolResults = await pendleSwapTool.execute(
+        swapParams,
+        { toolCallId: 'pendle_swap', messages: [] }
+      )
+    } else {
+      toolResults = null
+    }
+  } else if (toolName === 'wallet_balance') {
+    // Type guard for wallet tool
+    if (
+      toolParams &&
+      typeof toolParams === 'object' &&
+      !('query' in toolParams) &&
+      ('wallet_address' in toolParams || 'token_symbol' in toolParams || Object.keys(toolParams).length === 0)
+    ) {
+      toolResults = await walletBalanceTool.execute(
+        toolParams as { wallet_address: string; token_symbol?: string },
+        { toolCallId: 'wallet_balance', messages: [] }
+      )
+    } else {
+      toolResults = null
+    }
   } else {
     toolResults = null
   }
@@ -165,7 +255,8 @@ export async function executeToolCall(
 
   let toolCallMessages: CoreMessage[] = []
 
-  if (toolName === 'pendle_opportunities') {
+  if (toolName === 'pendle_opportunities' || toolName === 'wallet_balance' ||
+      toolName === 'pendle_quote' || toolName === 'pendle_swap') {
     // Do NOT output the tool result as a text message
     toolCallMessages = [
       {
@@ -190,7 +281,8 @@ export async function executeToolCall(
     ]
   }
 
-  if (toolName === 'pendle_opportunities') {
+  if (toolName === 'pendle_opportunities' || toolName === 'wallet_balance' ||
+      toolName === 'pendle_quote' || toolName === 'pendle_swap') {
     // Do NOT stream the annotation
     // (do NOT call dataStream.writeMessageAnnotation(...))
     // But DO add the tool result to the LLM context for the next turn

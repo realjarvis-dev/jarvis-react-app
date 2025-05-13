@@ -36,6 +36,10 @@ export interface SimplifiedPendleMarket {
   name: string
   address: string
   expiry: string
+  pt: string
+  yt: string
+  sy: string
+  underlyingAsset: string
   liquidity: number
   impliedApy: number
 } 

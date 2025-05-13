@@ -10,6 +10,7 @@ import { getMaxAllowedTokens, truncateMessages } from '../utils/context-window'
 import { isReasoningModel } from '../utils/registry'
 import { handleStreamFinish } from './handle-stream-finish'
 import { BaseStreamConfig } from './types'
+import { LetterText } from 'lucide-react'
 
 // Function to check if a message contains ask_question tool invocation
 function containsAskQuestionTool(message: CoreMessage) {
@@ -27,7 +28,7 @@ function containsAskQuestionTool(message: CoreMessage) {
 export function createToolCallingStreamResponse(config: BaseStreamConfig) {
   return createDataStreamResponse({
     execute: async (dataStream: DataStreamWriter) => {
-      const { messages, model, chatId, searchMode } = config
+      const { messages, model, chatId, searchMode, userId } = config
       const modelId = `${model.providerId}:${model.id}`
 
       try {
@@ -40,10 +41,12 @@ export function createToolCallingStreamResponse(config: BaseStreamConfig) {
         let researcherConfig = await researcher({
           messages: truncatedMessages,
           model: modelId,
-          searchMode
+          searchMode,
+          userEvmWallet: config.userEvmWallet,
+          userSolWallet: config.userSolWallet
         })
 
-        console.log('researcherConfig', researcherConfig)
+        // console.log('researcherConfig', researcherConfig)
 
         const result = streamText({
           ...researcherConfig,
@@ -64,6 +67,7 @@ export function createToolCallingStreamResponse(config: BaseStreamConfig) {
               model: modelId,
               chatId,
               dataStream,
+              userId,
               skipRelatedQuestions: shouldSkipRelatedQuestions
             })
           }

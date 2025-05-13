@@ -5,8 +5,11 @@ import { PendleOpportunitiesSection } from './pendle-opportunities-section'
 import { QuestionConfirmation } from './question-confirmation'
 import RetrieveSection from './retrieve-section'
 import { SearchSection } from './search-section'
+import { SimpleQuoteDisplay } from './simple-quote-display'
+import { SwapTransactionCard } from './swap-transaction-card'
 import { VideoSearchSection } from './video-search-section'
-
+import { WalletBalanceSection } from './wallet-balance-section'
+import { TransferSection } from './transfer-section'
 interface ToolSectionProps {
   tool: ToolInvocation
   isOpen: boolean
@@ -64,7 +67,7 @@ export function ToolSection({
           onOpenChange={onOpenChange}
         />
       )
-    case 'video_search':
+    case 'videoSearch':
       return (
         <VideoSearchSection
           tool={tool}
@@ -83,6 +86,51 @@ export function ToolSection({
     case 'pendle_opportunities':
       return (
         <PendleOpportunitiesSection
+          tool={tool}
+          isOpen={isOpen}
+          onOpenChange={onOpenChange}
+        />
+      )
+    case 'pendle_quote':
+      return (
+        <div className="flex flex-col space-y-4 py-4">
+          <div className="flex flex-col">
+            <h3 className="text-base font-medium">Pendle Quote</h3>
+            <div className="mt-2">
+              <SimpleQuoteDisplay tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
+            </div>
+          </div>
+        </div>
+      )
+    case 'pendle_swap':
+      return (
+        <div className="flex flex-col space-y-4 py-4">
+          <div className="flex flex-col">
+            <h3 className="text-base font-medium">Pendle Swap</h3>
+            <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+              {tool.state === 'call' 
+                ? 'Processing your swap transaction...' 
+                : tool.state === 'result' && 'result' in tool && tool.result?.success 
+                  ? 'Swap completed successfully' 
+                  : 'Swap transaction failed'}
+            </div>
+            <div className="mt-2">
+              <SwapTransactionCard tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
+            </div>
+          </div>
+        </div>
+      )
+    case 'wallet_balance':
+      return (
+        <WalletBalanceSection
+          tool={tool}
+          isOpen={isOpen}
+          onOpenChange={onOpenChange}
+        />
+      )
+    case 'privy_transfer':
+      return (
+        <TransferSection
           tool={tool}
           isOpen={isOpen}
           onOpenChange={onOpenChange}

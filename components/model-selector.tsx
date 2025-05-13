@@ -38,8 +38,10 @@ interface ModelSelectorProps {
 export function ModelSelector({ models }: ModelSelectorProps) {
   const [open, setOpen] = useState(false)
   const [value, setValue] = useState('')
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
     const savedModel = getCookie('selectedModel')
     if (savedModel) {
       try {
@@ -54,14 +56,16 @@ export function ModelSelector({ models }: ModelSelectorProps) {
   const handleModelSelect = (id: string) => {
     const newValue = id === value ? '' : id
     setValue(newValue)
-    
-    const selectedModel = models.find(model => createModelId(model) === newValue)
+
+    const selectedModel = models.find(
+      model => createModelId(model) === newValue
+    )
     if (selectedModel) {
       setCookie('selectedModel', JSON.stringify(selectedModel))
     } else {
       setCookie('selectedModel', '')
     }
-    
+
     setOpen(false)
   }
 
@@ -77,7 +81,7 @@ export function ModelSelector({ models }: ModelSelectorProps) {
           aria-expanded={open}
           className="text-sm rounded-full shadow-none focus:ring-0"
         >
-          {selectedModel ? (
+          {mounted && selectedModel ? (
             <div className="flex items-center space-x-1">
               <Image
                 src={`/providers/logos/${selectedModel.providerId}.svg`}

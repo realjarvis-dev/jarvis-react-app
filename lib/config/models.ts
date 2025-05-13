@@ -39,13 +39,16 @@ export async function getModels(): Promise<Model[]> {
     // Construct the models.json URL
     const modelUrl = new URL('/config/models.json', baseUrlObj)
     console.log('Attempting to fetch models from:', modelUrl.toString())
+    const headersList = await headers()
+    const privyToken = headersList.get('authorization')?.replace(/^Bearer /, '')
 
     try {
       const response = await fetch(modelUrl, {
         cache: 'no-store',
         headers: {
-          Accept: 'application/json'
-        }
+          Accept: 'application/json',
+        },
+        credentials: 'include',
       })
 
       if (!response.ok) {

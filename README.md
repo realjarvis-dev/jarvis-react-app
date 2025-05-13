@@ -2,7 +2,7 @@
 
 An AI-powered search engine with a generative UI.
 
-![capture](/public/screenshot-2025-01-31.png)
+![capture](/public/screenshot-2025-05-04.png)
 
 ## 🗂️ Overview
 
@@ -12,9 +12,9 @@ An AI-powered search engine with a generative UI.
 - 🌐 [Deploy](#-deploy)
 - 🔎 [Search Engine](#-search-engine)
 - ✅ [Verified models](#-verified-models)
-- ⚡ [AI SDK Implementation](#-ai-sdk-implementation)
-- 📦 [Open Source vs Cloud Offering](#-open-source-vs-cloud-offering)
 - 👥 [Contributing](#-contributing)
+
+📝 Explore AI-generated documentation on [DeepWiki](https://deepwiki.com/miurla/morphic)
 
 ## 🛠 Features
 
@@ -25,6 +25,12 @@ An AI-powered search engine with a generative UI.
 - Multiple search providers support (Tavily, SearXNG, Exa)
 - Model selection from UI (switch between available AI models)
   - Reasoning models with visible thought process
+
+### Authentication
+
+- User authentication powered by [Supabase Auth](https://supabase.com/docs/guides/auth)
+- Supports Email/Password sign-up and sign-in
+- Supports Social Login with Google
 
 ### Chat & History
 
@@ -73,6 +79,10 @@ Models are configured in `public/config/models.json`. Each model requires its co
 - [TypeScript](https://www.typescriptlang.org/) - Type safety
 - [Vercel AI SDK](https://sdk.vercel.ai/docs) - Text streaming / Generative UI
 
+### Authentication & Authorization (Updated Category)
+
+- [Supabase](https://supabase.com/) - User authentication and backend services
+
 ### AI & Search
 
 - [OpenAI](https://openai.com/) - Default AI provider (Optional: Google AI, Anthropic, Groq, Ollama, Azure OpenAI, DeepSeek, Fireworks)
@@ -119,7 +129,7 @@ cp .env.local.example .env.local
 Fill in the required environment variables in `.env.local`:
 
 ```bash
-# Required
+# Required for Core Functionality
 OPENAI_API_KEY=     # Get from https://platform.openai.com/api-keys
 TAVILY_API_KEY=     # Get from https://app.tavily.com/home
 ```
