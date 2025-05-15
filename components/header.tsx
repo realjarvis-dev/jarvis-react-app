@@ -42,8 +42,11 @@ export const Header: React.FC = () => {
         console.log('Login complete in Header:', params)
 
 
-        if (!wasAlreadyAuthenticated) {
+        if (isNewUser) {
           setShowWelcomePopup(true)
+        } else if (!wasAlreadyAuthenticated) {
+          router.push("/")
+          router.refresh()
         }
         // always show welcome popup, for demo purposes
         // setShowWelcomePopup(true)

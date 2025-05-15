@@ -1,16 +1,14 @@
-'use client'
-
 import { WalletBalance } from '@/components/wallet-balance'
-import { useWalletAddresses } from '@/lib/hooks/use-evm-and-sol-addresses'
-import { usePrivy } from '@privy-io/react-auth'
-export default function WalletPage() {
+import { getUserEvmWalletAddress } from '@/lib/privy/client';
+import { getWalletBalances } from '@/lib/utils/wallet';
+
+export default async function WalletPage() {
   // Sample wallet address (from the script)
-  const { ready, authenticated, user } = usePrivy()
-  const { evmAddress, solAddress } = useWalletAddresses(
-    ready,
-    authenticated,
-    user
-  )
+
+  const walletAddress = await getUserEvmWalletAddress()
+    
+  const balances = await getWalletBalances(walletAddress);
+
   // const primaryWallet = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
 
   return (
@@ -24,7 +22,7 @@ export default function WalletPage() {
         </div>
 
         <div className="flex justify-center">
-          <WalletBalance walletAddress={evmAddress} className="w-full" />
+          <WalletBalance title="Wallet Balance" walletAddress={walletAddress} tokens={balances.tokens} isLoading={false} error={null} className="w-full" />
         </div>
       </div>
     </div>

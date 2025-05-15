@@ -68,7 +68,7 @@ export async function getTokenBalance(
         }
       })
     } catch (err) {
-      console.error('Error in getTokenBalance:', err)
+      console.log('Error in getTokenBalance:', err)
       // No need to reassign erc20 as it's already initialized as an empty array
     }
 
@@ -86,7 +86,7 @@ export async function getTokenBalance(
     /* ── 6. Combine and return ──────────────────────────────────────── */
     return [ethToken, ...erc20]
   } catch (err) {
-    console.error('Error in getTokenBalance:', err)
+    console.log('Error in getTokenBalance:', err)
     return []
   }
 }
