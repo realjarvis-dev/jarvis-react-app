@@ -196,7 +196,7 @@ export function Chat({
   return (
     <div
       className={cn(
-        'relative flex h-full min-w-0 flex-1 flex-col overflow-hidden',
+        'relative flex h-full min-w-0 flex-1 flex-col',
         messages.length === 0 ? 'items-center justify-center' : ''
       )}
       data-testid="full-chat"
