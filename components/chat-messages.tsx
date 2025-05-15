@@ -137,7 +137,7 @@ export function ChatMessages({
           ))}
         <div  />
       </div>
-      <div ref={anchorRef} className="h-16 md:h-24" />
+      <div ref={anchorRef} className="h-24" />
     </div>
   )
 }
