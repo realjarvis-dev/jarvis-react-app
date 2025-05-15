@@ -135,8 +135,9 @@ export function ChatMessages({
           ) : (
             <Spinner className="mb-4" />
           ))}
-        <div ref={anchorRef} />
+        <div  />
       </div>
+      <div ref={anchorRef} className="h-16 md:h-24" />
     </div>
   )
 }
