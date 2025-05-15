@@ -136,3 +136,9 @@
     right: 0;
   }
 }
+
+html, body, #__next {
+  height: 100dvh;
+  margin: 0;
+}
+
