@@ -21,10 +21,10 @@ interface WalletBalanceSectionProps {
 }
 
 export function WalletBalanceSection({
-  // eslint-disable-line
+
   tool,
-  isOpen, // eslint-disable-line @typescript-eslint/no-unused-vars
-  onOpenChange // eslint-disable-line @typescript-eslint/no-unused-vars
+  isOpen, 
+  onOpenChange 
 }: WalletBalanceSectionProps) {
   const [walletAddressArg, setWalletAddressArg] = useState<string | undefined>(
     undefined
