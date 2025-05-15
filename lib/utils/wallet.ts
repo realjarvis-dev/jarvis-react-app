@@ -1,6 +1,8 @@
 import { ethers } from "ethers";
-import { getTokenBalance } from "../alchemy/get-token-balance";
+import tokenBalanceFunctions, { getTokenBalance } from "../alchemy/get-token-balance";
 import { getUserEvmWalletAddress } from '../privy/client';
+import { TokenData } from "../alchemy/types";
+import { BepoliaConfig } from "../config/network";
 // ERC20 standard interface
 const ERC20_ABI = [
   "function balanceOf(address) view returns (uint256)",
@@ -20,13 +22,10 @@ const KNOWN_TOKENS = [
   // Add more tokens as you discover them
 ];
 
-// Token data interface
-export interface TokenData {
-  symbol: string;
-  balance: string;
-  name: string;
-  address: string;
-}
+const KNOWN_BEPOLIA_TOKENS = [
+  "0xFCBD14DC51f0A4d49d5E53C2E0950e0bC26d0Dce", // Honey
+  "0x6969696969696969696969696969696969696969", // WBERA
+]
 
 export interface WalletBalanceResult {
   tokens: TokenData[];
@@ -52,7 +51,8 @@ async function getTokenData(tokenAddress: string, walletAddress: string, provide
         address: tokenAddress,
         symbol,
         name,
-        balance: formattedBalance
+        balance: formattedBalance,
+        network: BepoliaConfig.name
       };
     }
     return null;
@@ -123,55 +123,28 @@ export async function getWalletBalances(
     throw new Error("No wallet address provided and user does not have EVM wallet.");
   }
   
-  // const provider = new ethers.JsonRpcProvider(rpcUrl);
-  
+  const bepoliaProvider = new ethers.JsonRpcProvider(BepoliaConfig.rpcUrl);
+  let bepoliaTokenData: TokenData[] = []
+  for (const token of KNOWN_BEPOLIA_TOKENS) {
+    const tokenData = await getTokenData(token, walletAddress, bepoliaProvider)
+    if (tokenData) {
+      bepoliaTokenData.push(tokenData)
+    }
+  }
   try {
-    // Get ETH balance
-    // const ethBalance = await provider.getBalance(walletAddress);
-    // const formattedEthBalance = ethers.formatEther(ethBalance);
-    
-    // // Start with our known tokens
-    // let tokenAddresses = new Set(KNOWN_TOKENS.map(addr => addr.toLowerCase()));
-    
-    // // // Try to discover additional tokens
-    // // try {
-    // //   const discoveredTokens = await discoverTokens(walletAddress, provider);
-    // //   discoveredTokens.forEach(addr => tokenAddresses.add(addr));
-    // // } catch (error) {
-    // //   console.error("Token discovery failed, using only known tokens");
-    // // }
-    
-    // // Get data for all tokens in parallel
-    // const tokenDataPromises = Array.from(tokenAddresses).map(addr => 
-    //   getTokenData(addr, walletAddress, provider)
-    // );
-    // const tokenDataResults = await Promise.all(tokenDataPromises);
-    
-    // // Filter out null results (tokens with zero balance or errors)
-    // const tokenData = tokenDataResults.filter(data => data !== null) as TokenData[];
-    
-    // // Sort by balance value (descending)
-    // tokenData.sort((a, b) => {
-    //   // Simple string comparison for sorting (not perfect but works for most cases)
-    //   return parseFloat(b.balance) - parseFloat(a.balance);
-    // });
 
-    const tokenData = await getTokenBalance(walletAddress)
-    
-    // Add ETH to the tokens array
-    // const formattedTokens: TokenData[] = [
-    //   {
-    //     symbol: "ETH",
-    //     balance: formattedEthBalance,
-    //     name: "Ethereum",
-    //     address: "0x0000000000000000000000000000000000000000" // Zero address for ETH
-    //   },
-    //   ...tokenData
-    // ];
+
+    const tokenDataPromises = tokenBalanceFunctions.map(fn => fn(walletAddress));
+    const allTokenData = await Promise.all(tokenDataPromises);
+
+    // Flatten the results if each function returns an array, otherwise adjust as needed
+    const tokenData = allTokenData.flat();
+
+
     
     // Create the final result object
     return {
-      tokens: tokenData
+      tokens: [...tokenData, ...bepoliaTokenData] as TokenData[]
     };
   } catch (error) {
     console.error("Error fetching wallet balances:", error);

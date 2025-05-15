@@ -296,7 +296,7 @@ const SidebarTrigger = React.forwardRef<
       onClick={event => {
         onClick?.(event)
         toggleSidebar()
-        router.refresh()
+        // router.refresh()
       }}
       {...props}
     >
