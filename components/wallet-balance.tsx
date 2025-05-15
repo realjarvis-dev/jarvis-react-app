@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useWalletBalances } from '@/lib/hooks/useWalletBalances';
-import { TokenData } from '@/lib/utils/wallet';
+import { TokenData } from '@/lib/alchemy/types';
 import { useState } from 'react';
 
 const TokenRow = ({ token }: { token: TokenData }) => {
@@ -24,6 +24,7 @@ const TokenRow = ({ token }: { token: TokenData }) => {
         <div>
           <p className="font-medium">{token.symbol}</p>
           <p className="text-sm text-gray-500 dark:text-gray-400">{token.name}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{token.network}</p>
         </div>
       </div>
       <div className="text-right">
@@ -73,7 +74,7 @@ export function WalletBalance({ walletAddress, tokenSymbol, className = '' }: Wa
         </div>
         <CardDescription>
           {walletAddress 
-            ? `Wallet: ${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}`
+            ? `Wallet: ${walletAddress}`
             : 'Your cryptocurrency holdings'
           }
         </CardDescription>
@@ -120,7 +121,7 @@ export function WalletBalance({ walletAddress, tokenSymbol, className = '' }: Wa
         {!isLoading && !error && displayTokens.length > 0 && (
           <div>
             {displayTokens.map((token) => (
-              <TokenRow key={token.address} token={token} />
+              <TokenRow key={`${token.address}-${token.network}`} token={token} />
             ))}
           </div>
         )}
