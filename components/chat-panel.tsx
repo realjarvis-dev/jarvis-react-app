@@ -27,7 +27,11 @@ import { IconLogo } from './ui/icons'
 import { WelcomeMessage } from './welcome-messages'
 
 // Custom hook for keyboard avoidance on mobile
-function useKeyboardAvoidance({ ref }: { ref: RefObject<HTMLTextAreaElement> }): void {
+function useKeyboardAvoidance({
+  ref
+}: {
+  ref: RefObject<HTMLTextAreaElement>
+}): void {
   useEffect(() => {
     // Check if visualViewport API is available
     const hasVisualViewport =
@@ -47,7 +51,10 @@ function useKeyboardAvoidance({ ref }: { ref: RefObject<HTMLTextAreaElement> }):
       )
 
       // Set the CSS variable
-      document.documentElement.style.setProperty('--keyboard-inset', `${keyboardHeight}px`)
+      document.documentElement.style.setProperty(
+        '--keyboard-inset',
+        `${keyboardHeight}px`
+      )
 
       // Add a class to the body when keyboard is visible (for potential CSS adjustments)
       if (keyboardHeight > 0) {
@@ -76,7 +83,10 @@ function useKeyboardAvoidance({ ref }: { ref: RefObject<HTMLTextAreaElement> }):
       const updateInset = () => {
         // @ts-ignore - VirtualKeyboard API may not be in types yet
         const keyboardHeight = navigator.virtualKeyboard.boundingRect.height
-        document.documentElement.style.setProperty('--keyboard-inset', `${keyboardHeight}px`)
+        document.documentElement.style.setProperty(
+          '--keyboard-inset',
+          `${keyboardHeight}px`
+        )
 
         if (keyboardHeight > 0) {
           document.body.classList.add('keyboard-visible')
@@ -101,18 +111,33 @@ function useKeyboardAvoidance({ ref }: { ref: RefObject<HTMLTextAreaElement> }):
 
       return () => {
         // @ts-ignore - VirtualKeyboard API may not be in types yet
-        navigator.virtualKeyboard.removeEventListener('geometrychange', updateInset)
+        navigator.virtualKeyboard.removeEventListener(
+          'geometrychange',
+          updateInset
+        )
       }
     }
     // Fallback to Visual Viewport API (works on iOS Safari)
     else if (hasVisualViewport && window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleVisualViewportChange)
-      window.visualViewport.addEventListener('scroll', handleVisualViewportChange)
+      window.visualViewport.addEventListener(
+        'resize',
+        handleVisualViewportChange
+      )
+      window.visualViewport.addEventListener(
+        'scroll',
+        handleVisualViewportChange
+      )
 
       return () => {
         if (window.visualViewport) {
-          window.visualViewport.removeEventListener('resize', handleVisualViewportChange)
-          window.visualViewport.removeEventListener('scroll', handleVisualViewportChange)
+          window.visualViewport.removeEventListener(
+            'resize',
+            handleVisualViewportChange
+          )
+          window.visualViewport.removeEventListener(
+            'scroll',
+            handleVisualViewportChange
+          )
         }
       }
     }
@@ -125,12 +150,16 @@ function useKeyboardAvoidance({ ref }: { ref: RefObject<HTMLTextAreaElement> }):
         const currentAspectRatio = window.innerWidth / window.innerHeight
 
         // Keyboard is likely visible if aspect ratio changes significantly
-        const isKeyboardVisible = Math.abs(currentAspectRatio - normalAspectRatio) > 0.3
+        const isKeyboardVisible =
+          Math.abs(currentAspectRatio - normalAspectRatio) > 0.3
 
         if (isKeyboardVisible) {
           // Estimate keyboard height (rough approximation)
           const estimatedKeyboardHeight = window.innerHeight * 0.4
-          document.documentElement.style.setProperty('--keyboard-inset', `${estimatedKeyboardHeight}px`)
+          document.documentElement.style.setProperty(
+            '--keyboard-inset',
+            `${estimatedKeyboardHeight}px`
+          )
           document.body.classList.add('keyboard-visible')
 
           setTimeout(() => {
@@ -343,7 +372,8 @@ export function ChatPanel({
         // This ensures the panel stays at the bottom on mobile
         position: 'sticky',
         bottom: 0,
-        zIndex: 30
+        zIndex: 30,
+        overflow: 'hidden'
       }}
     >
       <div className="w-full max-w-3xl">
@@ -464,20 +494,21 @@ export function ChatPanel({
                 if (e.target) {
                   e.target.focus({ preventScroll: true })
                 }
-                
+
                 // Delay scrolling until after keyboard is fully open
                 // Using requestAnimationFrame for smoother timing
                 requestAnimationFrame(() => {
                   setTimeout(() => {
-                    const scrollContainer = document.getElementById('scroll-container');
+                    const scrollContainer =
+                      document.getElementById('scroll-container')
                     if (scrollContainer) {
                       scrollContainer.scrollTo({
                         top: scrollContainer.scrollHeight,
                         behavior: 'smooth'
-                      });
+                      })
                     }
-                  }, 350); // Longer delay to account for keyboard animation
-                });
+                  }, 350) // Longer delay to account for keyboard animation
+                })
               }}
               onBlur={() => setShowEmptyScreen(false)}
             />
