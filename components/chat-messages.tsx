@@ -103,7 +103,7 @@ export function ChatMessages({
       aria-roledescription="chat messages"
       className={cn(
         'relative w-full pt-14',
-        messages.length > 0 ? 'flex-1 overflow-y-auto' : ''
+        messages.length > 0 ? 'flex-1 overflow-y-auto overscroll-contain' : ''
       )}
       style={{ contain: 'strict' }}
     >
