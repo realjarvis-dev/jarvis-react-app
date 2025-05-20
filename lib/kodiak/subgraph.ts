@@ -20,7 +20,7 @@ export const SUBGRAPH_ENDPOINTS = {
  * @param network Network to query (mainnet or bepolia)
  * @returns Promise with vault data
  */
-export async function fetchVaultsFromSubgraph(network: 'mainnet' | 'bepolia' = 'mainnet'): Promise<any[]> {
+export async function fetchVaultsFromSubgraph(network: 'mainnet' | 'bepolia' = 'bepolia'): Promise<any[]> {
   try {
     const endpoint = SUBGRAPH_ENDPOINTS[network];
     
@@ -88,7 +88,7 @@ export async function fetchVaultsFromSubgraph(network: 'mainnet' | 'bepolia' = '
  * @param network Network to query (mainnet or bepolia)
  * @returns Promise with vault data
  */
-export async function fetchVaultByAddress(address: string, network: 'mainnet' | 'bepolia' = 'mainnet'): Promise<any | null> {
+export async function fetchVaultByAddress(address: string, network: 'mainnet' | 'bepolia' = 'bepolia'): Promise<any | null> {
   try {
     const endpoint = SUBGRAPH_ENDPOINTS[network];
     

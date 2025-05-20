@@ -5,37 +5,39 @@ import { fetchVaultByAddress, fetchVaultsFromSubgraph, mapSubgraphDataToIslands 
 
 // ABIs for interacting with Kodiak contracts - defined inline to avoid external files
 const ERC20_ABI = [
-  "function name() view returns (string)",
-  "function symbol() view returns (string)",
-  "function decimals() view returns (uint8)",
-  "function totalSupply() view returns (uint256)"
+  'function symbol() view returns (string)',
+  'function decimals() view returns (uint8)',
+  'function totalSupply() view returns (uint256)'
 ];
 
 const POOL_ABI = [
-  "function token0() view returns (address)",
-  "function token1() view returns (address)",
-  "function fee() view returns (uint24)"
+  'function fee() view returns (uint24)'
 ];
 
 const ISLAND_ABI = [
-  "function pool() view returns (address)",
-  "function lowerTick() view returns (int24)",
-  "function upperTick() view returns (int24)",
-  "function manager() view returns (address)",
-  "function managerFeeBPS() view returns (uint16)",
-  "function totalSupply() view returns (uint256)",
-  "function getUnderlyingBalances() view returns (uint256, uint256)"
+  'function name() view returns (string)',
+  'function token0() view returns (address)',
+  'function token1() view returns (address)',
+  'function lowerTick() view returns (int24)',
+  'function upperTick() view returns (int24)',
+  'function pool() view returns (address)',
+  'function totalSupply() view returns (uint256)',
+  'function manager() view returns (address)',
+  'function isManaged() view returns (bool)',
+  'function managerFeeBPS() view returns (uint16)',
+  'function getUnderlyingBalances() view returns (uint256 amount0Current, uint256 amount1Current)'
 ];
 
 const FACTORY_ABI = [
-  "function islandCount() view returns (uint256)",
-  "function getIsland(uint256 index) view returns (address)"
+  'function numIslands() view returns (uint256)',
+  'function getDeployers() view returns (address[])',
+  'function getIslands(address deployer) view returns (address[])'
 ];
 
 // Contract addresses for Kodiak on different networks
 const CONTRACT_ADDRESSES = {
   bepolia: {
-    factory: '0x0d186F917EE5205a6BcF47b7CD575F66A2Beb4FF'
+    factory: '0x85F42bf3aDC6F9ED718a26e3CC64af73B756812e'
   },
   mainnet: {
     factory: '0xc7a3f400ae22b05c7bfdb7bbc7a3be5d1777fd50'
@@ -69,13 +71,12 @@ export async function getIslandData(
     // Create Island contract instance
     const island = new ethers.Contract(address, ISLAND_ABI, provider);
     
-    // Get pool address
-    const poolAddress = await island.pool();
+    // Get token addresses directly from the island contract
+    const token0Address = await island.token0();
+    const token1Address = await island.token1();
     
-    // Get token addresses from pool
-    const pool = new ethers.Contract(poolAddress, POOL_ABI, provider);
-    const token0Address = await pool.token0();
-    const token1Address = await pool.token1();
+    // Get pool address (for fee tier)
+    const poolAddress = await island.pool();
     
     // Get token details
     const token0 = new ethers.Contract(token0Address, ERC20_ABI, provider);
@@ -86,8 +87,14 @@ export async function getIslandData(
     const token0Decimals = await token0.decimals();
     const token1Decimals = await token1.decimals();
     
-    // Construct name based on tokens
-    const name = `Kodiak Island ${token0Symbol}-${token1Symbol}`;
+    // Get name directly from the island contract or construct it
+    let name;
+    try {
+      name = await island.name();
+    } catch (error) {
+      // Fall back to constructed name if name() function fails
+      name = `Kodiak Island ${token0Symbol}-${token1Symbol}`;
+    }
     
     // Get Island config
     const lowerTick = await island.lowerTick();
@@ -95,7 +102,7 @@ export async function getIslandData(
     const manager = await island.manager();
     
     // Check if island is managed
-    const isManaged = manager !== '0x0000000000000000000000000000000000000000';
+    const isManaged = await island.isManaged();
     
     // Get manager fee if managed
     let managerFeeBPS = 0;
@@ -105,8 +112,8 @@ export async function getIslandData(
     
     // Get pool fee tier
     let feeTier;
-    
     try {
+      const pool = new ethers.Contract(poolAddress, POOL_ABI, provider);
       feeTier = await pool.fee();
     } catch (error) {
       feeTier = 3000; // Default to 0.3%
@@ -202,25 +209,38 @@ export async function fetchKodiakIslands(
     const factoryAddress = CONTRACT_ADDRESSES[network].factory;
     const factory = new ethers.Contract(factoryAddress, FACTORY_ABI, provider);
     
-    // Get all islands
-    const islandCount = await factory.islandCount();
-    console.log(`Found ${islandCount} islands on factory`);
+    // Get number of islands and deployers
+    const numIslands = await factory.numIslands();
+    console.log(`Found ${numIslands} total islands on factory`);
+    
+    // Get all deployers
+    const deployers = await factory.getDeployers();
+    console.log(`Found ${deployers.length} deployers on factory`);
     
     const islands: KodiakIsland[] = [];
     const tokenPairs = new Set();
     
-    // Fetch data for each island
-    for (let i = 0; i < Math.min(islandCount, 100); i++) {
+    // Loop through each deployer and get their islands
+    for (const deployer of deployers) {
       try {
-        const islandAddress = await factory.getIsland(i);
-        const islandData = await getIslandData(islandAddress, network);
+        const deployerIslands = await factory.getIslands(deployer);
+        console.log(`Deployer ${deployer} has ${deployerIslands.length} islands`);
         
-        if (islandData) {
-          islands.push(islandData);
-          tokenPairs.add(`${islandData.token0.symbol}-${islandData.token1.symbol}`);
+        // Process each island from this deployer
+        for (const islandAddress of deployerIslands) {
+          try {
+            const islandData = await getIslandData(islandAddress, network);
+            
+            if (islandData) {
+              islands.push(islandData);
+              tokenPairs.add(`${islandData.token0.symbol}-${islandData.token1.symbol}`);
+            }
+          } catch (error) {
+            console.error(`Error fetching island ${islandAddress}: ${error}`);
+          }
         }
       } catch (error) {
-        console.error(`Error fetching island at index ${i}: ${error}`);
+        console.error(`Error fetching islands for deployer ${deployer}: ${error}`);
       }
     }
     

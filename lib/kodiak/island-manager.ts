@@ -85,7 +85,7 @@ export function calculateSwapAmount(
 /**
  * Create a provider based on the network
  */
-function getProvider(network: 'bepolia' | 'mainnet' = 'mainnet') {
+function getProvider(network: 'bepolia' | 'mainnet' = 'bepolia') {
   const config = network === 'bepolia' ? BepoliaConfig : BerachainMainnetConfig;
   return new ethers.JsonRpcProvider(config.rpcUrl);
 }
@@ -95,7 +95,7 @@ function getProvider(network: 'bepolia' | 'mainnet' = 'mainnet') {
  */
 function getRouterContract(
   provider: ethers.JsonRpcProvider,
-  network: 'bepolia' | 'mainnet' = 'mainnet'
+  network: 'bepolia' | 'mainnet' = 'bepolia'
 ): ethers.Contract {
   return new ethers.Contract(ROUTER_ADDRESSES[network], ISLAND_ROUTER_ABI, provider);
 }
@@ -157,7 +157,7 @@ export function generateDepositTx(params: DepositParams): ethers.TransactionRequ
     amount1,
     slippagePercentage = 0.5,
     receiver = ethers.ZeroAddress,
-    network = 'mainnet'
+    network = 'bepolia'
   } = params;
   
   // Calculate minimum amounts with slippage
@@ -194,7 +194,7 @@ export function generateSingleSidedDepositTx(params: SingleSidedDepositParams): 
     isToken0,
     slippagePercentage = 0.5,
     receiver = ethers.ZeroAddress,
-    network = 'mainnet'
+    network = 'bepolia'
   } = params;
   
   // Calculate minimum amount with slippage
@@ -228,7 +228,7 @@ export function generateWithdrawTx(params: WithdrawParams): ethers.TransactionRe
     shareAmount,
     slippagePercentage = 0.5,
     receiver = ethers.ZeroAddress,
-    network = 'mainnet'
+    network = 'bepolia'
   } = params;
   
   // We set min amounts to 0 because we already provide the share amount
@@ -263,7 +263,7 @@ export function generateSingleSidedWithdrawTx(params: SingleSidedWithdrawParams)
     withdrawToken0,
     slippagePercentage = 0.5,
     receiver = ethers.ZeroAddress,
-    network = 'mainnet'
+    network = 'bepolia'
   } = params;
   
   // We set minAmountOut to 0 for now
