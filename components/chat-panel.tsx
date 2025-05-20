@@ -17,9 +17,9 @@ import Textarea from 'react-textarea-autosize'
 import { toast } from 'sonner'
 import { useWalletAddresses } from '../lib/hooks/use-evm-and-sol-addresses'
 import { useArtifact } from './artifact/artifact-context'
+import { SuggestionPills } from './chat-panel/suggestion-pills'
 import { CopyableWalletAddress } from './copyable-wallet-address'
 import { CopyableWalletAddressSkeleton } from './copyable-wallet-address-skeleton'
-import { EmptyScreen } from './empty-screen'
 import { ModelSelector } from './model-selector'
 import { SearchModeToggle } from './search-mode-toggle'
 import { Button } from './ui/button'
@@ -365,11 +365,10 @@ export function ChatPanel({
     <div
       className={cn(
         'w-full bg-background group/form-container shrink-0 flex justify-center',
-        'sticky bottom-0 px-4 sm:px-4 md:px-4',
+        'sticky bottom-0 px-2 sm:px-4', // Reduced side padding on mobile
         'pb-[calc(var(--keyboard-inset,0px)+env(safe-area-inset-bottom,4px))]'
       )}
       style={{
-        // This ensures the panel stays at the bottom on mobile
         position: 'sticky',
         bottom: 0,
         zIndex: 30,
@@ -378,59 +377,60 @@ export function ChatPanel({
     >
       <div className="w-full max-w-3xl">
         {messages.length === 0 && (
-          <div className="mb-2 sm:mb-4 md:mb-6 lg:mb-10 flex flex-col items-center gap-1 sm:gap-2 md:gap-4 w-full min-h-[180px] sm:min-h-[200px]">
-            <IconLogo className="size-8 sm:size-10 md:size-12 text-muted-foreground" />
+          <div className="mb-2 sm:mb-4 flex flex-col items-center gap-1 sm:gap-2 w-full min-h-[120px] sm:min-h-[180px]">
+            <IconLogo className="size-6 sm:size-8 md:size-12 text-muted-foreground" />
+            {/* Wallet details components with improved mobile layouts */}
             {!mounted ? (
-              <div>
-                <CopyableWalletAddressSkeleton className="justify-center" />
-                <CopyableWalletAddressSkeleton className="justify-center" />
+              <div className="w-full max-w-[280px] sm:max-w-none">
+                <CopyableWalletAddressSkeleton className="justify-center text-xs sm:text-sm" />
+                <CopyableWalletAddressSkeleton className="justify-center text-xs sm:text-sm" />
               </div>
             ) : !ready ? (
-              <div>
-                <CopyableWalletAddressSkeleton className="justify-center" />
-                <CopyableWalletAddressSkeleton className="justify-center" />
+              <div className="w-full max-w-[280px] sm:max-w-none">
+                <CopyableWalletAddressSkeleton className="justify-center text-xs sm:text-sm" />
+                <CopyableWalletAddressSkeleton className="justify-center text-xs sm:text-sm" />
               </div>
             ) : ready && !authenticated ? (
-              <div>
+              <div className="w-full max-w-[280px] sm:max-w-none">
                 <CopyableWalletAddress
                   walletAddress=""
-                  className="justify-center"
+                  className="justify-center text-xs sm:text-sm"
                   walletAddressNotAvailableText="Please sign in"
                 />
                 <CopyableWalletAddress
                   walletAddress=""
-                  className="justify-center"
+                  className="justify-center text-xs sm:text-sm"
                   walletAddressNotAvailableText="We will create/retrieve your wallets"
                 />
               </div>
             ) : evmAddress && solAddress && isNewUser ? (
-              <div>
+              <div className="w-full max-w-[280px] sm:max-w-none">
                 <CopyableWalletAddress
                   walletAddress={''}
-                  className="justify-center"
+                  className="justify-center text-xs sm:text-sm"
                   walletAddressNotAvailableText="Congrats! Your wallet has been created."
                 />
                 <CopyableWalletAddress
                   walletAddress={evmAddress}
-                  className="justify-center"
+                  className="justify-center text-xs sm:text-sm truncate"
                   walletAddressIntroText="EVM wallet:"
                 />
                 <CopyableWalletAddress
                   walletAddress={solAddress}
-                  className="justify-center"
+                  className="justify-center text-xs sm:text-sm truncate"
                   walletAddressIntroText="Solana wallet:"
                 />
               </div>
             ) : evmAddress && solAddress ? (
-              <div>
+              <div className="w-full max-w-[280px] sm:max-w-none">
                 <CopyableWalletAddress
                   walletAddress={evmAddress}
-                  className="justify-center"
+                  className="justify-center text-xs sm:text-sm truncate"
                   walletAddressIntroText="EVM wallet:"
                 />
                 <CopyableWalletAddress
                   walletAddress={solAddress}
-                  className="justify-center"
+                  className="justify-center text-xs sm:text-sm truncate"
                   walletAddressIntroText="Solana wallet:"
                 />
               </div>
@@ -439,21 +439,21 @@ export function ChatPanel({
           </div>
         )}
         <form onSubmit={handleSubmit} className={cn('w-full relative')}>
-          {/* Add scroll-down button to ChatPanel right top - show when not auto scrolling */}
+          {/* Scroll-down button */}
           {!isAutoScroll && messages.length > 0 && (
             <Button
               type="button"
               variant="outline"
               size="icon"
-              className="absolute -top-10 right-4 z-20 size-8 rounded-full shadow-md"
+              className="absolute -top-10 right-2 z-20 size-7 sm:size-8 rounded-full shadow-md"
               onClick={handleScrollToBottom}
               title="Scroll to bottom"
             >
-              <ChevronDown size={16} />
+              <ChevronDown size={14} className="sm:size-16" />
             </Button>
           )}
 
-          <div className="relative flex flex-col w-full gap-0.5 sm:gap-1 md:gap-2 bg-muted rounded-3xl border border-input min-h-[60px] sm:min-h-[80px]">
+          <div className="relative flex flex-col w-full gap-0.5 sm:gap-1 md:gap-2 bg-muted rounded-2xl sm:rounded-3xl border border-input min-h-[50px] sm:min-h-[60px]">
             <Textarea
               ref={inputRef}
               name="input"
@@ -462,11 +462,11 @@ export function ChatPanel({
               tabIndex={0}
               onCompositionStart={handleCompositionStart}
               onCompositionEnd={handleCompositionEnd}
-              placeholder="Ask a question..."
+              placeholder="Start your crypto journey with one simple prompt..."
               spellCheck={false}
               value={input}
               disabled={isLoading || isToolInvocationInProgress()}
-              className="resize-none w-full min-h-[38px] sm:min-h-[48px] bg-transparent border-0 p-3 sm:p-3 md:p-4 text-sm placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+              className="resize-none w-full min-h-[38px] bg-transparent border-0 p-2 sm:p-3 md:p-4 text-xs sm:text-sm placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               onChange={e => {
                 handleInputChange(e)
                 setShowEmptyScreen(e.target.value.length === 0)
@@ -488,76 +488,73 @@ export function ChatPanel({
                 }
               }}
               onFocus={e => {
-                setShowEmptyScreen(true)
-                // Ensure we don't scroll when focused on mobile
                 e.preventDefault()
                 if (e.target) {
                   e.target.focus({ preventScroll: true })
                 }
 
-                // Delay scrolling until after keyboard is fully open
-                // Using requestAnimationFrame for smoother timing
                 requestAnimationFrame(() => {
                   setTimeout(() => {
-                    const scrollContainer =
-                      document.getElementById('scroll-container')
+                    const scrollContainer = document.getElementById('scroll-container')
                     if (scrollContainer) {
                       scrollContainer.scrollTo({
                         top: scrollContainer.scrollHeight,
                         behavior: 'smooth'
                       })
                     }
-                  }, 350) // Longer delay to account for keyboard animation
+                  }, 350)
                 })
               }}
               onBlur={() => setShowEmptyScreen(false)}
             />
 
-            {/* Bottom menu area */}
-            <div className="flex items-center justify-between p-3 sm:p-3 md:p-3 text-[10px] sm:text-xs md:text-sm">
-              <div className="flex items-center gap-2 sm:gap-2 md:gap-2 overflow-hidden">
+            {/* Mobile-optimized bottom menu area */}
+            <div className="flex items-center justify-between p-2 sm:p-3 text-[10px] sm:text-xs">
+              <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto hide-scrollbar">
                 <ModelSelector models={models || []} />
                 <SearchModeToggle />
               </div>
-              <div className="flex items-center gap-1 sm:gap-2">
+              <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                 {messages.length > 0 && (
                   <Button
                     variant="outline"
                     size="icon"
                     onClick={handleNewChat}
-                    className="shrink-0 rounded-full group"
+                    className="shrink-0 rounded-full group size-7 sm:size-8"
                     type="button"
                     disabled={isLoading || isToolInvocationInProgress()}
                   >
-                    <MessageCirclePlus className="size-4 group-hover:rotate-12 transition-all" />
+                    <MessageCirclePlus className="size-3.5 sm:size-4 group-hover:rotate-12 transition-all" />
                   </Button>
                 )}
                 <Button
                   type={isLoading ? 'button' : 'submit'}
                   size={'icon'}
                   variant={'outline'}
-                  className={cn(isLoading && 'animate-pulse', 'rounded-full')}
+                  className={cn(isLoading && 'animate-pulse', 'rounded-full size-7 sm:size-8')}
                   disabled={
                     (input.length === 0 && !isLoading) ||
                     isToolInvocationInProgress()
                   }
                   onClick={isLoading ? stop : undefined}
                 >
-                  {isLoading ? <Square size={20} /> : <ArrowUp size={20} />}
+                  {isLoading ? <Square size={16} className="sm:size-20" /> : <ArrowUp size={16} className="sm:size-20" />}
                 </Button>
               </div>
             </div>
           </div>
 
+          {/* Mobile-friendly suggestion pills */}
           {messages.length === 0 && mounted && (
-            <EmptyScreen
-              submitMessage={message => {
-                handleInputChange({
-                  target: { value: message }
-                } as React.ChangeEvent<HTMLTextAreaElement>)
-              }}
-              className={cn(showEmptyScreen ? 'visible' : 'invisible')}
-            />
+            <div className="mt-2 overflow-hidden">
+              <SuggestionPills
+                onSelectSuggestion={suggestion => {
+                  handleInputChange({
+                    target: { value: suggestion }
+                  } as React.ChangeEvent<HTMLTextAreaElement>)
+                }}
+              />
+            </div>
           )}
         </form>
       </div>
