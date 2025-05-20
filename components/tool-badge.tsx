@@ -1,4 +1,4 @@
-import { DollarSign, Link, Search, Film } from 'lucide-react'
+import { DollarSign, Film, Link, Search } from 'lucide-react'
 import React from 'react'
 import { Badge } from './ui/badge'
 
@@ -18,6 +18,7 @@ export const ToolBadge: React.FC<ToolBadgeProps> = ({
     retrieve: <Link size={14} />,
     video_search: <Film size={14} />,
     pendle_opportunities: <DollarSign size={14} />,
+    kodiak_opportunities: <DollarSign size={14} />,
     transfer: <DollarSign size={14} />
   }
 
