@@ -106,7 +106,7 @@ export function Chat({
 
   useEffect(() => {
     setMessages(savedMessages)
-  }, [id])
+  }, [id, savedMessages, setMessages])
 
   const onQuerySelect = (query: string) => {
     append({
@@ -166,7 +166,7 @@ export function Chat({
   }
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    // 1) haven’t initialized Privy yet?
+    // 1) haven't initialized Privy yet?
     if (!ready) {
       toast.error('Still initializing, please wait…')
       return

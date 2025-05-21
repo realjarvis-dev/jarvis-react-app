@@ -1,10 +1,8 @@
-import { PrivyClient } from '@privy-io/privy-node';
 import { ethers } from 'ethers';
 import { BepoliaConfig } from '../lib/config/network';
 import {
     calculateMinimumWithSlippage,
-    calculateSwapAmount,
-    generateSingleSidedDepositTx
+    calculateSwapAmount
 } from '../lib/kodiak/island-manager';
 
 // Island details
@@ -159,50 +157,5 @@ async function main() {
   }
 }
 
-/**
- * Example of how to use Privy for signing transactions
- * This demonstrates how to use the island-manager helper functions
- */
-async function executeWithPrivy() {
-  try {
-    // Initialize Privy client
-    const privyClient = new PrivyClient({
-      appId: process.env.PRIVY_APP_ID!,
-      appSecret: process.env.PRIVY_APP_SECRET!,
-    });
-    
-    // In a real implementation, you'd get this from the user's session
-    const userPrivyId = process.env.TEST_PRIVY_USER_ID;
-    const userAddress = 'USER_ADDRESS_HERE'; // This would come from Privy or your user data
-    
-    if (!userPrivyId) {
-      throw new Error('TEST_PRIVY_USER_ID environment variable not set');
-    }
-    
-    // Amount to invest (in BERA)
-    const investAmount = ethers.parseEther('0.001').toString();
-    
-    // Use the island-manager to generate the transaction data
-    // This handles the calculation of proper swap amounts and slippage
-    const txData = generateSingleSidedDepositTx({
-      islandAddress: ISLAND_ADDRESS,
-      tokenAmount: investAmount,
-      isToken0: true, // WBERA is token0 in this pool
-      slippagePercentage: 0.5, // 0.5% slippage
-      receiver: userAddress,
-      network: 'bepolia'
-    });
-    
-    console.log('Generated transaction data:', txData);
-    console.log('Transaction would be sent with Privy in production');
-    
-  } catch (error) {
-    console.error('Error in Privy execution:', error);
-  }
-}
-
 // For testing, use the direct method
-main().catch(console.error);
-
-// To test with Privy (uncomment when ready)
-// executeWithPrivy().catch(console.error); 
+main().catch(console.error); 

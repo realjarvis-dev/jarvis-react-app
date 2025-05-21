@@ -3,11 +3,11 @@
 import { Model } from '@/lib/types/models'
 import { cn } from '@/lib/utils'
 import {
-  WalletWithMetadata,
-  useHeadlessDelegatedActions,
-  usePrivy,
-  useSolanaWallets,
-  useWallets
+    WalletWithMetadata,
+    useHeadlessDelegatedActions,
+    usePrivy,
+    useSolanaWallets,
+    useWallets
 } from '@privy-io/react-auth'
 import { Message } from 'ai'
 import { ArrowUp, ChevronDown, MessageCirclePlus, Square } from 'lucide-react'
@@ -347,8 +347,13 @@ export function ChatPanel({
   }, [evmReady, solanaReady, authenticated, ready])
 
   useEffect(() => {
+    setShowEmptyScreen(messages.length === 0)
     setMounted(true)
-  }, [])
+
+    if (messages.length === 0 && mounted) {
+      inputRef.current?.focus()
+    }
+  }, [messages.length, mounted, delegateWallet, evmWallets, solanaWallets, user])
 
   // Add scroll to bottom handler
   const handleScrollToBottom = () => {

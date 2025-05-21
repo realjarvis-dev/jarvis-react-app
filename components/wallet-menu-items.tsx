@@ -1,17 +1,16 @@
 'use client'
 
-import { DropdownMenuItem } from '@/components/ui/dropdown-menu'
-import { ArrowRightCircle, Unlink2, Wallet } from 'lucide-react'
+import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import {
+    useHeadlessDelegatedActions,
     usePrivy,
     useSolanaWallets,
     useWallets,
-    useDelegatedActions,
-    useHeadlessDelegatedActions,
-    type WalletWithMetadata,
     type ConnectedSolanaWallet,
     type ConnectedWallet,
-    } from '@privy-io/react-auth';
+    type WalletWithMetadata
+} from '@privy-io/react-auth';
+import { ArrowRightCircle, Unlink2, Wallet } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -34,7 +33,7 @@ export function WalletMenuItems() {
         const solanaWalletToDelegate = solanaWallets.find((wallet) => wallet.walletClientType === 'privy');
         setSolanaWalletToDelegate(solanaWalletToDelegate);
     }
-  }, [solanaReady])
+  }, [solanaReady, solanaWallets])
 
   useEffect(() => {
     if (evmReady) {
@@ -42,7 +41,7 @@ export function WalletMenuItems() {
       console.log('evmWalletToDelegate', evmWalletToDelegate)
       setEvmWalletToDelegate(evmWalletToDelegate);
     }
-  }, [evmReady])
+  }, [evmReady, evmWallets])
 
   useEffect(() => {
     if (!userReady) return;

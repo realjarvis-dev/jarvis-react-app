@@ -36,8 +36,8 @@ export default function KodiakInvestPage() {
             <ul>
               <li>Your BERA will be automatically converted to the right ratio of tokens</li>
               <li>The liquidity will be provided to the Kodiak V3 pool</li>
-              <li>You'll receive Kodiak Island LP tokens representing your position</li>
-              <li>You'll earn fees from trades that occur within your position's price range</li>
+              <li>You&apos;ll receive Kodiak Island LP tokens representing your position</li>
+              <li>You&apos;ll earn fees from trades that occur within your position&apos;s price range</li>
             </ul>
             <p>
               The APR shown is historically based on trading volume and fees generated.

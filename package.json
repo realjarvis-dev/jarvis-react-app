@@ -20,7 +20,6 @@
     "@ai-sdk/xai": "^1.1.10",
     "@chainlink/contracts": "^1.4.0",
     "@privy-io/js-sdk-core": "^0.50.0",
-    "@privy-io/privy-node": "^0.0.2",
     "@privy-io/react-auth": "^2.13.0",
     "@privy-io/server-auth": "^1.21.3",
     "@radix-ui/react-alert-dialog": "^1.0.5",
