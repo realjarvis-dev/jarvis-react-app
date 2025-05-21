@@ -19,83 +19,115 @@ function formatCurrentPrice(island: any): string {
  * Display opportunity in a format similar to Kodiak UI
  */
 function displayOpportunityTable(islands: any[]) {
-  // Sort by APR
-  const sortedIslands = [...islands].sort((a, b) => b.apr.feeApr - a.apr.feeApr);
-  
-  // Print headers
-  console.log('Pool'.padEnd(25) + 'Range'.padEnd(40) + 'Price'.padEnd(25) + 'Pool TVL'.padEnd(15) + 'APR');
-  console.log('-'.repeat(115));
-  
-  // Print each island
-  sortedIslands.forEach(island => {
-    // Format pool name
-    const poolName = `${island.token0.symbol} - ${island.token1.symbol}`;
-    const feeTier = (island.feeTier / 10000).toFixed(1) + '%';
-    const poolType = 'Island';
+  try {
+    // Sort by APR
+    const sortedIslands = [...islands].sort((a, b) => b.apr.feeApr - a.apr.feeApr);
     
-    const pool = `${poolName.padEnd(20)} ${feeTier.padEnd(4)} ${poolType}`;
+    // Print headers
+    console.log('Pool'.padEnd(25) + 'Range'.padEnd(40) + 'Price'.padEnd(25) + 'Pool TVL'.padEnd(15) + 'APR');
+    console.log('-'.repeat(115));
     
-    // Format price range (Min/Max values)
-    const min = `Min: ${island.token0.symbol} 1 = ${formatTickToPrice(island.lowerTick, island.token0.decimals, island.token1.decimals).toFixed(4)}`;
-    const max = `Max: ${island.token0.symbol} 1 = ${formatTickToPrice(island.upperTick, island.token0.decimals, island.token1.decimals).toFixed(4)}`;
-    const range = `${min}\n${' '.repeat(25)}${max}`;
-    
-    // Current price
-    const price = `${island.token0.symbol} 1 = ${formatCurrentPrice(island)}`;
-    
-    // TVL
-    const tvl = `$${island.tvl.usdValue.toLocaleString('en-US', {
-      maximumFractionDigits: 0
-    })}`;
-    
-    // APR - add blue/green color coding like in the screenshot
-    const aprValue = (island.apr.feeApr * 100).toFixed(2);
-    // Using simple Unicode for arrow, could be replaced with proper terminal colors
-    const apr = `${aprValue}%`;
-    
-    console.log(pool.padEnd(25) + range.padEnd(40) + price.padEnd(25) + tvl.padEnd(15) + apr);
-  });
+    // Print each island
+    sortedIslands.forEach(island => {
+      try {
+        // Format pool name
+        const poolName = `${island.token0.symbol} - ${island.token1.symbol}`;
+        const feeTier = (island.feeTier / 10000).toFixed(1) + '%';
+        const poolType = 'Island';
+        
+        const pool = `${poolName.padEnd(20)} ${feeTier.padEnd(4)} ${poolType}`;
+        
+        // Format price range (Min/Max values)
+        const min = `Min: ${island.token0.symbol} 1 = ${formatTickToPrice(island.lowerTick, island.token0.decimals, island.token1.decimals).toFixed(4)}`;
+        const max = `Max: ${island.token0.symbol} 1 = ${formatTickToPrice(island.upperTick, island.token0.decimals, island.token1.decimals).toFixed(4)}`;
+        const range = `${min}\n${' '.repeat(25)}${max}`;
+        
+        // Current price
+        const price = `${island.token0.symbol} 1 = ${formatCurrentPrice(island)}`;
+        
+        // TVL - ensure we're using a number, not BigInt
+        const tvlValue = typeof island.tvl.usdValue === 'bigint' 
+          ? Number(island.tvl.usdValue) 
+          : island.tvl.usdValue;
+        
+        const tvl = `$${tvlValue.toLocaleString('en-US', {
+          maximumFractionDigits: 0
+        })}`;
+        
+        // APR - add blue/green color coding like in the screenshot
+        const aprValue = (island.apr.feeApr * 100).toFixed(2);
+        // Using simple Unicode for arrow, could be replaced with proper terminal colors
+        const apr = `${aprValue}%`;
+        
+        console.log(pool.padEnd(25) + range.padEnd(40) + price.padEnd(25) + tvl.padEnd(15) + apr);
+      } catch (err) {
+        console.error(`Error displaying island: ${island.address}`, err);
+      }
+    });
+  } catch (error) {
+    console.error('Error displaying opportunities table:', error);
+  }
 }
 
 /**
  * Convert tick to price
  */
-function formatTickToPrice(tick: number, decimals0: number, decimals1: number): number {
-  const tickToPrice = Math.pow(1.0001, tick);
-  return tickToPrice * Math.pow(10, decimals0 - decimals1);
+function formatTickToPrice(tick: number | bigint, decimals0: number | bigint, decimals1: number | bigint): number {
+  // Convert all parameters to numbers if they are BigInt
+  const tickNum = typeof tick === 'bigint' ? Number(tick) : tick;
+  const decimals0Num = typeof decimals0 === 'bigint' ? Number(decimals0) : decimals0;
+  const decimals1Num = typeof decimals1 === 'bigint' ? Number(decimals1) : decimals1;
+  
+  const tickToPrice = Math.pow(1.0001, tickNum);
+  return tickToPrice * Math.pow(10, decimals0Num - decimals1Num);
 }
 
 /**
  * Display detailed information about an opportunity
  */
 function displayOpportunityDetails(island: any) {
-  console.log(`\nDetailed information for ${island.token0.symbol}-${island.token1.symbol}:`);
-  console.log(`Address: ${island.address}`);
-  console.log(`Type: Island`);
-  console.log(`Fee Tier: ${island.feeTier / 10000}%`);
-  console.log(`Price Range: ${formatPriceRange(
-    island.lowerTick,
-    island.upperTick,
-    island.token0.symbol,
-    island.token1.symbol
-  )}`);
-  console.log(`Current Price: ${island.token0.symbol} 1 = ${formatCurrentPrice(island)}`);
-  console.log(`TVL: ${formatTVL(
-    island.tvl.token0Amount,
-    island.tvl.token1Amount,
-    island.token0.decimals,
-    island.token1.decimals,
-    island.token0.symbol,
-    island.token1.symbol
-  )}`);
-  console.log(`TVL (USD): $${island.tvl.usdValue.toLocaleString()}`);
-  console.log(`APR: ${formatAPR(island.apr.feeApr, island.apr.isEstimate)}`);
-  console.log(`Volume (All Time): $${parseFloat(island.volumeUSD || '0').toLocaleString()}`);
-  console.log(`Volume (Weekly): $${parseFloat(island.weeklyVolumeUSD || '0').toLocaleString()}`);
-  console.log(`Managed: ${island.isManaged ? 'Yes' : 'No'}`);
-  if (island.isManaged) {
-    console.log(`Manager: ${island.manager}`);
-    console.log(`Manager Fee: ${island.managerFeeBPS / 100}%`);
+  try {
+    console.log(`\nDetailed information for ${island.token0.symbol}-${island.token1.symbol}:`);
+    console.log(`Address: ${island.address}`);
+    console.log(`Type: Island`);
+    console.log(`Fee Tier: ${island.feeTier / 10000}%`);
+    console.log(`Price Range: ${formatPriceRange(
+      island.lowerTick,
+      island.upperTick,
+      island.token0.symbol,
+      island.token1.symbol
+    )}`);
+    console.log(`Current Price: ${island.token0.symbol} 1 = ${formatCurrentPrice(island)}`);
+    console.log(`TVL: ${formatTVL(
+      island.tvl.token0Amount,
+      island.tvl.token1Amount,
+      island.token0.decimals,
+      island.token1.decimals,
+      island.token0.symbol,
+      island.token1.symbol
+    )}`);
+    
+    // Convert TVL usdValue if it's a BigInt
+    const tvlUsd = typeof island.tvl.usdValue === 'bigint' 
+      ? Number(island.tvl.usdValue) 
+      : island.tvl.usdValue;
+      
+    console.log(`TVL (USD): $${tvlUsd.toLocaleString()}`);
+    console.log(`APR: ${formatAPR(island.apr.feeApr, island.apr.isEstimate)}`);
+    
+    // Parse volumes as floats
+    const volumeUsd = parseFloat(island.volumeUSD || '0');
+    const weeklyVolumeUsd = parseFloat(island.weeklyVolumeUSD || '0');
+    
+    console.log(`Volume (All Time): $${volumeUsd.toLocaleString()}`);
+    console.log(`Volume (Weekly): $${weeklyVolumeUsd.toLocaleString()}`);
+    console.log(`Managed: ${island.isManaged ? 'Yes' : 'No'}`);
+    if (island.isManaged) {
+      console.log(`Manager: ${island.manager}`);
+      console.log(`Manager Fee: ${island.managerFeeBPS / 100}%`);
+    }
+  } catch (error) {
+    console.error(`Error displaying detailed information for island: ${island.address}`, error);
   }
 }
 

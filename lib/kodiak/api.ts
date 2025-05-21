@@ -295,39 +295,46 @@ export async function getKodiakOpportunities(
     
     let islands = islandsResponse.data.islands;
     
-    // Apply filters to get active islands
-    const activeIslands = islands.filter(island => {
-      // Filter 1: Minimum TVL threshold
-      if (island.tvl.usdValue < minTvl) {
-        return false;
-      }
-      
-      // Filter 2: Minimum volume threshold (if specified)
-      if (minVolumeUSD > 0 && parseFloat(island.volumeUSD || '0') < minVolumeUSD) {
-        return false;
-      }
-      
-      // Filter 3: Check for inactive islands (with zero token amounts)
-      if (!includeInactive) {
-        const token0Amount = ethers.toBigInt(island.tvl.token0Amount);
-        const token1Amount = ethers.toBigInt(island.tvl.token1Amount);
-        
-        // Skip islands with no tokens
-        if (token0Amount === BigInt(0) && token1Amount === BigInt(0)) {
+    // Only apply filters on mainnet, not on testnet
+    if (network === 'mainnet') {
+      // Apply filters to get active islands
+      const activeIslands = islands.filter(island => {
+        // Filter 1: Minimum TVL threshold
+        if (island.tvl.usdValue < minTvl) {
           return false;
         }
         
-        // Skip islands with zero APR and low TVL (likely inactive)
-        if (island.apr.feeApr === 0 && island.tvl.usdValue < 5000) {
+        // Filter 2: Minimum volume threshold (if specified)
+        if (minVolumeUSD > 0 && parseFloat(island.volumeUSD || '0') < minVolumeUSD) {
           return false;
         }
-      }
+        
+        // Filter 3: Check for inactive islands (with zero token amounts)
+        if (!includeInactive) {
+          const token0Amount = ethers.toBigInt(island.tvl.token0Amount);
+          const token1Amount = ethers.toBigInt(island.tvl.token1Amount);
+          
+          // Skip islands with no tokens
+          if (token0Amount === BigInt(0) && token1Amount === BigInt(0)) {
+            return false;
+          }
+          
+          // Skip islands with zero APR and low TVL (likely inactive)
+          if (island.apr.feeApr === 0 && island.tvl.usdValue < 5000) {
+            return false;
+          }
+        }
+        
+        return true;
+      });
       
-      return true;
-    });
-    
-    console.log(`Found ${activeIslands.length} active Kodiak Islands`);
-    return activeIslands;
+      console.log(`Found ${activeIslands.length} active Kodiak Islands on mainnet`);
+      return activeIslands;
+    } else {
+      // On testnet, return all islands without filtering
+      console.log(`Found ${islands.length} Kodiak Islands on testnet (no filtering applied)`);
+      return islands;
+    }
   } catch (error) {
     console.error('Error getting Kodiak opportunities:', error);
     return [];
