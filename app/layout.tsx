@@ -59,16 +59,16 @@ export default async function RootLayout({
       >
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
-          // enableSystem
+          defaultTheme="system"
+          enableSystem
           disableTransitionOnChange
         >
           <WrappedPrivyProvider>
             <SidebarProvider defaultOpen={false}>
               <AppSidebar />
-              <div className="flex flex-col flex-1 min-w-0"> {/* ADDED min-w-0 HERE */}
+              <div className="flex flex-col flex-1">
                 <Header />
-                <main className="flex flex-1 min-h-0 w-full">
+                <main className="flex flex-1 min-h-0">
                   <ArtifactRoot>{children}</ArtifactRoot>
                 </main>
               </div>

@@ -1,24 +1,23 @@
-import { WalletWithMetadata } from '@privy-io/server-auth'
 import { CoreMessage, smoothStream, streamText } from 'ai'
-import { kodiakOpportunitiesTool } from '../tools/kodiak'
 import { pendleOpportunitiesTool, pendleQuoteTool, pendleSwapTool } from '../tools/pendle'
-import { privyTransferTool } from '../tools/privy-transfer'
 import { createQuestionTool } from '../tools/question'
 import { retrieveTool } from '../tools/retrieve'
 import { createSearchTool } from '../tools/search'
 import { createVideoSearchTool } from '../tools/video-search'
 import { walletBalanceTool } from '../tools/wallet'
 import { getModel } from '../utils/registry'
+import { WalletWithMetadata } from '@privy-io/server-auth'
+import { privyTransferTool } from '../tools/privy-transfer'
+import { NetworkConfig } from '../config/network'
 const SYSTEM_PROMPT = `
 Instructions:
 
-You are a helpful AI assistant with access to real-time web search, Pendle DeFi yield opportunities, Kodiak Islands yield opportunities, wallet balance information, content retrieval, video search capabilities, and the ability to ask clarifying questions.
+You are a helpful AI assistant with access to real-time web search, Pendle DeFi yield opportunities, wallet balance information, content retrieval, video search capabilities, and the ability to ask clarifying questions.
 
 IMPORTANT: When the user has search mode enabled, you MUST use the most appropriate tool for every factual query, even if you believe you know the answer.
 
 Available tools:
 - pendle_opportunities: Use when the user asks about Pendle yield opportunities, DeFi yields, or APY/yield farming on Ethereum. This tool returns a list of current Pendle opportunities with APY and liquidity information.
-- kodiak_opportunities: Use when the user asks about Kodiak Islands yield opportunities, DeFi yields, or liquidity pools on Berachain. This tool returns a list of current Kodiak opportunities with APR and TVL information.
 - pendle_quote: Use when the user wants to know the conversion rate between ETH and a specific Pendle market token (PT or YT). This requires market address and token out address parameters.
 - pendle_swap: Use when the user wants to execute a swap transaction from ETH to a Pendle token (PT or YT). This requires market address, token out address, and ETH amount parameters.
 - wallet_balance: Use when the user asks about their wallet balance, token holdings, or specific token balance. This tool returns the user's cryptocurrency balances.
@@ -86,15 +85,6 @@ When using the privy_transfer tool:
 - Only accept the amount of transaction in the unit of ETH.
 - Ask user what they want to do next after the transfer is complete.
 
-When using the kodiak_opportunities tool:
-- The results will be automatically displayed to the user when you call this tool.
-- You can filter by minimum APR (apr_gte), maximum APR (apr_lte), sort by "apr" or "tvl", and specify the number of results (max_results).
-- DO NOT output the results as text. Never include specific APR values, pool addresses, or TVL figures in your response.
-- NEVER repeat, list, summarize, or describe the Kodiak opportunities results in your text response. The user can already see them in the UI.
-- Instead, acknowledge the query and provide additional context if needed: "I've fetched the latest Kodiak Island opportunities for you. Is there anything specific about these investments you'd like to know more about?"
-- IMPORTANT: Do not mention specific pools, rates, or summarize what the user can see. This creates duplicate information in the chat.
-- REMEMBER, simply call the tool and let the UI do the display work.
-
 Citation Format:
 [number](url)
 `
@@ -160,8 +150,8 @@ export function researcher({
     const videoSearchTool = createVideoSearchTool(model)
     const askQuestionTool = createQuestionTool(model)
 
-    const all_tools = ['search', 'retrieve', 'videoSearch', 'ask_question', 'pendle_opportunities', 'pendle_quote', 'pendle_swap', 'wallet_balance', 'privy_transfer', 'kodiak_opportunities']
-    const web3_tools = ['wallet_balance', 'privy_transfer','pendle_opportunities', 'pendle_quote', 'pendle_swap', 'kodiak_opportunities']
+    const all_tools = ['search', 'retrieve', 'videoSearch', 'ask_question', 'pendle_opportunities', 'pendle_quote', 'pendle_swap', 'wallet_balance', 'privy_transfer']
+    const web3_tools = ['wallet_balance', 'privy_transfer','pendle_opportunities', 'pendle_quote', 'pendle_swap']
 
     const userWalletInfo = `
     User EVM wallet address: ${userEvmWallet?.address}, delegated status: ${userEvmWallet?.delegated}
@@ -177,8 +167,7 @@ export function researcher({
       pendle_quote: pendleQuoteTool,
       pendle_swap: pendleSwapTool,
       wallet_balance: walletBalanceTool,
-      privy_transfer: privyTransferTool,
-      kodiak_opportunities: kodiakOpportunitiesTool
+      privy_transfer: privyTransferTool
     }
 
     let o3_mini_tool_lst = {

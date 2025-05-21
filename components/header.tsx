@@ -42,11 +42,8 @@ export const Header: React.FC = () => {
         console.log('Login complete in Header:', params)
 
 
-        if (isNewUser) {
+        if (!wasAlreadyAuthenticated) {
           setShowWelcomePopup(true)
-        } else if (!wasAlreadyAuthenticated) {
-          router.push("/")
-          router.refresh()
         }
         // always show welcome popup, for demo purposes
         // setShowWelcomePopup(true)
@@ -63,7 +60,7 @@ export const Header: React.FC = () => {
   return (
     <header
       className={cn(
-        'fixed top-0 right-0 p-2 flex justify-between items-center z-10 backdrop-blur-none bg-transparent transition-[width] duration-200 ease-linear',
+        'fixed top-0 right-0 p-2 flex justify-between items-center z-10 backdrop-blur lg:backdrop-blur-none bg-background/80 lg:bg-transparent transition-[width] duration-200 ease-linear',
         open ? 'md:w-[calc(100%-var(--sidebar-width))]' : 'md:w-full',
         'w-full'
       )}
