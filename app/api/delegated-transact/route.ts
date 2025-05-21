@@ -1,5 +1,5 @@
 export const runtime = 'nodejs'
-import { getUserWallet, privy } from '@/lib/privy/client'
+import { getUserWallet } from '@/lib/privy/client'
 import { StaticJsonRpcProvider } from '@ethersproject/providers'
 import {
   calculateTotalGasEstimate,
@@ -61,35 +61,36 @@ export async function GET(req: NextRequest) {
 
     console.log('Populated transaction request:', populatedTxRequest)
 
-    // // 3. Calculate gas estimation
-    // const { totalGasEstimate, l1ExecutionFeeEstimate } =
-    //   await calculateTotalGasEstimate(populatedTxRequest, provider)
+    // 3. Calculate gas estimation
+    const { totalGasEstimate, l1ExecutionFeeEstimate } =
+      await calculateTotalGasEstimate(populatedTxRequest, provider)
 
-    // console.log('Total gas estimate:', totalGasEstimate.toString())
-    // console.log('L1 execution fee estimate:', l1ExecutionFeeEstimate.toString())
+    console.log('Total gas estimate:', totalGasEstimate.toString())
+    console.log('L1 execution fee estimate:', l1ExecutionFeeEstimate.toString())
 
     // 4. Send the transaction with the calculated gas limit - using a safe default based on estimate
     const gasLimitWithBuffer = 650000 // Safe default gas limit
 
-    // Passing value directly as a number - 1000000000000000 wei (0.001 ETH)
-    const { hash } = await privy.walletApi.ethereum.sendTransaction({
-      walletId: evmWallet?.id || '',
-      caip2: `eip155:${chainId}`,
-      transaction: {
-        to: recipientAddress,
-        value: 1000000000000000, // Value as a number instead of hex string
-        chainId: chainId,
-        gasLimit: gasLimitWithBuffer
-      },
-      idempotencyKey: `tx-${Date.now()}` // unique key for this transaction
-    })
+    // // Passing value directly as a number - 1000000000000000 wei (0.001 ETH)
+    // const { hash } = await privy.walletApi.ethereum.sendTransaction({
+    //   walletId: evmWallet?.id || '',
+    //   caip2: `eip155:${chainId}`,
+    //   transaction: {
+    //     to: recipientAddress,
+    //     value: 1000000000000000, // Value as a number instead of hex string
+    //     chainId: chainId,
+    //     gasLimit: gasLimitWithBuffer
+    //   },
+    //   idempotencyKey: `tx-${Date.now()}` // unique key for this transaction
+    // })
 
-      console.log('Transaction sent, hash:', hash)
+    // console.log('Transaction sent, hash:', hash)
 
     return NextResponse.json(
       {
-        hash,
-
+        // hash,
+        gasEstimate: totalGasEstimate.toString(),
+        l1Fee: l1ExecutionFeeEstimate.toString()
       },
       { status: 200 }
     )

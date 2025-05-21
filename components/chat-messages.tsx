@@ -102,8 +102,8 @@ export function ChatMessages({
       role="list"
       aria-roledescription="chat messages"
       className={cn(
-        'relative w-full pt-14',
-        messages.length > 0 ? 'flex-1 overflow-y-auto overscroll-contain' : ''
+        'relative size-full pt-14',
+        messages.length > 0 ? 'flex-1 overflow-y-auto' : ''
       )}
       style={{ contain: 'strict' }}
     >
@@ -135,9 +135,8 @@ export function ChatMessages({
           ) : (
             <Spinner className="mb-4" />
           ))}
-        <div  />
+        <div ref={anchorRef} />
       </div>
-      <div ref={anchorRef} className="h-24" />
     </div>
   )
 }

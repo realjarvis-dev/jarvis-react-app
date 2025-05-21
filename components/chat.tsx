@@ -9,13 +9,13 @@ import { getAccessToken, usePrivy } from '@privy-io/react-auth'
 import { ChatRequestOptions } from 'ai'
 import { Message } from 'ai/react'
 import { useRouter } from 'next/navigation'
-import { useEffect, useRef, useState, useTransition } from 'react'
+import { useEffect, useRef, useTransition, useState } from 'react'
 import { toast } from 'sonner'
 import { ChatMessages } from './chat-messages'
 import { ChatPanel } from './chat-panel'
 
-const TRIAL_KEY = 'anon_trials'
-const MAX_TRIALS = 2
+const TRIAL_KEY = 'anon_trials';
+const MAX_TRIALS = 2;
 
 export function Chat({
   id,
@@ -166,17 +166,14 @@ export function Chat({
   }
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    // 1) haven’t initialized Privy yet?
+      // 1) haven’t initialized Privy yet?
     if (!ready) {
       toast.error('Still initializing, please wait…')
       return
     }
     // 2) anon user out of trials?
     const isAnon = !authenticated
-    let trials = parseInt(
-      localStorage.getItem(TRIAL_KEY) ?? `${MAX_TRIALS}`,
-      10
-    )
+    let trials = parseInt(localStorage.getItem(TRIAL_KEY) ?? `${MAX_TRIALS}`, 10);
     if (isAnon && trials !== null && trials <= 0) {
       toast.error('No trials left – please log in!')
       setData(undefined)
