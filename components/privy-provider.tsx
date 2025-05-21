@@ -17,7 +17,7 @@ export default function WrappedPrivyProvider({ children }: { children: React.Rea
   // "supportedChains": [mainnetOverride],
   "appearance": {
     "accentColor": "#6A6FF5",
-    "theme": theme === "Dark" ? "dark" : "light",
+    "theme": "light",
     "showWalletLoginFirst": false,
     "logo": "https://auth.privy.io/logos/privy-logo.png",
     "walletChainType": "ethereum-and-solana",
