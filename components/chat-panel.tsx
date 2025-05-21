@@ -219,7 +219,6 @@ export function ChatPanel({
   // isPageGradientActive // This prop might be removed
 }: ChatPanelProps) {
   // const [showEmptyScreen, setShowEmptyScreen] = useState(false) // Your existing state
-  const [showEmptyScreen, setShowEmptyScreen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const router = useRouter() // Your existing state
   const inputRef = useRef<HTMLTextAreaElement>(null) // Your existing state
@@ -359,7 +358,7 @@ export function ChatPanel({
   ]) // Added missing dependencies
 
   useEffect(() => {
-    setShowEmptyScreen(messages.length === 0)
+    // setShowEmptyScreen(messages.length === 0)
     setMounted(true)
 
     if (messages.length === 0 && mounted) {
