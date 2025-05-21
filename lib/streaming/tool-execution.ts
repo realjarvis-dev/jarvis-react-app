@@ -6,6 +6,7 @@ import {
   JSONValue
 } from 'ai'
 import { searchSchema } from '../schema/search'
+import { kodiakOpportunitiesTool } from '../tools/kodiak'
 import { pendleOpportunitiesTool, pendleQuoteTool, pendleSwapTool } from '../tools/pendle'
 import { search } from '../tools/search'
 import { walletBalanceTool } from '../tools/wallet'
@@ -25,6 +26,9 @@ const walletSchemaString = JSON.stringify(walletBalanceTool.parameters, null, 2)
 const pendleSchemaString = JSON.stringify(pendleOpportunitiesTool.parameters, null, 2)
 const pendleQuoteSchemaString = JSON.stringify(pendleQuoteTool.parameters, null, 2)
 const pendleSwapSchemaString = JSON.stringify(pendleSwapTool.parameters, null, 2)
+
+// Deserialize the kodiak schema to string
+const kodiakSchemaString = JSON.stringify(kodiakOpportunitiesTool.parameters, null, 2)
 
 // Helper to get search schema as a string for inclusion in prompt
 // Convert the zod schema to a JSON schema object
@@ -59,6 +63,7 @@ export async function executeToolCall(
 
             Available tools:
             - pendle_opportunities: Use when the user asks about Pendle yield opportunities farming on Ethereum. This tool returns a list of current Pendle opportunities with APY and liquidity information.
+            - kodiak_opportunities: Use when the user asks about Kodiak Islands yield opportunities on Berachain. This tool returns a list of current Kodiak opportunities with APR and TVL information.
             - pendle_quote: Use when the user wants to get a quote for swapping ETH to a Pendle token (PT or YT).
             - pendle_swap: Use when the user wants to execute a swap transaction from ETH to a Pendle token (PT or YT).
             - wallet_balance: Use when the user asks about their wallet balance, token holdings, or specific token balance. This tool returns the user's cryptocurrency balances.
@@ -70,6 +75,9 @@ export async function executeToolCall(
 
             Pendle opportunities parameters:
             ${pendleSchemaString}
+            
+            Kodiak opportunities parameters:
+            ${kodiakSchemaString}
             
             Pendle quote parameters:
             ${pendleQuoteSchemaString}
@@ -98,7 +106,14 @@ export async function executeToolCall(
     toolParams = toolCall.parameters
   }
   
-  // If not pendle opportunities, try pendle quote tool
+  // If not pendle opportunities, try kodiak opportunities tool
+  if (!toolName || toolName === '') {
+    toolCall = parseToolCallXml(toolSelectionResponse.text, kodiakOpportunitiesTool.parameters)
+    toolName = toolCall.tool
+    toolParams = toolCall.parameters
+  }
+  
+  // If not kodiak opportunities, try pendle quote tool
   if (!toolName || toolName === '') {
     toolCall = parseToolCallXml(toolSelectionResponse.text, pendleQuoteTool.parameters)
     toolName = toolCall.tool
@@ -163,6 +178,34 @@ export async function executeToolCall(
       toolResults = await pendleOpportunitiesTool.execute(
         toolParams as { max_results: number; apy_gte?: number; apy_lte?: number },
         { toolCallId: 'pendle_opportunities', messages: [] }
+      )
+    } else {
+      toolResults = null
+    }
+  } else if (toolName === 'kodiak_opportunities') {
+    // Type guard for kodiak tool: must NOT have 'query', but have at least one of the kodiak params
+    if (
+      toolParams &&
+      typeof toolParams === 'object' &&
+      !('query' in toolParams) &&
+      ('max_results' in toolParams || 'apr_gte' in toolParams || 'apr_lte' in toolParams || 'sort_by' in toolParams)
+    ) {
+      // Type assertion to specify this is definitely a Kodiak params object
+      const kodiakParams = toolParams as { 
+        max_results?: number; 
+        apr_gte?: number; 
+        apr_lte?: number;
+        sort_by?: 'apr' | 'tvl' 
+      };
+      
+      toolResults = await kodiakOpportunitiesTool.execute(
+        {
+          max_results: kodiakParams.max_results ?? 10, // Default to 10 if undefined
+          sort_by: kodiakParams.sort_by ?? 'tvl', // Default to 'tvl' if undefined
+          apr_gte: kodiakParams.apr_gte,
+          apr_lte: kodiakParams.apr_lte
+        },
+        { toolCallId: 'kodiak_opportunities', messages: [] }
       )
     } else {
       toolResults = null
@@ -256,7 +299,7 @@ export async function executeToolCall(
   let toolCallMessages: CoreMessage[] = []
 
   if (toolName === 'pendle_opportunities' || toolName === 'wallet_balance' ||
-      toolName === 'pendle_quote' || toolName === 'pendle_swap') {
+      toolName === 'pendle_quote' || toolName === 'pendle_swap' || toolName === 'kodiak_opportunities') {
     // Do NOT output the tool result as a text message
     toolCallMessages = [
       {
@@ -282,7 +325,7 @@ export async function executeToolCall(
   }
 
   if (toolName === 'pendle_opportunities' || toolName === 'wallet_balance' ||
-      toolName === 'pendle_quote' || toolName === 'pendle_swap') {
+      toolName === 'pendle_quote' || toolName === 'pendle_swap' || toolName === 'kodiak_opportunities') {
     // Do NOT stream the annotation
     // (do NOT call dataStream.writeMessageAnnotation(...))
     // But DO add the tool result to the LLM context for the next turn
