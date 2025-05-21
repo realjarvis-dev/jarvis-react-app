@@ -3,11 +3,11 @@
 import { Model } from '@/lib/types/models'
 import { cn } from '@/lib/utils'
 import {
-    WalletWithMetadata,
-    useHeadlessDelegatedActions,
-    usePrivy,
-    useSolanaWallets,
-    useWallets
+  WalletWithMetadata,
+  useHeadlessDelegatedActions,
+  usePrivy,
+  useSolanaWallets,
+  useWallets
 } from '@privy-io/react-auth'
 import { Message } from 'ai'
 import { ArrowUp, ChevronDown, MessageCirclePlus, Square } from 'lucide-react'
@@ -219,6 +219,7 @@ export function ChatPanel({
   // isPageGradientActive // This prop might be removed
 }: ChatPanelProps) {
   // const [showEmptyScreen, setShowEmptyScreen] = useState(false) // Your existing state
+  const [showEmptyScreen, setShowEmptyScreen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const router = useRouter() // Your existing state
   const inputRef = useRef<HTMLTextAreaElement>(null) // Your existing state
