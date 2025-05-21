@@ -28,10 +28,10 @@ export const kodiakOpportunitiesTool = tool({
       ),
     network: z
       .enum(['mainnet', 'bepolia'])
-      .default('bepolia')
-      .describe('Network to fetch opportunities from. Default is bepolia (Berachain testnet).')
+      .default('mainnet')
+      .describe('Network to fetch opportunities from. Default is mainnet (Ethereum).')
   }),
-  execute: async ({ num_results = 10, apr_gte, apr_lte, network = 'bepolia' }) => {
+  execute: async ({ num_results = 10, apr_gte, apr_lte, network = 'mainnet' }) => {
     try {
       // Get all opportunities from Kodiak
       const allOpportunities = await getKodiakOpportunities(network);

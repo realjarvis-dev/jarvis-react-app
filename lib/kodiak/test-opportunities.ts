@@ -139,7 +139,7 @@ async function showActiveOpportunities() {
   
   try {
     // Get all active opportunities with default filtering (TVL >= $100)
-    const activeIslands = await getKodiakOpportunities('bepolia');
+    const activeIslands = await getKodiakOpportunities('mainnet');
     
     console.log(`Found ${activeIslands.length} active Kodiak Islands\n`);
     
