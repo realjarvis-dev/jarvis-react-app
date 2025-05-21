@@ -58,7 +58,7 @@ export default function GuestMenu({ login }: GuestMenuProps) {
           </button>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuSub>
+        {/* <DropdownMenuSub>
           <DropdownMenuSubTrigger>
             <Palette className="mr-2 h-4 w-4" />
             <span>Theme</span>
@@ -66,7 +66,7 @@ export default function GuestMenu({ login }: GuestMenuProps) {
           <DropdownMenuSubContent>
             <ThemeMenuItems />
           </DropdownMenuSubContent>
-        </DropdownMenuSub>
+        </DropdownMenuSub> */}
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
             <Link2 className="mr-2 h-4 w-4" />
