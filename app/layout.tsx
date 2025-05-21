@@ -60,7 +60,7 @@ export default async function RootLayout({
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
-          // enableSystem
+          enableSystem={false} // Set enableSystem to false
           disableTransitionOnChange
         >
           <WrappedPrivyProvider>

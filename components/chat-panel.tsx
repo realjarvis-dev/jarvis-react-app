@@ -389,7 +389,7 @@ export function ChatPanel({
         src="/videos/background.mp4" // Ensure this path is correct
         poster="/videos/background_poster.jpg" // Optional: path to a poster image
         isActive={showVideoBg}
-        playbackRate={0.75} // Adjust playback speed as desired
+        playbackRate={0.15} // Adjust playback speed as desired
       />
       <div
         className={cn(
