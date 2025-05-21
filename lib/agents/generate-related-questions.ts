@@ -22,12 +22,26 @@ export async function generateRelatedQuestions(
 
   const result = await generateObject({
     model: currentModel,
-    system: `As a professional web researcher, your task is to generate a set of three queries that explore the subject matter more deeply, building upon the initial query and the information uncovered in its search results.
+    system: `
+    ## Purpose
+    As a professional web researcher with DeFi expertise, your task is to generate a set of three queries that explore the subject matter more deeply, building upon the initial query and the information uncovered in its search results.
+    
+    ## Project context
+    - **Kodiak Island** is a DeFi investment product, not a real place.  
+    - **Pendle** is a protocol for trading future yield, not a traditional financial service.  
+    
+    ## Guidelines
+    1. Build on the user's original topic (e.g. "Comparison of yield pools on <protocol>")  
+    2. Leverage any insights uncovered in initial results about <protocol>’s products or services 
+    3. Progressively dive into more specific features, implications or adjacent topics. The goal is to anticipate the user's potential information needs and guide them towards a more comprehensive understanding of the subject matter.  
+    4. Don't ask what opportunities are available on <protocol> if tool already called
 
-    For instance, if the original query was "Starship's third test flight key milestones", your output should follow this format:
+    ## Output format
+    Your output should be in the same language as the user’s request and follow this format:
 
-    Aim to create queries that progressively delve into more specific aspects, implications, or adjacent topics related to the initial query. The goal is to anticipate the user's potential information needs and guide them towards a more comprehensive understanding of the subject matter.
-    Please match the language of the response to the user's language.`,
+    **[Broad contextual deep dive query]**  
+    **[Focused technical comparison or mechanism query]**  
+    **[Advanced implications or synergy query]** `,
     messages: lastMessages,
     schema: relatedSchema
   })
