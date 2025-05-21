@@ -1,15 +1,17 @@
 'use client'
 
 import { ToolInvocation } from 'ai'
+import { KodiakOpportunitiesSection } from './kodiak-opportunities-section'
 import { PendleOpportunitiesSection } from './pendle-opportunities-section'
 import { QuestionConfirmation } from './question-confirmation'
 import RetrieveSection from './retrieve-section'
 import { SearchSection } from './search-section'
 import { SimpleQuoteDisplay } from './simple-quote-display'
 import { SwapTransactionCard } from './swap-transaction-card'
+import { TransferSection } from './transfer-section'
 import { VideoSearchSection } from './video-search-section'
 import { WalletBalanceSection } from './wallet-balance-section'
-import { TransferSection } from './transfer-section'
+
 interface ToolSectionProps {
   tool: ToolInvocation
   isOpen: boolean
@@ -86,6 +88,14 @@ export function ToolSection({
     case 'pendle_opportunities':
       return (
         <PendleOpportunitiesSection
+          tool={tool}
+          isOpen={isOpen}
+          onOpenChange={onOpenChange}
+        />
+      )
+    case 'kodiak_opportunities':
+      return (
+        <KodiakOpportunitiesSection
           tool={tool}
           isOpen={isOpen}
           onOpenChange={onOpenChange}
