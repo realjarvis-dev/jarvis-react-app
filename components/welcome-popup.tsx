@@ -21,7 +21,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ onClose, open }) => {
       <DialogContent className="max-w-[90%] w-full sm:max-w-[525px] p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="text-center text-xl sm:text-2xl">
-          Enable Jarvis in Autopilot
+          Enable Jarvis in Autopilot Mode
           </DialogTitle>
           <DialogDescription className="text-center pt-2 text-sm sm:text-base">
           Jarvis will automatically carry out your approved on‑chain actions—you remain in full control and can revoke access anytime in settings.         
