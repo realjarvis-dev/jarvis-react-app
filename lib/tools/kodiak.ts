@@ -29,17 +29,33 @@ export const kodiakOpportunitiesTool = tool({
     network: z
       .enum(['mainnet', 'bepolia'])
       .default('mainnet')
-      .describe('Network to fetch opportunities from. Default is mainnet (Ethereum).')
+      .describe('Network to fetch opportunities from. Default is mainnet (Ethereum).'),
+    sortBy: z
+      .enum(['apr', 'tvl'])
+      .default('apr')
+      .describe('Sort opportunities by "apr" (highest first) or "tvl" (highest first). Default is "apr".')
   }),
-  execute: async ({ num_results = 10, apr_gte, apr_lte, network = 'mainnet' }) => {
+  execute: async ({ num_results = 10, apr_gte, apr_lte, network = 'mainnet', sortBy = 'apr' }) => {
     try {
       // Get all opportunities from Kodiak
       const allOpportunities = await getKodiakOpportunities(network);
       
-      // Sort by APR (highest first)
-      let sortedOpportunities = [...allOpportunities].sort((a, b) => 
-        b.apr.feeApr - a.apr.feeApr
-      );
+      // Sort opportunities based on sortBy parameter
+      let sortedOpportunities;
+      if (sortBy === 'tvl') {
+        // Sort by TVL (highest first)
+        sortedOpportunities = [...allOpportunities].sort((a, b) => {
+          // Handle both number and BigInt cases
+          const aTvl = typeof a.tvl.usdValue === 'bigint' ? Number(a.tvl.usdValue) : a.tvl.usdValue;
+          const bTvl = typeof b.tvl.usdValue === 'bigint' ? Number(b.tvl.usdValue) : b.tvl.usdValue;
+          return bTvl - aTvl;
+        });
+      } else {
+        // Sort by APR (highest first)
+        sortedOpportunities = [...allOpportunities].sort((a, b) => 
+          b.apr.feeApr - a.apr.feeApr
+        );
+      }
       
       // Apply APR filters if provided
       if (apr_gte !== undefined) {

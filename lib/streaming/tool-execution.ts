@@ -63,7 +63,7 @@ export async function executeToolCall(
 
             Available tools:
             - pendle_opportunities: Use when the user asks about Pendle yield opportunities farming on Ethereum. This tool returns a list of current Pendle opportunities with APY and liquidity information.
-            - kodiak_opportunities: Use when the user asks about Kodiak Islands yield opportunities. This tool returns a list of current Kodiak Islands with APR and TVL information.
+            - kodiak_opportunities: Use when the user asks about Kodiak Islands yield opportunities. This tool returns a list of current Kodiak Islands with APR and TVL information. Results can be sorted by APR (default) or TVL.
             - pendle_quote: Use when the user wants to get a quote for swapping ETH to a Pendle token (PT or YT).
             - pendle_swap: Use when the user wants to execute a swap transaction from ETH to a Pendle token (PT or YT).
             - wallet_balance: Use when the user asks about their wallet balance, token holdings, or specific token balance. This tool returns the user's cryptocurrency balances.
@@ -188,7 +188,7 @@ export async function executeToolCall(
       toolParams &&
       typeof toolParams === 'object' &&
       !('query' in toolParams) &&
-      ('num_results' in toolParams || 'apr_gte' in toolParams || 'apr_lte' in toolParams || 'network' in toolParams)
+      ('num_results' in toolParams || 'apr_gte' in toolParams || 'apr_lte' in toolParams || 'network' in toolParams || 'sortBy' in toolParams)
     ) {
       toolResults = await kodiakOpportunitiesTool.execute(
         toolParams as { 
@@ -196,6 +196,7 @@ export async function executeToolCall(
           apr_gte?: number; 
           apr_lte?: number;
           network: 'mainnet' | 'bepolia';
+          sortBy: 'apr' | 'tvl';
         },
         { toolCallId: 'kodiak_opportunities', messages: [] }
       )
