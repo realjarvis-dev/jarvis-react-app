@@ -45,7 +45,7 @@ export const kodiakOpportunitiesTool = tool({
       ),
     sort_by: z
       .enum(['apr', 'tvl'])
-      .default('tvl')
+      .default('apr')
       .describe('Field to sort by: "apr" or "tvl" (default: "tvl")'),
     max_results: z
       .number()
