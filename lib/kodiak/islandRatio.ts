@@ -1,4 +1,7 @@
 import { ethers } from 'ethers';
+import { BerachainMainnetConfig } from '../config/network';
+import { KodiakIsland } from '../types/kodiak';
+import { fetchVaultByAddress, mapSubgraphDataToIslands } from './subgraph';
 
 // Define interface for Token with address and decimals
 interface Token {
@@ -19,13 +22,29 @@ interface SwapCalculationResult {
   amountToSwap: bigint;
   amountToKeep: bigint;
   expectedOutput: bigint;
+  price?: bigint;
 }
 
 // Simple ABI for the Island contract's getMintAmounts function
 const ISLAND_ABI = [
   'function getMintAmounts(uint256 amount0Max, uint256 amount1Max) external view returns (uint256 amount0, uint256 amount1, uint256 mintAmount)',
   'function token0() external view returns (address)',
-  'function token1() external view returns (address)'
+  'function token1() external view returns (address)',
+  'function name() view returns (string)',
+  'function lowerTick() view returns (int24)',
+  'function upperTick() view returns (int24)',
+  'function pool() view returns (address)',
+  'function totalSupply() view returns (uint256)',
+  'function manager() view returns (address)',
+  'function isManaged() view returns (bool)',
+  'function managerFeeBPS() view returns (uint16)',
+  'function getUnderlyingBalances() view returns (uint256 amount0Current, uint256 amount1Current)'
+];
+
+// ABI for pool contract
+const POOL_ABI = [
+  'function fee() view returns (uint24)',
+  'function slot0() view returns (uint160 sqrtPriceX96, int24 tick, uint16 observationIndex, uint16 observationCardinality, uint16 observationCardinalityNext, uint8 feeProtocol, bool unlocked)'
 ];
 
 // Get token information from an ERC20 token
@@ -156,22 +175,35 @@ async function getIslandRatio(
  * @param provider The ethers provider
  * @param totalAmount The total amount of token to deposit
  * @param isToken0 Whether the input token is token0 (true) or token1 (false)
- * @param currentPrice Optional current price of token0 in terms of token1 (if not provided, will use the Island's ratio)
  * @returns Object containing the amount to swap, amount to keep, and expected output from swap
+ * @throws Error if current price cannot be determined
  */
 async function calculateOptimalSwapForIsland(
   islandAddress: string,
   provider: ethers.JsonRpcProvider,
   totalAmount: bigint,
-  isToken0: boolean,
-  currentPrice?: bigint
+  isToken0: boolean
 ): Promise<SwapCalculationResult> {
   // Get the island ratio first
   const islandState = await getIslandRatio(islandAddress, provider);
   
-  // Use the Island's actual ratio or the provided price
-  // This ensures we're calculating based on the ratio that the Island actually requires
-  const price = currentPrice || BigInt(10680);
+  // Get island details to extract the current price
+  const islandDetails = await getIslandDetails(islandAddress);
+  
+  // Require island details and tick to be available
+  if (!islandDetails) {
+    throw new Error(`Failed to fetch island details for ${islandAddress}`);
+  }
+  
+  if (islandDetails.tick === undefined) {
+    throw new Error(`Current tick is not available for island ${islandAddress}`);
+  }
+  
+  // Convert tick to price
+  const tickPrice = Math.pow(1.0001, islandDetails.tick);
+  // Scale by 10000 to match our ratio calculations
+  const price = BigInt(Math.round(tickPrice * 10000));
+  console.log(`Using current price from tick: ${tickPrice} (scaled: ${price})`);
   
   // Calculate how much to swap
   const amountToSwap = calculateSwapAmount(
@@ -200,8 +232,124 @@ async function calculateOptimalSwapForIsland(
   return {
     amountToSwap,
     amountToKeep,
-    expectedOutput
+    expectedOutput,
+    price // Also return the price that was used for reference
   };
+}
+
+/**
+ * Get details for a specific Kodiak Island by address
+ * @param address Island contract address
+ * @returns Island details or null if the island doesn't exist
+ */
+async function getIslandDetails(address: string): Promise<KodiakIsland | null> {
+  try {
+    console.log(`Fetching details for Kodiak Island ${address}...`);
+    
+    // First try to get data from subgraph (more efficient and includes real APR)
+    const subgraphData = await fetchVaultByAddress(address);
+
+    if (subgraphData) {
+      console.log(`Successfully fetched data from subgraph for Island ${address}`);
+      return mapSubgraphDataToIslands([subgraphData])[0];
+    }
+
+    console.log(`Subgraph data not available for ${address}, falling back to on-chain data...`);
+
+    // Fall back to on-chain data if subgraph fails
+    const provider = new ethers.JsonRpcProvider(BerachainMainnetConfig.rpcUrl);
+
+    // Create Island contract instance
+    const island = new ethers.Contract(address, ISLAND_ABI, provider);
+
+    // Get token addresses directly from the island contract
+    const token0Address = await island.token0();
+    const token1Address = await island.token1();
+
+    // Get pool address (for fee tier)
+    const poolAddress = await island.pool();
+
+    // Get token details
+    const token0 = await getTokenInfo(token0Address, provider);
+    const token1 = await getTokenInfo(token1Address, provider);
+
+    // Get name directly from the island contract or construct it
+    let name;
+    try {
+      name = await island.name();
+    } catch (error) {
+      // Fall back to constructed name if name() function fails
+      name = `Kodiak Island ${token0.symbol || 'Token0'}-${token1.symbol || 'Token1'}`;
+    }
+
+    // Get Island config
+    const lowerTick = await island.lowerTick();
+    const upperTick = await island.upperTick();
+    const manager = await island.manager();
+
+    // Check if island is managed
+    const isManaged = await island.isManaged();
+
+    // Get manager fee if managed
+    let managerFeeBPS = 0;
+    if (isManaged) {
+      managerFeeBPS = await island.managerFeeBPS();
+    }
+
+    // Get pool fee tier and current tick
+    let feeTier = 0; // Default to 0 if not available
+    let tick: number | undefined = undefined;
+    try {
+      const pool = new ethers.Contract(poolAddress, POOL_ABI, provider);
+      feeTier = Number(await pool.fee());
+      
+      // Get current tick from pool slot0
+      const slot0 = await pool.slot0();
+      tick = Number(slot0.tick);
+    } catch (error) {
+      console.warn(`Failed to get pool data: ${error}`);
+    }
+
+    // Get balances
+    const balances = await island.getUnderlyingBalances();
+
+    return {
+      address,
+      name,
+      token0: {
+        address: token0Address,
+        symbol: token0.symbol || 'Token0',
+        decimals: token0.decimals
+      },
+      token1: {
+        address: token1Address,
+        symbol: token1.symbol || 'Token1',
+        decimals: token1.decimals
+      },
+      totalSupply: (await island.totalSupply()).toString(),
+      lowerTick: Number(lowerTick),
+      upperTick: Number(upperTick),
+      feeTier,
+      manager,
+      isManaged,
+      managerFeeBPS: Number(managerFeeBPS),
+      tvl: {
+        token0Amount: balances[0].toString(),
+        token1Amount: balances[1].toString(),
+        usdValue: 0 // Can't determine USD value from on-chain data
+      },
+      apr: {
+        feeApr: 0,
+        combinedApr: 0,
+        isEstimate: true // On-chain data doesn't provide APR information
+      },
+      poolType: 'Island',
+      tick
+    };
+  } catch (error) {
+    console.error(`Error fetching Island details: ${error}`);
+    return null;
+  }
 }
 
 // Example usage function
@@ -221,8 +369,7 @@ async function checkIslandRatio(islandAddress: string, rpcUrl: string) {
 
 export {
     calculateOptimalSwapForIsland, calculateSwapAmount,
-    checkIslandRatio,
-    getIslandRatio
+    checkIslandRatio, getIslandDetails, getIslandRatio
 };
 
 // Export types
