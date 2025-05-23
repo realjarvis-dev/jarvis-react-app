@@ -22,7 +22,32 @@ interface SwapCalculationResult {
   amountToSwap: bigint;
   amountToKeep: bigint;
   expectedOutput: bigint;
-  price?: bigint;
+  islandAddress: string;
+  tokenInAddress: string;
+  tokenOutAddress: string;
+}
+
+// Interface for Kodiak Quote API response
+interface KodiakQuoteResult {
+  blockNumber: string;
+  amount: string;
+  amountDecimals: string;
+  quote: string;
+  quoteDecimals: string;
+  quoteGasAdjusted: string;
+  quoteGasAdjustedDecimals: string;
+  gasUseEstimateQuote: string;
+  gasUseEstimateQuoteDecimals: string;
+  gasUseEstimate: string;
+  gasUseEstimateUSD: string;
+  gasPriceWei: string;
+  route: any[];
+  routeString: string;
+  quoteId: string;
+  methodParameters?: {
+    calldata: string;
+    value: string;
+  };
 }
 
 // Simple ABI for the Island contract's getMintAmounts function
@@ -175,7 +200,7 @@ async function getIslandRatio(
  * @param provider The ethers provider
  * @param totalAmount The total amount of token to deposit
  * @param isToken0 Whether the input token is token0 (true) or token1 (false)
- * @returns Object containing the amount to swap, amount to keep, and expected output from swap
+ * @returns Object containing the amount to swap, amount to keep, expected output from swap, and token addresses
  * @throws Error if current price cannot be determined
  */
 async function calculateOptimalSwapForIsland(
@@ -229,11 +254,17 @@ async function calculateOptimalSwapForIsland(
     expectedOutput = (amountToSwap * BigInt(10000)) / price;
   }
   
+  // Set token addresses based on isToken0 flag
+  const tokenInAddress = isToken0 ? islandDetails.token0.address : islandDetails.token1.address;
+  const tokenOutAddress = isToken0 ? islandDetails.token1.address : islandDetails.token0.address;
+  
   return {
     amountToSwap,
     amountToKeep,
     expectedOutput,
-    price // Also return the price that was used for reference
+    islandAddress,
+    tokenInAddress,
+    tokenOutAddress
   };
 }
 
@@ -363,6 +394,52 @@ async function checkIslandRatio(islandAddress: string, rpcUrl: string) {
     return ratio;
   } catch (error) {
     console.error('Error fetching island ratio:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get the swap calldata from Kodiak Quote API based on the output from calculateOptimalSwapForIsland
+ * @param swapResult The result from calculateOptimalSwapForIsland
+ * @returns Raw API response 
+ * @throws Error if API call fails or returns invalid data
+ */
+async function getKodiakSwapCalldata(
+  swapResult: SwapCalculationResult
+): Promise<any> {
+  // Constants for the API call
+  const CHAIN_ID = BerachainMainnetConfig.chainId;
+  const PROTOCOLS = "v2,v3,mixed";
+  const TYPE = "exactIn";
+  const DEADLINE = "60";
+  const SLIPPAGE_TOLERANCE = "1";
+  const RECIPIENT = process.env.WALLET_ADDRESS;
+  
+  // Base URL for the Kodiak Quote API
+  const API_URL = "https://api.kodiak.finance/quote";
+  
+  // Prepare query parameters for the API call
+  const params = {
+    protocols: PROTOCOLS,
+    tokenInAddress: swapResult.tokenInAddress,
+    tokenInChainId: CHAIN_ID,
+    tokenOutAddress: swapResult.tokenOutAddress,
+    tokenOutChainId: CHAIN_ID,
+    amount: swapResult.amountToSwap.toString(),
+    type: TYPE,
+    recipient: RECIPIENT,
+    deadline: DEADLINE,
+    slippageTolerance: SLIPPAGE_TOLERANCE
+  };
+  
+  try {
+    // Make the API call
+    const response = await axios.get(API_URL, { params });
+    
+    // Return the raw response data
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching quote from Kodiak API:', error);
     throw error;
   }
 }
