@@ -110,7 +110,8 @@ export async function getSwapTransaction(
  * @returns Promise with transaction hash
  */
 export async function executeSwapTransaction(
-  txData: TransactionRequest
+  txData: TransactionRequest,
+  chainId: number = 1
 ): Promise<{ hash: string }> {
   try {
     // // Verify environment variables are set
@@ -131,7 +132,6 @@ export async function executeSwapTransaction(
     const from = txData.from
 
     const data = txData.data
-    const chainId = 1
     const value = txData.value
     const evmWallet = await getUserWallet('ethereum')
     if (!evmWallet) {
@@ -151,7 +151,8 @@ export async function executeSwapTransaction(
       to: txData.to,
       from: txData.from,
       data: txData.data,
-      value: txData.value ?? BigInt(0)
+      value: txData.value ?? BigInt(0),
+      chainId: chainId
     })
     // Add a 20 % buffer
     const gasLimit = gasEstimate + gasEstimate / BigInt(5)

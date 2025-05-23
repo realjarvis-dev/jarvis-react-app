@@ -8,6 +8,7 @@ import { retrieveTool } from '../tools/retrieve'
 import { createSearchTool } from '../tools/search'
 import { createVideoSearchTool } from '../tools/video-search'
 import { walletBalanceTool } from '../tools/wallet'
+import { genericSwapTool } from '../tools/generic-swap'
 import { getModel } from '../utils/registry'
 const SYSTEM_PROMPT = `
 Instructions:
@@ -160,8 +161,8 @@ export function researcher({
     const videoSearchTool = createVideoSearchTool(model)
     const askQuestionTool = createQuestionTool(model)
 
-    const all_tools = ['search', 'retrieve', 'videoSearch', 'ask_question', 'pendle_opportunities', 'pendle_quote', 'pendle_swap', 'wallet_balance', 'privy_transfer', 'kodiak_opportunities']
-    const web3_tools = ['wallet_balance', 'privy_transfer','pendle_opportunities', 'pendle_quote', 'pendle_swap', 'kodiak_opportunities']
+    const all_tools = ['search', 'retrieve', 'videoSearch', 'ask_question', 'pendle_opportunities', 'pendle_quote', 'pendle_swap', 'wallet_balance', 'privy_transfer', 'kodiak_opportunities', 'generic_swap']
+    const web3_tools = ['wallet_balance', 'privy_transfer','pendle_opportunities', 'pendle_quote', 'pendle_swap', 'kodiak_opportunities', 'generic_swap']
 
     const userWalletInfo = `
     User EVM wallet address: ${userEvmWallet?.address}, delegated status: ${userEvmWallet?.delegated}
@@ -178,7 +179,8 @@ export function researcher({
       pendle_swap: pendleSwapTool,
       wallet_balance: walletBalanceTool,
       privy_transfer: privyTransferTool,
-      kodiak_opportunities: kodiakOpportunitiesTool
+      kodiak_opportunities: kodiakOpportunitiesTool,
+      generic_swap: genericSwapTool
     }
 
     let o3_mini_tool_lst = {
@@ -201,9 +203,9 @@ export function researcher({
 
 
     let prompt = `${model === "openai:o3-mini" ? O3_MINI_SYSTEM_PROMPT : SYSTEM_PROMPT}\nCurrent date and time: ${currentDate}\n${model === "openai:o3-mini" ? '' : userWalletInfo}`
-    console.log('prompt', prompt)
-    console.log('model', model)
-    console.log('all_tools', all_tools)
+    // console.log('prompt', prompt)
+    // console.log('model', model)
+    // console.log('all_tools', all_tools)
     return {
       model: getModel(model),
       system: prompt,
