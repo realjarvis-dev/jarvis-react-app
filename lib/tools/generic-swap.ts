@@ -218,7 +218,7 @@ export const genericSwapTool = tool({
       await logToFile(logFilePath, logContent)
 
       // TODO: uncomment this when ready
-      const result = await executeSwapTransaction(txData)
+      const result = await executeSwapTransaction(txData, chainId=chainId)
 
       const completeTime = new Date().toISOString()
 
