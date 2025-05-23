@@ -29,7 +29,7 @@ function formatManagerFee(feeBPS: number): string {
 }
 
 export const kodiakOpportunitiesTool = tool({
-  description: 'Get Kodiak Island yield opportunities on Berachain.',
+  description: 'Get Kodiak Island yield opportunities on Berachain. This tool automatically renders UI.',
   parameters: z.object({
     apr_gte: z
       .number()

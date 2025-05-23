@@ -7,9 +7,11 @@ import {
   executeSwapTransaction,
   getSwapEthToTokenTransaction
 } from '../pendle/transactions'
+import { ensoSwapEthToToken } from '../enso/swap'
+import { getUserEvmWalletAddress } from '../privy/client'
 
 export const pendleOpportunitiesTool = tool({
-  description: 'Get Pendle yield opportunities on Ethereum.',
+  description: 'Get Pendle yield opportunities on Ethereum. This tool automatically renders UI.',
   parameters: z.object({
     max_results: z
       .number()
@@ -58,7 +60,7 @@ export const pendleOpportunitiesTool = tool({
 })
 
 export const pendleQuoteTool = tool({
-  description: 'Get a quote for swapping ETH to a Pendle market token.',
+  description: 'Get a quote for swapping ETH to a Pendle market token. This tool automatically renders UI.',
   parameters: z.object({
     market_address: z.string().describe('The address of the Pendle market'),
     token_out_address: z
@@ -69,8 +71,9 @@ export const pendleQuoteTool = tool({
       .describe('The name of the market (required, e.g. "rswETH")'),
     token_type: z
       .enum(['pt', 'yt'])
+      .default('pt')
       .describe(
-        'The token type - "pt" for Principal Token or "yt" for Yield Token'
+        'The token type - "pt" for Principal Token or "yt" for Yield Token. Default to pt as only pt trading is available now.'
       )
   }),
   execute: async ({
@@ -112,12 +115,12 @@ export const pendleQuoteTool = tool({
 
 export const pendleSwapTool = tool({
   description:
-    'Execute a swap transaction from ETH to a Pendle token (PT or YT).',
+    'Execute a swap transaction from ETH to a Pendle token (PT only). This tool automatically renders UI.',
   parameters: z.object({
-    market_address: z.string().describe('The address of the Pendle market'),
+    // market_address: z.string().describe('The address of the Pendle market'),
     token_out_address: z
       .string()
-      .describe('The address of the token to receive (PT or YT)'),
+      .describe('The address of the token to receive (PT only)'),
     amount_in_eth: z
       .string()
       .describe('Amount of ETH to swap (in ETH units, e.g. "1" for 1 ETH)'),
@@ -133,7 +136,7 @@ export const pendleSwapTool = tool({
       .describe('The name of the token to receive (e.g. "PT weETH")')
   }),
   execute: async ({
-    market_address,
+    // market_address,
     token_out_address,
     amount_in_eth,
     slippage = 0.01,
@@ -148,13 +151,27 @@ export const pendleSwapTool = tool({
         throw new Error(`Invalid ETH amount: ${amount_in_eth}`)
       }
 
-      // Get the transaction data
-      const txData = await getSwapEthToTokenTransaction(
-        market_address.toLowerCase().trim(),
-        token_out_address.toLowerCase().trim(),
-        amountInWei,
+      // // // Get the transaction data
+      // const txData = await getSwapEthToTokenTransaction(
+      //   market_address.toLowerCase().trim(),
+      //   token_out_address.toLowerCase().trim(),
+      //   amountInWei,
+      //   slippage
+      // )
+
+      const evmWalletAddress = await getUserEvmWalletAddress()
+      if (!evmWalletAddress) {
+        throw new Error('EVM wallet not found')
+      }
+
+
+      const txData = await ensoSwapEthToToken({
+        tokenOut: token_out_address.toLowerCase().trim(),
+        fromAddress: evmWalletAddress,
+        amountIn: amountInWei,
         slippage
-      )
+      })
+
 
       // Execute the transaction
       const result = await executeSwapTransaction(txData)
@@ -173,7 +190,7 @@ export const pendleSwapTool = tool({
           from: 'ETH',
           to: tokenDisplay,
           amount: amount_in_eth + ' ETH',
-          market: market_address
+          // market: market_address
         }
       }
     } catch (error: any) {
@@ -181,7 +198,7 @@ export const pendleSwapTool = tool({
       return {
         success: false,
         error: error.message || 'Failed to execute swap',
-        market_address,
+        // market_address,
         token_out_address
       }
     }

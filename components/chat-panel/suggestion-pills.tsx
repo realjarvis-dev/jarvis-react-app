@@ -66,7 +66,7 @@ export function SuggestionPills({ onSelectSuggestion }: SuggestionPillsProps) {
   const suggestionsRow1: Suggestion[] = [
     { text: "Check my ETH wallet balance", icon: <Receipt className="size-3.5 stroke-current" /> },
     { text: "Swap 0.1 ETH for eETH PT on Pendle", icon: <TrendingUp className="size-3.5 stroke-current" /> },
-    { text: "Show top Pendle YT yields", icon: <BarChart3 className="size-3.5 stroke-current" /> },
+    { text: "Show top Pendle PT yields", icon: <BarChart3 className="size-3.5 stroke-current" /> },
     { text: "What's the current gas fee?", icon: <Zap className="size-3.5 stroke-current" /> }, // New
     { text: "Explore DeFi yield farming options", icon: <Building className="size-3.5 stroke-current" /> }, // New
   ];
