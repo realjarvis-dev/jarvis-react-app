@@ -11,7 +11,7 @@ import { ensoSwapEthToToken } from '../enso/swap'
 import { getUserEvmWalletAddress } from '../privy/client'
 
 export const pendleOpportunitiesTool = tool({
-  description: 'Get Pendle yield opportunities on Ethereum.',
+  description: 'Get Pendle yield opportunities on Ethereum. This tool automatically renders UI.',
   parameters: z.object({
     max_results: z
       .number()
@@ -60,7 +60,7 @@ export const pendleOpportunitiesTool = tool({
 })
 
 export const pendleQuoteTool = tool({
-  description: 'Get a quote for swapping ETH to a Pendle market token.',
+  description: 'Get a quote for swapping ETH to a Pendle market token. This tool automatically renders UI.',
   parameters: z.object({
     market_address: z.string().describe('The address of the Pendle market'),
     token_out_address: z
@@ -115,7 +115,7 @@ export const pendleQuoteTool = tool({
 
 export const pendleSwapTool = tool({
   description:
-    'Execute a swap transaction from ETH to a Pendle token (PT only).',
+    'Execute a swap transaction from ETH to a Pendle token (PT only). This tool automatically renders UI.',
   parameters: z.object({
     // market_address: z.string().describe('The address of the Pendle market'),
     token_out_address: z

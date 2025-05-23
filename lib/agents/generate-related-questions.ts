@@ -15,14 +15,22 @@ export async function generateRelatedQuestions(
     role: 'user'
   })) as CoreMessage[]
 
+  console.log('lastMessages', lastMessages)
+
   const supportedModel = isToolCallSupported(model)
   const currentModel = supportedModel
     ? getModel(model)
     : getToolCallModel(model)
 
-  const result = await generateObject({
-    model: currentModel,
-    system: `
+  const maxRetries = 3
+  let currentRetry = 0
+  let delay = 1000 // initial delay 1 second
+
+  while (currentRetry < maxRetries) {
+    try {
+      const result = await generateObject({
+        model: currentModel,
+        system: `
     ## Purpose
     As a professional web researcher with DeFi expertise, your task is to generate a set of three queries that explore the subject matter more deeply, building upon the initial query and the information uncovered in its search results.
     
@@ -42,9 +50,27 @@ export async function generateRelatedQuestions(
     **[Broad contextual deep dive query]**  
     **[Focused technical comparison or mechanism query]**  
     **[Advanced implications or synergy query]** `,
-    messages: lastMessages,
-    schema: relatedSchema
-  })
-
-  return result
+        messages: lastMessages,
+        schema: relatedSchema
+      })
+      return result // Success, exit the loop and return
+    } catch (error) {
+      currentRetry++
+      if (currentRetry >= maxRetries) {
+        console.error('Max retries reached. Failing operation.', error)
+        throw error // Rethrow the last error
+      }
+      console.warn(
+        `Attempt ${currentRetry} failed. Retrying in ${delay / 1000}s...`,
+        error
+      )
+      await new Promise(resolve => setTimeout(resolve, delay))
+      delay *= 2 // Exponential backoff
+    }
+  }
+  // This part should not be reached if logic is correct,
+  // but as a fallback, throw an error.
+  throw new Error(
+    'Failed to generate related questions after multiple retries.'
+  )
 }
