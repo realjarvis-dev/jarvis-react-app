@@ -559,6 +559,8 @@ async function depositToKodiakIsland(params: DepositParams): Promise<DepositResu
         error_message: 'Invalid quote amount received from Kodiak API'
       };
     }
+
+    console.log("Start approving")
     
     // Step 3: Approve token spending
     const approvalTx = await approveToken(
@@ -569,10 +571,12 @@ async function depositToKodiakIsland(params: DepositParams): Promise<DepositResu
       userAddress
     );
     
+    console.log("end approving")
+
     if (approvalTx.status === 'fail') {
       return approvalTx;
     }
-    
+    console.log("start depositing")
     // Step 4: Execute the deposit transaction
     return await executeDeposit(
       swapResult,
@@ -582,6 +586,7 @@ async function depositToKodiakIsland(params: DepositParams): Promise<DepositResu
       userAddress,
       totalAmount
     );
+    console.log("end depositing")
     
   } catch (error) {
     return {
@@ -603,7 +608,9 @@ async function approveToken(
 ): Promise<DepositResult> {
   try {
     // Get current allowance
-    const provider = new ethers.JsonRpcProvider(BerachainMainnetConfig.rpcUrl);
+    // const provider = new ethers.JsonRpcProvider(BerachainMainnetConfig.rpcUrl);
+    // TODO: only for debugging purpose, change it back later
+    const provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545");
     const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
     const allowance = await tokenContract.allowance(userAddress, spenderAddress);
     
@@ -621,19 +628,61 @@ async function approveToken(
     const idempotencyKey = uuidv4();
     
     try {
+
+    const block = await provider.getBlock('latest')
+    const baseFee = block?.baseFeePerGas
+    console.log('baseFee', baseFee)
+    const maxFee = baseFee ? BigInt(baseFee) * BigInt(2) : BigInt(1010690044) // ~2× base fee
+    const priority = ethers.parseUnits('1', 'gwei') // 1 gwei tip
+
+    console.log('Sending transaction...')
+
+
+    const evmWallet = await getUserWallet('ethereum')
+    if (!evmWallet) {
+      throw new Error('EVM wallet not found')
+    }
+    if (!evmWallet.id) {
+      throw new Error('EVM wallet ID not found')
+    }
+    const correctNonce = await provider.getTransactionCount(userAddress as `0x${string}`, "pending");
+
+
+
+    // Gas estimation
+    const gasEstimate = await provider.estimateGas({
+      to: tokenAddress as `0x${string}`,
+      from: userAddress as `0x${string}`,
+      data: approvalData as `0x${string}`,
+      value: BigInt(0)
+    })
+    // Add a 20 % buffer
+    const gasLimit = gasEstimate + gasEstimate / BigInt(5)
+
       // Send approval transaction using Privy
-      const { hash } = await privy.walletApi.ethereum.sendTransaction({
+      const { signedTransaction, encoding } = await privy.walletApi.ethereum.signTransaction({
         walletId: wallet.id,
-        caip2: `eip155:${BerachainMainnetConfig.chainId}`,
+        // caip2: `eip155:${BerachainMainnetConfig.chainId}`,
         transaction: {
           to: tokenAddress as `0x${string}`,
           data: approvalData as `0x${string}`,
-          chainId: BerachainMainnetConfig.chainId
+          chainId: BerachainMainnetConfig.chainId,
+          gasLimit: ethers.toQuantity(gasLimit) as `0x${string}`,
+          maxFeePerGas: ethers.toQuantity(maxFee + priority) as `0x${string}`,
+          maxPriorityFeePerGas: ethers.toQuantity(priority) as `0x${string}`,
+          nonce: correctNonce
+
         },
         idempotencyKey: idempotencyKey
       });
+
+        //TODO: change the url back later. only for debugging purpose
+
+        
+
+        const txResponse = await provider.broadcastTransaction(signedTransaction)
       
-      return { status: 'success', hash };
+      return { status: 'success', hash: txResponse.hash };
     } catch (txError) {
       throw txError;
     }
@@ -695,22 +744,67 @@ async function executeDeposit(
     ]);
     
     const idempotencyKey = uuidv4();
+
+    //TODO: change the url back later. only for debugging purpose
+    const provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545");
+
+    const block = await provider.getBlock('latest')
+    const baseFee = block?.baseFeePerGas
+    console.log('baseFee', baseFee)
+    const maxFee = baseFee ? BigInt(baseFee) * BigInt(2) : BigInt(1010690044) // ~2× base fee
+    const priority = ethers.parseUnits('1', 'gwei') // 1 gwei tip
+
+    console.log('Sending transaction...')
+
+
+    const evmWallet = await getUserWallet('ethereum')
+    if (!evmWallet) {
+      throw new Error('EVM wallet not found')
+    }
+    if (!evmWallet.id) {
+      throw new Error('EVM wallet ID not found')
+    }
+    const correctNonce = await provider.getTransactionCount(userAddress as `0x${string}`, "pending");
+
+
+
+    // // Gas estimation
+    // const gasEstimate = await provider.estimateGas({
+    //   to: KODIAK_ROUTER_ADDRESS as `0x${string}`,
+    //   from: userAddress as `0x${string}`,
+    //   data: depositData as `0x${string}`,
+    //   value: totalAmount
+    // })
+    // // Add a 20 % buffer
+    // const gasLimit = gasEstimate + gasEstimate / BigInt(5)
+
     
     try {
       // Send deposit transaction using Privy
-      const { hash } = await privy.walletApi.ethereum.sendTransaction({
+      const { encoding, signedTransaction } = await privy.walletApi.ethereum.signTransaction({
         walletId: wallet.id,
-        caip2: `eip155:${BerachainMainnetConfig.chainId}`,
+        // caip2: `eip155:${BerachainMainnetConfig.chainId}`,
         transaction: {
           to: KODIAK_ROUTER_ADDRESS as `0x${string}`,
           data: depositData as `0x${string}`,
-          chainId: BerachainMainnetConfig.chainId
+          chainId: BerachainMainnetConfig.chainId,
+          from: userAddress as `0x${string}`,
+          gasLimit: 650000,
+          // gasLimit: ethers.toQuantity(gasLimit) as `0x${string}`,
+          maxFeePerGas: ethers.toQuantity(maxFee + priority) as `0x${string}`,
+          maxPriorityFeePerGas: ethers.toQuantity(priority) as `0x${string}`,
+          nonce: correctNonce,
         },
         idempotencyKey: idempotencyKey
       });
+
+     
+
       
-      console.log("[Kodiak Deposit] Transaction successful with hash:", hash);
-      return { status: 'success', hash };
+
+      const txResponse = await provider.broadcastTransaction(signedTransaction)
+      console.log("[Kodiak Deposit] Transaction successful with hash:", txResponse.hash);
+      return { status: 'success', hash: txResponse.hash };
     } catch (txError) {
       console.error("[Kodiak Deposit] Transaction failed:", txError);
       throw txError;
