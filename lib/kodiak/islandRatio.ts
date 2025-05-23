@@ -118,7 +118,7 @@ async function getTokenInfo(tokenAddress: string, provider: ethers.JsonRpcProvid
   
   return {
     address: tokenAddress,
-    decimals: Number(decimals), // Ensure decimals is a number
+    decimals: Number(decimals),
     symbol
   };
 }
@@ -139,39 +139,13 @@ function calculateSwapAmount(
   ratio1: bigint,
   isToken0: boolean
 ): bigint {
-  // Instead of using the formula directly from the documentation, which seems to lead to
-  // swapping almost everything, let's implement a more intuitive approach.
-  
   if (isToken0) {
-    // If depositing token0 (e.g., sUSDa):
-    // 1. Calculate the portion of token0 to keep based on the ratio
-    // 2. The rest will be swapped to token1
-    
-    // Calculate what portion of the total input we should keep
-    // For optimal deposit: keep_amount * ratio = swap_amount * price / 10000
-    
-    // For our example: ratio = 12656 (1.2656)
-    // We want: keep_amount * 1.2656 = (totalAmount - keep_amount) * price / 10000
-    // Solving for keep_amount:
-    // keep_amount = (totalAmount * price) / (ratio * 10000 + price)
-    
     const denominator = (ratio0 * price) + (ratio1 * BigInt(10000));
     const amountToKeep = (totalAmount * ratio0 * price) / denominator;
-    
-    // Amount to swap is the rest
     return totalAmount - amountToKeep;
   } else {
-    // If depositing token1 (e.g., USDa):
-    // We use a similar approach but adjusted for token1
-    
-    // For optimal deposit: keep_amount / ratio = swap_amount * 10000 / price
-    // Solving for keep_amount:
-    // keep_amount = (totalAmount * ratio) / (10000 + ratio)
-    
     const denominator = (ratio1 * BigInt(10000)) + (ratio0 * price);
     const amountToKeep = (totalAmount * ratio1 * BigInt(10000)) / denominator;
-    
-    // Amount to swap is the rest
     return totalAmount - amountToKeep;
   }
 }
@@ -190,8 +164,6 @@ async function getIslandRatio(
   // Get token information
   const token0 = await getTokenInfo(token0Address, provider);
   const token1 = await getTokenInfo(token1Address, provider);
-  
-  console.log(`Island tokens: ${token0.symbol} (${token0.decimals} decimals) and ${token1.symbol} (${token1.decimals} decimals)`);
   
   // Use 1 unit of each token to check the ratio
   const amount0 = ethers.parseUnits('1', token0.decimals);
@@ -234,7 +206,6 @@ async function getIslandRatio(
  * @param totalAmount The total amount of token to deposit
  * @param isToken0 Whether the input token is token0 (true) or token1 (false)
  * @returns Object containing the amount to swap, amount to keep, expected output from swap, and token addresses
- * @throws Error if current price cannot be determined
  */
 async function calculateOptimalSwapForIsland(
   islandAddress: string,
@@ -261,7 +232,6 @@ async function calculateOptimalSwapForIsland(
   const tickPrice = Math.pow(1.0001, islandDetails.tick);
   // Scale by 10000 to match our ratio calculations
   const price = BigInt(Math.round(tickPrice * 10000));
-  console.log(`Using current price from tick: ${tickPrice} (scaled: ${price})`);
   
   // Calculate how much to swap
   const amountToSwap = calculateSwapAmount(
@@ -275,15 +245,11 @@ async function calculateOptimalSwapForIsland(
   // Calculate how much of the input token to keep
   const amountToKeep = totalAmount - amountToSwap;
   
-  // Calculate expected output from swap (simplified, actual output depends on AMM curve)
+  // Calculate expected output from swap
   let expectedOutput: bigint;
   if (isToken0) {
-    // If swapping token0 for token1, use the price
-    // The ratio is already scaled by 10000, so we need to adjust for that
     expectedOutput = (amountToSwap * price) / BigInt(10000);
   } else {
-    // If swapping token1 for token0, use the inverse of the price
-    // The ratio is already scaled by 10000, so we need to adjust for that
     expectedOutput = (amountToSwap * BigInt(10000)) / price;
   }
   
@@ -308,17 +274,12 @@ async function calculateOptimalSwapForIsland(
  */
 async function getIslandDetails(address: string): Promise<KodiakIsland | null> {
   try {
-    console.log(`Fetching details for Kodiak Island ${address}...`);
-    
     // First try to get data from subgraph (more efficient and includes real APR)
     const subgraphData = await fetchVaultByAddress(address);
 
     if (subgraphData) {
-      console.log(`Successfully fetched data from subgraph for Island ${address}`);
       return mapSubgraphDataToIslands([subgraphData])[0];
     }
-
-    console.log(`Subgraph data not available for ${address}, falling back to on-chain data...`);
 
     // Fall back to on-chain data if subgraph fails
     const provider = new ethers.JsonRpcProvider(BerachainMainnetConfig.rpcUrl);
@@ -371,7 +332,7 @@ async function getIslandDetails(address: string): Promise<KodiakIsland | null> {
       const slot0 = await pool.slot0();
       tick = Number(slot0.tick);
     } catch (error) {
-      console.warn(`Failed to get pool data: ${error}`);
+      // Silently fail if pool data can't be fetched
     }
 
     // Get balances
@@ -411,23 +372,7 @@ async function getIslandDetails(address: string): Promise<KodiakIsland | null> {
       tick
     };
   } catch (error) {
-    console.error(`Error fetching Island details: ${error}`);
     return null;
-  }
-}
-
-// Example usage function
-async function checkIslandRatio(islandAddress: string, rpcUrl: string) {
-  const provider = new ethers.JsonRpcProvider(rpcUrl);
-  
-  try {
-    console.log(`Checking ratio for island: ${islandAddress}`);
-    const ratio = await getIslandRatio(islandAddress, provider);
-    
-    return ratio;
-  } catch (error) {
-    console.error('Error fetching island ratio:', error);
-    throw error;
   }
 }
 
@@ -446,7 +391,13 @@ async function getKodiakSwapCalldata(
   const TYPE = "exactIn";
   const DEADLINE = "60";
   const SLIPPAGE_TOLERANCE = "1";
-  const RECIPIENT = process.env.WALLET_ADDRESS;
+  
+  // Get the user's wallet address for the recipient
+  const userAddress = await getUserEvmWalletAddress();
+  if (!userAddress) {
+    throw new Error('Could not get user wallet address');
+  }
+  const RECIPIENT = userAddress;
   
   // Base URL for the Kodiak Quote API
   const API_URL = "https://api.kodiak.finance/quote";
@@ -469,10 +420,15 @@ async function getKodiakSwapCalldata(
     // Make the API call
     const response = await axios.get(API_URL, { params });
     
-    // Return the raw response data
-    return response.data;
+    // Validate the response data
+    const data = response.data;
+    if (!data || !data.quote || !data.methodParameters?.calldata) {
+      throw new Error('Invalid response from Kodiak API: missing required fields');
+    }
+    
+    // Return the validated response data
+    return data;
   } catch (error) {
-    console.error('Error fetching quote from Kodiak API:', error);
     throw error;
   }
 }
@@ -484,6 +440,35 @@ async function getKodiakSwapCalldata(
  */
 async function depositToKodiakIsland(params: DepositParams): Promise<DepositResult> {
   try {
+    // Validate input parameters
+    if (!params.islandAddress || !ethers.isAddress(params.islandAddress)) {
+      return {
+        status: 'fail',
+        error_message: 'Invalid island address'
+      };
+    }
+    
+    if (!params.totalAmount || isNaN(Number(params.totalAmount)) || Number(params.totalAmount) <= 0) {
+      return {
+        status: 'fail',
+        error_message: 'Invalid deposit amount'
+      };
+    }
+    
+    if (params.slippageBPS < 0 || params.slippageBPS > 10000) {
+      return {
+        status: 'fail',
+        error_message: 'Invalid slippage: must be between 0 and 10000 BPS'
+      };
+    }
+    
+    if (!params.minSharesReceived || isNaN(Number(params.minSharesReceived))) {
+      return {
+        status: 'fail',
+        error_message: 'Invalid minimum shares parameter'
+      };
+    }
+    
     // Get user's wallet
     const wallet = await getUserWallet('ethereum');
     if (!wallet) {
@@ -541,7 +526,6 @@ async function depositToKodiakIsland(params: DepositParams): Promise<DepositResu
     const totalAmount = ethers.parseUnits(params.totalAmount, decimals);
     
     // Step 1: Calculate optimal swap
-    console.log(`Calculating optimal swap for ${params.totalAmount} tokens...`);
     const swapResult = await calculateOptimalSwapForIsland(
       params.islandAddress,
       provider,
@@ -550,14 +534,29 @@ async function depositToKodiakIsland(params: DepositParams): Promise<DepositResu
     );
     
     // Step 2: Get quote and calldata from Kodiak API
-    console.log('Fetching quote from Kodiak API...');
     const quoteResult = await getKodiakSwapCalldata(swapResult);
+    
+    // Check if quote result is valid and contains all required fields
+    if (!quoteResult) {
+      return {
+        status: 'fail',
+        error_message: 'Failed to get quote from Kodiak API'
+      };
+    }
     
     // Check if calldata is present
     if (!quoteResult.methodParameters?.calldata) {
       return {
         status: 'fail',
         error_message: 'Failed to get calldata from Kodiak API'
+      };
+    }
+    
+    // Verify that the quote amount is valid
+    if (!quoteResult.quote || isNaN(Number(quoteResult.quote)) || Number(quoteResult.quote) <= 0) {
+      return {
+        status: 'fail',
+        error_message: 'Invalid quote amount received from Kodiak API'
       };
     }
     
@@ -574,19 +573,17 @@ async function depositToKodiakIsland(params: DepositParams): Promise<DepositResu
       return approvalTx;
     }
     
-    console.log('Token approval successful');
-    
     // Step 4: Execute the deposit transaction
     return await executeDeposit(
       swapResult,
       quoteResult,
       params,
       wallet,
-      userAddress
+      userAddress,
+      totalAmount
     );
     
   } catch (error) {
-    console.error('Error in depositToKodiakIsland:', error);
     return {
       status: 'fail',
       error_message: error instanceof Error ? error.message : String(error)
@@ -612,7 +609,6 @@ async function approveToken(
     
     // Skip approval if allowance is sufficient
     if (allowance >= BigInt(amount)) {
-      console.log('Existing allowance is sufficient');
       return { status: 'success' };
     }
     
@@ -624,23 +620,24 @@ async function approveToken(
     
     const idempotencyKey = uuidv4();
     
-    // Send approval transaction using Privy
-    const { hash } = await privy.walletApi.ethereum.sendTransaction({
-      walletId: wallet.id,
-      caip2: `eip155:${BerachainMainnetConfig.chainId}`,
-      transaction: {
-        to: tokenAddress as `0x${string}`,
-        data: approvalData as `0x${string}`,
-        chainId: BerachainMainnetConfig.chainId
-      },
-      idempotencyKey: idempotencyKey
-    });
-    
-    console.log('Approval transaction sent, hash:', hash);
-    return { status: 'success', hash };
-    
+    try {
+      // Send approval transaction using Privy
+      const { hash } = await privy.walletApi.ethereum.sendTransaction({
+        walletId: wallet.id,
+        caip2: `eip155:${BerachainMainnetConfig.chainId}`,
+        transaction: {
+          to: tokenAddress as `0x${string}`,
+          data: approvalData as `0x${string}`,
+          chainId: BerachainMainnetConfig.chainId
+        },
+        idempotencyKey: idempotencyKey
+      });
+      
+      return { status: 'success', hash };
+    } catch (txError) {
+      throw txError;
+    }
   } catch (error) {
-    console.error('Error in approveToken:', error);
     return {
       status: 'fail',
       error_message: error instanceof Error ? error.message : String(error),
@@ -656,12 +653,27 @@ async function executeDeposit(
   quoteResult: KodiakQuoteResult,
   params: DepositParams,
   wallet: any,
-  userAddress: string
+  userAddress: string,
+  totalAmount: bigint
 ): Promise<DepositResult> {
   try {
+    // Log transaction parameters for debugging
+    console.log("[Kodiak Deposit] Executing deposit with parameters:", {
+      islandAddress: params.islandAddress,
+      totalAmount: totalAmount.toString(),
+      amountToSwap: swapResult.amountToSwap.toString(),
+      amountToKeep: swapResult.amountToKeep.toString(),
+      expectedOutput: swapResult.expectedOutput.toString(),
+      isToken0: params.isToken0,
+      slippageBPS: params.slippageBPS,
+      minSharesReceived: params.minSharesReceived
+    });
+    
     // Create RouterSwapParams object
     const swapParams = {
-      zeroForOne: params.isToken0, // true if swapping token0 for token1
+      // zeroForOne should be true if we're swapping token0 for token1
+      // This matches the isToken0 flag which indicates if the input token is token0
+      zeroForOne: params.isToken0,
       amountIn: swapResult.amountToSwap.toString(),
       minAmountOut: calculateMinAmountOut(quoteResult.quote, params.slippageBPS),
       routeData: quoteResult.methodParameters!.calldata
@@ -670,9 +682,8 @@ async function executeDeposit(
     // Create contract interface for encoding function call
     const routerInterface = new ethers.Interface(KODIAK_ROUTER_ABI);
     
-    // Encode the addLiquiditySingle function call
-    const totalAmount = ethers.parseUnits(params.totalAmount, 18); // Assuming 18 decimals
-    const minSharesReceived = ethers.parseUnits(params.minSharesReceived, 18); // Assuming 18 decimals
+    // For minSharesReceived, we should still parse it with 18 decimals as LP tokens typically use 18 decimals
+    const minSharesReceived = ethers.parseUnits(params.minSharesReceived, 18);
     
     const depositData = routerInterface.encodeFunctionData('addLiquiditySingle', [
       params.islandAddress,
@@ -685,23 +696,27 @@ async function executeDeposit(
     
     const idempotencyKey = uuidv4();
     
-    // Send deposit transaction using Privy
-    const { hash } = await privy.walletApi.ethereum.sendTransaction({
-      walletId: wallet.id,
-      caip2: `eip155:${BerachainMainnetConfig.chainId}`,
-      transaction: {
-        to: KODIAK_ROUTER_ADDRESS as `0x${string}`,
-        data: depositData as `0x${string}`,
-        chainId: BerachainMainnetConfig.chainId
-      },
-      idempotencyKey: idempotencyKey
-    });
-    
-    console.log('Deposit transaction sent, hash:', hash);
-    return { status: 'success', hash };
-    
+    try {
+      // Send deposit transaction using Privy
+      const { hash } = await privy.walletApi.ethereum.sendTransaction({
+        walletId: wallet.id,
+        caip2: `eip155:${BerachainMainnetConfig.chainId}`,
+        transaction: {
+          to: KODIAK_ROUTER_ADDRESS as `0x${string}`,
+          data: depositData as `0x${string}`,
+          chainId: BerachainMainnetConfig.chainId
+        },
+        idempotencyKey: idempotencyKey
+      });
+      
+      console.log("[Kodiak Deposit] Transaction successful with hash:", hash);
+      return { status: 'success', hash };
+    } catch (txError) {
+      console.error("[Kodiak Deposit] Transaction failed:", txError);
+      throw txError;
+    }
   } catch (error) {
-    console.error('Error in executeDeposit:', error);
+    console.error("[Kodiak Deposit] Error in executeDeposit:", error);
     return {
       status: 'fail',
       error_message: error instanceof Error ? error.message : String(error)
@@ -711,23 +726,36 @@ async function executeDeposit(
 
 /**
  * Calculate minimum amount out with slippage
+ * @param quoteAmount The quoted amount from the API
+ * @param slippageBPS Slippage in basis points (e.g., 50 for 0.5%)
+ * @returns The minimum amount out after applying slippage
  */
 function calculateMinAmountOut(quoteAmount: string, slippageBPS: number): string {
+  if (!quoteAmount || isNaN(Number(quoteAmount))) {
+    throw new Error(`Invalid quote amount: ${quoteAmount}`);
+  }
+  
+  if (slippageBPS < 0 || slippageBPS > 10000) {
+    throw new Error(`Invalid slippage: ${slippageBPS}. Must be between 0 and 10000`);
+  }
+  
   const amount = BigInt(quoteAmount);
   const minAmountOut = amount - (amount * BigInt(slippageBPS) / BigInt(10000));
   return minAmountOut.toString();
 }
 
 export {
-    calculateOptimalSwapForIsland, calculateSwapAmount,
-    checkIslandRatio, depositToKodiakIsland, getIslandDetails, getIslandRatio,
+    calculateOptimalSwapForIsland,
+    calculateSwapAmount, depositToKodiakIsland, getIslandDetails,
+    getIslandRatio,
     getKodiakSwapCalldata
 };
 
 // Export types
     export type {
         DepositParams,
-        DepositResult, IslandState,
+        DepositResult,
+        IslandState,
         KodiakQuoteResult,
         SwapCalculationResult,
         Token
