@@ -1,5 +1,8 @@
+import axios from 'axios';
 import { ethers } from 'ethers';
+import { v4 as uuidv4 } from 'uuid';
 import { BerachainMainnetConfig } from '../config/network';
+import { getUserEvmWalletAddress, getUserWallet, privy } from '../privy/client';
 import { KodiakIsland } from '../types/kodiak';
 import { fetchVaultByAddress, mapSubgraphDataToIslands } from './subgraph';
 
@@ -49,6 +52,36 @@ interface KodiakQuoteResult {
     value: string;
   };
 }
+
+// Interface for deposit parameters
+interface DepositParams {
+  islandAddress: string;
+  totalAmount: string; // Amount in human-readable format
+  isToken0: boolean;
+  slippageBPS: number; // Slippage in basis points (e.g., 50 for 0.5%)
+  minSharesReceived: string; // Minimum shares to receive
+}
+
+// Interface for deposit result
+interface DepositResult {
+  status: 'success' | 'fail';
+  hash?: string;
+  error_message?: string;
+}
+
+// ABI for the Kodiak Island Router
+const KODIAK_ROUTER_ABI = [
+  'function addLiquiditySingle(address island, uint256 totalAmountIn, uint256 amountSharesMin, uint256 maxStakingSlippageBPS, tuple(bool zeroForOne, uint256 amountIn, uint256 minAmountOut, bytes routeData) swapData, address receiver) external returns (uint256 amount0, uint256 amount1, uint256 mintAmount)'
+];
+
+// ABI for ERC20 tokens for approvals
+const ERC20_ABI = [
+  'function approve(address spender, uint256 amount) external returns (bool)',
+  'function allowance(address owner, address spender) external view returns (uint256)'
+];
+
+// Address of the Kodiak Island Router
+const KODIAK_ROUTER_ADDRESS = '0xe301E48F77963D3F7DbD2a4796962Bd7f3867Fb4';
 
 // Simple ABI for the Island contract's getMintAmounts function
 const ISLAND_ABI = [
@@ -444,11 +477,259 @@ async function getKodiakSwapCalldata(
   }
 }
 
+/**
+ * Deposit a single token into a Kodiak Island
+ * @param params Deposit parameters
+ * @returns Result of the deposit operation
+ */
+async function depositToKodiakIsland(params: DepositParams): Promise<DepositResult> {
+  try {
+    // Get user's wallet
+    const wallet = await getUserWallet('ethereum');
+    if (!wallet) {
+      return {
+        status: 'fail',
+        error_message: 'No EVM wallet available'
+      };
+    }
+    
+    if (!wallet.delegated) {
+      return {
+        status: 'fail',
+        error_message: 'EVM wallet not delegated to Privy'
+      };
+    }
+    
+    // Get user's wallet address
+    const userAddress = await getUserEvmWalletAddress();
+    if (!userAddress) {
+      return {
+        status: 'fail',
+        error_message: 'Could not get user wallet address'
+      };
+    }
+    
+    // Set up provider for calculations
+    const provider = new ethers.JsonRpcProvider(BerachainMainnetConfig.rpcUrl);
+    
+    // Get token info from the Island contract
+    const islandContract = new ethers.Contract(
+      params.islandAddress,
+      [
+        'function token0() external view returns (address)',
+        'function token1() external view returns (address)'
+      ],
+      provider
+    );
+    
+    const token0Address = await islandContract.token0();
+    const token1Address = await islandContract.token1();
+    
+    // Determine which token is being deposited
+    const tokenAddress = params.isToken0 ? token0Address : token1Address;
+    
+    // Get token decimals
+    const tokenContract = new ethers.Contract(
+      tokenAddress,
+      ['function decimals() view returns (uint8)'],
+      provider
+    );
+    
+    const decimals = await tokenContract.decimals();
+    
+    // Parse total amount
+    const totalAmount = ethers.parseUnits(params.totalAmount, decimals);
+    
+    // Step 1: Calculate optimal swap
+    console.log(`Calculating optimal swap for ${params.totalAmount} tokens...`);
+    const swapResult = await calculateOptimalSwapForIsland(
+      params.islandAddress,
+      provider,
+      totalAmount,
+      params.isToken0
+    );
+    
+    // Step 2: Get quote and calldata from Kodiak API
+    console.log('Fetching quote from Kodiak API...');
+    const quoteResult = await getKodiakSwapCalldata(swapResult);
+    
+    // Check if calldata is present
+    if (!quoteResult.methodParameters?.calldata) {
+      return {
+        status: 'fail',
+        error_message: 'Failed to get calldata from Kodiak API'
+      };
+    }
+    
+    // Step 3: Approve token spending
+    const approvalTx = await approveToken(
+      tokenAddress,
+      KODIAK_ROUTER_ADDRESS,
+      totalAmount.toString(),
+      wallet,
+      userAddress
+    );
+    
+    if (approvalTx.status === 'fail') {
+      return approvalTx;
+    }
+    
+    console.log('Token approval successful');
+    
+    // Step 4: Execute the deposit transaction
+    return await executeDeposit(
+      swapResult,
+      quoteResult,
+      params,
+      wallet,
+      userAddress
+    );
+    
+  } catch (error) {
+    console.error('Error in depositToKodiakIsland:', error);
+    return {
+      status: 'fail',
+      error_message: error instanceof Error ? error.message : String(error)
+    };
+  }
+}
+
+/**
+ * Approve token spending for the router
+ */
+async function approveToken(
+  tokenAddress: string,
+  spenderAddress: string,
+  amount: string,
+  wallet: any,
+  userAddress: string
+): Promise<DepositResult> {
+  try {
+    // Get current allowance
+    const provider = new ethers.JsonRpcProvider(BerachainMainnetConfig.rpcUrl);
+    const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
+    const allowance = await tokenContract.allowance(userAddress, spenderAddress);
+    
+    // Skip approval if allowance is sufficient
+    if (allowance >= BigInt(amount)) {
+      console.log('Existing allowance is sufficient');
+      return { status: 'success' };
+    }
+    
+    // Generate approval transaction
+    const approvalData = tokenContract.interface.encodeFunctionData('approve', [
+      spenderAddress,
+      amount
+    ]);
+    
+    const idempotencyKey = uuidv4();
+    
+    // Send approval transaction using Privy
+    const { hash } = await privy.walletApi.ethereum.sendTransaction({
+      walletId: wallet.id,
+      caip2: `eip155:${BerachainMainnetConfig.chainId}`,
+      transaction: {
+        to: tokenAddress as `0x${string}`,
+        data: approvalData as `0x${string}`,
+        chainId: BerachainMainnetConfig.chainId
+      },
+      idempotencyKey: idempotencyKey
+    });
+    
+    console.log('Approval transaction sent, hash:', hash);
+    return { status: 'success', hash };
+    
+  } catch (error) {
+    console.error('Error in approveToken:', error);
+    return {
+      status: 'fail',
+      error_message: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
+/**
+ * Execute the deposit transaction
+ */
+async function executeDeposit(
+  swapResult: SwapCalculationResult,
+  quoteResult: KodiakQuoteResult,
+  params: DepositParams,
+  wallet: any,
+  userAddress: string
+): Promise<DepositResult> {
+  try {
+    // Create RouterSwapParams object
+    const swapParams = {
+      zeroForOne: params.isToken0, // true if swapping token0 for token1
+      amountIn: swapResult.amountToSwap.toString(),
+      minAmountOut: calculateMinAmountOut(quoteResult.quote, params.slippageBPS),
+      routeData: quoteResult.methodParameters!.calldata
+    };
+    
+    // Create contract interface for encoding function call
+    const routerInterface = new ethers.Interface(KODIAK_ROUTER_ABI);
+    
+    // Encode the addLiquiditySingle function call
+    const totalAmount = ethers.parseUnits(params.totalAmount, 18); // Assuming 18 decimals
+    const minSharesReceived = ethers.parseUnits(params.minSharesReceived, 18); // Assuming 18 decimals
+    
+    const depositData = routerInterface.encodeFunctionData('addLiquiditySingle', [
+      params.islandAddress,
+      totalAmount.toString(),
+      minSharesReceived.toString(),
+      params.slippageBPS,
+      swapParams,
+      userAddress // receiver address
+    ]);
+    
+    const idempotencyKey = uuidv4();
+    
+    // Send deposit transaction using Privy
+    const { hash } = await privy.walletApi.ethereum.sendTransaction({
+      walletId: wallet.id,
+      caip2: `eip155:${BerachainMainnetConfig.chainId}`,
+      transaction: {
+        to: KODIAK_ROUTER_ADDRESS as `0x${string}`,
+        data: depositData as `0x${string}`,
+        chainId: BerachainMainnetConfig.chainId
+      },
+      idempotencyKey: idempotencyKey
+    });
+    
+    console.log('Deposit transaction sent, hash:', hash);
+    return { status: 'success', hash };
+    
+  } catch (error) {
+    console.error('Error in executeDeposit:', error);
+    return {
+      status: 'fail',
+      error_message: error instanceof Error ? error.message : String(error)
+    };
+  }
+}
+
+/**
+ * Calculate minimum amount out with slippage
+ */
+function calculateMinAmountOut(quoteAmount: string, slippageBPS: number): string {
+  const amount = BigInt(quoteAmount);
+  const minAmountOut = amount - (amount * BigInt(slippageBPS) / BigInt(10000));
+  return minAmountOut.toString();
+}
+
 export {
     calculateOptimalSwapForIsland, calculateSwapAmount,
-    checkIslandRatio, getIslandDetails, getIslandRatio
+    checkIslandRatio, depositToKodiakIsland, getIslandDetails, getIslandRatio,
+    getKodiakSwapCalldata
 };
 
 // Export types
-    export type { IslandState, SwapCalculationResult, Token };
+    export type {
+        DepositParams,
+        DepositResult, IslandState,
+        KodiakQuoteResult,
+        SwapCalculationResult,
+        Token
+    };
 
