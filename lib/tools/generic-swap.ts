@@ -5,7 +5,7 @@ import { mkdir } from 'fs/promises'
 import path, { dirname } from 'path' // Added import for path operations
 import { promisify } from 'util'
 import { z } from 'zod'
-import { ensoSwap, ensoSwapEthToToken } from '../enso/swap' // Import ensoSwap
+import { ensoSwap } from '../enso/swap' // Import ensoSwap
 import { executeSwapTransaction } from '../pendle/transactions'
 import { getUserEvmWalletAddress } from '../privy/client'
 
@@ -38,40 +38,16 @@ const tokenDecimalMap: Record<string, number> = {
   };
 
 const parameters = z.object({
-  protocol: z
-    .enum(['pendle', 'none']) // Updated enum
-    .describe(
-      'The underlying protocol context (e.g., "pendle" for Pendle-specific interactions). Use "none" for a general token swap (ETH or ERC20 via Enso router).'
-    ),
   tokenInSymbol: z
     .string()
     .default('ETH')
-    .describe('Symbol of the input token (e.g., "ETH", "USDC").'),
-  tokenInAddress: z
-    .string()
-    .optional()
-    .describe(
-      'Address of the input token. Required if tokenInSymbol is not "ETH".'
-    ),
-  tokenInDecimals: z
-    .number()
-    .int()
-    .optional()
-    .describe(
-      'Decimals of the input token. Required if tokenInSymbol is not "ETH" for correct amount conversion.'
-    ),
-  tokenOutAddress: z
-    .string()
-    .describe(
-      `The address of the token to receive. Pendle related tokens addresses can be found in the context. Some other commonly used tokens: ${JSON.stringify(
-        tokenAddressMap
-      )}`
-    ),
+    .describe('Symbol of the input token (e.g., "ETH", "USDC"). Currently only ETH is available'),
   tokenOutSymbol: z
     .string()
-    .optional()
     .describe(
-      'The symbol of the token to receive (e.g., "PT weETH", "DAI"). Used for display purposes. Only principle token (PT) and SY token for pendle protocol is supported; YT is not supported. Please notify user if you are unsure.'
+      `The symbol of the token to receive (e.g., "USDC", "DAI"). Used for display purposes. Available tokens: ${JSON.stringify(
+        Object.keys(tokenAddressMap)
+      )}`
     ),
   amountInHuman: z
     .string()
@@ -95,26 +71,25 @@ const parameters = z.object({
 
 export const genericSwapTool = tool({
   description:
-    'Execute a swap transaction from a source token to a target token using a specified protocol or a general router.',
+    `Execute a swap transaction from a source token to a target token using a specified protocol or a general router.
+    Use this tool when user request and swap and no protocol is in the context
+    `,
   parameters: parameters,
   execute: async ({
-    protocol,
     tokenInSymbol,
-    tokenInAddress,
-    tokenInDecimals,
-    tokenOutAddress,
     tokenOutSymbol,
     amountInHuman,
     slippage = 0.01,
     chainId = 1
   }) => {
-    tokenOutAddress = tokenOutAddress.toLowerCase()
-    tokenInAddress = tokenInAddress?.toLowerCase()
+    const tokenOutAddress = tokenAddressMap[tokenOutSymbol].toLowerCase()
+    const tokenInAddress = tokenAddressMap[tokenInSymbol].toLowerCase()
+    const tokenInDecimals = tokenDecimalMap[tokenInSymbol]
+    
     console.log('Mock tool start')
     const logFilePath = path.join(dirname(__dirname), 'genericSwapToolMock.log')
     let logContent = `Timestamp: ${new Date().toISOString()}`
 
-    logContent += `Protocol: ${protocol}\n`
     logContent += `Token In Symbol: ${tokenInSymbol}\n`
     logContent += `Token In Address: ${tokenInAddress}\n`
     logContent += `Token In Decimals: ${tokenInDecimals}\n`
@@ -158,9 +133,6 @@ export const genericSwapTool = tool({
         }
         try {
           actualTokenInAddress = ethers.getAddress(tokenInAddress) // Validate and checksum
-          if (tokenInSymbol in tokenDecimalMap) {
-            tokenInDecimals = tokenDecimalMap[tokenInSymbol]
-          }
           amountInBaseUnits = ethers
             .parseUnits(amountInHuman, tokenInDecimals)
             .toString()
@@ -175,40 +147,18 @@ export const genericSwapTool = tool({
 
       let txData
 
-      if (protocol === 'pendle' && upperTokenInSymbol === 'ETH') {
-        // Use specialized ETH -> Pendle PT/YT swap if available (via ensoSwapEthToToken or similar)
-        // ensoSwapEthToToken internally sets chainId: 1 and ETH as tokenIn
-        txData = await ensoSwapEthToToken({
-          tokenOut: ethers.getAddress(tokenOutAddress.toLowerCase()), // Validate/checksum
-          fromAddress: evmWalletAddress,
-          amountIn: amountInBaseUnits,
-          slippage
-        })
-      } else if (protocol === 'none') {
+
         // General swap (ETH -> Token or Token -> Token) using ensoSwap
         txData = await ensoSwap({
-          chainId: chainId,
-          tokenIn: actualTokenInAddress,
-          tokenOut: ethers.getAddress(tokenOutAddress.toLowerCase()), // Validate/checksum
-          fromAddress: evmWalletAddress,
-          amountIn: amountInBaseUnits,
-          slippage
+            chainId: chainId,
+            tokenIn: actualTokenInAddress,
+            tokenOut: ethers.getAddress(tokenOutAddress.toLowerCase()), // Validate/checksum
+            fromAddress: evmWalletAddress,
+            amountIn: amountInBaseUnits,
+            slippage
         })
 
-      } else if (protocol === 'pendle' && upperTokenInSymbol !== 'ETH') {
-        txData = await ensoSwap({
-          chainId: chainId,
-          tokenIn: actualTokenInAddress,
-          tokenOut: ethers.getAddress(tokenOutAddress.toLowerCase()),
-          fromAddress: evmWalletAddress,
-          amountIn: amountInBaseUnits,
-          slippage
-        })
-      } else {
-        throw new Error(
-          `Unsupported combination: protocol '${protocol}' with input token '${tokenInSymbol}'.`
-        )
-      }
+
 
       if (!txData) {
         throw new Error('Failed to prepare transaction data.')
@@ -226,7 +176,7 @@ export const genericSwapTool = tool({
         success: true,
         transaction_hash: result.hash,
         swap_details: {
-          protocol: protocol,
+          protocol: 'none',
           from_token_symbol: upperTokenInSymbol,
           from_token_address:
             actualTokenInAddress ===
@@ -252,7 +202,7 @@ export const genericSwapTool = tool({
         error: error.message || 'Failed to execute generic swap.',
         swap_details: {
           // Provide as much detail as possible even in failure
-          protocol: protocol,
+          protocol: 'none',
           from_token_symbol: tokenInSymbol?.toUpperCase(),
           from_token_address: tokenInAddress,
           to_token_address: tokenOutAddress,

@@ -71,8 +71,9 @@ export const pendleQuoteTool = tool({
       .describe('The name of the market (required, e.g. "rswETH")'),
     token_type: z
       .enum(['pt', 'yt'])
+      .default('pt')
       .describe(
-        'The token type - "pt" for Principal Token or "yt" for Yield Token'
+        'The token type - "pt" for Principal Token or "yt" for Yield Token. Default to pt as only pt trading is available now.'
       )
   }),
   execute: async ({
