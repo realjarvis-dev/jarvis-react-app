@@ -1,10 +1,15 @@
 import axios from 'axios';
 import { ethers } from 'ethers';
+import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import { BerachainMainnetConfig } from '../config/network';
 import { getUserEvmWalletAddress, getUserWallet, privy } from '../privy/client';
 import { KodiakIsland } from '../types/kodiak';
 import { fetchVaultByAddress, mapSubgraphDataToIslands } from './subgraph';
+
+import KodiakRouterJson from './KodiakRouter.json';
+const kodiakAbi = KodiakRouterJson as any; 
+const ISLAND_ROUTER = "0x679a7C63FC83b6A4D9C1F931891d705483d4791F";
 
 // Define interface for Token with address and decimals
 interface Token {
@@ -71,7 +76,7 @@ interface DepositResult {
 
 // ABI for the Kodiak Island Router
 const KODIAK_ROUTER_ABI = [
-  'function addLiquiditySingle(address island, uint256 totalAmountIn, uint256 amountSharesMin, uint256 maxStakingSlippageBPS, tuple(bool zeroForOne, uint256 amountIn, uint256 minAmountOut, bytes routeData) swapData, address receiver) external returns (uint256 amount0, uint256 amount1, uint256 mintAmount)'
+  'function addLiquiditySingle(address island, uint256 totalAmountIn, uint256 amountSharesMin, uint256 maxStakingSlippageBPS, tuple(uint256 amountIn,uint256 minAmountOut,bool zeroForOne, bytes routeData) swapData,address receiver) external returns (uint256 amount0,uint256 amount1,uint256 mintAmount)'
 ];
 
 // ABI for ERC20 tokens for approvals
@@ -81,7 +86,7 @@ const ERC20_ABI = [
 ];
 
 // Address of the Kodiak Island Router
-const KODIAK_ROUTER_ADDRESS = '0xe301E48F77963D3F7DbD2a4796962Bd7f3867Fb4';
+const KODIAK_ROUTER_ADDRESS = '0x679a7C63FC83b6A4D9C1F931891d705483d4791F';
 
 // Simple ABI for the Island contract's getMintAmounts function
 const ISLAND_ABI = [
@@ -411,10 +416,12 @@ async function getKodiakSwapCalldata(
     tokenOutChainId: CHAIN_ID,
     amount: swapResult.amountToSwap.toString(),
     type: TYPE,
-    recipient: RECIPIENT,
+    recipient: KODIAK_ROUTER_ADDRESS,
     deadline: DEADLINE,
     slippageTolerance: SLIPPAGE_TOLERANCE
   };
+
+  console.log("Swap Calldata Params", params)
   
   try {
     // Make the API call
@@ -571,6 +578,7 @@ async function depositToKodiakIsland(params: DepositParams): Promise<DepositResu
       userAddress
     );
     
+    
     console.log("end approving")
 
     if (approvalTx.status === 'fail') {
@@ -608,9 +616,7 @@ async function approveToken(
 ): Promise<DepositResult> {
   try {
     // Get current allowance
-    // const provider = new ethers.JsonRpcProvider(BerachainMainnetConfig.rpcUrl);
-    // TODO: only for debugging purpose, change it back later
-    const provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545");
+    const provider = new ethers.JsonRpcProvider(BerachainMainnetConfig.rpcUrl);
     const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
     const allowance = await tokenContract.allowance(userAddress, spenderAddress);
     
@@ -676,10 +682,27 @@ async function approveToken(
         idempotencyKey: idempotencyKey
       });
 
-        //TODO: change the url back later. only for debugging purpose
+      // Save the signed transaction to a file for debugging
+      try {
+        fs.writeFileSync('signed_transaction_approval.json', JSON.stringify({
+          signedTransaction,
+          encoding,
+          txDetails: {
+            to: tokenAddress,
+            data: approvalData,
+            chainId: BerachainMainnetConfig.chainId,
+            gasLimit: ethers.toQuantity(gasLimit),
+            maxFeePerGas: ethers.toQuantity(maxFee + priority),
+            maxPriorityFeePerGas: ethers.toQuantity(priority),
+            nonce: correctNonce
+          }
+        }, null, 2));
+        console.log('Approval transaction saved to signed_transaction_approval.json');
+      } catch (writeError) {
+        console.error('Error saving transaction to file:', writeError);
+      }
 
-        
-
+        // Broadcast the signed transaction
         const txResponse = await provider.broadcastTransaction(signedTransaction)
       
       return { status: 'success', hash: txResponse.hash };
@@ -698,125 +721,136 @@ async function approveToken(
  * Execute the deposit transaction
  */
 async function executeDeposit(
-  swapResult: SwapCalculationResult,
-  quoteResult: KodiakQuoteResult,
-  params: DepositParams,
-  wallet: any,
-  userAddress: string,
-  totalAmount: bigint
-): Promise<DepositResult> {
-  try {
-    // Log transaction parameters for debugging
-    console.log("[Kodiak Deposit] Executing deposit with parameters:", {
-      islandAddress: params.islandAddress,
-      totalAmount: totalAmount.toString(),
-      amountToSwap: swapResult.amountToSwap.toString(),
-      amountToKeep: swapResult.amountToKeep.toString(),
-      expectedOutput: swapResult.expectedOutput.toString(),
-      isToken0: params.isToken0,
-      slippageBPS: params.slippageBPS,
-      minSharesReceived: params.minSharesReceived
-    });
-    
-    // Create RouterSwapParams object
-    const swapParams = {
-      // zeroForOne should be true if we're swapping token0 for token1
-      // This matches the isToken0 flag which indicates if the input token is token0
-      zeroForOne: params.isToken0,
-      amountIn: swapResult.amountToSwap.toString(),
-      minAmountOut: calculateMinAmountOut(quoteResult.quote, params.slippageBPS),
-      routeData: quoteResult.methodParameters!.calldata
-    };
-    
-    // Create contract interface for encoding function call
-    const routerInterface = new ethers.Interface(KODIAK_ROUTER_ABI);
-    
-    // For minSharesReceived, we should still parse it with 18 decimals as LP tokens typically use 18 decimals
-    const minSharesReceived = ethers.parseUnits(params.minSharesReceived, 18);
-    
-    const depositData = routerInterface.encodeFunctionData('addLiquiditySingle', [
-      params.islandAddress,
-      totalAmount.toString(),
-      minSharesReceived.toString(),
-      params.slippageBPS,
-      swapParams,
-      userAddress // receiver address
-    ]);
-    
-    const idempotencyKey = uuidv4();
-
-    //TODO: change the url back later. only for debugging purpose
-    const provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545");
-
-    const block = await provider.getBlock('latest')
-    const baseFee = block?.baseFeePerGas
-    console.log('baseFee', baseFee)
-    const maxFee = baseFee ? BigInt(baseFee) * BigInt(2) : BigInt(1010690044) // ~2× base fee
-    const priority = ethers.parseUnits('1', 'gwei') // 1 gwei tip
-
-    console.log('Sending transaction...')
-
-
-    const evmWallet = await getUserWallet('ethereum')
-    if (!evmWallet) {
-      throw new Error('EVM wallet not found')
-    }
-    if (!evmWallet.id) {
-      throw new Error('EVM wallet ID not found')
-    }
-    const correctNonce = await provider.getTransactionCount(userAddress as `0x${string}`, "pending");
-
-
-
-    // // Gas estimation
-    // const gasEstimate = await provider.estimateGas({
-    //   to: KODIAK_ROUTER_ADDRESS as `0x${string}`,
-    //   from: userAddress as `0x${string}`,
-    //   data: depositData as `0x${string}`,
-    //   value: totalAmount
-    // })
-    // // Add a 20 % buffer
-    // const gasLimit = gasEstimate + gasEstimate / BigInt(5)
-
-    
+    swapResult: SwapCalculationResult,
+    quoteResult: KodiakQuoteResult,
+    params: DepositParams,
+    wallet: any,
+    userAddress: string,
+    totalAmount: bigint
+  ): Promise<DepositResult> {
     try {
-      // Send deposit transaction using Privy
-      const { encoding, signedTransaction } = await privy.walletApi.ethereum.signTransaction({
-        walletId: wallet.id,
-        // caip2: `eip155:${BerachainMainnetConfig.chainId}`,
-        transaction: {
-          to: KODIAK_ROUTER_ADDRESS as `0x${string}`,
-          data: depositData as `0x${string}`,
-          chainId: BerachainMainnetConfig.chainId,
-          from: userAddress as `0x${string}`,
-          gasLimit: 650000,
-          // gasLimit: ethers.toQuantity(gasLimit) as `0x${string}`,
-          maxFeePerGas: ethers.toQuantity(maxFee + priority) as `0x${string}`,
-          maxPriorityFeePerGas: ethers.toQuantity(priority) as `0x${string}`,
-          nonce: correctNonce,
-        },
-        idempotencyKey: idempotencyKey
+      // Log transaction parameters for debugging
+      console.log("[Kodiak Deposit] Executing deposit with parameters:", {
+        islandAddress: params.islandAddress,
+        totalAmount: totalAmount.toString(),
+        amountToSwap: swapResult.amountToSwap.toString(),
+        amountToKeep: swapResult.amountToKeep.toString(),
+        expectedOutput: swapResult.expectedOutput.toString(),
+        isToken0: params.isToken0,
+        slippageBPS: params.slippageBPS,
+        minSharesReceived: params.minSharesReceived
       });
-
-     
-
+      const provider = new ethers.JsonRpcProvider(BerachainMainnetConfig.rpcUrl);
+      // Create RouterSwapParams object
+      console.log("quoteResult", quoteResult)
+  
+      const slippageFactor = BigInt(10000 - params.slippageBPS) / BigInt(10000);
+      const minAmountOut = BigInt(quoteResult.quote) * slippageFactor;
+      const swapParams = {
+        // zeroForOne should be true if we're swapping token0 for token1
+        // This matches the isToken0 flag which indicates if the input token is token0
+        amountIn: swapResult.amountToSwap.toString(),
+        // minAmountOut: calculateMinAmountOut(quoteResult.quote, params.slippageBPS),
+        minAmountOut: minAmountOut.toString(),
+        zeroForOne: params.isToken0,
+        routeData: quoteResult.methodParameters!.calldata
+      };
       
+      // Create contract interface for encoding function call
+      // const routerInterface = new ethers.Interface(KODIAK_ROUTER_ABI);
+      const kodiakRouter = new ethers.Contract(
+        KODIAK_ROUTER_ADDRESS,
+        kodiakAbi,
+        provider
+      );
+      
+      // For minSharesReceived, we should still parse it with 18 decimals as LP tokens typically use 18 decimals
+      const minSharesReceived = ethers.parseUnits(params.minSharesReceived, 18);
+  
+      console.log("sending txRequest")
+      console.log("params.islandAddress", params.islandAddress)
+      const txRequest = await kodiakRouter["addLiquiditySingle"].populateTransaction(
+        params.islandAddress,
+        totalAmount.toString(),
+        minSharesReceived.toString(),
+        params.slippageBPS,
+        swapParams,
+        userAddress // receiver address
+      );
+      console.log("[txRequest] params.islandAddress", params.islandAddress)
+  
+      if (!txRequest.data) {
+        throw new Error('Failed to populate transaction request')
+      }
+  
+      const depositData = txRequest.data
+      // console.log("depositData", txRequest)
+      // return {
+      //   status: 'fail',
+      //   hash: "test deposit data"
+      // }
+      const idempotencyKey = uuidv4();
+  
+  
+  
+      const block = await provider.getBlock('latest')
+      const baseFee = block?.baseFeePerGas
+      console.log('baseFee', baseFee)
+      const maxFee = baseFee ? BigInt(baseFee) * BigInt(2) : BigInt(1010690044) // ~2× base fee
+      const priority = ethers.parseUnits('1', 'gwei') // 1 gwei tip
+  
+      console.log('Sending transaction...')
+  
+  
+      const evmWallet = await getUserWallet('ethereum')
+      if (!evmWallet) {
+        throw new Error('EVM wallet not found')
+      }
+      if (!evmWallet.id) {
+        throw new Error('EVM wallet ID not found')
+      }
+      const correctNonce = await provider.getTransactionCount(userAddress as `0x${string}`, "pending");
+  
+      
+      try {
+        // Send deposit transaction using Privy
+        const { encoding, signedTransaction } = await privy.walletApi.ethereum.signTransaction({
+          walletId: wallet.id,
+          // caip2: `eip155:${BerachainMainnetConfig.chainId}`,
+          transaction: {
+            to: ISLAND_ROUTER as `0x${string}`,
+            data: depositData as `0x${string}`,
+            chainId: BerachainMainnetConfig.chainId,
+            from: userAddress as `0x${string}`,
+            gasLimit: 650000,
+            // gasLimit: ethers.toQuantity(gasLimit) as `0x${string}`,
+            maxFeePerGas: ethers.toQuantity(maxFee + priority) as `0x${string}`,
+            maxPriorityFeePerGas: ethers.toQuantity(priority) as `0x${string}`,
+            nonce: correctNonce,
+          },
+          idempotencyKey: idempotencyKey
+        });
 
-      const txResponse = await provider.broadcastTransaction(signedTransaction)
-      console.log("[Kodiak Deposit] Transaction successful with hash:", txResponse.hash);
-      return { status: 'success', hash: txResponse.hash };
-    } catch (txError) {
-      console.error("[Kodiak Deposit] Transaction failed:", txError);
-      throw txError;
+        
+        const txResponse = await provider.broadcastTransaction(signedTransaction)
+        const receipt = await txResponse.wait()
+        if (receipt) {
+          console.log('[Kodiak Deposit] Mined in block', receipt.blockNumber)
+        }
+        console.log("[Kodiak Deposit] Transaction successful with hash:", txResponse.hash);
+        return { status: 'success', hash: txResponse.hash };
+      } catch (txError) {
+        console.error("[Kodiak Deposit] Transaction failed:", txError);
+        throw txError;
+      }
+    } catch (error) {
+      // console.error("[Kodiak Deposit] Error in executeDeposit:", error);
+      return {
+        status: 'fail',
+        error_message: error instanceof Error ? error.message : String(error)
+      };
     }
-  } catch (error) {
-    console.error("[Kodiak Deposit] Error in executeDeposit:", error);
-    return {
-      status: 'fail',
-      error_message: error instanceof Error ? error.message : String(error)
-    };
   }
-}
 
 /**
  * Calculate minimum amount out with slippage
