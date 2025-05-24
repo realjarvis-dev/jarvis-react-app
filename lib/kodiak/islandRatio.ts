@@ -7,7 +7,7 @@ import { KodiakIsland } from '../types/kodiak';
 import { fetchVaultByAddress, mapSubgraphDataToIslands } from './subgraph';
 
 import KodiakRouterJson from './KodiakRouter.json';
-
+const TENDERLY_FORKED_RPC_URL = "https://virtual.berachain.rpc.tenderly.co/543d1a30-edf0-4512-af81-f38044be672f"
 const kodiakAbi = KodiakRouterJson as any; 
 const ISLAND_ROUTER = "0x679a7C63FC83b6A4D9C1F931891d705483d4791F";
 
@@ -403,7 +403,7 @@ async function getKodiakSwapCalldata(
   if (!userAddress) {
     throw new Error('Could not get user wallet address');
   }
-  const RECIPIENT = userAddress;
+  const RECIPIENT = ISLAND_ROUTER;
   
   // Base URL for the Kodiak Quote API
   const API_URL = "https://api.kodiak.finance/quote";
@@ -501,7 +501,7 @@ async function depositToKodiakIsland(params: DepositParams): Promise<DepositResu
     }
     
     // Set up provider for calculations
-    const provider = new ethers.JsonRpcProvider(BerachainMainnetConfig.rpcUrl);
+    const provider = new ethers.JsonRpcProvider(TENDERLY_FORKED_RPC_URL);
     
     // Get token info from the Island contract
     const islandContract = new ethers.Contract(
@@ -549,6 +549,14 @@ async function depositToKodiakIsland(params: DepositParams): Promise<DepositResu
         error_message: 'Failed to get quote from Kodiak API'
       };
     }
+
+    // console.log("quoteResult", quoteResult)
+    // if (quoteResult) {
+    //   return {
+    //     status: 'fail',
+    //     error_message: 'Use quote data for test'
+    //   };
+    // }
     
     // Check if calldata is present
     if (!quoteResult.methodParameters?.calldata) {
@@ -616,7 +624,7 @@ async function approveToken(
     // Get current allowance
     // const provider = new ethers.JsonRpcProvider(BerachainMainnetConfig.rpcUrl);
     // TODO: only for debugging purpose, change it back later
-    const provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545");
+    const provider = new ethers.JsonRpcProvider(TENDERLY_FORKED_RPC_URL);
     const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
     const allowance = await tokenContract.allowance(userAddress, spenderAddress);
     
@@ -687,10 +695,7 @@ async function approveToken(
 
         const txResponse = await provider.broadcastTransaction(signedTransaction)
         const receipt = await txResponse.wait()
-        console.log("[Approve token] receipt", receipt)
-        if (receipt) {
-          console.log('[Approve token] Mined in block', receipt.blockNumber)
-        }
+
       
       return { status: 'success', hash: txResponse.hash };
     } catch (txError) {
@@ -728,14 +733,18 @@ async function executeDeposit(
       minSharesReceived: params.minSharesReceived
     });
     //TODO: change the url back later. only for debugging purpose
-    const provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545");
+    const provider = new ethers.JsonRpcProvider(TENDERLY_FORKED_RPC_URL);
     // Create RouterSwapParams object
     console.log("quoteResult", quoteResult)
+
+    const slippageFactor = BigInt(10000 - params.slippageBPS) / BigInt(10000);
+    const minAmountOut = BigInt(quoteResult.quote) * slippageFactor;
     const swapParams = {
       // zeroForOne should be true if we're swapping token0 for token1
       // This matches the isToken0 flag which indicates if the input token is token0
       amountIn: swapResult.amountToSwap.toString(),
-      minAmountOut: calculateMinAmountOut(quoteResult.quote, params.slippageBPS),
+      // minAmountOut: calculateMinAmountOut(quoteResult.quote, params.slippageBPS),
+      minAmountOut: minAmountOut.toString(),
       zeroForOne: params.isToken0,
       routeData: quoteResult.methodParameters!.calldata
     };
@@ -761,6 +770,19 @@ async function executeDeposit(
       swapParams,
       userAddress // receiver address
     );
+    console.log("[txRequest] params.islandAddress", params.islandAddress)
+    
+    // const {used0, used1, shares} = await kodiakRouter["addLiquiditySingle"].staticCall(
+    //   params.islandAddress,
+    //   totalAmount.toString(),
+    //   minSharesReceived.toString(),
+    //   params.slippageBPS,
+    //   swapParams,
+    //   userAddress // receiver address
+    // );
+    // console.log("---Static call---")
+    // console.log({ used0, used1, shares });
+
 
     // console.log("quote", kodiakRouter.interface.getFunction("addLiquiditySingle")?.inputs);
 
@@ -784,6 +806,11 @@ async function executeDeposit(
     }
 
     const depositData = txRequest.data
+    // console.log("depositData", txRequest)
+    // return {
+    //   status: 'fail',
+    //   hash: "test deposit data"
+    // }
     const idempotencyKey = uuidv4();
 
 
