@@ -387,7 +387,7 @@ export function SwapTransactionCard({
           
           {/* Small timestamp note */}
           <div className="text-xs text-center text-gray-400 dark:text-gray-500 mt-1">
-            Transaction completed at {new Date().toLocaleTimeString()}
+            Transaction completed at {new Date(result.swap_details.complete_time).toLocaleTimeString()}
           </div>
         </div>
       </CardContent>

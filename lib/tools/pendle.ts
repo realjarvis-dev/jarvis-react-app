@@ -100,7 +100,8 @@ export const pendleQuoteTool = tool({
         market: fullTokenName,
         rate: quote.rate,
         inverse_rate: quote.inverse,
-        output_amount: quote.outputAmount
+        output_amount: quote.outputAmount,
+        complete_time: new Date().toISOString()
       }
     } catch (error: any) {
       // Return a simple error object
@@ -191,6 +192,7 @@ export const pendleSwapTool = tool({
           to: tokenDisplay,
           amount: amount_in_eth + ' ETH',
           // market: market_address
+          complete_time: new Date().toISOString()
         }
       }
     } catch (error: any) {

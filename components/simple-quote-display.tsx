@@ -74,7 +74,7 @@ export function SimpleQuoteDisplay({
           
           {/* Small timestamp note */}
           <div className="text-xs text-center text-gray-400 dark:text-gray-500 mt-1">
-            Quote valid as of {new Date().toLocaleTimeString()}
+            Quote valid as of {new Date(result.complete_time).toLocaleTimeString()}
           </div>
         </div>
       </CardContent>

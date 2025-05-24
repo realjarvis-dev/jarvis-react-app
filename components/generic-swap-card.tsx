@@ -211,7 +211,7 @@ export function GenericSwapCard({
       ? result.transaction_hash
       : undefined
   const chainId = args?.chainId || result?.swap_details?.chain_id || 1 // Default to Ethereum mainnet
-  const etherscanBaseUrl = `https://${getConfigByChainId(chainId).scanLink}/tx/`
+  const etherscanBaseUrl = `https://${getConfigByChainId(chainId).scanLink}`
 
   // Pending UI
   if (tool.state === 'call') {
@@ -274,6 +274,7 @@ export function GenericSwapCard({
               <SwapTransactionStatus
                 status={status}
                 tokenName={displayTokenOut}
+                chainId={chainId}
               />
             </div>
             {args && (
