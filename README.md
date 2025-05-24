@@ -1,20 +1,16 @@
-# Morphic
+# Jarvis
 
-An AI-powered search engine with a generative UI.
+A web3 investment agent with a generative UI.
 
-![capture](/public/screenshot-2025-05-04.png)
 
 ## 🗂️ Overview
 
 - 🛠 [Features](#-features)
 - 🧱 [Stack](#-stack)
 - 🚀 [Quickstart](#-quickstart)
-- 🌐 [Deploy](#-deploy)
-- 🔎 [Search Engine](#-search-engine)
 - ✅ [Verified models](#-verified-models)
 - 👥 [Contributing](#-contributing)
 
-📝 Explore AI-generated documentation on [DeepWiki](https://deepwiki.com/miurla/morphic)
 
 ## 🛠 Features
 
@@ -25,12 +21,16 @@ An AI-powered search engine with a generative UI.
 - Multiple search providers support (Tavily, SearXNG, Exa)
 - Model selection from UI (switch between available AI models)
   - Reasoning models with visible thought process
+- Automatic embedded wallet creation
+- On-chain transaction including transfer and swap
+- Interact with several yield protocol
 
 ### Authentication
 
-- User authentication powered by [Supabase Auth](https://supabase.com/docs/guides/auth)
-- Supports Email/Password sign-up and sign-in
+- User authentication powered by [Privy Auth](https://privy.io)
+- Supports Email sign-up and sign-in
 - Supports Social Login with Google
+- Supports External wallet login
 
 ### Chat & History
 
@@ -42,16 +42,8 @@ An AI-powered search engine with a generative UI.
 
 The following AI providers are supported:
 
-- OpenAI (Default)
-- Google Generative AI
-- Azure OpenAI
-- Anthropic
-- Ollama
-- Groq
-- DeepSeek
-- Fireworks
-- xAI (Grok)
-- OpenAI Compatible
+- OpenAI 
+
 
 Models are configured in `public/config/models.json`. Each model requires its corresponding API key to be set in the environment variables. See [Configuration Guide](docs/CONFIGURATION.md) for details.
 
@@ -66,10 +58,6 @@ Models are configured in `public/config/models.json`. Each model requires its co
   - Safe search options
   - Custom time range filtering
 
-### Additional Features
-
-- Docker deployment ready
-- Browser search engine integration
 
 ## 🧱 Stack
 
@@ -78,10 +66,6 @@ Models are configured in `public/config/models.json`. Each model requires its co
 - [Next.js](https://nextjs.org/) - App Router, React Server Components
 - [TypeScript](https://www.typescriptlang.org/) - Type safety
 - [Vercel AI SDK](https://sdk.vercel.ai/docs) - Text streaming / Generative UI
-
-### Authentication & Authorization (Updated Category)
-
-- [Supabase](https://supabase.com/) - User authentication and backend services
 
 ### AI & Search
 
@@ -103,20 +87,30 @@ Models are configured in `public/config/models.json`. Each model requires its co
 - [Radix UI](https://www.radix-ui.com/) - Unstyled, accessible components
 - [Lucide Icons](https://lucide.dev/) - Beautiful & consistent icons
 
+### Authentication & Authorization & Wallet Infrastructure
+
+- [Privy](https://www.privy.io/) - User authentication and embedded walleet
+
+### Yield Protocols
+- [Pendle](https://docs.pendle.finance/Introduction) - Yield trading protocol
+- [Kodiak](https://documentation.kodiak.finance/) - Liquidity hub on Berachain
+
+### On-chain Integration
+- [Enso Network](https://docs.enso.build/home) - Tools to interact with DeFi protocols
+- [Alchemy](https://www.alchemy.com/) - Balance and token checking
+
 ## 🚀 Quickstart
 
-### 1. Fork and Clone repo
-
-Fork the repo to your Github account, then run the following command to clone the repo:
+### 1. Clone repo
 
 ```bash
-git clone git@github.com:[YOUR_GITHUB_ACCOUNT]/morphic.git
+git clone https://github.com/kirastudio-ai/Jarvis-investment-agent.git
 ```
 
 ### 2. Install dependencies
 
 ```bash
-cd morphic
+cd Jarvis-investment-agent
 bun install
 ```
 
@@ -130,6 +124,14 @@ Fill in the required environment variables in `.env.local`:
 
 ```bash
 # Required for Core Functionality
+
+ETH_RPC_URL=        # Get from customized rpc provider or local forked mainnet
+NEXT_PUBLIC_TEST_NET_ENV=production | development
+ALCHEMY_API_KEY=    # Get from https://www.alchemy.com/
+ENSO_API_KEY=       # Get from https://docs.enso.build/home
+NEXT_PUBLIC_PRIVY_APP_ID= # Get from https://www.privy.io/
+PRIVY_APP_SECRET=   # Get from https://www.privy.io/
+PRIVY_SIGNING_KEY=  # Get from https://www.privy.io/
 OPENAI_API_KEY=     # Get from https://platform.openai.com/api-keys
 TAVILY_API_KEY=     # Get from https://app.tavily.com/home
 ```
@@ -141,103 +143,15 @@ For optional features configuration (Redis, SearXNG, etc.), see [CONFIGURATION.m
 #### Using Bun
 
 ```bash
-bun dev
+bun run dev
 ```
 
-#### Using Docker
-
-```bash
-docker compose up -d
-```
-
-Visit http://localhost:3000 in your browser.
-
-## 🌐 Deploy
-
-Host your own live version of Morphic with Vercel, Cloudflare Pages, or Docker.
-
-### Vercel
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmiurla%2Fmorphic&env=OPENAI_API_KEY,TAVILY_API_KEY,UPSTASH_REDIS_REST_URL,UPSTASH_REDIS_REST_TOKEN)
-
-### Docker Prebuilt Image
-
-Prebuilt Docker images are available on GitHub Container Registry:
-
-```bash
-docker pull ghcr.io/miurla/morphic:latest
-```
-
-You can use it with docker-compose:
-
-```yaml
-services:
-  morphic:
-    image: ghcr.io/miurla/morphic:latest
-    env_file: .env.local
-    ports:
-      - '3000:3000'
-    volumes:
-      - ./models.json:/app/public/config/models.json # Optional: Override default model configuration
-```
-
-The default model configuration is located at `public/config/models.json`. For Docker deployment, you can create `models.json` alongside `.env.local` to override the default configuration.
-
-## 🔎 Search Engine
-
-### Setting up the Search Engine in Your Browser
-
-If you want to use Morphic as a search engine in your browser, follow these steps:
-
-1. Open your browser settings.
-2. Navigate to the search engine settings section.
-3. Select "Manage search engines and site search".
-4. Under "Site search", click on "Add".
-5. Fill in the fields as follows:
-   - **Search engine**: Morphic
-   - **Shortcut**: morphic
-   - **URL with %s in place of query**: `https://morphic.sh/search?q=%s`
-6. Click "Add" to save the new search engine.
-7. Find "Morphic" in the list of site search, click on the three dots next to it, and select "Make default".
-
-This will allow you to use Morphic as your default search engine in the browser.
-
-## ✅ Verified models
-
-### List of models applicable to all
+## ✅ Verified model
 
 - OpenAI
-  - gpt-4.1
-  - gpt-4.1-mini
-  - gpt-4.1-nano
-  - o3-mini
+
   - gpt-4o
-  - gpt-4o-mini
-  - gpt-4-turbo
-  - gpt-3.5-turbo
-- Google
-  - Gemini 2.5 Pro (Experimental)
-  - Gemini 2.0 Flash Thinking (Experimental)
-  - Gemini 2.0 Flash
-- Anthropic
-  - Claude 3.5 Sonnet
-  - Claude 3.5 Hike
-- Ollama
-  - qwen2.5
-  - deepseek-r1
-- Groq
-  - deepseek-r1-distill-llama-70b
-  - Llama 4 Maverick 17B
-- Fireworks
-  - DeepSeek R1
-  - Llama 4 Maverick
-- DeepSeek
-  - DeepSeek V3
-  - DeepSeek R1
-- xAI
-  - grok-2
-  - grok-2-vision
-  - grok-3-beta
+
 
 ## 👥 Contributing
 
