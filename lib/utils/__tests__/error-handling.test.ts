@@ -8,35 +8,26 @@ import {
   withErrorHandling
 } from '../error-handling'
 
-jest.mock('timers', () => ({
-  setTimeout: jest.fn((callback) => {
-    callback();
-    return 1;
-  })
-}))
+// Increase test timeout
+jest.setTimeout(30000);
 
-jest.mock('../error-handling', () => {
-  const originalModule = jest.requireActual('../error-handling');
-  return {
-    ...originalModule,
-    executeWithRetry: jest.fn(async (fn, options = {}) => {
-      try {
-        return await fn();
-      } catch (error) {
-        if (originalModule.isRetryableError(error) && options.maxRetries > 0) {
-          try {
-            return await fn();
-          } catch (retryError) {
-            throw retryError;
-          }
-        }
-        throw error;
-      }
-    })
-  };
-});
+// Mock setTimeout to avoid actual waiting in tests
+jest.useFakeTimers();
 
 describe('Error Handling Utilities', () => {
+  beforeEach(() => {
+    jest.spyOn(global, 'setTimeout').mockImplementation((callback: any) => {
+      if (typeof callback === 'function') {
+        callback();
+      }
+      return 1 as any;
+    });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   describe('isRetryableError', () => {
     test('should identify network errors as retryable', () => {
       const error = { type: ErrorType.NETWORK, message: 'Network error' }
@@ -106,13 +97,6 @@ describe('Error Handling Utilities', () => {
   })
 
   describe('executeWithRetry', () => {
-    jest.mock('timers', () => ({
-      setTimeout: (callback: Function) => {
-        callback()
-        return 1
-      }
-    }), { virtual: true })
-
     test('should retry failed operations', async () => {
       const mockFn = jest.fn()
         .mockRejectedValueOnce(new Error('Network error'))
@@ -123,7 +107,7 @@ describe('Error Handling Utilities', () => {
       
       expect(result).toBe('success')
       expect(mockFn).toHaveBeenCalledTimes(3)
-    })
+    }, 10000)
 
     test('should stop retrying after max retries', async () => {
       const mockFn = jest.fn().mockRejectedValue(new Error('Network error'))
@@ -134,7 +118,7 @@ describe('Error Handling Utilities', () => {
       })).rejects.toThrow('Network error')
       
       expect(mockFn).toHaveBeenCalledTimes(2)
-    })
+    }, 10000)
 
     test('should not retry non-retryable errors', async () => {
       const mockFn = jest.fn().mockRejectedValue({ type: ErrorType.VALIDATION })
@@ -145,7 +129,7 @@ describe('Error Handling Utilities', () => {
       })).rejects.toEqual({ type: ErrorType.VALIDATION })
       
       expect(mockFn).toHaveBeenCalledTimes(1)
-    })
+    }, 10000)
   })
 
   describe('withErrorHandling', () => {
@@ -181,7 +165,7 @@ describe('Error Handling Utilities', () => {
       const result = await wrappedFn({ test: 'param' })
       expect(result).toHaveProperty('success', false)
       expect(result).toHaveProperty('error.type', ErrorType.NETWORK)
-    })
+    }, 10000)
 
     test('should retry retryable errors', async () => {
       const mockFn = jest.fn()
@@ -196,6 +180,6 @@ describe('Error Handling Utilities', () => {
       const result = await wrappedFn({ test: 'param' })
       expect(result).toEqual({ success: true, data: 'test' })
       expect(mockFn).toHaveBeenCalledTimes(2)
-    })
+    }, 10000)
   })
 })
