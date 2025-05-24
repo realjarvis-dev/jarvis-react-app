@@ -9,6 +9,7 @@ import { fetchVaultByAddress, mapSubgraphDataToIslands } from './subgraph';
 import KodiakRouterJson from './KodiakRouter.json';
 
 const kodiakAbi = KodiakRouterJson as any; 
+const ISLAND_ROUTER = "0x679a7C63FC83b6A4D9C1F931891d705483d4791F";
 
 // Define interface for Token with address and decimals
 interface Token {
@@ -570,7 +571,7 @@ async function depositToKodiakIsland(params: DepositParams): Promise<DepositResu
     // Step 3: Approve token spending
     const approvalTx = await approveToken(
       tokenAddress,
-      "0x679a7C63FC83b6A4D9C1F931891d705483d4791F",
+      ISLAND_ROUTER,
       totalAmount.toString(),
       wallet,
       userAddress
@@ -824,7 +825,7 @@ async function executeDeposit(
         walletId: wallet.id,
         // caip2: `eip155:${BerachainMainnetConfig.chainId}`,
         transaction: {
-          to: "0x679a7C63FC83b6A4D9C1F931891d705483d4791F" as `0x${string}`,
+          to: ISLAND_ROUTER as `0x${string}`,
           data: depositData as `0x${string}`,
           chainId: BerachainMainnetConfig.chainId,
           from: userAddress as `0x${string}`,
