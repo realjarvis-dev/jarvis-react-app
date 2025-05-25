@@ -6,6 +6,7 @@ import {
 import axios from 'axios'
 import { ethers, TransactionRequest } from 'ethers'
 import { v4 as uuidv4 } from 'uuid'
+import { getConfigByChainId } from '../config/network'
 
 // Types for transaction responses
 export interface QuoteResponse {
@@ -104,6 +105,54 @@ export async function getSwapTransaction(
   }
 }
 
+const ERC20_ABI = [
+  'function approve(address spender, uint256 amount) external returns (bool)',
+  'function allowance(address owner, address spender) external view returns (uint256)'
+];
+export async function erc20Approval (
+  tokenAddress: string,
+  spenderAddress: string,
+  amount: string,
+  userAddress: string,
+  chainId: number = 1
+): Promise<{ status: string, message?: string }> {
+    // default to use the ETH_RPC_URL in env
+    // on localhost can put 127.0.0.1:8545 for local testing
+    // TODO: on deployment have to remove the ETH_RPC_URL for multichain support
+    const provider = new ethers.JsonRpcProvider(process.env.ETH_RPC_URL || getConfigByChainId(chainId).rpcUrl);
+    const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
+    const allowance = await tokenContract.allowance(userAddress, spenderAddress);
+    
+    // Skip approval if allowance is sufficient
+    if (allowance >= BigInt(amount)) {
+      return { status: 'success', message: 'Allowance is sufficient' };
+    }
+    
+    // Generate approval transaction
+    const approvalData = tokenContract.interface.encodeFunctionData('approve', [
+      spenderAddress,
+      amount
+    ]);
+
+    try {
+      const txData = await executeSwapTransaction({
+        to: tokenAddress,
+        from: userAddress,
+        data: approvalData,
+        value: BigInt(0)
+      }, chainId)
+      return { status: 'success', message: txData.hash }
+    } catch (error: any) {
+      return { status: 'fail', message: error.message }
+    }
+
+
+
+
+
+}
+
+// TODO: add an option to support no gas estimation since kodiak deposit can't be estimated
 /**
  * Executes a transaction with the given transaction data
  * @param txData Transaction data to execute
