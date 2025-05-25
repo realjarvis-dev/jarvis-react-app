@@ -25,6 +25,7 @@ export interface KodiakIsland {
     };
     apr: {
       feeApr: number;
+      rewardApr?: number;
       combinedApr: number;
       isEstimate: boolean;
     };
@@ -201,6 +202,7 @@ export function buildKodiakIslandObject(
     },
     apr: {
       feeApr: 0,
+      rewardApr: 0,
       combinedApr: 0,
       isEstimate: true // On-chain data doesn't provide APR information
     },
