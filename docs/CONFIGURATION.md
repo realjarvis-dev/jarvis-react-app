@@ -1,11 +1,15 @@
 # Configuration Guide
 
-This guide covers the optional features and their configuration in Morphic.
+This guide covers the optional features and their configuration in Jarvis.
 
 ## Table of Contents
 
 - [Chat History Storage](#chat-history-storage)
 - [Search Providers](#search-providers)
+- [Web3 Setup](#web3-setup)
+  - [Privy Setup](#privy-setup)
+  - [Alchemy Setup](#alchemy-setup)
+  - [Enso Setup](#enso-setup)
 - [Additional AI Providers](#additional-ai-providers)
 - [Other Features](#other-features)
 
@@ -119,6 +123,64 @@ For detailed configuration options, refer to the [SearXNG documentation](https:/
 docker-compose logs searxng
 ```
 
+## Web3 Setup
+
+This section covers the setup for essential Web3 services used by Jarvis for authentication, wallet infrastructure, and on-chain interactions. Details for these environment variables can also be found in the main `README.md`.
+
+### Privy Setup
+
+Privy is used for user authentication and embedded wallet management.
+
+1.  Sign up or log in to [Privy](https://www.privy.io/).
+2.  Navigate to your dashboard to find your App ID, App Secret, and Signing Key.
+3.  Configure your `.env.local` with these credentials:
+
+```bash
+# Privy - Authentication & Embedded Wallets
+NEXT_PUBLIC_PRIVY_APP_ID= # Get from https://www.privy.io/
+PRIVY_APP_SECRET=   # Get from https://www.privy.io/
+PRIVY_SIGNING_KEY=  # Get from https://www.privy.io/
+```
+
+### Alchemy Setup
+
+Alchemy is used for balance and token checking on the blockchain.
+
+1.  Create an account or log in at [Alchemy](https://www.alchemy.com/).
+2.  Create a new app on your dashboard to get an API Key.
+3.  Set the following environment variables in your `.env.local`:
+
+```bash
+# Alchemy - Blockchain Data
+ALCHEMY_API_KEY=    # Get from https://www.alchemy.com/
+```
+
+You will also need to configure an Ethereum RPC URL if you want to use locally forked mainnet.
+
+```bash
+ETH_RPC_URL=        # Your Ethereum RPC URL
+```
+
+### Enso Setup
+
+Enso provides tools to interact with various DeFi protocols.
+
+1.  Refer to the [Enso documentation](https://docs.enso.build/home) to obtain an API key.
+2.  Add the API key to your `.env.local`:
+
+```bash
+# Enso - DeFi Protocol Interaction
+ENSO_API_KEY=       # Get from https://docs.enso.build/home
+```
+
+You should also set the test net environment variable, as mentioned in `README.md`:
+
+```bash
+# Controls privy-transfer use sepolia or mainnet
+# TODO: make it more general
+NEXT_PUBLIC_TEST_NET_ENV=production # or development
+```
+
 ## Additional AI Providers
 
 Models are configured in `public/config/models.json`. Each model requires its corresponding API key to be set in the environment variables.
@@ -141,64 +203,6 @@ The `models.json` file contains an array of model configurations with the follow
     }
   ]
 }
-```
-
-### Provider API Keys
-
-### Google Generative AI
-
-```bash
-GOOGLE_GENERATIVE_AI_API_KEY=[YOUR_API_KEY]
-```
-
-### Anthropic
-
-```bash
-ANTHROPIC_API_KEY=[YOUR_API_KEY]
-```
-
-### Groq
-
-```bash
-GROQ_API_KEY=[YOUR_API_KEY]
-```
-
-### Ollama
-
-```bash
-OLLAMA_BASE_URL=http://localhost:11434
-```
-
-### Azure OpenAI
-
-```bash
-AZURE_API_KEY=[YOUR_API_KEY]
-AZURE_RESOURCE_NAME=[YOUR_RESOURCE_NAME]
-```
-
-### DeepSeek
-
-```bash
-DEEPSEEK_API_KEY=[YOUR_API_KEY]
-```
-
-### Fireworks
-
-```bash
-FIREWORKS_API_KEY=[YOUR_API_KEY]
-```
-
-### xAI
-
-```bash
-XAI_API_KEY=[YOUR_XAI_API_KEY]
-```
-
-### OpenAI Compatible Model
-
-```bash
-OPENAI_COMPATIBLE_API_KEY=[YOUR_API_KEY]
-OPENAI_COMPATIBLE_API_BASE_URL=[YOUR_API_BASE_URL]
 ```
 
 ## Other Features
