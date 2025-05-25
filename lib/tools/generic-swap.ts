@@ -6,7 +6,7 @@ import path, { dirname } from 'path' // Added import for path operations
 import { promisify } from 'util'
 import { z } from 'zod'
 import { ensoSwap } from '../enso/swap' // Import ensoSwap
-import { executeSwapTransaction } from '../pendle/transactions'
+import { erc20Approval, executeSwapTransaction } from '../pendle/transactions'
 import { getUserEvmWalletAddress } from '../privy/client'
 
 const tokenAddressMap: Record<string, string> = {
@@ -85,7 +85,7 @@ export const genericSwapTool = tool({
     const tokenOutAddress = tokenAddressMap[tokenOutSymbol].toLowerCase()
     const tokenInAddress = tokenAddressMap[tokenInSymbol].toLowerCase()
     const tokenInDecimals = tokenDecimalMap[tokenInSymbol]
-    
+    let erc20Input = false
     console.log('Mock tool start')
     const logFilePath = path.join(dirname(__dirname), 'genericSwapToolMock.log')
     let logContent = `Timestamp: ${new Date().toISOString()}`
@@ -125,6 +125,7 @@ export const genericSwapTool = tool({
           )
         }
       } else {
+        erc20Input = true
         // ERC20 input
         if (!tokenInAddress || typeof tokenInDecimals !== 'number') {
           throw new Error(
@@ -136,6 +137,8 @@ export const genericSwapTool = tool({
           amountInBaseUnits = ethers
             .parseUnits(amountInHuman, tokenInDecimals)
             .toString()
+        
+
         } catch (error) {
           throw new Error(
             `Invalid amount or address for ${tokenInSymbol}: ${amountInHuman}. Address: ${tokenInAddress}. Decimals: ${tokenInDecimals}. ${
@@ -148,20 +151,30 @@ export const genericSwapTool = tool({
       let txData
 
 
-        // General swap (ETH -> Token or Token -> Token) using ensoSwap
-        txData = await ensoSwap({
-            chainId: chainId,
-            tokenIn: actualTokenInAddress,
-            tokenOut: ethers.getAddress(tokenOutAddress.toLowerCase()), // Validate/checksum
-            fromAddress: evmWalletAddress,
-            amountIn: amountInBaseUnits,
-            slippage
-        })
+
+      // General swap (ETH -> Token or Token -> Token) using ensoSwap
+      txData = await ensoSwap({
+          chainId: chainId,
+          tokenIn: actualTokenInAddress,
+          tokenOut: ethers.getAddress(tokenOutAddress.toLowerCase()), // Validate/checksum
+          fromAddress: evmWalletAddress,
+          amountIn: amountInBaseUnits,
+          slippage
+      })
+
 
 
 
       if (!txData) {
         throw new Error('Failed to prepare transaction data.')
+      }
+
+      if (erc20Input) {
+        const approvalResult = await erc20Approval(tokenInAddress, txData.to,
+            amountInBaseUnits, evmWalletAddress, chainId)
+        if (approvalResult.status === 'fail') {
+          throw new Error(approvalResult.message)
+        }
       }
 
       logContent += `Transaction Data: ${JSON.stringify(txData)}\n`
