@@ -41,18 +41,20 @@ const parameters = z.object({
   tokenInSymbol: z
     .string()
     .default('ETH')
-    .describe('Symbol of the input token (e.g., "ETH", "USDC"). Currently only ETH is available'),
+    .describe(`Symbol of the input token (e.g., "ETH", "USDC"). Available tokens: ${JSON.stringify(
+        Object.keys(tokenAddressMap)
+      )}. Notify user if the token is not available.`),
   tokenOutSymbol: z
     .string()
     .describe(
       `The symbol of the token to receive (e.g., "USDC", "DAI"). Used for display purposes. Available tokens: ${JSON.stringify(
         Object.keys(tokenAddressMap)
-      )}`
+      )}. Notify user if the token is not available.`
     ),
   amountInHuman: z
     .string()
     .describe(
-      'Amount of input token to swap in human-readable format (e.g., "1", "100.5").'
+      'Amount of input token to swap in human-readable format (e.g., "1", "100.5") in the unit of Input Token. Notify user if output amount is supplied.'
     ),
   slippage: z
     .number()
