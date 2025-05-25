@@ -340,10 +340,11 @@ export async function fetchKodiakIslandsFromApi(
       throw new Error('Invalid response from Kodiak API');
     }
     
-    console.log(`Successfully fetched ${response.data.data.length} islands from API`);
+    const apiVaults = response.data.data;
+    console.log(`Successfully fetched ${apiVaults.length} islands from API`);
     
     // Map the API response to our format
-    const islands = mapApiResponseToIslands(response.data.data);
+    const islands = mapApiResponseToIslands(apiVaults);
     
     // Count unique token pairs
     const tokenPairs = new Set();
@@ -377,7 +378,21 @@ export async function fetchKodiakIslandsFromApi(
  * @returns Array of KodiakIsland objects
  */
 function mapApiResponseToIslands(apiVaults: KodiakApiVault[]): KodiakIsland[] {
-  return apiVaults.map(vault => {
+  // First, filter out vaults where either token has a zero price
+  const filteredVaults = apiVaults.filter(vault => {
+    if (vault.token0.price === 0) {
+      console.log(`Filtering out island ${vault.id} (${vault.token0.symbol}-${vault.token1.symbol}) because token0 price is 0`);
+      return false;
+    }
+    if (vault.token1.price === 0) {
+      console.log(`Filtering out island ${vault.id} (${vault.token0.symbol}-${vault.token1.symbol}) because token1 price is 0`);
+      return false;
+    }
+    return true;
+  });
+  
+  // Then map the filtered vaults to our format
+  return filteredVaults.map(vault => {
     // The API already returns APR values in percentage form
     // We need to convert them to decimal form for our interface
     const feeApr = vault.apr / 100;
