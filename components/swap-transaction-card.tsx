@@ -279,7 +279,7 @@ export function SwapTransactionCard({
               <div className="bg-white dark:bg-gray-900 rounded-lg p-3 text-sm mt-2">
                 <div className="grid grid-cols-2 gap-2">
                   <div className="text-gray-500 dark:text-gray-400">Amount:</div>
-                  <div>{tool.args.amount_in_eth} ETH</div>
+                  <div>{tool.args.amount_in_human} {tool.args.input_token_name_display}</div>
                   <div className="text-gray-500 dark:text-gray-400">To:</div>
                   <div>{tokenName}</div>
                 </div>
@@ -318,7 +318,7 @@ export function SwapTransactionCard({
               <div className="bg-white dark:bg-gray-900 rounded-lg p-3 text-sm">
                 <div className="grid grid-cols-2 gap-2">
                   <div className="text-gray-500 dark:text-gray-400">Amount:</div>
-                  <div>{result.swap_details.amount}</div>
+                  <div>{result.swap_details.amount_in}</div>
                   <div className="text-gray-500 dark:text-gray-400">Market:</div>
                   <div className="truncate">{result.swap_details.market}</div>
                 </div>
@@ -364,7 +364,7 @@ export function SwapTransactionCard({
               {/* Amount */}
               <div className="flex justify-between items-center">
                 <div className="text-sm text-gray-500 dark:text-gray-400">Amount:</div>
-                <div className="text-sm font-bold">{result.swap_details?.amount || 'N/A'}</div>
+                <div className="text-sm font-bold">{result.swap_details?.amount_in || 'N/A'}</div>
               </div>
               
               {/* Transaction Hash */}
@@ -387,7 +387,7 @@ export function SwapTransactionCard({
           
           {/* Small timestamp note */}
           <div className="text-xs text-center text-gray-400 dark:text-gray-500 mt-1">
-            Transaction completed at {new Date().toLocaleTimeString()}
+            Transaction completed at {new Date(result.swap_details.complete_time).toLocaleTimeString()}
           </div>
         </div>
       </CardContent>

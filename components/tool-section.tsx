@@ -11,7 +11,7 @@ import { SwapTransactionCard } from './swap-transaction-card'
 import { TransferSection } from './transfer-section'
 import { VideoSearchSection } from './video-search-section'
 import { WalletBalanceSection } from './wallet-balance-section'
-
+import { GenericSwapCard } from './generic-swap-card'
 interface ToolSectionProps {
   tool: ToolInvocation
   isOpen: boolean
@@ -129,6 +129,10 @@ export function ToolSection({
             </div>
           </div>
         </div>
+      )
+    case 'generic_swap':
+      return (
+        <GenericSwapCard tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
       )
     case 'wallet_balance':
       return (

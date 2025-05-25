@@ -6,6 +6,7 @@ import {
 import axios from 'axios'
 import { ethers, TransactionRequest } from 'ethers'
 import { v4 as uuidv4 } from 'uuid'
+import { getConfigByChainId } from '../config/network'
 
 // Types for transaction responses
 export interface QuoteResponse {
@@ -26,28 +27,22 @@ const BASE_URL = 'https://api-v2.pendle.finance/core/v1'
 /**
  * Get transaction data for swapping tokens with Pendle
  * @param marketAddress The market address
+ * @param tokenIn Address of the input token
  * @param tokenOut Address of the output token
  * @param amountIn Amount of input token in wei
  * @param slippage Slippage tolerance (e.g., 0.01 for 1%)
  * @returns Promise with transaction data
  */
-export async function getSwapTransaction(
+export async function getSwapTransactionFromPendle(
   marketAddress: string,
+  tokenIn: string,
   tokenOut: string,
   amountIn: string,
   slippage: number = 0.01
 ): Promise<any> {
   try {
-    // ETH is always used as the input token
-    const actualTokenIn = ETH_ADDRESS
-
     console.log(`Using market: ${marketAddress}`)
-    console.log(`Swapping from ${actualTokenIn} to ${tokenOut}`)
-
-    // // Use environment variable for receiver address, error if not set
-    // if (!process.env.WALLET_ADDRESS) {
-    //   throw new Error('WALLET_ADDRESS environment variable is not set.')
-    // }
+    console.log(`Swapping from ${tokenIn} to ${tokenOut}`)
 
     const evmWalletAddress = await getUserEvmWalletAddress()
     if (!evmWalletAddress) {
@@ -65,7 +60,7 @@ export async function getSwapTransaction(
 
     console.log('API URL:', url)
     console.log('Payload:', {
-      tokenIn: actualTokenIn,
+      tokenIn,
       tokenOut,
       amountIn,
       slippage,
@@ -75,10 +70,10 @@ export async function getSwapTransaction(
 
     const response = await axios.get(url, {
       params: {
-        tokenIn: actualTokenIn,
-        tokenOut: tokenOut,
-        amountIn: amountIn,
-        slippage: slippage,
+        tokenIn,
+        tokenOut,
+        amountIn,
+        slippage,
         receiver: RECEIVER,
         enableAggregator: true
       }
@@ -104,13 +99,85 @@ export async function getSwapTransaction(
   }
 }
 
+const ERC20_ABI = [
+  'function approve(address spender, uint256 amount) external returns (bool)',
+  'function allowance(address owner, address spender) external view returns (uint256)',
+  "function decimals() view returns (uint8)",
+  "function symbol() view returns (string)",
+  "function name() view returns (string)"
+];
+
+export async function getERC20Details (
+  tokenAddress: string,
+  chainId: number = 1
+): Promise<{ decimals: number, symbol: string, name: string }> {
+  try {
+    const provider = new ethers.JsonRpcProvider(process.env.ETH_RPC_URL || getConfigByChainId(chainId).rpcUrl);
+    const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
+    const [decimals, symbol, name] = await Promise.all([
+    tokenContract.decimals(),
+    tokenContract.symbol(),
+    tokenContract.name()
+  ]);
+  return { decimals, symbol, name };
+  } catch (error: any) {
+    console.error('Error fetching ERC20 details:', error.message)
+    throw new Error(`Failed to get ERC20 details: ${error.message}`)
+  }
+}
+
+export async function erc20Approval (
+  tokenAddress: string,
+  spenderAddress: string,
+  amount: string,
+  userAddress: string,
+  chainId: number = 1
+): Promise<{ status: string, message?: string }> {
+    // default to use the ETH_RPC_URL in env
+    // on localhost can put 127.0.0.1:8545 for local testing
+    // TODO: on deployment have to remove the ETH_RPC_URL for multichain support
+    const provider = new ethers.JsonRpcProvider(process.env.ETH_RPC_URL || getConfigByChainId(chainId).rpcUrl);
+    const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
+    const allowance = await tokenContract.allowance(userAddress, spenderAddress);
+    
+    // Skip approval if allowance is sufficient
+    if (allowance >= BigInt(amount)) {
+      return { status: 'success', message: 'Allowance is sufficient' };
+    }
+    
+    // Generate approval transaction
+    const approvalData = tokenContract.interface.encodeFunctionData('approve', [
+      spenderAddress,
+      amount
+    ]);
+
+    try {
+      const txData = await executeSwapTransaction({
+        to: tokenAddress,
+        from: userAddress,
+        data: approvalData,
+        value: BigInt(0)
+      }, chainId)
+      return { status: 'success', message: txData.hash }
+    } catch (error: any) {
+      return { status: 'fail', message: error.message }
+    }
+
+
+
+
+
+}
+
+// TODO: add an option to support no gas estimation since kodiak deposit can't be estimated
 /**
  * Executes a transaction with the given transaction data
  * @param txData Transaction data to execute
  * @returns Promise with transaction hash
  */
 export async function executeSwapTransaction(
-  txData: TransactionRequest
+  txData: TransactionRequest,
+  chainId: number = 1
 ): Promise<{ hash: string }> {
   try {
     // // Verify environment variables are set
@@ -131,7 +198,6 @@ export async function executeSwapTransaction(
     const from = txData.from
 
     const data = txData.data
-    const chainId = 1
     const value = txData.value
     const evmWallet = await getUserWallet('ethereum')
     if (!evmWallet) {
@@ -151,7 +217,8 @@ export async function executeSwapTransaction(
       to: txData.to,
       from: txData.from,
       data: txData.data,
-      value: txData.value ?? BigInt(0)
+      value: txData.value ?? BigInt(0),
+      chainId: chainId
     })
     // Add a 20 % buffer
     const gasLimit = gasEstimate + gasEstimate / BigInt(5)
@@ -199,32 +266,32 @@ export async function executeSwapTransaction(
   }
 }
 
-/**
- * Get transaction data for swapping ETH to a specific token
- * @param marketAddress The market address
- * @param tokenOutAddress Address of the output token
- * @param amountIn Amount of ETH in wei
- * @param slippage Slippage tolerance (e.g., 0.01 for 1%)
- * @returns Promise with transaction result
- */
-export async function getSwapEthToTokenTransaction(
-  marketAddress: string,
-  tokenOutAddress: string,
-  amountIn: string,
-  slippage: number = 0.01
-): Promise<any> {
-  try {
-    // Get the transaction data - ETH is hardcoded as input token in getSwapTransaction
-    const txData = await getSwapTransaction(
-      marketAddress,
-      tokenOutAddress,
-      amountIn,
-      slippage
-    )
+// /**
+//  * Get transaction data for swapping ETH to a specific token
+//  * @param marketAddress The market address
+//  * @param tokenOutAddress Address of the output token
+//  * @param amountIn Amount of ETH in wei
+//  * @param slippage Slippage tolerance (e.g., 0.01 for 1%)
+//  * @returns Promise with transaction result
+//  */
+// export async function getSwapEthToTokenTransaction(
+//   marketAddress: string,
+//   tokenOutAddress: string,
+//   amountIn: string,
+//   slippage: number = 0.01
+// ): Promise<any> {
+//   try {
+//     // Get the transaction data - ETH is hardcoded as input token in getSwapTransaction
+//     const txData = await getSwapTransaction(
+//       marketAddress,
+//       tokenOutAddress,
+//       amountIn,
+//       slippage
+//     )
 
-    return txData
-  } catch (error: any) {
-    console.error('Error getting swap transaction data:', error.message)
-    throw new Error(`Failed to get swap transaction data: ${error.message}`)
-  }
-}
+//     return txData
+//   } catch (error: any) {
+//     console.error('Error getting swap transaction data:', error.message)
+//     throw new Error(`Failed to get swap transaction data: ${error.message}`)
+//   }
+// }

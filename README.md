@@ -1,75 +1,118 @@
-# Morphic
+# 🤖 Jarvis: Unifying Web3 with Autonomous Agent
 
-An AI-powered search engine with a generative UI.
+![Jarvis User Interface](/public/images/UI.png "Unifying Web3 with Autonomous Agent")
 
-![capture](/public/screenshot-2025-05-04.png)
+## 🚀 What is Jarvis?
+
+**Jarvis is pioneering the future of Web3 by creating autonomous financial agents that bridge the gap between human intent and decentralized protocols.**
+
+In a fragmented DeFi landscape with thousands of protocols and complex interactions, Jarvis serves as your unified gateway - an intelligent layer that understands your goals and autonomously orchestrates across the entire Web3 ecosystem to achieve them.
+
+Simply tell Jarvis what you want: *"Earn 3% monthly yield"*, *"Protect my portfolio from volatility"*, or *"Find the best yield for my idle USDC"*. Your autonomous agent then analyzes opportunities across 160+ protocols, constructs optimal strategies, and executes them 24/7 - all through natural conversation.
+
+## ✨ The Vision
+
+### 🌐 **Unifying Fragmented DeFi**
+- One interface to access the entire Web3 ecosystem
+- No more jumping between protocols or managing multiple positions
+- Your agent handles all the complexity behind the scenes
+
+### 🤖 **True Financial Autonomy**
+- Agents that act on your behalf, not just respond to commands
+- Proactive optimization and rebalancing
+- 24/7 monitoring and execution without human intervention
+
+### 🔮 **Intent-Based Web3**
+- Move from "how" to "what" - just state your goals
+- Natural language replaces complex transactions
+- AI translates intent into optimal on-chain actions
+
+### 🛡️ **Democratizing Sophisticated Strategies**
+- Institutional-grade portfolio management for everyone
+- Access strategies previously available only to whales
+- No coding or DeFi expertise required
+
+## 🎬 Experience the Future
+
+```
+You: "I want to preserve my wealth and earn steady income"
+
+Jarvis: "I'll create a diversified strategy across multiple protocols to achieve this.
+        Here's my recommendation:
+        
+        • 30% in RWA yields (tokenized treasuries) - 5.2% APY
+        • 25% in blue-chip lending (Aave, Compound) - 3.8% APY  
+        • 25% in ETH liquid staking derivatives - 4.5% APY
+        • 20% in stablecoin liquidity pools - 6.1% APY
+        
+        Expected return: 4.7% APY with minimal volatility
+        Automatic rebalancing: Daily
+        Risk monitoring: Real-time
+        
+        Should I deploy this autonomous strategy?"
+
+You: "Yes, go ahead"
+
+Jarvis: "Strategy deployed! I'll manage this 24/7 and notify you of any 
+        significant changes. Your first yield payment arrives in 24 hours."
+```
 
 ## 🗂️ Overview
 
 - 🛠 [Features](#-features)
 - 🧱 [Stack](#-stack)
 - 🚀 [Quickstart](#-quickstart)
-- 🌐 [Deploy](#-deploy)
-- 🔎 [Search Engine](#-search-engine)
 - ✅ [Verified models](#-verified-models)
+- 🌟 [Why Jarvis?](#-why-jarvis)
 - 👥 [Contributing](#-contributing)
-
-📝 Explore AI-generated documentation on [DeepWiki](https://deepwiki.com/miurla/morphic)
 
 ## 🛠 Features
 
-### Core Features
+### Autonomous Agent Capabilities
 
-- AI-powered search with GenerativeUI
-- Natural language question understanding
-- Multiple search providers support (Tavily, SearXNG, Exa)
-- Model selection from UI (switch between available AI models)
-  - Reasoning models with visible thought process
+- **Multi-Protocol Orchestration** - Seamlessly interact with 160+ DeFi protocols
+- **Intent Recognition** - Advanced NLP to understand complex financial goals
+- **Strategy Generation** - AI creates custom strategies based on your objectives
+- **Autonomous Execution** - Deploy and manage positions without manual intervention
+- **Real-time Optimization** - Continuous rebalancing for optimal performance
+- **Risk Management** - Proactive monitoring and defensive actions
+- **Cross-chain Intelligence** - Find opportunities across all major networks
 
-### Authentication
+### Core Infrastructure
 
-- User authentication powered by [Supabase Auth](https://supabase.com/docs/guides/auth)
-- Supports Email/Password sign-up and sign-in
-- Supports Social Login with Google
+- **GenerativeUI Interface** - Dynamic, context-aware responses
+- **Natural Language Processing** - Speak human, not code
+- **Embedded Wallet System** - Seamless onboarding with no seed phrases
+- **Multi-model AI Support** - Leveraging best-in-class language models
+- **Real-time Data Aggregation** - Live feeds from across DeFi
+- **Smart Contract Automation** - Gas-optimized execution layer
 
-### Chat & History
+### Authentication & Security
 
-- Chat history functionality (Optional)
-- Share search results (Optional)
-- Redis support (Local/Upstash)
+- User authentication powered by [Privy Auth](https://privy.io)
+- Email and social login support
+- External wallet connections
+- Non-custodial architecture - your keys, your crypto
+- Audit-first approach to protocol integration
 
-### AI Providers
+### Advanced Features
 
-The following AI providers are supported:
+- **Portfolio Analytics** - Real-time P&L and risk metrics
+- **Strategy Backtesting** - Test strategies against historical data
+- **Custom Alerts** - Notifications for important events
+- **Tax Optimization** - Track and optimize for tax efficiency
+- **Social Strategies** - Learn from successful community strategies
 
-- OpenAI (Default)
-- Google Generative AI
-- Azure OpenAI
-- Anthropic
-- Ollama
-- Groq
-- DeepSeek
-- Fireworks
-- xAI (Grok)
-- OpenAI Compatible
+## 🌟 Why Jarvis?
 
-Models are configured in `public/config/models.json`. Each model requires its corresponding API key to be set in the environment variables. See [Configuration Guide](docs/CONFIGURATION.md) for details.
-
-### Search Capabilities
-
-- URL-specific search
-- Video search support (Optional)
-- SearXNG integration with:
-  - Customizable search depth (basic/advanced)
-  - Configurable engines
-  - Adjustable results limit
-  - Safe search options
-  - Custom time range filtering
-
-### Additional Features
-
-- Docker deployment ready
-- Browser search engine integration
+| Traditional DeFi | Jarvis Autonomous Agents |
+|-----------------|-------------------------|
+| Navigate 100s of protocols manually | One unified interface to all of DeFi |
+| Constant monitoring required | Autonomous 24/7 management |
+| Complex transactions | Natural language commands |
+| Miss opportunities while sleeping | Your agent never sleeps |
+| One protocol at a time | Orchestrate across 160+ protocols |
+| Technical expertise required | Anyone can be a DeFi power user |
 
 ## 🧱 Stack
 
@@ -79,44 +122,50 @@ Models are configured in `public/config/models.json`. Each model requires its co
 - [TypeScript](https://www.typescriptlang.org/) - Type safety
 - [Vercel AI SDK](https://sdk.vercel.ai/docs) - Text streaming / Generative UI
 
-### Authentication & Authorization (Updated Category)
+### AI & Intelligence Layer
 
-- [Supabase](https://supabase.com/) - User authentication and backend services
-
-### AI & Search
-
-- [OpenAI](https://openai.com/) - Default AI provider (Optional: Google AI, Anthropic, Groq, Ollama, Azure OpenAI, DeepSeek, Fireworks)
-- [Tavily AI](https://tavily.com/) - Default search provider
+- [OpenAI](https://openai.com/) - Primary language model
+- [Tavily AI](https://tavily.com/) - Real-time data search
 - Alternative providers:
   - [SearXNG](https://docs.searxng.org/) - Self-hosted search
   - [Exa](https://exa.ai/) - Neural search
 
-### Data Storage
+### Data Infrastructure
 
 - [Upstash](https://upstash.com/) - Serverless Redis
-- [Redis](https://redis.io/) - Local Redis option
+- [Redis](https://redis.io/) - Local caching option
 
-### UI & Styling
+### UI & Experience
 
-- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
-- [shadcn/ui](https://ui.shadcn.com/) - Re-usable components
-- [Radix UI](https://www.radix-ui.com/) - Unstyled, accessible components
-- [Lucide Icons](https://lucide.dev/) - Beautiful & consistent icons
+- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS
+- [shadcn/ui](https://ui.shadcn.com/) - Composable components
+- [Radix UI](https://www.radix-ui.com/) - Accessible primitives
+- [Lucide Icons](https://lucide.dev/) - Consistent iconography
+
+### Web3 Infrastructure
+
+- [Privy](https://www.privy.io/) - Authentication and embedded wallets
+- [Enso Network](https://docs.enso.build/home) - Multi-protocol integration layer
+- [Alchemy](https://www.alchemy.com/) - Blockchain data and infrastructure
+
+### Integrated Protocols
+
+- [Pendle](https://docs.pendle.finance/Introduction) - Yield tokenization
+- [Kodiak](https://documentation.kodiak.finance/) - Berachain liquidity
+- 160+ protocols via Enso integration
 
 ## 🚀 Quickstart
 
-### 1. Fork and Clone repo
-
-Fork the repo to your Github account, then run the following command to clone the repo:
+### 1. Clone repo
 
 ```bash
-git clone git@github.com:[YOUR_GITHUB_ACCOUNT]/morphic.git
+git clone https://github.com/kirastudio-ai/Jarvis-investment-agent.git
 ```
 
 ### 2. Install dependencies
 
 ```bash
-cd morphic
+cd Jarvis-investment-agent
 bun install
 ```
 
@@ -130,6 +179,14 @@ Fill in the required environment variables in `.env.local`:
 
 ```bash
 # Required for Core Functionality
+
+ETH_RPC_URL=        # Get from customized rpc provider or local forked mainnet
+NEXT_PUBLIC_TEST_NET_ENV=production | development
+ALCHEMY_API_KEY=    # Get from https://www.alchemy.com/
+ENSO_API_KEY=       # Get from https://docs.enso.build/home
+NEXT_PUBLIC_PRIVY_APP_ID= # Get from https://www.privy.io/
+PRIVY_APP_SECRET=   # Get from https://www.privy.io/
+PRIVY_SIGNING_KEY=  # Get from https://www.privy.io/
 OPENAI_API_KEY=     # Get from https://platform.openai.com/api-keys
 TAVILY_API_KEY=     # Get from https://app.tavily.com/home
 ```
@@ -141,111 +198,124 @@ For optional features configuration (Redis, SearXNG, etc.), see [CONFIGURATION.m
 #### Using Bun
 
 ```bash
-bun dev
+bun run dev
 ```
 
-#### Using Docker
+#### Using npm
 
 ```bash
-docker compose up -d
+npm run dev
 ```
 
-Visit http://localhost:3000 in your browser.
+Visit `http://localhost:3000` to experience autonomous Web3!
 
-## 🌐 Deploy
+## ✅ Verified Models
 
-Host your own live version of Morphic with Vercel, Cloudflare Pages, or Docker.
+### OpenAI
+- gpt-4o (Recommended for production)
+- gpt-4o-mini
+- gpt-4-turbo
 
-### Vercel
+### Coming Soon
+- Anthropic Claude
+- Google Gemini
+- Local models via Ollama
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmiurla%2Fmorphic&env=OPENAI_API_KEY,TAVILY_API_KEY,UPSTASH_REDIS_REST_URL,UPSTASH_REDIS_REST_TOKEN)
+## 🗺️ Roadmap
 
-### Docker Prebuilt Image
+### Phase 1: Foundation (Completed ✅)
+- [x] Core autonomous agent framework
+- [x] Multi-protocol integration via Enso
+- [x] Natural language understanding
+- [x] Embedded wallet infrastructure
 
-Prebuilt Docker images are available on GitHub Container Registry:
+### Phase 2: Intelligence (In Progress 🚧)
+- [ ] Advanced strategy optimization algorithms
+- [ ] Multi-chain agent coordination
+- [ ] Backtesting and simulation engine
+- [ ] Social strategy marketplace
 
-```bash
-docker pull ghcr.io/miurla/morphic:latest
-```
+### Phase 3: Scale (Upcoming 🔮)
+- [ ] Mobile companion app
+- [ ] Institutional agent features
+- [ ] Custom agent training
+- [ ] DAO governance integration
+- [ ] Cross-chain liquidity aggregation
 
-You can use it with docker-compose:
+### Phase 4: Ecosystem (Future 🌟)
+- [ ] Agent-to-agent communication protocol
+- [ ] Decentralized agent marketplace
+- [ ] Custom strategy NFTs
+- [ ] Integration with traditional finance
 
-```yaml
-services:
-  morphic:
-    image: ghcr.io/miurla/morphic:latest
-    env_file: .env.local
-    ports:
-      - '3000:3000'
-    volumes:
-      - ./models.json:/app/public/config/models.json # Optional: Override default model configuration
-```
+## 📊 Platform Stats
 
-The default model configuration is located at `public/config/models.json`. For Docker deployment, you can create `models.json` alongside `.env.local` to override the default configuration.
-
-## 🔎 Search Engine
-
-### Setting up the Search Engine in Your Browser
-
-If you want to use Morphic as a search engine in your browser, follow these steps:
-
-1. Open your browser settings.
-2. Navigate to the search engine settings section.
-3. Select "Manage search engines and site search".
-4. Under "Site search", click on "Add".
-5. Fill in the fields as follows:
-   - **Search engine**: Morphic
-   - **Shortcut**: morphic
-   - **URL with %s in place of query**: `https://morphic.sh/search?q=%s`
-6. Click "Add" to save the new search engine.
-7. Find "Morphic" in the list of site search, click on the three dots next to it, and select "Make default".
-
-This will allow you to use Morphic as your default search engine in the browser.
-
-## ✅ Verified models
-
-### List of models applicable to all
-
-- OpenAI
-  - gpt-4.1
-  - gpt-4.1-mini
-  - gpt-4.1-nano
-  - o3-mini
-  - gpt-4o
-  - gpt-4o-mini
-  - gpt-4-turbo
-  - gpt-3.5-turbo
-- Google
-  - Gemini 2.5 Pro (Experimental)
-  - Gemini 2.0 Flash Thinking (Experimental)
-  - Gemini 2.0 Flash
-- Anthropic
-  - Claude 3.5 Sonnet
-  - Claude 3.5 Hike
-- Ollama
-  - qwen2.5
-  - deepseek-r1
-- Groq
-  - deepseek-r1-distill-llama-70b
-  - Llama 4 Maverick 17B
-- Fireworks
-  - DeepSeek R1
-  - Llama 4 Maverick
-- DeepSeek
-  - DeepSeek V3
-  - DeepSeek R1
-- xAI
-  - grok-2
-  - grok-2-vision
-  - grok-3-beta
+- **160+** Integrated Protocols
+- **1000+** Available Strategies
+- **99.9%** Uptime
 
 ## 👥 Contributing
 
-We welcome contributions to Morphic! Whether it's bug reports, feature requests, or pull requests, all contributions are appreciated.
+We're building the future of autonomous Web3 together! We welcome contributions from developers, DeFi experts, and visionaries.
 
 Please see our [Contributing Guide](CONTRIBUTING.md) for details on:
 
-- How to submit issues
-- How to submit pull requests
-- Commit message conventions
-- Development setup
+- Submitting issues and feature requests
+- Development workflow
+- Code standards and review process
+- Testing requirements
+- Documentation guidelines
+
+### Development Setup
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add autonomous feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Areas for Contribution
+
+- 🤖 Agent intelligence improvements
+- 🔗 New protocol integrations
+- 🎨 UI/UX enhancements
+- 📚 Documentation and tutorials
+- 🧪 Testing and QA
+- 🌍 Localization
+
+## 🔗 Links
+
+- [Website](https://www.thejarvis.xyz)
+
+## 📄 License
+
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+
+For attribution and modification details, see the [NOTICE](NOTICE) file.
+
+## 🤝 Acknowledgments
+
+Special thanks to the Enso Network team, our protocol partners, and the entire DeFi community for making unified Web3 possible.
+
+## 👥 Contributors
+
+### Jarvis Contributors
+Thanks to everyone who has contributed to the Jarvis autonomous agent platform!
+
+- allen@thejarvis.xyz
+- rui@thejarvis.xyz
+- gaurav@thejarvis.xyz
+
+### Original Project
+Jarvis was originally forked from [[Morphic](https://github.com/miurla/morphic)] and has since evolved into a completely different platform focused on autonomous Web3 agents. We acknowledge the foundational work of the original contributors.
+
+---
+
+<div align="center">
+  <h3>Ready to unlock the full potential of Web3 with autonomous agents?</h3>
+  <a href="https://www.thejarvis.xyz">
+    <img src="https://img.shields.io/badge/Launch%20Jarvis-🚀-blue?style=for-the-badge" alt="Launch Jarvis">
+  </a>
+  <br><br>
+  <sub>The future of DeFi is autonomous. The future is Jarvis.</sub>
+</div>

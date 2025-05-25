@@ -1,4 +1,11 @@
 import { Network } from "alchemy-sdk";
+
+type NetworkConfigType = {
+    name: Network,
+    chainId: number,
+    scanLink: string,
+    rpcUrl: string
+}
 export const SepoliaConfig = {
     name: Network.ETH_SEPOLIA,
     chainId: 11155111,
@@ -25,6 +32,20 @@ export const BerachainMainnetConfig = {
 export const BepoliaConfig = {
     name: Network.BERACHAIN_BEPOLIA,
     chainId: 80069,
-    scanLink: 'https://testnet.berascan.com/',
+    scanLink: 'testnet.berascan.com',
     rpcUrl: 'https://berachain-bepolia.g.alchemy.com/v2/yIRJoLX9TId7oSWYdnflKgthIy59m-vr'
+}
+
+export const chainIdToNetworkConfig: Record<number, NetworkConfigType> = {
+    [BerachainMainnetConfig.chainId]: BerachainMainnetConfig,
+    [BepoliaConfig.chainId]: BepoliaConfig,
+    [SepoliaConfig.chainId]: SepoliaConfig,
+    [MainnetConfig.chainId]: MainnetConfig
+}
+
+export const getConfigByChainId = (chainId: number) => {
+    if (chainId in chainIdToNetworkConfig) {
+        return chainIdToNetworkConfig[chainId];
+    }
+    throw new Error(`No config found for chainId: ${chainId}`);
 }

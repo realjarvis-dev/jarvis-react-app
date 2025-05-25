@@ -37,10 +37,10 @@ export default async function SearchPage(props: {
   params: Promise<{ id: string }>
 }) {
   const cookiesList = await cookies()
-  console.log(
-    'Privy token from cookies:',
-    cookiesList.get('privy-token')?.value
-  )
+  // console.log(
+  //   'Privy token from cookies:',
+  //   cookiesList.get('privy-token')?.value
+  // )
   const headersList = await headers()
   // console.log('All headers:', Object.fromEntries(headersList.entries()))
 

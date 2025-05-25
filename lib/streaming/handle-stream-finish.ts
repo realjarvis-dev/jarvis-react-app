@@ -28,6 +28,7 @@ export async function handleStreamFinish({
   try {
     const extendedCoreMessages = convertToExtendedCoreMessages(originalMessages)
     let allAnnotations = [...annotations]
+    let relatedQuestionsData: { object: any } | undefined
 
     if (!skipRelatedQuestions) {
       // Notify related questions loading
@@ -38,24 +39,38 @@ export async function handleStreamFinish({
       dataStream.writeMessageAnnotation(relatedQuestionsAnnotation)
 
       // Generate related questions
-      const relatedQuestions = await generateRelatedQuestions(
-        responseMessages,
-        model
-      )
-
-      // Create and add related questions annotation
-      const updatedRelatedQuestionsAnnotation: ExtendedCoreMessage = {
-        role: 'data',
-        content: {
-          type: 'related-questions',
-          data: relatedQuestions.object
-        } as JSONValue
+      try {
+        relatedQuestionsData = await generateRelatedQuestions(
+          responseMessages,
+          model
+        )
+      } catch (err) {
+        console.log(
+          'Failed to generate related questions. Using dummy data:',
+          err
+        )
+        relatedQuestionsData = {
+          object: {
+            items: []
+          }
+        }
       }
+
+      // Create and add related questions annotation if data is available
+      if (relatedQuestionsData && relatedQuestionsData.object) {
+        const updatedRelatedQuestionsAnnotation: ExtendedCoreMessage = {
+          role: 'data',
+          content: {
+            type: 'related-questions',
+            data: relatedQuestionsData.object
+          } as JSONValue
+        }
 
       dataStream.writeMessageAnnotation(
         updatedRelatedQuestionsAnnotation.content as JSONValue
       )
-      allAnnotations.push(updatedRelatedQuestionsAnnotation)
+        allAnnotations.push(updatedRelatedQuestionsAnnotation)
+      }
     }
 
     // Create the message to save
@@ -82,10 +97,13 @@ export async function handleStreamFinish({
     console.log(`Save chat for ${userId}`)
 
     // Save chat with complete response and related questions
-    await saveChat({
-      ...savedChat,
-      messages: generatedMessages
-    }, userId).catch(error => {
+    await saveChat(
+      {
+        ...savedChat,
+        messages: generatedMessages
+      },
+      userId
+    ).catch(error => {
       console.error('Failed to save chat:', error)
       throw new Error('Failed to save chat history')
     })

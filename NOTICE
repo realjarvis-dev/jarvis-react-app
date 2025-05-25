@@ -1,0 +1,40 @@
+Jarvis - Autonomous Web3 Agent Platform
+Copyright 2024 Kira Studio AI
+
+This product includes software originally developed by Yoshiki Miura
+(https://github.com/miurla/morphic).
+
+========================================================================
+
+THIRD-PARTY SOFTWARE NOTICES AND INFORMATION
+
+This project incorporates components from the following projects:
+
+1. Original Search Application
+   - Copyright 2024 Yoshiki Miura
+   - Licensed under Apache License 2.0
+   - Significant modifications have been made to transform the original
+     search application into an autonomous Web3 agent platform
+
+========================================================================
+
+MODIFICATIONS AND ENHANCEMENTS
+
+The following substantial modifications have been made to the original work:
+
+- Complete reimplementation of core architecture for Web3 integration
+- Addition of autonomous agent capabilities and intent recognition
+- Integration with 160+ DeFi protocols via Enso Network
+- Implementation of embedded wallet infrastructure via Privy
+- Development of natural language to on-chain action translation
+- Creation of portfolio management and strategy execution engine
+- Addition of real-time yield optimization algorithms
+- Multi-chain support and cross-protocol orchestration
+
+These modifications represent a fundamental transformation of the original
+codebase into a specialized platform for autonomous Web3 financial agents.
+
+========================================================================
+
+For more information about the Apache License 2.0, please visit:
+http://www.apache.org/licenses/LICENSE-2.0
