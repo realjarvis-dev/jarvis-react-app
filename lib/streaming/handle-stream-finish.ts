@@ -51,9 +51,7 @@ export async function handleStreamFinish({
         )
         relatedQuestionsData = {
           object: {
-            broadQuery: 'What are the main concepts of this topic?',
-            focusedQuery: 'How does this specific feature work?',
-            advancedQuery: 'What are the future trends related to this?'
+            items: []
           }
         }
       }

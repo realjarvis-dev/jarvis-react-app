@@ -22,11 +22,7 @@ export async function generateRelatedQuestions(
     ? getModel(model)
     : getToolCallModel(model)
 
-  const maxRetries = 3
-  let currentRetry = 0
-  let delay = 1000 // initial delay 1 second
 
-  while (currentRetry < maxRetries) {
     try {
       const result = await generateObject({
         model: currentModel,
@@ -36,13 +32,14 @@ export async function generateRelatedQuestions(
     
     ## Project context
     - **Kodiak Island** is a DeFi investment product, not a real place.  
-    - **Pendle** is a protocol for trading future yield, not a traditional financial service.  
+    - **Pendle** is a protocol for trading future yield.
     
     ## Guidelines
-    1. Build on the user's original topic (e.g. "Comparison of yield pools on <protocol>")  
+    1. Build on the user's original topic  
     2. Leverage any insights uncovered in initial results about <protocol>’s products or services 
     3. Progressively dive into more specific features, implications or adjacent topics. The goal is to anticipate the user's potential information needs and guide them towards a more comprehensive understanding of the subject matter.  
     4. Don't ask what opportunities are available on <protocol> if tool already called
+
 
     ## Output format
     Your output should be in the same language as the user’s request and follow this format:
@@ -55,22 +52,8 @@ export async function generateRelatedQuestions(
       })
       return result // Success, exit the loop and return
     } catch (error) {
-      currentRetry++
-      if (currentRetry >= maxRetries) {
-        console.error('Max retries reached. Failing operation.', error)
-        throw error // Rethrow the last error
-      }
-      console.warn(
-        `Attempt ${currentRetry} failed. Retrying in ${delay / 1000}s...`,
-        error
-      )
-      await new Promise(resolve => setTimeout(resolve, delay))
-      delay *= 2 // Exponential backoff
+      console.log('Error generating related questions:', error)
+      throw error
     }
-  }
-  // This part should not be reached if logic is correct,
-  // but as a fallback, throw an error.
-  throw new Error(
-    'Failed to generate related questions after multiple retries.'
-  )
 }
+
