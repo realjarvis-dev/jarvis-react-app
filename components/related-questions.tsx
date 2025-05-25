@@ -48,6 +48,8 @@ export const RelatedQuestions: React.FC<RelatedQuestionsProps> = ({
     return null
   }
 
+
+
   if (relatedQuestions.items.length === 0 && isLoading) {
     return (
       <CollapsibleMessage
@@ -60,6 +62,10 @@ export const RelatedQuestions: React.FC<RelatedQuestionsProps> = ({
         <Skeleton className="w-full h-6" />
       </CollapsibleMessage>
     )
+  }
+
+  if (relatedQuestions.items.length === 0 && !isLoading) {
+    return null
   }
 
   return (

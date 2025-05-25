@@ -1,15 +1,7 @@
 import { WalletWithMetadata } from '@privy-io/server-auth'
 import { CoreMessage, smoothStream, streamText } from 'ai'
-import { kodiakOpportunitiesTool } from '../tools/kodiak'
-import { pendleOpportunitiesTool, pendleQuoteTool, pendleSwapTool } from '../tools/pendle'
-import { privyTransferTool } from '../tools/privy-transfer'
-import { createQuestionTool } from '../tools/question'
-import { retrieveTool } from '../tools/retrieve'
-import { createSearchTool } from '../tools/search'
-import { createVideoSearchTool } from '../tools/video-search'
-import { walletBalanceTool } from '../tools/wallet'
-import { genericSwapTool } from '../tools/generic-swap'
 import { getModel } from '../utils/registry'
+import { ToolCategory, getToolRegistry } from '../utils/tool-registry'
 
 const get_system_prompt = (searchMode: boolean) => {
 
@@ -45,7 +37,7 @@ When asked a question, you should:
 1. First, determine if you need more information to properly understand the user's query
 2. Determine if the user wants to explore any opportunities that are covered by the web3 tools. If so, call the tool but don't return any results in your response since the tool will render the UI.
 3. If the user wants to execute transactions, use the most appropriate tool to execute the transaction.
-4. Use search tool to find information if the user's query is not covered by the tools, as the tool only includes market information but not any other information.
+4. Use search tool to find information if the user's query is not covered by the tools, as the tool only includes market information but not any other information. Search for protocol's doc if user asked about protocol's product or service.
 5. **If the query is ambiguous or lacks specific details, use the ask_question tool to create a structured question with relevant options**
 6. If you have enough information, use the most appropriate tool (see above) to gather relevant information
 7. Use the retrieve tool to get detailed content from specific URLs
@@ -161,57 +153,51 @@ export function researcher({
   console.log('searchMode', searchMode)
   try {
     const currentDate = new Date().toLocaleString()
-
-    // Create model-specific tools
-    const searchTool = createSearchTool(model)
-    const videoSearchTool = createVideoSearchTool(model)
-    const askQuestionTool = createQuestionTool(model)
-
-    const all_tools = ['search', 'retrieve', 'videoSearch', 'ask_question', 'pendle_opportunities', 'pendle_quote', 'pendle_swap', 'wallet_balance', 'privy_transfer', 'kodiak_opportunities', 'generic_swap']
-    const web3_tools = ['wallet_balance', 'privy_transfer','pendle_opportunities', 'pendle_quote', 'pendle_swap', 'kodiak_opportunities', 'generic_swap']
-
+    
+    const registry = getToolRegistry(model)
+    
+    const all_tools = registry.getAllToolNames()
+    const web3_tools = registry.getToolNamesByCategory(ToolCategory.WEB3)
+    const supportedTools = registry.getSupportedToolNames(model)
+    const maxSteps = registry.getMaxSteps(model, searchMode)
+    
     const userWalletInfo = `
     User EVM wallet address: ${userEvmWallet?.address}, delegated status: ${userEvmWallet?.delegated}
     User Solana wallet address: ${userSolWallet?.address}, delegated status: ${userSolWallet?.delegated}
     You can only execute on behalf of the user if they have wallets and have delegated you access to their wallet.
     `
-    let tool_lst = {
-      search: searchTool,
-      retrieve: retrieveTool,
-      videoSearch: videoSearchTool,
-      ask_question: askQuestionTool,
-      pendle_opportunities: pendleOpportunitiesTool,
-      pendle_quote: pendleQuoteTool,
-      pendle_swap: pendleSwapTool,
-      wallet_balance: walletBalanceTool,
-      privy_transfer: privyTransferTool,
-      kodiak_opportunities: kodiakOpportunitiesTool,
-      generic_swap: genericSwapTool
-    }
-
-    let o3_mini_tool_lst = {
-      search: searchTool,
-      retrieve: retrieveTool,
-      videoSearch: videoSearchTool,
-      ask_question: askQuestionTool,
-    } 
-
-    if (model === "openai:o3-mini") {
-      for (const pendle_tools of web3_tools) {
-        all_tools.splice(all_tools.indexOf(pendle_tools), 1)
-
+    
+    // Create tool list from registry
+    const tool_lst: Record<string, any> = {}
+    for (const toolName of supportedTools) {
+      const toolDef = registry.getTool(toolName)
+      if (toolDef) {
+        tool_lst[toolName] = {
+          description: toolDef.description,
+          parameters: toolDef.schema,
+          execute: toolDef.execute
+        }
       }
-      for (const pendle_tools of web3_tools) {
-        web3_tools.splice(web3_tools.indexOf(pendle_tools), 1)
+    }
+    
+    // Create o3-mini specific tool list
+    const o3_mini_tool_lst: Record<string, any> = {}
+    const o3MiniTools = registry.getSupportedToolNames('openai:o3-mini')
+    for (const toolName of o3MiniTools) {
+      const toolDef = registry.getTool(toolName)
+      if (toolDef) {
+        o3_mini_tool_lst[toolName] = {
+          description: toolDef.description,
+          parameters: toolDef.schema,
+          execute: toolDef.execute
+        }
       }
     }
 
 
 
     let prompt = `${model === "openai:o3-mini" ? O3_MINI_SYSTEM_PROMPT : get_system_prompt(searchMode)}\nCurrent date and time: ${currentDate}\n${model === "openai:o3-mini" ? '' : userWalletInfo}`
-    // console.log('prompt', prompt)
-    // console.log('model', model)
-    // console.log('all_tools', all_tools)
+    
     return {
       model: getModel(model),
       system: prompt,
@@ -219,9 +205,9 @@ export function researcher({
       temperature: 0.1,
       tools: (model === "openai:o3-mini") ? o3_mini_tool_lst : tool_lst,
       experimental_activeTools: searchMode
-        ? all_tools
+        ? supportedTools
         : web3_tools,
-      maxSteps: searchMode ? 10 : 5,
+      maxSteps: maxSteps,
       experimental_transform: smoothStream()
     }
   } catch (error) {
