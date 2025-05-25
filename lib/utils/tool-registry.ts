@@ -199,7 +199,7 @@ export function createToolRegistry(model: string): ToolRegistry {
   
   registry.registerTool({
     name: 'pendle_swap',
-    description: 'Execute a swap transaction from ETH to a Pendle token',
+    description: pendleSwapTool.description || '',
     schema: pendleSwapTool.parameters,
     execute: async (params, context) => pendleSwapTool.execute(params, { toolCallId: context?.toolCallId, messages: context?.messages || [] }),
     category: ToolCategory.WEB3
