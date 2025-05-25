@@ -20,6 +20,7 @@ import { useArtifact } from './artifact/artifact-context'
 import { SuggestionPills } from './chat-panel/suggestion-pills'
 import { CopyableWalletAddress } from './copyable-wallet-address'
 import { CopyableWalletAddressSkeleton } from './copyable-wallet-address-skeleton'
+import { MarketPulse } from './MarketPulse'
 import { ModelSelector } from './model-selector'
 import { SearchModeToggle } from './search-mode-toggle'
 import { Button } from './ui/button'
@@ -387,7 +388,7 @@ export function ChatPanel({
     <> {/* Use a fragment if VideoBackground is fixed and outside the main div's flow */}
       <VideoBackground
         src="/videos/background.mp4" // Ensure this path is correct
-        poster="/videos/background_poster.jpg" // Optional: path to a poster image
+        // poster="/videos/background_poster.jpg" // Optional: path to a poster image
         isActive={showVideoBg}
         playbackRate={0.15} // Adjust playback speed as desired
       />
@@ -517,7 +518,7 @@ export function ChatPanel({
               )}
             </div>
           )}
-
+          <MarketPulse />
           <form onSubmit={handleSubmit} className={cn('w-full relative')}>
             {/* Scroll-down button */}
             {!isAutoScroll && messages.length > 0 && (
