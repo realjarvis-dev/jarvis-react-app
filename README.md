@@ -1,6 +1,6 @@
 # Jarvis
 
-A web3 investment agent with a generative UI.
+A web3 investment agent with a generative UI. A gateway to investment opportunities. We aim to build a next‑generation, AI‑driven portfolio manager that lets you set high‑level financial goals—like earning 3% monthly yield in USD—and automatically crafts, executes, and rebalances on‑chain strategies to meet them. Through a simple chat interface, you describe your objectives and risk tolerance; behind the scenes, Jarvis analyzes yield data, constructs optimized token‑swap and staking plans, and deploys them via smart contracts, providing 24/7 portfolio management without intermediaries.
 
 
 ## 🗂️ Overview
