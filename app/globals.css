@@ -116,3 +116,39 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Add to your global CSS */
+.keyboard-visible .group\/form-container {
+  /* Ensure the container stays visible when keyboard is open */
+  position: fixed;
+  bottom: env(safe-area-inset-bottom, 0);
+  left: 0;
+  right: 0;
+  z-index: 50;
+}
+
+/* Fix for very small screens */
+@media (max-height: 500px) {
+  .group\/form-container {
+    position: fixed;
+    bottom: env(safe-area-inset-bottom, 0);
+    left: 0;
+    right: 0;
+  }
+}
+
+html, body, #__next {
+  height: 100dvh;
+  margin: 0;
+}
+
+/* Add this with your other utility classes */
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
