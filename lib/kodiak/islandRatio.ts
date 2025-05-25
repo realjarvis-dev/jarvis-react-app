@@ -4,74 +4,12 @@ import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import { BerachainMainnetConfig } from '../config/network';
 import { getUserEvmWalletAddress, getUserWallet, privy } from '../privy/client';
+import { DepositResult, IslandSingleDepositParams, IslandState, KodiakQuoteResult, SwapCalculationResult, Token } from '../types/kodiak';
 import { getIslandDetails } from './api';
 
 import KodiakRouterJson from './KodiakRouter.json';
 const kodiakAbi = KodiakRouterJson as any; 
 const ISLAND_ROUTER = "0x679a7C63FC83b6A4D9C1F931891d705483d4791F";
-
-// Define interface for Token with address and decimals
-interface Token {
-  address: string;
-  decimals: number;
-  symbol?: string;
-}
-
-// Define interface for the Island state
-interface IslandState {
-  amount0: bigint;
-  amount1: bigint;
-  ratio: bigint;
-}
-
-// Interface for swap calculation result
-interface SwapCalculationResult {
-  amountToSwap: bigint;
-  amountToKeep: bigint;
-  expectedOutput: bigint;
-  islandAddress: string;
-  tokenInAddress: string;
-  tokenOutAddress: string;
-}
-
-// Interface for Kodiak Quote API response
-interface KodiakQuoteResult {
-  blockNumber: string;
-  amount: string;
-  amountDecimals: string;
-  quote: string;
-  quoteDecimals: string;
-  quoteGasAdjusted: string;
-  quoteGasAdjustedDecimals: string;
-  gasUseEstimateQuote: string;
-  gasUseEstimateQuoteDecimals: string;
-  gasUseEstimate: string;
-  gasUseEstimateUSD: string;
-  gasPriceWei: string;
-  route: any[];
-  routeString: string;
-  quoteId: string;
-  methodParameters?: {
-    calldata: string;
-    value: string;
-  };
-}
-
-// Interface for deposit parameters
-interface DepositParams {
-  islandAddress: string;
-  totalAmount: string; // Amount in human-readable format
-  isToken0: boolean;
-  slippageBPS: number; // Slippage in basis points (e.g., 50 for 0.5%)
-  minSharesReceived: string; // Minimum shares to receive
-}
-
-// Interface for deposit result
-interface DepositResult {
-  status: 'success' | 'fail';
-  hash?: string;
-  error_message?: string;
-}
 
 // ABI for the Kodiak Island Router
 const KODIAK_ROUTER_ABI = [
@@ -335,7 +273,7 @@ async function getKodiakSwapCalldata(
  * @param params Deposit parameters
  * @returns Result of the deposit operation
  */
-async function depositToKodiakIsland(params: DepositParams): Promise<DepositResult> {
+async function depositToKodiakIsland(params: IslandSingleDepositParams): Promise<DepositResult> {
   try {
     // Validate input parameters
     if (!params.islandAddress || !ethers.isAddress(params.islandAddress)) {
@@ -613,7 +551,7 @@ async function approveToken(
 async function executeDeposit(
     swapResult: SwapCalculationResult,
     quoteResult: KodiakQuoteResult,
-    params: DepositParams,
+    params: IslandSingleDepositParams,
     wallet: any,
     userAddress: string,
     totalAmount: bigint
@@ -771,11 +709,6 @@ export {
 
 // Export types
     export type {
-        DepositParams,
-        DepositResult,
-        IslandState,
-        KodiakQuoteResult,
-        SwapCalculationResult,
-        Token
+        IslandSingleDepositParams
     };
 

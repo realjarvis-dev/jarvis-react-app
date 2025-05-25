@@ -208,3 +208,78 @@ export function buildKodiakIslandObject(
     tick
   };
 } 
+
+/**
+ * Interface for Token with address and decimals
+ */
+export interface Token {
+  address: string;
+  decimals: number;
+  symbol?: string;
+}
+
+/**
+ * Interface for the Island state
+ */
+export interface IslandState {
+  amount0: bigint;
+  amount1: bigint;
+  ratio: bigint;
+}
+
+/**
+ * Interface for swap calculation result
+ */
+export interface SwapCalculationResult {
+  amountToSwap: bigint;
+  amountToKeep: bigint;
+  expectedOutput: bigint;
+  islandAddress: string;
+  tokenInAddress: string;
+  tokenOutAddress: string;
+}
+
+/**
+ * Interface for Kodiak Quote API response
+ */
+export interface KodiakQuoteResult {
+  blockNumber: string;
+  amount: string;
+  amountDecimals: string;
+  quote: string;
+  quoteDecimals: string;
+  quoteGasAdjusted: string;
+  quoteGasAdjustedDecimals: string;
+  gasUseEstimateQuote: string;
+  gasUseEstimateQuoteDecimals: string;
+  gasUseEstimate: string;
+  gasUseEstimateUSD: string;
+  gasPriceWei: string;
+  route: any[];
+  routeString: string;
+  quoteId: string;
+  methodParameters?: {
+    calldata: string;
+    value: string;
+  };
+}
+
+/**
+ * Interface for deposit result
+ */
+export interface DepositResult {
+  status: 'success' | 'fail';
+  hash?: string;
+  error_message?: string;
+} 
+
+/**
+ * Interface for single token deposit to Kodiak Island
+ */
+export interface IslandSingleDepositParams {
+  islandAddress: string;
+  totalAmount: string; // Amount in human-readable format
+  isToken0: boolean;
+  slippageBPS: number; // Slippage in basis points (e.g., 50 for 0.5%)
+  minSharesReceived: string; // Minimum shares to receive
+} 
