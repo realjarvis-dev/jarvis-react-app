@@ -1,4 +1,4 @@
-# 🤖 Jarvis: Unifying Web3 with Autonomous Agents
+# 🤖 Jarvis: Unifying Web3 with Autonomous Agent
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
