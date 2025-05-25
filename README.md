@@ -1,7 +1,5 @@
 # 🤖 Jarvis: Unifying Web3 with Autonomous Agent
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
 ![Jarvis User Interface](/public/images/UI.png "Unifying Web3 with Autonomous Agent")
 
 ## 🚀 What is Jarvis?
@@ -291,7 +289,9 @@ Please see our [Contributing Guide](CONTRIBUTING.md) for details on:
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+
+For attribution and modification details, see the [NOTICE](NOTICE) file.
 
 ## 🤝 Acknowledgments
 
