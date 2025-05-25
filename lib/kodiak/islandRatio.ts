@@ -3,57 +3,13 @@ import { ethers } from 'ethers';
 import { BerachainMainnetConfig } from '../config/network';
 import { getUserEvmWalletAddress, getUserWallet } from '../privy/client';
 import { DepositResult, IslandSingleDepositParams, IslandState, SwapCalculationResult, Token } from '../types/kodiak';
+import { ISLAND_ABI, ISLAND_INFO_ABI, KODIAK_ROUTER_ADDRESS, TOKEN_INFO_ABI } from './abi';
 import { getIslandDetails } from './api';
 import { approveToken, executeDeposit } from './transactions';
 
-import KodiakRouterJson from './KodiakRouter.json';
-const kodiakAbi = KodiakRouterJson as any; 
-const ISLAND_ROUTER = "0x679a7C63FC83b6A4D9C1F931891d705483d4791F";
-
-// ABI for the Kodiak Island Router
-const KODIAK_ROUTER_ABI = [
-  'function addLiquiditySingle(address island, uint256 totalAmountIn, uint256 amountSharesMin, uint256 maxStakingSlippageBPS, tuple(uint256 amountIn,uint256 minAmountOut,bool zeroForOne, bytes routeData) swapData,address receiver) external returns (uint256 amount0,uint256 amount1,uint256 mintAmount)'
-];
-
-// ABI for ERC20 tokens for approvals
-const ERC20_ABI = [
-  'function approve(address spender, uint256 amount) external returns (bool)',
-  'function allowance(address owner, address spender) external view returns (uint256)'
-];
-
-// Address of the Kodiak Island Router
-const KODIAK_ROUTER_ADDRESS = '0x679a7C63FC83b6A4D9C1F931891d705483d4791F';
-
-// Simple ABI for the Island contract's getMintAmounts function
-const ISLAND_ABI = [
-  'function getMintAmounts(uint256 amount0Max, uint256 amount1Max) external view returns (uint256 amount0, uint256 amount1, uint256 mintAmount)',
-  'function token0() external view returns (address)',
-  'function token1() external view returns (address)',
-  'function name() view returns (string)',
-  'function lowerTick() view returns (int24)',
-  'function upperTick() view returns (int24)',
-  'function pool() view returns (address)',
-  'function totalSupply() view returns (uint256)',
-  'function manager() view returns (address)',
-  'function isManaged() view returns (bool)',
-  'function managerFeeBPS() view returns (uint16)',
-  'function getUnderlyingBalances() view returns (uint256 amount0Current, uint256 amount1Current)'
-];
-
-// ABI for pool contract
-const POOL_ABI = [
-  'function fee() view returns (uint24)',
-  'function slot0() view returns (uint160 sqrtPriceX96, int24 tick, uint16 observationIndex, uint16 observationCardinality, uint16 observationCardinalityNext, uint8 feeProtocol, bool unlocked)'
-];
-
 // Get token information from an ERC20 token
 async function getTokenInfo(tokenAddress: string, provider: ethers.JsonRpcProvider): Promise<Token> {
-  const tokenABI = [
-    'function decimals() view returns (uint8)',
-    'function symbol() view returns (string)'
-  ];
-  
-  const tokenContract = new ethers.Contract(tokenAddress, tokenABI, provider);
+  const tokenContract = new ethers.Contract(tokenAddress, TOKEN_INFO_ABI, provider);
   const decimals = await tokenContract.decimals();
   const symbol = await tokenContract.symbol();
   
@@ -334,10 +290,7 @@ async function depositToKodiakIsland(params: IslandSingleDepositParams): Promise
     // Get token info from the Island contract
     const islandContract = new ethers.Contract(
       params.islandAddress,
-      [
-        'function token0() external view returns (address)',
-        'function token1() external view returns (address)'
-      ],
+      ISLAND_INFO_ABI,
       provider
     );
     
@@ -350,7 +303,7 @@ async function depositToKodiakIsland(params: IslandSingleDepositParams): Promise
     // Get token decimals
     const tokenContract = new ethers.Contract(
       tokenAddress,
-      ['function decimals() view returns (uint8)'],
+      TOKEN_INFO_ABI,
       provider
     );
     

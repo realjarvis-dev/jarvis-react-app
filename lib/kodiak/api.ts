@@ -1,39 +1,8 @@
 import { ethers } from 'ethers';
 import { BerachainMainnetConfig } from '../config/network';
 import { KodiakIsland, KodiakIslandResponse, buildKodiakIslandObject } from '../types/kodiak';
+import { FACTORY_ABI, ISLAND_ABI, POOL_ABI, TOKEN_INFO_ABI } from './abi';
 import { fetchVaultByAddress, fetchVaultsFromSubgraph, mapSubgraphDataToIslands } from './subgraph';
-
-// ABIs for interacting with Kodiak contracts - defined inline to avoid external files
-const ERC20_ABI = [
-  'function symbol() view returns (string)',
-  'function decimals() view returns (uint8)',
-  'function totalSupply() view returns (uint256)'
-];
-
-const POOL_ABI = [
-  'function fee() view returns (uint24)',
-  'function slot0() view returns (uint160 sqrtPriceX96, int24 tick, uint16 observationIndex, uint16 observationCardinality, uint16 observationCardinalityNext, uint8 feeProtocol, bool unlocked)'
-];
-
-const ISLAND_ABI = [
-  'function name() view returns (string)',
-  'function token0() view returns (address)',
-  'function token1() view returns (address)',
-  'function lowerTick() view returns (int24)',
-  'function upperTick() view returns (int24)',
-  'function pool() view returns (address)',
-  'function totalSupply() view returns (uint256)',
-  'function manager() view returns (address)',
-  'function isManaged() view returns (bool)',
-  'function managerFeeBPS() view returns (uint16)',
-  'function getUnderlyingBalances() view returns (uint256 amount0Current, uint256 amount1Current)'
-];
-
-const FACTORY_ABI = [
-  'function numIslands() view returns (uint256)',
-  'function getDeployers() view returns (address[])',
-  'function getIslands(address deployer) view returns (address[])'
-];
 
 // Contract address for Kodiak on mainnet
 const FACTORY_ADDRESS = '0xc7a3f400ae22b05c7bfdb7bbc7a3be5d1777fd50';
@@ -44,12 +13,7 @@ async function getTokenInfo(tokenAddress: string, provider: ethers.JsonRpcProvid
   decimals: number;
   symbol?: string;
 }> {
-  const tokenABI = [
-    'function decimals() view returns (uint8)',
-    'function symbol() view returns (string)'
-  ];
-  
-  const tokenContract = new ethers.Contract(tokenAddress, tokenABI, provider);
+  const tokenContract = new ethers.Contract(tokenAddress, TOKEN_INFO_ABI, provider);
   const decimals = await tokenContract.decimals();
   const symbol = await tokenContract.symbol();
   

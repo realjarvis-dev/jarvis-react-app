@@ -4,24 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { BerachainMainnetConfig } from '../config/network';
 import { getUserWallet, privy } from '../privy/client';
 import { DepositResult, IslandSingleDepositParams, KodiakQuoteResult, SwapCalculationResult } from '../types/kodiak';
-
-import KodiakRouterJson from './KodiakRouter.json';
-const kodiakAbi = KodiakRouterJson as any; 
-const ISLAND_ROUTER = "0x679a7C63FC83b6A4D9C1F931891d705483d4791F";
-
-// ABI for the Kodiak Island Router
-const KODIAK_ROUTER_ABI = [
-  'function addLiquiditySingle(address island, uint256 totalAmountIn, uint256 amountSharesMin, uint256 maxStakingSlippageBPS, tuple(uint256 amountIn,uint256 minAmountOut,bool zeroForOne, bytes routeData) swapData,address receiver) external returns (uint256 amount0,uint256 amount1,uint256 mintAmount)'
-];
-
-// ABI for ERC20 tokens for approvals
-const ERC20_ABI = [
-  'function approve(address spender, uint256 amount) external returns (bool)',
-  'function allowance(address owner, address spender) external view returns (uint256)'
-];
-
-// Address of the Kodiak Island Router
-const KODIAK_ROUTER_ADDRESS = '0x679a7C63FC83b6A4D9C1F931891d705483d4791F';
+import { ERC20_ABI, KODIAK_ROUTER_ADDRESS, KODIAK_ROUTER_FULL_ABI } from './abi';
 
 /**
  * Approve token spending for the router
@@ -171,7 +154,7 @@ export async function executeDeposit(
     // Create contract instance
     const kodiakRouter = new ethers.Contract(
       KODIAK_ROUTER_ADDRESS,
-      kodiakAbi,
+      KODIAK_ROUTER_FULL_ABI,
       provider
     );
     
@@ -220,7 +203,7 @@ export async function executeDeposit(
       const { encoding, signedTransaction } = await privy.walletApi.ethereum.signTransaction({
         walletId: wallet.id,
         transaction: {
-          to: ISLAND_ROUTER as `0x${string}`,
+          to: KODIAK_ROUTER_ADDRESS as `0x${string}`,
           data: depositData as `0x${string}`,
           chainId: BerachainMainnetConfig.chainId,
           from: userAddress as `0x${string}`,
