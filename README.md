@@ -297,6 +297,18 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 Special thanks to the Enso Network team, our protocol partners, and the entire DeFi community for making unified Web3 possible.
 
+## 👥 Contributors
+
+### Jarvis Contributors
+Thanks to everyone who has contributed to the Jarvis autonomous agent platform!
+
+- allen@thejarvis.xyz
+- rui@thejarvis.xyz
+- gaurav@thejarvis.xyz
+
+### Original Project
+Jarvis was originally forked from [[Morphic](https://github.com/miurla/morphic)] and has since evolved into a completely different platform focused on autonomous Web3 agents. We acknowledge the foundational work of the original contributors.
+
 ---
 
 <div align="center">
