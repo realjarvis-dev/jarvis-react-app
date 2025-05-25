@@ -43,12 +43,12 @@ export const KodiakOpportunityCard: React.FC<KodiakOpportunityCardProps> = (isla
         {/* APR */}
         <div className="flex justify-between items-center">
           <h3 className="text-base font-medium text-muted-foreground">APR</h3>
-          <span className="text-lg font-bold text-green-400">
-            {island.apr.base.replace('%', '')}
-            {island.apr.boost && island.apr.boost !== '' ? 
-              ` ${island.apr.boost}` : 
-              '%'}
-          </span>
+          <div className="text-lg font-bold">
+            <span>{island.apr.base}</span>
+            {island.apr.boost && island.apr.boost !== '' && 
+              <span className="text-green-400">{` ${island.apr.boost}`}</span>
+            }
+          </div>
         </div>
         
         {/* TVL */}
