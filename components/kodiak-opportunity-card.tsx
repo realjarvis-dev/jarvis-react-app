@@ -77,14 +77,6 @@ export const KodiakOpportunityCard: React.FC<KodiakOpportunityCardProps> = (isla
             {`${token0Symbol} 1 = ${currentPrice}`}
           </div>
         </div>
-        
-        {/* Manager Fee - Only show if managed */}
-        {island.management.isManaged && (
-          <div className="flex justify-between items-center">
-            <h3 className="text-base font-medium text-muted-foreground">Manager Fee</h3>
-            <span className="text-base font-medium">{island.management.managerFee}</span>
-          </div>
-        )}
       </CardContent>
     </Card>
   )
