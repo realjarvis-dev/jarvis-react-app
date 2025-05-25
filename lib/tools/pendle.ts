@@ -55,6 +55,7 @@ export const pendleOpportunitiesTool = tool({
       filtered = filtered.filter(o => o.impliedApy >= decimal_apy_gte!)
     if (decimal_apy_lte !== undefined)
       filtered = filtered.filter(o => o.impliedApy <= decimal_apy_lte!)
+    filtered.sort((a, b) => b.impliedApy - a.impliedApy)
     return filtered.slice(0, max_results)
   }
 })
