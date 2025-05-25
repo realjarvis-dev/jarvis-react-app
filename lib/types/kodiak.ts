@@ -155,3 +155,56 @@ export interface FormattedKodiakIslandsResponse {
   totalCount: number;
   error?: string;
 } 
+
+/**
+ * Helper function to build a KodiakIsland object from fetched data
+ */
+export function buildKodiakIslandObject(
+  address: string,
+  name: string,
+  token0: { address: string; symbol?: string; decimals: number },
+  token1: { address: string; symbol?: string; decimals: number },
+  totalSupply: string,
+  lowerTick: number,
+  upperTick: number,
+  feeTier: number,
+  manager: string,
+  isManaged: boolean,
+  managerFeeBPS: number,
+  balances: { 0: bigint | string | number, 1: bigint | string | number } | Array<bigint | string | number>,
+  tick?: number
+): KodiakIsland {
+  return {
+    address,
+    name,
+    token0: {
+      address: token0.address,
+      symbol: token0.symbol || 'Token0',
+      decimals: token0.decimals
+    },
+    token1: {
+      address: token1.address,
+      symbol: token1.symbol || 'Token1',
+      decimals: token1.decimals
+    },
+    totalSupply,
+    lowerTick,
+    upperTick,
+    feeTier,
+    manager,
+    isManaged,
+    managerFeeBPS,
+    tvl: {
+      token0Amount: balances[0].toString(),
+      token1Amount: balances[1].toString(),
+      usdValue: 0 // Can't determine USD value from on-chain data
+    },
+    apr: {
+      feeApr: 0,
+      combinedApr: 0,
+      isEstimate: true // On-chain data doesn't provide APR information
+    },
+    poolType: 'Island',
+    tick
+  };
+} 

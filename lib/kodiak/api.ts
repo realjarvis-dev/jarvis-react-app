@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 import { BerachainMainnetConfig } from '../config/network';
-import { KodiakIsland, KodiakIslandResponse } from '../types/kodiak';
+import { KodiakIsland, KodiakIslandResponse, buildKodiakIslandObject } from '../types/kodiak';
 import { fetchVaultByAddress, fetchVaultsFromSubgraph, mapSubgraphDataToIslands } from './subgraph';
 
 // ABIs for interacting with Kodiak contracts - defined inline to avoid external files
@@ -11,7 +11,8 @@ const ERC20_ABI = [
 ];
 
 const POOL_ABI = [
-  'function fee() view returns (uint24)'
+  'function fee() view returns (uint24)',
+  'function slot0() view returns (uint160 sqrtPriceX96, int24 tick, uint16 observationIndex, uint16 observationCardinality, uint16 observationCardinalityNext, uint8 feeProtocol, bool unlocked)'
 ];
 
 const ISLAND_ABI = [
@@ -37,10 +38,32 @@ const FACTORY_ABI = [
 // Contract address for Kodiak on mainnet
 const FACTORY_ADDRESS = '0xc7a3f400ae22b05c7bfdb7bbc7a3be5d1777fd50';
 
+// Get token information from an ERC20 token
+async function getTokenInfo(tokenAddress: string, provider: ethers.JsonRpcProvider): Promise<{
+  address: string;
+  decimals: number;
+  symbol?: string;
+}> {
+  const tokenABI = [
+    'function decimals() view returns (uint8)',
+    'function symbol() view returns (string)'
+  ];
+  
+  const tokenContract = new ethers.Contract(tokenAddress, tokenABI, provider);
+  const decimals = await tokenContract.decimals();
+  const symbol = await tokenContract.symbol();
+  
+  return {
+    address: tokenAddress,
+    decimals: Number(decimals),
+    symbol
+  };
+}
+
 /**
  * Fetches data for a specific Kodiak Island
  */
-export async function getIslandData(address: string): Promise<KodiakIsland | null> {
+export async function getIslandDetails(address: string): Promise<KodiakIsland | null> {
   console.log(`Fetching data for Kodiak Island ${address}...`);
 
   try {
@@ -67,14 +90,9 @@ export async function getIslandData(address: string): Promise<KodiakIsland | nul
     // Get pool address (for fee tier)
     const poolAddress = await island.pool();
 
-    // Get token details
-    const token0 = new ethers.Contract(token0Address, ERC20_ABI, provider);
-    const token1 = new ethers.Contract(token1Address, ERC20_ABI, provider);
-
-    const token0Symbol = await token0.symbol();
-    const token1Symbol = await token1.symbol();
-    const token0Decimals = await token0.decimals();
-    const token1Decimals = await token1.decimals();
+    // Get token details using the helper function
+    const token0 = await getTokenInfo(token0Address, provider);
+    const token1 = await getTokenInfo(token1Address, provider);
 
     // Get name directly from the island contract or construct it
     let name;
@@ -82,7 +100,7 @@ export async function getIslandData(address: string): Promise<KodiakIsland | nul
       name = await island.name();
     } catch (error) {
       // Fall back to constructed name if name() function fails
-      name = `Kodiak Island ${token0Symbol}-${token1Symbol}`;
+      name = `Kodiak Island ${token0.symbol || 'Token0'}-${token1.symbol || 'Token1'}`;
     }
 
     // Get Island config
@@ -99,49 +117,40 @@ export async function getIslandData(address: string): Promise<KodiakIsland | nul
       managerFeeBPS = await island.managerFeeBPS();
     }
 
-    // Get pool fee tier
-    let feeTier;
+    // Get pool fee tier and current tick
+    let feeTier = 0; // Default to 0 if not available
+    let tick: number | undefined = undefined;
     try {
       const pool = new ethers.Contract(poolAddress, POOL_ABI, provider);
-      feeTier = await pool.fee();
+      feeTier = Number(await pool.fee());
+      
+      // Get current tick from pool slot0
+      const slot0 = await pool.slot0();
+      tick = Number(slot0.tick);
     } catch (error) {
-      feeTier = 3000; // Default to 0.3%
+      console.error(`Error fetching pool data for island ${address}: ${error}`);
+      // Continue with defaults if pool data can't be fetched
     }
 
     // Get balances
     const balances = await island.getUnderlyingBalances();
+    const totalSupply = (await island.totalSupply()).toString();
 
-    return {
+    return buildKodiakIslandObject(
       address,
       name,
-      token0: {
-        address: token0Address,
-        symbol: token0Symbol,
-        decimals: token0Decimals
-      },
-      token1: {
-        address: token1Address,
-        symbol: token1Symbol,
-        decimals: token1Decimals
-      },
-      totalSupply: (await island.totalSupply()).toString(),
-      lowerTick: Number(lowerTick),
-      upperTick: Number(upperTick),
-      feeTier: Number(feeTier),
+      token0,
+      token1,
+      totalSupply,
+      Number(lowerTick),
+      Number(upperTick),
+      Number(feeTier),
       manager,
       isManaged,
-      managerFeeBPS: Number(managerFeeBPS),
-      tvl: {
-        token0Amount: balances[0].toString(),
-        token1Amount: balances[1].toString(),
-        usdValue: 0 // Can't determine USD value from on-chain data
-      },
-      apr: {
-        feeApr: 0,
-        combinedApr: 0,
-        isEstimate: true // On-chain data doesn't provide APR information
-      }
-    };
+      Number(managerFeeBPS),
+      balances,
+      tick
+    );
   } catch (error) {
     console.error(`Error fetching Island data: ${error}`);
     return null;
@@ -214,7 +223,7 @@ export async function fetchKodiakIslands(): Promise<KodiakIslandResponse> {
         // Process each island from this deployer
         for (const islandAddress of deployerIslands) {
           try {
-            const islandData = await getIslandData(islandAddress);
+            const islandData = await getIslandDetails(islandAddress);
 
             if (islandData) {
               islands.push(islandData);
@@ -316,15 +325,3 @@ export async function getKodiakOpportunities(
     return [];
   }
 }
-
-/**
- * Gets a specific Kodiak Island by address
- */
-export async function getKodiakIslandByAddress(address: string): Promise<KodiakIsland | null> {
-  try {
-    return await getIslandData(address);
-  } catch (error: any) {
-    console.error(`Error getting Kodiak Island ${address}: ${error.message}`);
-    return null;
-  }
-} 

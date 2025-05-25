@@ -4,8 +4,7 @@ import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import { BerachainMainnetConfig } from '../config/network';
 import { getUserEvmWalletAddress, getUserWallet, privy } from '../privy/client';
-import { KodiakIsland } from '../types/kodiak';
-import { fetchVaultByAddress, mapSubgraphDataToIslands } from './subgraph';
+import { getIslandDetails } from './api';
 
 import KodiakRouterJson from './KodiakRouter.json';
 const kodiakAbi = KodiakRouterJson as any; 
@@ -270,115 +269,6 @@ async function calculateOptimalSwapForIsland(
     tokenInAddress,
     tokenOutAddress
   };
-}
-
-/**
- * Get details for a specific Kodiak Island by address
- * @param address Island contract address
- * @returns Island details or null if the island doesn't exist
- */
-async function getIslandDetails(address: string): Promise<KodiakIsland | null> {
-  try {
-    // First try to get data from subgraph (more efficient and includes real APR)
-    const subgraphData = await fetchVaultByAddress(address);
-
-    if (subgraphData) {
-      return mapSubgraphDataToIslands([subgraphData])[0];
-    }
-
-    // Fall back to on-chain data if subgraph fails
-    const provider = new ethers.JsonRpcProvider(BerachainMainnetConfig.rpcUrl);
-
-    // Create Island contract instance
-    const island = new ethers.Contract(address, ISLAND_ABI, provider);
-
-    // Get token addresses directly from the island contract
-    const token0Address = await island.token0();
-    const token1Address = await island.token1();
-
-    // Get pool address (for fee tier)
-    const poolAddress = await island.pool();
-
-    // Get token details
-    const token0 = await getTokenInfo(token0Address, provider);
-    const token1 = await getTokenInfo(token1Address, provider);
-
-    // Get name directly from the island contract or construct it
-    let name;
-    try {
-      name = await island.name();
-    } catch (error) {
-      // Fall back to constructed name if name() function fails
-      name = `Kodiak Island ${token0.symbol || 'Token0'}-${token1.symbol || 'Token1'}`;
-    }
-
-    // Get Island config
-    const lowerTick = await island.lowerTick();
-    const upperTick = await island.upperTick();
-    const manager = await island.manager();
-
-    // Check if island is managed
-    const isManaged = await island.isManaged();
-
-    // Get manager fee if managed
-    let managerFeeBPS = 0;
-    if (isManaged) {
-      managerFeeBPS = await island.managerFeeBPS();
-    }
-
-    // Get pool fee tier and current tick
-    let feeTier = 0; // Default to 0 if not available
-    let tick: number | undefined = undefined;
-    try {
-      const pool = new ethers.Contract(poolAddress, POOL_ABI, provider);
-      feeTier = Number(await pool.fee());
-      
-      // Get current tick from pool slot0
-      const slot0 = await pool.slot0();
-      tick = Number(slot0.tick);
-    } catch (error) {
-      // Silently fail if pool data can't be fetched
-    }
-
-    // Get balances
-    const balances = await island.getUnderlyingBalances();
-
-    return {
-      address,
-      name,
-      token0: {
-        address: token0Address,
-        symbol: token0.symbol || 'Token0',
-        decimals: token0.decimals
-      },
-      token1: {
-        address: token1Address,
-        symbol: token1.symbol || 'Token1',
-        decimals: token1.decimals
-      },
-      totalSupply: (await island.totalSupply()).toString(),
-      lowerTick: Number(lowerTick),
-      upperTick: Number(upperTick),
-      feeTier,
-      manager,
-      isManaged,
-      managerFeeBPS: Number(managerFeeBPS),
-      tvl: {
-        token0Amount: balances[0].toString(),
-        token1Amount: balances[1].toString(),
-        usdValue: 0 // Can't determine USD value from on-chain data
-      },
-      apr: {
-        feeApr: 0,
-        combinedApr: 0,
-        isEstimate: true // On-chain data doesn't provide APR information
-      },
-      poolType: 'Island',
-      tick
-    };
-  } catch (error) {
-    return null;
-  }
 }
 
 /**
@@ -874,7 +764,7 @@ function calculateMinAmountOut(quoteAmount: string, slippageBPS: number): string
 
 export {
     calculateOptimalSwapForIsland,
-    calculateSwapAmount, depositToKodiakIsland, getIslandDetails,
+    calculateSwapAmount, depositToKodiakIsland,
     getIslandRatio,
     getKodiakSwapCalldata
 };
