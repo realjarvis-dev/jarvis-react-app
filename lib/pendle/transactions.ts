@@ -146,6 +146,16 @@ export async function executeSwapTransaction(
     const weiBig = BigInt(value || '0')
     const quantity = ethers.toQuantity(weiBig)
 
+    // Gas estimation
+    const gasEstimate = await provider.estimateGas({
+      to: txData.to,
+      from: txData.from,
+      data: txData.data,
+      value: txData.value ?? BigInt(0)
+    })
+    // Add a 20 % buffer
+    const gasLimit = gasEstimate + gasEstimate / BigInt(5)
+
     // strip the 0x prefix for to, quantity, and data
     const toAddress = (to as string).replace(/^0x/, '')
     const valueHex = quantity.replace(/^0x/, '')
@@ -162,7 +172,8 @@ export async function executeSwapTransaction(
           chainId: chainId,
           value: `0x${valueHex}` as `0x${string}`,
           data: `0x${dataHex}` as `0x${string}`,
-          gasLimit: 650000, //650000
+          // gasLimit: 650000, //650000
+          gasLimit: ethers.toQuantity(gasLimit) as `0x${string}`,
           maxFeePerGas: ethers.toQuantity(maxFee + priority) as `0x${string}`,
           maxPriorityFeePerGas: ethers.toQuantity(priority) as `0x${string}`,
           nonce: correctNonce
