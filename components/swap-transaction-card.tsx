@@ -24,11 +24,12 @@ export function SwapTransactionCard({
   const [tokenName, setTokenName] = useState<string>('PT/YT Token')
   
   // Parse the result
-  const result = tool.result
+  const toolResult = tool.result
     ? typeof tool.result === 'string'
       ? JSON.parse(tool.result)
       : tool.result
     : null
+  const result = toolResult?.data || toolResult
 
   // Attempt to determine token name from the args (market address)
   useEffect(() => {
