@@ -140,13 +140,12 @@ export async function executeDeposit(
     // Create RouterSwapParams object
     console.log("quoteResult", quoteResult)
 
-    const slippageFactor = BigInt(10000 - params.slippageBPS) / BigInt(10000);
-    const minAmountOut = BigInt(quoteResult.quote) * slippageFactor;
+    const minAmountOut = calculateMinAmountOut(quoteResult.quote, params.slippageBPS);
     const swapParams = {
       // zeroForOne should be true if we're swapping token0 for token1
       // This matches the isToken0 flag which indicates if the input token is token0
       amountIn: swapResult.amountToSwap.toString(),
-      minAmountOut: minAmountOut.toString(),
+      minAmountOut: minAmountOut,
       zeroForOne: params.isToken0,
       routeData: quoteResult.methodParameters!.calldata
     };
