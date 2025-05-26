@@ -1,7 +1,7 @@
 import { Chat } from '@/components/chat'
 import { getChat } from '@/lib/actions/chat'
 import { getModels } from '@/lib/config/models'
-import { privy } from '@/lib/privy/client'
+import { isPrivyUserId, privy } from '@/lib/privy/client'
 import { convertToUIMessages } from '@/lib/utils'
 import { cookies, headers } from 'next/headers'
 import { notFound, redirect } from 'next/navigation'
@@ -73,7 +73,8 @@ export default async function SearchPage(props: {
     chat?.userId,
     userId
   )
-  if (chat?.userId !== userId && chat?.userId !== 'anonymous') {
+  // privy's start with did:
+  if (chat?.userId !== userId && isPrivyUserId(chat?.userId)) {
     console.log('Chat user ID does not match user ID')
     notFound()
   }
