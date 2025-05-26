@@ -1,10 +1,9 @@
-import { getUserWallet } from '@/lib/privy/client'
+import { getUser, getUserWallet } from '@/lib/privy/client'
 import { createManualToolStreamResponse } from '@/lib/streaming/create-manual-tool-stream'
 import { createToolCallingStreamResponse } from '@/lib/streaming/create-tool-calling-stream'
 import { Model } from '@/lib/types/models'
 import { isProviderEnabled } from '@/lib/utils/registry'
 import { cookies } from 'next/headers'
-import { getUser, getUserWallet } from '@/lib/privy/client'
 
 export const maxDuration = 30
 
