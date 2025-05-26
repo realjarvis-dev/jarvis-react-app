@@ -184,7 +184,7 @@ export function Chat({
     // 2) anon user out of trials?
     const isAnon = !authenticated
 
-    if (isAnon && anonTrial <= -10) {
+    if (isAnon && anonTrial <= 0) {
       toast.error('No trials left – please log in!')
       e.preventDefault()
       setData(undefined)
