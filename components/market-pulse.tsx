@@ -64,6 +64,9 @@ export function MarketPulse() {
     }
 
     fetchTrendingCoins()
+    const interval = setInterval(fetchTrendingCoins, 10 * 60000) // fetch every 10 minutes
+
+    return () => clearInterval(interval)
   }, [])
 
   useEffect(() => {
