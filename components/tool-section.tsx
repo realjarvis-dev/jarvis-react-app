@@ -1,6 +1,8 @@
 'use client'
 
 import { ToolInvocation } from 'ai'
+import { GenericSwapCard } from './generic-swap-card'
+import { KodiakDepositCard } from './kodiak-deposit-card'
 import { KodiakOpportunitiesSection } from './kodiak-opportunities-section'
 import { PendleOpportunitiesSection } from './pendle-opportunities-section'
 import { QuestionConfirmation } from './question-confirmation'
@@ -11,7 +13,6 @@ import { SwapTransactionCard } from './swap-transaction-card'
 import { TransferSection } from './transfer-section'
 import { VideoSearchSection } from './video-search-section'
 import { WalletBalanceSection } from './wallet-balance-section'
-import { GenericSwapCard } from './generic-swap-card'
 interface ToolSectionProps {
   tool: ToolInvocation
   isOpen: boolean
@@ -133,6 +134,24 @@ export function ToolSection({
     case 'generic_swap':
       return (
         <GenericSwapCard tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
+      )
+    case 'kodiak_deposit':
+      return (
+        <div className="flex flex-col space-y-4 py-4">
+          <div className="flex flex-col">
+            <h3 className="text-base font-medium">Kodiak Deposit</h3>
+            <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+              {tool.state === 'call' 
+                ? 'Processing your deposit transaction...' 
+                : tool.state === 'result' && 'result' in tool && tool.result?.success 
+                  ? 'Deposit completed successfully' 
+                  : 'Deposit transaction failed'}
+            </div>
+            <div className="mt-2">
+              <KodiakDepositCard tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
+            </div>
+          </div>
+        </div>
       )
     case 'wallet_balance':
       return (
