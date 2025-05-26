@@ -1,14 +1,14 @@
+import { getUserWallet } from '@/lib/privy/client'
 import { createManualToolStreamResponse } from '@/lib/streaming/create-manual-tool-stream'
 import { createToolCallingStreamResponse } from '@/lib/streaming/create-tool-calling-stream'
 import { Model } from '@/lib/types/models'
 import { isProviderEnabled } from '@/lib/utils/registry'
 import { cookies } from 'next/headers'
-import { getUserWallet } from '@/lib/privy/client'
 export const maxDuration = 30
 
 const DEFAULT_MODEL: Model = {
-  id: 'gpt-4o-mini',
-  name: 'GPT-4o mini',
+  id: 'gpt-4o',
+  name: 'GPT-4o',
   provider: 'OpenAI',
   providerId: 'openai',
   enabled: true,
@@ -30,18 +30,9 @@ export async function POST(request: Request) {
     }
 
     const cookieStore = await cookies()
-    const modelJson = cookieStore.get('selectedModel')?.value
     const searchMode = cookieStore.get('search-mode')?.value === 'true'
 
-    let selectedModel = DEFAULT_MODEL
-
-    if (modelJson) {
-      try {
-        selectedModel = JSON.parse(modelJson) as Model
-      } catch (e) {
-        console.error('Failed to parse selected model:', e)
-      }
-    }
+    const selectedModel = DEFAULT_MODEL
 
     if (
       !isProviderEnabled(selectedModel.providerId) ||
