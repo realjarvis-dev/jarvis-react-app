@@ -14,6 +14,8 @@ import { toast } from 'sonner'
 import { ChatMessages } from './chat-messages'
 import { ChatPanel } from './chat-panel'
 
+import useLocalStorage from 'use-local-storage-state';
+
 const TRIAL_KEY = 'anon_trials'
 const MAX_TRIALS = 2
 
@@ -31,12 +33,20 @@ export function Chat({
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const { user, ready, authenticated } = usePrivy()
   const [headers, setHeaders] = useState<Record<string, string>>({})
+  const [anonId, setAnonId] = useLocalStorage('anonUserId', { defaultValue: '' });
+  const [anonTrial, setAnonTrial] = useLocalStorage('anonTrial', { defaultValue: MAX_TRIALS });
 
   useEffect(() => {
     if (!ready) return
     if (!authenticated) {
+      if (!anonId) {
+        // e.g. using crypto API to generate a UUID
+        const anonId = crypto.randomUUID();
+        console.log('anonId', anonId);
+        setAnonId(anonId);
+      }
       setHeaders({
-        'x-user-id': 'anonymous',
+        'x-user-id': anonId,
         Authorization: ''
       })
       return
@@ -45,13 +55,13 @@ export function Chat({
         try {
           const token = await getAccessToken()
           setHeaders({
-            'x-user-id': user?.id || 'anonymous',
+            'x-user-id': user!.id,
             Authorization: `Bearer ${token}`
           })
         } catch (error) {
           console.error('Failed to get access token:', error)
           setHeaders({
-            'x-user-id': user?.id || 'anonymous',
+            'x-user-id': 'anonymous',
             Authorization: ''
           })
         }
@@ -173,20 +183,17 @@ export function Chat({
     }
     // 2) anon user out of trials?
     const isAnon = !authenticated
-    let trials = parseInt(
-      localStorage.getItem(TRIAL_KEY) ?? `${MAX_TRIALS}`,
-      10
-    )
-    if (isAnon && trials !== null && trials <= 0) {
+
+    if (isAnon && anonTrial <= -10) {
       toast.error('No trials left – please log in!')
+      e.preventDefault()
       setData(undefined)
       return
     }
 
     // 3) decrement and persist
-    if (isAnon && trials !== null) {
-      const next = trials - 1
-      localStorage.setItem(TRIAL_KEY, String(next))
+    if (isAnon) {
+      setAnonTrial(anonTrial - 1)
     }
     e.preventDefault()
     setData(undefined)

@@ -3,7 +3,9 @@ import { createToolCallingStreamResponse } from '@/lib/streaming/create-tool-cal
 import { Model } from '@/lib/types/models'
 import { isProviderEnabled } from '@/lib/utils/registry'
 import { cookies } from 'next/headers'
-import { getUserWallet } from '@/lib/privy/client'
+import { getUser, getUserWallet } from '@/lib/privy/client'
+import { getAnonId } from '@/lib/utils/anon-trials'
+import { WalletWithMetadata } from '@privy-io/server-auth'
 export const maxDuration = 30
 
 const DEFAULT_MODEL: Model = {
@@ -56,8 +58,20 @@ export async function POST(request: Request) {
       )
     }
 
-    const userEvmWallet = await getUserWallet('ethereum')
-    const userSolWallet = await getUserWallet('solana')
+    let authenticated = false
+    try {
+      await getUser()
+      authenticated = true
+    } catch (error) {
+      console.log('User not logged in')
+    }
+    let userEvmWallet = undefined
+    let userSolWallet = undefined
+    if (authenticated) {
+      userEvmWallet = await getUserWallet('ethereum')
+      userSolWallet = await getUserWallet('solana')
+    }
+
 
 
     const supportsToolCalling = selectedModel.toolCallType === 'native'
