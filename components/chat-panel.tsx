@@ -20,7 +20,7 @@ import { useArtifact } from './artifact/artifact-context'
 import { SuggestionPills } from './chat-panel/suggestion-pills'
 import { CopyableWalletAddress } from './copyable-wallet-address'
 import { CopyableWalletAddressSkeleton } from './copyable-wallet-address-skeleton'
-import { MarketPulse } from './MarketPulse'
+import { MarketPulse } from './market-pulse'
 import { ModelSelector } from './model-selector'
 import { SearchModeToggle } from './search-mode-toggle'
 import { Button } from './ui/button'
@@ -417,6 +417,10 @@ export function ChatPanel({
                 'bg-transparent'
               )}
             >
+              <div className="mb-6 w-full flex justify-center"> {/* <-- Added spacing here */}
+                <MarketPulse />
+              </div>
+
               <IconLogo
                 className={cn(
                   'size-6 sm:size-8 md:size-12',
@@ -424,6 +428,7 @@ export function ChatPanel({
                   showVideoBg ? 'text-white/90 drop-shadow-md' : 'text-muted-foreground'
                 )}
               />
+
               {/* Wallet details - existing logic, only classNames for text color change */}
               {!mounted || !ready ? (
                 <div className="w-full max-w-[280px] sm:max-w-none mt-2">
@@ -518,7 +523,6 @@ export function ChatPanel({
               )}
             </div>
           )}
-          <MarketPulse />
           <form onSubmit={handleSubmit} className={cn('w-full relative')}>
             {/* Scroll-down button */}
             {!isAutoScroll && messages.length > 0 && (
