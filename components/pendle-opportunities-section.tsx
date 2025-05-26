@@ -1,7 +1,8 @@
-import { OpportunityCard } from './opportunity-card'
-import { DefaultSkeleton } from './default-skeleton'
-import { ToolArgsSection } from './section'
 import { CollapsibleMessage } from './collapsible-message'
+import { DefaultSkeleton } from './default-skeleton'
+import { PendleOpportunitiesTable } from './pendle-opportunities-table'
+import { ToolArgsSection } from './section'
+
 interface PendleOpportunitiesSectionProps {
   tool: any
   isOpen: boolean
@@ -30,14 +31,10 @@ export function PendleOpportunitiesSection({
     header={header}
     isOpen={isOpen}
     onOpenChange={onOpenChange}
-    showIcon={false} // Assuming we want an icon
+    showIcon={false}
   >
       {results.length === 0 && <div>No opportunities found.</div>}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {results.map((opp: any, i: number) => (
-          <OpportunityCard key={i} {...opp} />
-        ))}
-      </div>
+      <PendleOpportunitiesTable opportunities={results} />
     </CollapsibleMessage>
   )
 }
