@@ -1,6 +1,5 @@
 'use client'
 
-import { Model } from '@/lib/types/models'
 import { cn } from '@/lib/utils'
 import {
   WalletWithMetadata,
@@ -20,7 +19,6 @@ import { useArtifact } from './artifact/artifact-context'
 import { SuggestionPills } from './chat-panel/suggestion-pills'
 import { CopyableWalletAddress } from './copyable-wallet-address'
 import { CopyableWalletAddressSkeleton } from './copyable-wallet-address-skeleton'
-import { ModelSelector } from './model-selector'
 import { SearchModeToggle } from './search-mode-toggle'
 import { Button } from './ui/button'
 import { IconLogo } from './ui/icons'
@@ -197,7 +195,6 @@ interface ChatPanelProps {
   query?: string
   stop: () => void
   append: (message: any) => void // Consider a more specific type if possible
-  models?: Model[]
   isAutoScroll: boolean
   onVideoBgChange?: (isVideoActive: boolean) => void // Kept for potential Header integration via RootLayout
   // isPageGradientActive?: boolean; // This prop might be removed if video is self-contained
@@ -213,7 +210,6 @@ export function ChatPanel({
   query,
   stop,
   append,
-  models,
   isAutoScroll,
   onVideoBgChange // Destructure this prop
   // isPageGradientActive // This prop might be removed
@@ -608,7 +604,6 @@ export function ChatPanel({
                 )}
               >
                 <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto hide-scrollbar">
-                  <ModelSelector models={models || []} />
                   <SearchModeToggle />
                 </div>
                 <div className="flex items-center gap-1 sm:gap-2 shrink-0">

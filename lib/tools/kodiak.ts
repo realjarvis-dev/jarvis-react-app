@@ -162,10 +162,21 @@ export const kodiakOpportunitiesTool = tool({
         };
       });
       
-      return formattedIslands;
+      // Return minimal data for streaming, but include full data for UI
+      return {
+        _uiDisplayTool: true,
+        summary: `Found ${formattedIslands.length} Kodiak Island opportunities`,
+        count: formattedIslands.length,
+        data: formattedIslands
+      };
     } catch (error) {
       console.error('Error in Kodiak opportunities tool:', error);
-      return [];
+      return {
+        _uiDisplayTool: true,
+        summary: 'Error fetching Kodiak opportunities',
+        count: 0,
+        data: []
+      };
     }
   }
 }) 

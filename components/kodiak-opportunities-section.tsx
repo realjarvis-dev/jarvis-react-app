@@ -23,7 +23,9 @@ export function KodiakOpportunitiesSection({
     <ToolArgsSection tool="kodiak_opportunities">{`Kodiak Island Opportunities`}</ToolArgsSection>
   )
 
-  const results = tool.result || []
+  const toolResult = tool.result || {}
+  const results = toolResult.data || toolResult || []
+  
   return (
     <CollapsibleMessage
       role="assistant"

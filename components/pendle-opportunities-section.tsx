@@ -23,7 +23,9 @@ export function PendleOpportunitiesSection({
     <ToolArgsSection tool="pendle_opportunities">{`Pendle Opportunities`}</ToolArgsSection>
   )
 
-  const results = tool.result || []
+  const toolResult = tool.result || {}
+  const results = toolResult.data || toolResult || []
+  
   return (
     <CollapsibleMessage
     role="assistant"

@@ -1,7 +1,6 @@
 import { tool } from 'ai'
 import { ethers } from 'ethers'
 import { z } from 'zod'
-import { ensoSwap } from '../enso/swap'
 import { getPendleMarkets } from '../pendle/api'
 import { getQuote } from '../pendle/quotes'
 import {
@@ -64,7 +63,15 @@ export const pendleOpportunitiesTool = tool({
     if (decimal_apy_lte !== undefined)
       filtered = filtered.filter(o => o.impliedApy <= decimal_apy_lte!)
     filtered.sort((a, b) => b.impliedApy - a.impliedApy)
-    return filtered.slice(0, max_results)
+    const results = filtered.slice(0, max_results)
+    
+    // Return minimal data for streaming, but include full data for UI
+    return {
+      _uiDisplayTool: true,
+      summary: `Found ${results.length} Pendle yield opportunities`,
+      count: results.length,
+      data: results
+    }
   }
 })
 
@@ -105,20 +112,32 @@ export const pendleQuoteTool = tool({
         1 // Fixed chain ID (Ethereum)
       )
 
-      // Return a clean response object
-      return {
+      // Return a clean response object with minimal streaming data
+      const quoteData = {
         market: fullTokenName,
         rate: quote.rate,
         inverse_rate: quote.inverse,
         output_amount: quote.outputAmount,
         complete_time: new Date().toISOString()
       }
+      
+      return {
+        _uiDisplayTool: true,
+        summary: `Quote for ${fullTokenName}: ${quote.rate}`,
+        data: quoteData
+      }
     } catch (error: any) {
       // Return a simple error object
-      return {
+      const errorData = {
         error: error.message || 'Failed to get quote',
         market_address,
         token_out_address
+      }
+      
+      return {
+        _uiDisplayTool: true,
+        summary: `Error getting quote: ${error.message || 'Failed to get quote'}`,
+        data: errorData
       }
     }
   }
@@ -276,12 +295,10 @@ export const pendleSwapTool = tool({
         }
       } 
 
-
-
       // Execute the transaction
       const result = await executeSwapTransaction(txData, chainId)
 
-      return {
+      const swapData = {
         success: true,
         transaction_hash: result.hash,
         swap_details: {
@@ -293,9 +310,15 @@ export const pendleSwapTool = tool({
           complete_time: new Date().toISOString()
         }
       }
+
+      return {
+        _uiDisplayTool: true,
+        summary: `Swap executed: ${amount_in_human} ${displayTokenIn} → ${displayTokenOut}`,
+        data: swapData
+      }
     } catch (error: any) {
       console.log(error)
-      return {
+      const errorData = {
         success: false,
         error: error.message || 'Failed to execute Pendle swap.',
         swap_parameters: {
@@ -304,6 +327,12 @@ export const pendleSwapTool = tool({
           amount_in_human,
           slippage
         }
+      }
+      
+      return {
+        _uiDisplayTool: true,
+        summary: `Swap failed: ${error.message || 'Failed to execute Pendle swap'}`,
+        data: errorData
       }
     }
   }

@@ -2,7 +2,6 @@
 
 import { CHAT_ID } from '@/lib/constants'
 import { useAutoScroll } from '@/lib/hooks/use-auto-scroll'
-import { Model } from '@/lib/types/models'
 import { cn } from '@/lib/utils'
 import { useChat } from '@ai-sdk/react'
 import { getAccessToken, usePrivy } from '@privy-io/react-auth'
@@ -22,13 +21,11 @@ const MAX_TRIALS = 2
 export function Chat({
   id,
   savedMessages = [],
-  query,
-  models
+  query
 }: {
   id: string
   savedMessages?: Message[]
   query?: string
-  models?: Model[]
 }) {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const { user, ready, authenticated } = usePrivy()
@@ -267,7 +264,6 @@ export function Chat({
         stop={stop}
         query={query}
         append={append}
-        models={models}
         isAutoScroll={isAutoScroll}
       />
     </div>
