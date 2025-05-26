@@ -4,7 +4,6 @@ import { getModel } from '../utils/registry'
 import { ToolCategory, getToolRegistry } from '../utils/tool-registry'
 
 const get_system_prompt = (searchMode: boolean) => {
-
   const SYSTEM_PROMPT = `
 Instructions:
 
@@ -97,7 +96,6 @@ Citation Format:
   return SYSTEM_PROMPT
 }
 
-
 const O3_MINI_SYSTEM_PROMPT = `
 Instructions:
 
@@ -142,31 +140,46 @@ export function researcher({
   model,
   searchMode,
   userEvmWallet,
-  userSolWallet
+  userSolWallet,
+  allowWeb3Tools
 }: {
   messages: CoreMessage[]
   model: string
   searchMode: boolean
   userEvmWallet: WalletWithMetadata | undefined
   userSolWallet: WalletWithMetadata | undefined
+  allowWeb3Tools: string
 }): ResearcherReturn {
   console.log('searchMode', searchMode)
   try {
     const currentDate = new Date().toLocaleString()
-    
+
     const registry = getToolRegistry(model)
-    
+
     const all_tools = registry.getAllToolNames()
-    const web3_tools = registry.getToolNamesByCategory(ToolCategory.WEB3)
-    const supportedTools = registry.getSupportedToolNames(model)
+    const search_tools = [...registry.getToolNamesByCategory(ToolCategory.WEB), ...registry.getToolNamesByCategory(ToolCategory.UTILITY)]
+    // const web3_tools = registry.getToolNamesByCategory(ToolCategory.WEB3)
+    let supportedTools = registry.getSupportedToolNames(model)
     const maxSteps = registry.getMaxSteps(model, searchMode)
-    
-    const userWalletInfo = `
-    User EVM wallet address: ${userEvmWallet?.address}, delegated status: ${userEvmWallet?.delegated}
-    User Solana wallet address: ${userSolWallet?.address}, delegated status: ${userSolWallet?.delegated}
-    You can only execute on behalf of the user if they have wallets and have delegated you access to their wallet.
-    `
-    
+
+    let web3_tools = registry.getToolNamesByCategory(ToolCategory.WEB3)
+    // remove web3 tools from supported tools if allowWeb3Tools is false
+    if (allowWeb3Tools === 'false') {
+      supportedTools = supportedTools.filter(tool => !web3_tools.includes(tool))
+      web3_tools = []
+    }
+
+    let userWalletInfo
+    if (userEvmWallet === undefined) {
+      userWalletInfo = "The user is not logged in. Don't use any web3 tools. If the user wants to use web3 tools, ask them to login friendly"
+    } else {
+      userWalletInfo = `
+User EVM wallet address: ${userEvmWallet?.address}, delegated status: ${userEvmWallet?.delegated}
+User Solana wallet address: ${userSolWallet?.address}, delegated status: ${userSolWallet?.delegated}
+You can only execute on behalf of the user if they have wallets and have delegated you access to their wallet.
+`
+    }
+
     // Create tool list from registry
     const tool_lst: Record<string, any> = {}
     for (const toolName of supportedTools) {
@@ -179,7 +192,7 @@ export function researcher({
         }
       }
     }
-    
+
     // Create o3-mini specific tool list
     const o3_mini_tool_lst: Record<string, any> = {}
     const o3MiniTools = registry.getSupportedToolNames('openai:o3-mini')
@@ -193,20 +206,27 @@ export function researcher({
         }
       }
     }
-
-
-
-    let prompt = `${model === "openai:o3-mini" ? O3_MINI_SYSTEM_PROMPT : get_system_prompt(searchMode)}\nCurrent date and time: ${currentDate}\n${model === "openai:o3-mini" ? '' : userWalletInfo}`
     
+    // console.log("allow web3 tools", allowWeb3Tools)
+    // console.log("supportedTools", supportedTools)
+    // console.log("web3_tools", web3_tools)
+    
+
+    let prompt = `${
+      model === 'openai:o3-mini'
+        ? O3_MINI_SYSTEM_PROMPT
+        : get_system_prompt(searchMode)
+    }\nCurrent date and time: ${currentDate}\n${
+      model === 'openai:o3-mini' ? '' : userWalletInfo
+    }`
+
     return {
       model: getModel(model),
       system: prompt,
       messages,
       temperature: 0.1,
-      tools: (model === "openai:o3-mini") ? o3_mini_tool_lst : tool_lst,
-      experimental_activeTools: searchMode
-        ? supportedTools
-        : web3_tools,
+      tools: model === 'openai:o3-mini' ? o3_mini_tool_lst : tool_lst,
+      experimental_activeTools: searchMode ? supportedTools : web3_tools,
       maxSteps: maxSteps,
       experimental_transform: smoothStream()
     }

@@ -13,6 +13,8 @@ import { toast } from 'sonner'
 import { ChatMessages } from './chat-messages'
 import { ChatPanel } from './chat-panel'
 
+import useLocalStorage from 'use-local-storage-state';
+
 const TRIAL_KEY = 'anon_trials'
 const MAX_TRIALS = 2
 
@@ -28,13 +30,21 @@ export function Chat({
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const { user, ready, authenticated } = usePrivy()
   const [headers, setHeaders] = useState<Record<string, string>>({})
+  const [anonId, setAnonId] = useLocalStorage('anonUserId', { defaultValue: '' });
+  const [anonTrial, setAnonTrial] = useLocalStorage('anonTrial', { defaultValue: MAX_TRIALS });
 
   useEffect(() => {
     if (!ready) return
     if (!authenticated) {
+      if (!anonId) {
+        // e.g. using crypto API to generate a UUID
+        const anonId = crypto.randomUUID();
+        console.log('anonId', anonId);
+        setAnonId(anonId);
+      }
       setHeaders({
-        'x-user-id': 'anonymous',
-        Authorization: ''
+        'x-user-id': anonId,
+        'allow-web3-tools': 'false'
       })
       return
     } else {
@@ -42,14 +52,14 @@ export function Chat({
         try {
           const token = await getAccessToken()
           setHeaders({
-            'x-user-id': user?.id || 'anonymous',
-            Authorization: `Bearer ${token}`
+            'x-user-id': user!.id,
+            'allow-web3-tools': 'true'
           })
         } catch (error) {
           console.error('Failed to get access token:', error)
           setHeaders({
-            'x-user-id': user?.id || 'anonymous',
-            Authorization: ''
+            'x-user-id': 'anonymous',
+            'allow-web3-tools': 'false'
           })
         }
       })()
@@ -105,11 +115,45 @@ export function Chat({
     setMessages(savedMessages)
   }, [id])
 
+  const checkTrialLimit = (limitReachCallback: () => void, limitNotReachedCallback: () => void) => {
+    if (!ready) {
+      toast.error('Still initializing, please wait…')
+      return
+    }
+    if (authenticated) {
+      return 
+    }
+    if (anonTrial <= 0) {
+      console.log('anonTrial', anonTrial)
+      limitReachCallback()
+      return
+    }
+
+    setAnonTrial(anonTrial - 1)
+    limitNotReachedCallback()
+  }
+
   const onQuerySelect = (query: string) => {
-    append({
-      role: 'user',
-      content: query
-    })
+    const sendMessage = () => {
+      append({
+        role: 'user',
+        content: query
+      })
+    }
+    if (!ready) {
+      toast.error('Still initializing, please wait…')
+      return
+    }
+    if (!authenticated) {
+      // check trial limit, execute callback if limit reached
+      checkTrialLimit(() => {
+        toast.error('No trials left – please log in!')
+      }, () => {
+        sendMessage()
+      })
+      return
+    }
+    sendMessage()
   }
 
   const handleUpdateAndReloadMessage = async (
@@ -162,32 +206,32 @@ export function Chat({
     return await reload(options)
   }
 
+
+
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    // 1) haven’t initialized Privy yet?
+    const sendMessage = () => {
+      e.preventDefault()
+      setData(undefined)
+      handleSubmit(e)
+    }
     if (!ready) {
       toast.error('Still initializing, please wait…')
       return
     }
-    // 2) anon user out of trials?
-    const isAnon = !authenticated
-    let trials = parseInt(
-      localStorage.getItem(TRIAL_KEY) ?? `${MAX_TRIALS}`,
-      10
-    )
-    if (isAnon && trials !== null && trials <= 0) {
-      toast.error('No trials left – please log in!')
-      setData(undefined)
+    if (!authenticated) {
+      // check trial limit, execute callback if limit reached
+      checkTrialLimit(() => {
+        toast.error('No trials left – please log in!')
+        e.preventDefault()
+        setData(undefined)
+      }, () => {
+        sendMessage()
+      })
       return
     }
 
-    // 3) decrement and persist
-    if (isAnon && trials !== null) {
-      const next = trials - 1
-      localStorage.setItem(TRIAL_KEY, String(next))
-    }
-    e.preventDefault()
-    setData(undefined)
-    handleSubmit(e)
+    // has to keep it for authenticated users
+    sendMessage()
   }
 
   return (
