@@ -1,6 +1,7 @@
 import { tool } from 'ai'
 import { z } from 'zod'
 import { getKodiakOpportunitiesFromApi } from '../kodiak/api'
+import { depositToKodiakIsland, IslandSingleDepositParams } from '../kodiak/islandRatio'
 import { tickToPrice } from '../kodiak/utils'
 import { FormattedKodiakIsland } from '../types/kodiak'
 
@@ -176,6 +177,117 @@ export const kodiakOpportunitiesTool = tool({
         summary: 'Error fetching Kodiak opportunities',
         count: 0,
         data: []
+      };
+    }
+  }
+})
+
+export const kodiakDepositTool = tool({
+  description: 'Deposit a single token into a Kodiak Island yield opportunity on Berachain. This tool automatically renders UI.',
+  parameters: z.object({
+    island_address: z
+      .string()
+      .describe('The address of the Kodiak Island to deposit into'),
+    amount: z
+      .string()
+      .describe('Amount of token to deposit in human-readable format (e.g., "1", "0.5")'),
+    is_token0: z
+      .boolean()
+      .default(true)
+      .describe('Whether to deposit token0 (true) or token1 (false). Default is true for token0.'),
+    slippage_bps: z
+      .number()
+      .min(1)
+      .max(1000)
+      .default(50)
+      .describe('Slippage tolerance in basis points (e.g., 50 for 0.5%). Default is 50 BPS.'),
+    min_shares_received: z
+      .string()
+      .default('0.01')
+      .describe('Minimum shares expected to receive from the deposit (default: 0.01)')
+  }),
+  execute: async ({ 
+    island_address, 
+    amount, 
+    is_token0 = true, 
+    slippage_bps = 50, 
+    min_shares_received = '0.01'
+  }) => {
+    try {
+      // Prepare deposit parameters
+      const depositParams: IslandSingleDepositParams = {
+        islandAddress: island_address,
+        totalAmount: amount,
+        isToken0: is_token0,
+        slippageBPS: slippage_bps,
+        minSharesReceived: min_shares_received
+      };
+
+      // Execute the deposit
+      const result = await depositToKodiakIsland(depositParams);
+
+      if (result.status === 'success') {
+        const depositData = {
+          success: true,
+          transaction_hash: result.hash,
+          deposit_details: {
+            island_address,
+            amount_deposited: `${amount} ${is_token0 ? 'Token0' : 'Token1'}`,
+            slippage_bps,
+            min_shares_received,
+            complete_time: new Date().toISOString()
+          }
+        };
+
+        console.log('[Kodiak Deposit Tool] Returning success data:', depositData);
+
+        return {
+          _uiDisplayTool: true,
+          summary: `Deposit successful: ${amount} ${is_token0 ? 'Token0' : 'Token1'} deposited to Kodiak Island`,
+          data: depositData
+        };
+      } else {
+        const errorData = {
+          success: false,
+          error: result.error_message || 'Deposit failed',
+          deposit_parameters: {
+            island_address,
+            amount,
+            is_token0,
+            slippage_bps,
+            min_shares_received
+          }
+        };
+
+        console.log('[Kodiak Deposit Tool] Returning error data:', errorData);
+
+        return {
+          _uiDisplayTool: true,
+          summary: `Deposit failed: ${result.error_message || 'Unknown error'}`,
+          data: errorData
+        };
+      }
+    } catch (error) {
+      console.error('Error in Kodiak deposit tool:', error);
+      
+      const errorData = {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to execute Kodiak deposit',
+        deposit_parameters: {
+          island_address,
+          amount,
+          is_token0,
+          slippage_bps,
+          min_shares_received
+        }
+      };
+
+      console.log('[Kodiak Deposit Tool] Returning catch error data:', errorData);
+
+      return {
+        _uiDisplayTool: true,
+        summary: `Deposit failed: ${error instanceof Error ? error.message : 'Failed to execute Kodiak deposit'}`,
+        data: errorData
       };
     }
   }
