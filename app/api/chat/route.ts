@@ -4,8 +4,7 @@ import { Model } from '@/lib/types/models'
 import { isProviderEnabled } from '@/lib/utils/registry'
 import { cookies } from 'next/headers'
 import { getUser, getUserWallet } from '@/lib/privy/client'
-import { getAnonId } from '@/lib/utils/anon-trials'
-import { WalletWithMetadata } from '@privy-io/server-auth'
+
 export const maxDuration = 30
 
 const DEFAULT_MODEL: Model = {
@@ -23,6 +22,7 @@ export async function POST(request: Request) {
     const referer = request.headers.get('referer')
     const isSharePage = referer?.includes('/share/')
     const userId = request.headers.get('x-user-id') || 'anonymous'
+    const allowWeb3Tools = request.headers.get('allow-web3-tools') || 'false'
 
     if (isSharePage) {
       return new Response('Chat API is not available on share pages', {
@@ -84,7 +84,8 @@ export async function POST(request: Request) {
           searchMode,
           userId,
           userEvmWallet,
-          userSolWallet
+          userSolWallet,
+          allowWeb3Tools
         })
       : createManualToolStreamResponse({
           messages,
@@ -93,7 +94,8 @@ export async function POST(request: Request) {
           searchMode,
           userId,
           userEvmWallet,
-          userSolWallet
+          userSolWallet,
+          allowWeb3Tools
         })
   } catch (error) {
     console.error('API route error:', error)

@@ -47,7 +47,7 @@ export function Chat({
       }
       setHeaders({
         'x-user-id': anonId,
-        Authorization: ''
+        'allow-web3-tools': 'false'
       })
       return
     } else {
@@ -56,13 +56,13 @@ export function Chat({
           const token = await getAccessToken()
           setHeaders({
             'x-user-id': user!.id,
-            Authorization: `Bearer ${token}`
+            'allow-web3-tools': 'true'
           })
         } catch (error) {
           console.error('Failed to get access token:', error)
           setHeaders({
             'x-user-id': 'anonymous',
-            Authorization: ''
+            'allow-web3-tools': 'false'
           })
         }
       })()
