@@ -1,14 +1,14 @@
 import { z } from 'zod'
 import { searchSchema } from '../schema/search'
-import { pendleOpportunitiesTool, pendleQuoteTool, pendleSwapTool } from '../tools/pendle'
-import { kodiakOpportunitiesTool } from '../tools/kodiak'
 import { genericSwapTool } from '../tools/generic-swap'
+import { kodiakDepositTool, kodiakOpportunitiesTool } from '../tools/kodiak'
+import { pendleOpportunitiesTool, pendleQuoteTool, pendleSwapTool } from '../tools/pendle'
+import { privyTransferTool } from '../tools/privy-transfer'
+import { createQuestionTool } from '../tools/question'
 import { retrieveTool } from '../tools/retrieve'
 import { createSearchTool } from '../tools/search'
 import { createVideoSearchTool } from '../tools/video-search'
 import { walletBalanceTool } from '../tools/wallet'
-import { createQuestionTool } from '../tools/question'
-import { privyTransferTool } from '../tools/privy-transfer'
 
 interface ToolExecutionOptions {
   toolCallId?: string
@@ -226,6 +226,14 @@ export function createToolRegistry(model: string): ToolRegistry {
     description: 'Get Kodiak Island yield opportunities on Berachain',
     schema: kodiakOpportunitiesTool.parameters,
     execute: async (params, context) => kodiakOpportunitiesTool.execute(params, { toolCallId: context?.toolCallId, messages: context?.messages || [] }),
+    category: ToolCategory.WEB3
+  })
+  
+  registry.registerTool({
+    name: 'kodiak_deposit',
+    description: 'Deposit a single token into a Kodiak Island yield opportunity on Berachain',
+    schema: kodiakDepositTool.parameters,
+    execute: async (params, context) => kodiakDepositTool.execute(params, { toolCallId: context?.toolCallId, messages: context?.messages || [] }),
     category: ToolCategory.WEB3
   })
   
