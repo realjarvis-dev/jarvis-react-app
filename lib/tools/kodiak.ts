@@ -1,6 +1,6 @@
 import { tool } from 'ai'
 import { z } from 'zod'
-import { getKodiakOpportunities } from '../kodiak/api'
+import { getKodiakOpportunitiesFromApi } from '../kodiak/api'
 import { tickToPrice } from '../kodiak/utils'
 import { FormattedKodiakIsland } from '../types/kodiak'
 
@@ -17,15 +17,6 @@ function formatPrice(price: number, tokenSymbol: string): string {
     return `≈0 ${tokenSymbol}`;
   }
   return `${price.toFixed(5)} ${tokenSymbol}`;
-}
-
-/**
- * Formats manager fee from basis points to percentage
- * @param feeBPS Manager fee in basis points (1 BPS = 0.01%)
- * @returns Formatted manager fee as percentage
- */
-function formatManagerFee(feeBPS: number): string {
-  return (feeBPS / 100).toFixed(2) + '%';
 }
 
 export const kodiakOpportunitiesTool = tool({
@@ -61,16 +52,20 @@ export const kodiakOpportunitiesTool = tool({
     max_results = 10 
   }) => {
     try {
-      // Fetch all active islands with reasonable TVL
-      const islands = await getKodiakOpportunities({
+      // Fetch all active islands with reasonable TVL using the new API endpoint
+      const islands = await getKodiakOpportunitiesFromApi({
         minTvl: 10, // Lower threshold to show more islands
         includeInactive: false
       });
       
-      // Apply APR filters if provided
-      let filteredIslands = [...islands];
+      // Filter out islands with null tick data (Uniswap V2 pools)
+      let filteredIslands = islands.filter(island => 
+        island.lowerTick !== null && 
+        island.upperTick !== null && 
+        island.tick !== null
+      );
       
-      // Filter by minimum APR if specified
+      // Apply APR filters if provided
       if (apr_gte !== undefined) {
         const minApr = apr_gte / 100; // Convert percentage to decimal
         filteredIslands = filteredIslands.filter(island => 
@@ -96,31 +91,44 @@ export const kodiakOpportunitiesTool = tool({
       
       // Format islands for display
       const formattedIslands: FormattedKodiakIsland[] = filteredIslands.slice(0, max_results).map(island => {
-        // Calculate price range
+        // Regular Kodiak Islands with tick-based pricing
         const lowerPrice = tickToPrice(island.lowerTick);
         const upperPrice = tickToPrice(island.upperTick);
         
+        // Format price range
+        const minPriceText = lowerPrice > 1_000_000 
+          ? `${island.token0.symbol} 1 = ∞ ${island.token1.symbol}`
+          : (lowerPrice < 0.000001 && lowerPrice > 0
+              ? `${island.token0.symbol} 1 = ≈0 ${island.token1.symbol}`
+              : `${island.token0.symbol} 1 = ${lowerPrice.toFixed(4)} ${island.token1.symbol}`);
+        
+        const maxPriceText = upperPrice > 1_000_000 
+          ? `${island.token0.symbol} 1 = ∞ ${island.token1.symbol}`
+          : (upperPrice < 0.000001 && upperPrice > 0
+              ? `${island.token0.symbol} 1 = ≈0 ${island.token1.symbol}`
+              : `${island.token0.symbol} 1 = ${upperPrice.toFixed(4)} ${island.token1.symbol}`);
+        
         // Format current price
-        let currentPrice = '';
-        if (island.currentPrice) {
-          currentPrice = formatPrice(island.currentPrice, island.token1.symbol);
+        let currentPriceText = '';
+        if (island.currentPrice && island.currentPrice > 0) {
+          currentPriceText = `${island.token0.symbol} 1 = ${formatPrice(island.currentPrice, island.token1.symbol)}`;
         } else if (island.tick) {
           // If we have tick but not price, calculate it
           const calculatedPrice = Math.pow(1.0001, island.tick);
-          currentPrice = formatPrice(calculatedPrice, island.token1.symbol);
+          currentPriceText = `${island.token0.symbol} 1 = ${formatPrice(calculatedPrice, island.token1.symbol)}`;
+        } else {
+          // Fallback if we can't calculate price
+          currentPriceText = `${island.token0.symbol} 1 = (price unavailable)`;
         }
         
         // Format fee tier (convert from basis points to percentage)
-        const feeTier = (island.feeTier / 10000).toFixed(2) + '%';
+        const feeTier = island.feeTier !== null 
+          ? (island.feeTier / 10000).toFixed(2) + '%'
+          : '0.00%';
         
-        // Format APR components
+        // Format APR components - now use the explicit rewardApr field from the API
         const baseAPR = island.apr.feeApr;
-        let boostAPR = 0;
-        
-        // Some pools might have additional yield sources
-        if (island.apr.combinedApr > island.apr.feeApr) {
-          boostAPR = island.apr.combinedApr - island.apr.feeApr;
-        }
+        const boostAPR = island.apr.rewardApr || (island.apr.combinedApr - island.apr.feeApr);
         
         const formattedBaseAPR = (baseAPR * 100).toFixed(2) + '%';
         const formattedBoostAPR = boostAPR > 0 ? '+ ' + (boostAPR * 100).toFixed(2) + '%' : '';
@@ -133,18 +141,10 @@ export const kodiakOpportunitiesTool = tool({
           feeTier,
           poolType: island.poolType || 'Island',
           range: {
-            min: lowerPrice > 1_000_000 
-              ? `1 ${island.token0.symbol} = ∞ ${island.token1.symbol}`
-              : (lowerPrice < 0.000001 && lowerPrice > 0
-                  ? `1 ${island.token0.symbol} = ≈0 ${island.token1.symbol}`
-                  : `1 ${island.token0.symbol} = ${lowerPrice.toFixed(4)} ${island.token1.symbol}`),
-            max: upperPrice > 1_000_000 
-              ? `1 ${island.token0.symbol} = ∞ ${island.token1.symbol}`
-              : (upperPrice < 0.000001 && upperPrice > 0
-                  ? `1 ${island.token0.symbol} = ≈0 ${island.token1.symbol}`
-                  : `1 ${island.token0.symbol} = ${upperPrice.toFixed(4)} ${island.token1.symbol}`),
+            min: minPriceText,
+            max: maxPriceText,
           },
-          price: `1 ${island.token0.symbol} = ${currentPrice}`,
+          price: currentPriceText,
           poolTVL,
           farmTVL: poolTVL, // Same as pool TVL for Kodiak
           apr: {
@@ -157,8 +157,7 @@ export const kodiakOpportunitiesTool = tool({
           token1: island.token1,
           management: {
             isManaged: island.isManaged,
-            managerAddress: island.manager,
-            managerFee: formatManagerFee(island.managerFeeBPS)
+            managerAddress: island.manager
           }
         };
       });

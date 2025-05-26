@@ -1,6 +1,6 @@
 import { CollapsibleMessage } from './collapsible-message'
 import { DefaultSkeleton } from './default-skeleton'
-import { KodiakOpportunityCard } from './kodiak-opportunity-card'
+import { KodiakOpportunitiesTable } from './kodiak-opportunities-table'
 import { ToolArgsSection } from './section'
 
 interface KodiakOpportunitiesSectionProps {
@@ -34,11 +34,7 @@ export function KodiakOpportunitiesSection({
       showIcon={false}
     >
       {results.length === 0 && <div>No Kodiak Island opportunities found.</div>}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {results.map((opp: any, i: number) => (
-          <KodiakOpportunityCard key={i} {...opp} />
-        ))}
-      </div>
+      <KodiakOpportunitiesTable opportunities={results} />
     </CollapsibleMessage>
   )
 } 
