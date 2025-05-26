@@ -59,7 +59,7 @@ export const PendleOpportunitiesTable: React.FC<PendleOpportunitiesTableProps> =
               >
                 <TableCell className="font-medium py-3 border-r border-r-gray-800/20">
                   <div className="text-xs text-white whitespace-nowrap">
-                    {market.name}
+                    {market.name} <span className="text-blue-400">PT</span>
                   </div>
                 </TableCell>
                 <TableCell className="py-3 border-r border-r-gray-800/20">
