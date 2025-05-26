@@ -5,23 +5,23 @@ import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { AlertCircle, CheckCircle, Clock, Link, Loader2, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { SwapTransactionStatus } from './swap-transaction-status'
+import { KodiakDepositStatus } from './kodiak-deposit-status'
 
-interface SwapTransactionCardProps {
+interface KodiakDepositCardProps {
   tool: any
   isOpen?: boolean
   onOpenChange?: (open: boolean) => void
 }
 
-type TransactionStatus = 'preparing' | 'building' | 'signing' | 'broadcasting' | 'confirming' | 'confirmed' | 'failed'
+type DepositStatus = 'preparing' | 'calculating' | 'approving' | 'swapping' | 'depositing' | 'confirming' | 'confirmed' | 'failed'
 
-export function SwapTransactionCard({
+export function KodiakDepositCard({
   tool,
   isOpen,
   onOpenChange
-}: SwapTransactionCardProps) {
-  const [status, setStatus] = useState<TransactionStatus>('preparing')
-  const [tokenName, setTokenName] = useState<string>('PT/YT Token')
+}: KodiakDepositCardProps) {
+  const [status, setStatus] = useState<DepositStatus>('preparing')
+  const [islandName, setIslandName] = useState<string>('Kodiak Island')
   
   // Parse the result
   const toolResult = tool.result
@@ -31,56 +31,42 @@ export function SwapTransactionCard({
     : null
   const result = toolResult?.data || toolResult
 
-  // Attempt to determine token name from the args (market address)
+  // Debug logging
   useEffect(() => {
-    if (tool.args?.market_address && tool.args?.token_out_address) {
-      // Check if we have a known token name pattern in the market address
-      const marketAddress = tool.args.market_address.toLowerCase()
-      
-      // Common Pendle markets that can be recognized
-      const marketPatterns = [
-        { pattern: 'weeth', name: 'weETH' },
-        { pattern: 'rseth', name: 'rsETH' },
-        { pattern: 'steth', name: 'stETH' },
-        { pattern: 'reth', name: 'rETH' },
-        { pattern: 'cbeth', name: 'cbETH' },
-        { pattern: 'sfrxeth', name: 'sfrxETH' },
-        { pattern: 'ezeth', name: 'ezETH' },
-        { pattern: 'sweth', name: 'swETH' },
-        { pattern: 'weth', name: 'WETH' },
-        { pattern: 'ethx', name: 'ETHx' }
-      ]
-      
-      // Try to match the market address to a known pattern
-      for (const { pattern, name } of marketPatterns) {
-        if (marketAddress.includes(pattern)) {
-          // We'll prefix with PT or YT based on if this looks like a YT token
-          const isYT = tool.args.token_out_address.toLowerCase().includes('yt')
-          const prefix = isYT ? 'YT' : 'PT'
-          setTokenName(`${prefix} ${name}`)
-          break
-        }
-      }
+    console.log('[KodiakDepositCard] Tool state:', tool.state);
+    console.log('[KodiakDepositCard] Tool result:', tool.result);
+    console.log('[KodiakDepositCard] Parsed toolResult:', toolResult);
+    console.log('[KodiakDepositCard] Final result:', result);
+  }, [tool.state, tool.result, toolResult, result]);
+
+  // Extract island information from tool args
+  useEffect(() => {
+    if (tool.args?.island_address) {
+      // Try to create a readable name from the island address
+      const address = tool.args.island_address
+      setIslandName(`Island ${address.slice(0, 6)}...${address.slice(-4)}`)
     }
   }, [tool.args])
 
-  // Also try to extract token info from result
+  // Also try to extract island info from result
   useEffect(() => {
-    if (result?.swap_details?.to && result.swap_details.to !== 'Pendle Token') {
-      setTokenName(result.swap_details.to)
+    if (result?.deposit_details?.island_address) {
+      const address = result.deposit_details.island_address
+      setIslandName(`Island ${address.slice(0, 6)}...${address.slice(-4)}`)
     }
   }, [result])
 
   // Simulate transaction flow for better UX
   useEffect(() => {
     if (tool.state === 'call') {
-      // Set up the sequence of status changes for a better UX
-      const statusSequence: Array<{ status: TransactionStatus; delay: number }> = [
+      // Set up the sequence of status changes for Kodiak deposit flow
+      const statusSequence: Array<{ status: DepositStatus; delay: number }> = [
         { status: 'preparing', delay: 1000 },
-        { status: 'building', delay: 2000 },
-        { status: 'signing', delay: 2000 },
-        { status: 'broadcasting', delay: 1500 },
-        { status: 'confirming', delay: 2500 }
+        { status: 'calculating', delay: 1500 },
+        { status: 'approving', delay: 2000 },
+        { status: 'swapping', delay: 2500 },
+        { status: 'depositing', delay: 2000 },
+        { status: 'confirming', delay: 3000 }
       ]
 
       let timeoutId: NodeJS.Timeout | null = null
@@ -110,30 +96,36 @@ export function SwapTransactionCard({
   }, [tool.state, result])
 
   // Get appropriate icon and text for current status
-  const getStatusInfo = (status: TransactionStatus) => {
+  const getStatusInfo = (status: DepositStatus) => {
     switch (status) {
       case 'preparing':
         return { 
           icon: <Clock className="h-4 w-4" />, 
-          text: 'Preparing transaction', 
+          text: 'Preparing deposit', 
           color: 'text-blue-600 dark:text-blue-400' 
         }
-      case 'building':
+      case 'calculating':
         return { 
           icon: <Loader2 className="h-4 w-4 animate-spin" />, 
-          text: 'Building transaction', 
+          text: 'Calculating optimal swap', 
           color: 'text-blue-600 dark:text-blue-400' 
         }
-      case 'signing':
+      case 'approving':
         return { 
           icon: <Loader2 className="h-4 w-4 animate-spin" />, 
-          text: 'Signing transaction', 
+          text: 'Approving token spending', 
           color: 'text-amber-600 dark:text-amber-400' 
         }
-      case 'broadcasting':
+      case 'swapping':
         return { 
           icon: <Loader2 className="h-4 w-4 animate-spin" />, 
-          text: 'Broadcasting to network', 
+          text: 'Swapping tokens', 
+          color: 'text-amber-600 dark:text-amber-400' 
+        }
+      case 'depositing':
+        return { 
+          icon: <Loader2 className="h-4 w-4 animate-spin" />, 
+          text: 'Depositing to island', 
           color: 'text-amber-600 dark:text-amber-400' 
         }
       case 'confirming':
@@ -145,13 +137,13 @@ export function SwapTransactionCard({
       case 'confirmed':
         return { 
           icon: <CheckCircle className="h-4 w-4" />, 
-          text: 'Transaction confirmed', 
+          text: 'Deposit confirmed', 
           color: 'text-green-600 dark:text-green-400' 
         }
       case 'failed':
         return { 
           icon: <AlertCircle className="h-4 w-4" />, 
-          text: 'Transaction failed', 
+          text: 'Deposit failed', 
           color: 'text-red-600 dark:text-red-400' 
         }
       default:
@@ -164,12 +156,13 @@ export function SwapTransactionCard({
   }
 
   // Get status badge based on current status
-  const getStatusBadge = (status: TransactionStatus) => {
+  const getStatusBadge = (status: DepositStatus) => {
     switch (status) {
       case 'preparing':
-      case 'building':
-      case 'signing':
-      case 'broadcasting':
+      case 'calculating':
+      case 'approving':
+      case 'swapping':
+      case 'depositing':
       case 'confirming':
         return (
           <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
@@ -194,12 +187,13 @@ export function SwapTransactionCard({
     }
   }
 
-  // Progress steps for transaction flow
+  // Progress steps for deposit flow
   const steps = [
     { id: 'preparing', label: 'Preparing' },
-    { id: 'building', label: 'Building' },
-    { id: 'signing', label: 'Signing' },
-    { id: 'broadcasting', label: 'Broadcasting' },
+    { id: 'calculating', label: 'Calculating' },
+    { id: 'approving', label: 'Approving' },
+    { id: 'swapping', label: 'Swapping' },
+    { id: 'depositing', label: 'Depositing' },
     { id: 'confirming', label: 'Confirming' }
   ]
 
@@ -224,7 +218,7 @@ export function SwapTransactionCard({
         <CardContent className="pt-4">
           <div className="flex flex-col space-y-4">
             <div className="flex justify-between items-center">
-              <h3 className="text-base font-medium">Swap Transaction</h3>
+              <h3 className="text-base font-medium">Kodiak Deposit</h3>
               {getStatusBadge(status)}
             </div>
             
@@ -272,7 +266,7 @@ export function SwapTransactionCard({
             
             {/* Add status component for consistency */}
             <div className="bg-white dark:bg-gray-900 rounded-lg p-3 mt-2">
-              <SwapTransactionStatus status={status} tokenName={tokenName} />
+              <KodiakDepositStatus status={status} islandName={islandName} />
             </div>
             
             {/* Transaction data (if any) */}
@@ -280,9 +274,11 @@ export function SwapTransactionCard({
               <div className="bg-white dark:bg-gray-900 rounded-lg p-3 text-sm mt-2">
                 <div className="grid grid-cols-2 gap-2">
                   <div className="text-gray-500 dark:text-gray-400">Amount:</div>
-                  <div>{tool.args.amount_in_human} {tool.args.input_token_name_display}</div>
-                  <div className="text-gray-500 dark:text-gray-400">To:</div>
-                  <div>{tokenName}</div>
+                  <div>{tool.args.amount} {tool.args.is_token0 ? 'Token0' : 'Token1'}</div>
+                  <div className="text-gray-500 dark:text-gray-400">Island:</div>
+                  <div className="truncate">{islandName}</div>
+                  <div className="text-gray-500 dark:text-gray-400">Slippage:</div>
+                  <div>{tool.args.slippage_bps / 100}%</div>
                 </div>
               </div>
             )}
@@ -304,7 +300,7 @@ export function SwapTransactionCard({
         <CardContent className="pt-4">
           <div className="flex flex-col space-y-4">
             <div className="flex justify-between items-center">
-              <h3 className="text-base font-medium">Swap Transaction</h3>
+              <h3 className="text-base font-medium">Kodiak Deposit</h3>
               <Badge variant="destructive">
                 <XCircle className="h-3 w-3 mr-1" />
                 Failed
@@ -312,16 +308,16 @@ export function SwapTransactionCard({
             </div>
             
             <div className="text-red-600 dark:text-red-400 text-sm font-medium">
-              {result.error || 'Transaction failed'}
+              {result.error || 'Deposit failed'}
             </div>
             
-            {result.swap_details && (
+            {result.deposit_parameters && (
               <div className="bg-white dark:bg-gray-900 rounded-lg p-3 text-sm">
                 <div className="grid grid-cols-2 gap-2">
                   <div className="text-gray-500 dark:text-gray-400">Amount:</div>
-                  <div>{result.swap_details.amount_in}</div>
-                  <div className="text-gray-500 dark:text-gray-400">Market:</div>
-                  <div className="truncate">{result.swap_details.market}</div>
+                  <div>{result.deposit_parameters.amount} {result.deposit_parameters.is_token0 ? 'Token0' : 'Token1'}</div>
+                  <div className="text-gray-500 dark:text-gray-400">Island:</div>
+                  <div className="truncate">{islandName}</div>
                 </div>
               </div>
             )}
@@ -337,7 +333,7 @@ export function SwapTransactionCard({
       <CardContent className="p-6">
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center pb-3 border-b border-green-100 dark:border-green-900">
-            <h3 className="text-base font-medium">Swap Transaction</h3>
+            <h3 className="text-base font-medium">Kodiak Deposit</h3>
             <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
               <CheckCircle className="h-3 w-3 mr-1" />
               Confirmed
@@ -346,26 +342,34 @@ export function SwapTransactionCard({
           
           {/* Add status component at the top */}
           <div className="bg-white dark:bg-gray-900 rounded-lg p-3">
-            <SwapTransactionStatus status={status} txHash={getTransactionHash()} tokenName={tokenName} />
+            <KodiakDepositStatus status={status} txHash={getTransactionHash()} islandName={islandName} />
           </div>
           
           {/* Transaction Details */}
           <div className="bg-white dark:bg-gray-900 rounded-lg p-4 shadow-sm">
             <div className="flex flex-col space-y-3">
-              {/* From/To */}
+              {/* Amount Deposited */}
               <div className="flex justify-between items-center">
-                <div className="text-sm text-gray-500 dark:text-gray-400">From:</div>
-                <div className="text-sm font-medium">{result.swap_details?.from || 'ETH'}</div>
-              </div>
-              <div className="flex justify-between items-center">
-                <div className="text-sm text-gray-500 dark:text-gray-400">To:</div>
-                <div className="text-sm font-medium">{tokenName}</div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">Amount Deposited:</div>
+                <div className="text-sm font-bold">{result.deposit_details?.amount_deposited || 'N/A'}</div>
               </div>
               
-              {/* Amount */}
+              {/* Island */}
               <div className="flex justify-between items-center">
-                <div className="text-sm text-gray-500 dark:text-gray-400">Amount:</div>
-                <div className="text-sm font-bold">{result.swap_details?.amount_in || 'N/A'}</div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">Island:</div>
+                <div className="text-sm font-medium">{islandName}</div>
+              </div>
+              
+              {/* Slippage */}
+              <div className="flex justify-between items-center">
+                <div className="text-sm text-gray-500 dark:text-gray-400">Slippage:</div>
+                <div className="text-sm font-medium">{result.deposit_details?.slippage_bps ? (result.deposit_details.slippage_bps / 100) : 0.5}%</div>
+              </div>
+              
+              {/* Min Shares */}
+              <div className="flex justify-between items-center">
+                <div className="text-sm text-gray-500 dark:text-gray-400">Min Shares:</div>
+                <div className="text-sm font-medium">{result.deposit_details?.min_shares_received}</div>
               </div>
               
               {/* Transaction Hash */}
@@ -373,7 +377,7 @@ export function SwapTransactionCard({
                 <div className="flex justify-between items-center">
                   <div className="text-xs text-gray-500 dark:text-gray-400">Transaction:</div>
                   <a 
-                    href={`https://etherscan.io/tx/${result.transaction_hash}`} 
+                    href={`https://berascan.com/tx/${result.transaction_hash}`} 
                     target="_blank" 
                     rel="noreferrer"
                     className="text-xs font-medium text-blue-600 dark:text-blue-400 flex items-center hover:underline"
@@ -387,9 +391,11 @@ export function SwapTransactionCard({
           </div>
           
           {/* Small timestamp note */}
-          <div className="text-xs text-center text-gray-400 dark:text-gray-500 mt-1">
-            Transaction completed at {new Date(result.swap_details.complete_time).toLocaleTimeString()}
-          </div>
+          {result.deposit_details?.complete_time && (
+            <div className="text-xs text-center text-gray-400 dark:text-gray-500 mt-1">
+              Deposit completed at {new Date(result.deposit_details.complete_time).toLocaleTimeString()}
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

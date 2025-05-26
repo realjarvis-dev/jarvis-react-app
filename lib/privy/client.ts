@@ -14,6 +14,10 @@ export const privy = new PrivyClient(appId, appSecret,
 }
 )
 
+export function isPrivyUserId(userId: string): boolean {
+  return userId.includes('did:privy:')
+}
+
 export async function verifyAccessToken(): Promise<AuthTokenClaims> {
   const cookieStore = await cookies()
   const token = cookieStore.get("privy-token")?.value

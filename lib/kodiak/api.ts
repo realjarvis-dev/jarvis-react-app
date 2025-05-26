@@ -1,46 +1,41 @@
+import axios from 'axios';
 import { ethers } from 'ethers';
 import { BerachainMainnetConfig } from '../config/network';
-import { KodiakIsland, KodiakIslandResponse } from '../types/kodiak';
+import {
+  buildKodiakIslandObject,
+  KodiakApiResponse,
+  KodiakApiVault,
+  KodiakIsland,
+  KodiakIslandResponse
+} from '../types/kodiak';
+import { FACTORY_ABI, ISLAND_ABI, POOL_ABI, TOKEN_INFO_ABI } from './abi';
 import { fetchVaultByAddress, fetchVaultsFromSubgraph, mapSubgraphDataToIslands } from './subgraph';
-
-// ABIs for interacting with Kodiak contracts - defined inline to avoid external files
-const ERC20_ABI = [
-  'function symbol() view returns (string)',
-  'function decimals() view returns (uint8)',
-  'function totalSupply() view returns (uint256)'
-];
-
-const POOL_ABI = [
-  'function fee() view returns (uint24)'
-];
-
-const ISLAND_ABI = [
-  'function name() view returns (string)',
-  'function token0() view returns (address)',
-  'function token1() view returns (address)',
-  'function lowerTick() view returns (int24)',
-  'function upperTick() view returns (int24)',
-  'function pool() view returns (address)',
-  'function totalSupply() view returns (uint256)',
-  'function manager() view returns (address)',
-  'function isManaged() view returns (bool)',
-  'function managerFeeBPS() view returns (uint16)',
-  'function getUnderlyingBalances() view returns (uint256 amount0Current, uint256 amount1Current)'
-];
-
-const FACTORY_ABI = [
-  'function numIslands() view returns (uint256)',
-  'function getDeployers() view returns (address[])',
-  'function getIslands(address deployer) view returns (address[])'
-];
 
 // Contract address for Kodiak on mainnet
 const FACTORY_ADDRESS = '0xc7a3f400ae22b05c7bfdb7bbc7a3be5d1777fd50';
+const KODIAK_API_BASE_URL = 'https://backend.kodiak.finance';
+
+// Get token information from an ERC20 token
+async function getTokenInfo(tokenAddress: string, provider: ethers.JsonRpcProvider): Promise<{
+  address: string;
+  decimals: number;
+  symbol?: string;
+}> {
+  const tokenContract = new ethers.Contract(tokenAddress, TOKEN_INFO_ABI, provider);
+  const decimals = await tokenContract.decimals();
+  const symbol = await tokenContract.symbol();
+  
+  return {
+    address: tokenAddress,
+    decimals: Number(decimals),
+    symbol
+  };
+}
 
 /**
  * Fetches data for a specific Kodiak Island
  */
-export async function getIslandData(address: string): Promise<KodiakIsland | null> {
+export async function getIslandDetails(address: string): Promise<KodiakIsland | null> {
   console.log(`Fetching data for Kodiak Island ${address}...`);
 
   try {
@@ -67,14 +62,9 @@ export async function getIslandData(address: string): Promise<KodiakIsland | nul
     // Get pool address (for fee tier)
     const poolAddress = await island.pool();
 
-    // Get token details
-    const token0 = new ethers.Contract(token0Address, ERC20_ABI, provider);
-    const token1 = new ethers.Contract(token1Address, ERC20_ABI, provider);
-
-    const token0Symbol = await token0.symbol();
-    const token1Symbol = await token1.symbol();
-    const token0Decimals = await token0.decimals();
-    const token1Decimals = await token1.decimals();
+    // Get token details using the helper function
+    const token0 = await getTokenInfo(token0Address, provider);
+    const token1 = await getTokenInfo(token1Address, provider);
 
     // Get name directly from the island contract or construct it
     let name;
@@ -82,7 +72,7 @@ export async function getIslandData(address: string): Promise<KodiakIsland | nul
       name = await island.name();
     } catch (error) {
       // Fall back to constructed name if name() function fails
-      name = `Kodiak Island ${token0Symbol}-${token1Symbol}`;
+      name = `Kodiak Island ${token0.symbol || 'Token0'}-${token1.symbol || 'Token1'}`;
     }
 
     // Get Island config
@@ -99,49 +89,40 @@ export async function getIslandData(address: string): Promise<KodiakIsland | nul
       managerFeeBPS = await island.managerFeeBPS();
     }
 
-    // Get pool fee tier
-    let feeTier;
+    // Get pool fee tier and current tick
+    let feeTier = 0; // Default to 0 if not available
+    let tick: number | undefined = undefined;
     try {
       const pool = new ethers.Contract(poolAddress, POOL_ABI, provider);
-      feeTier = await pool.fee();
+      feeTier = Number(await pool.fee());
+      
+      // Get current tick from pool slot0
+      const slot0 = await pool.slot0();
+      tick = Number(slot0.tick);
     } catch (error) {
-      feeTier = 3000; // Default to 0.3%
+      console.error(`Error fetching pool data for island ${address}: ${error}`);
+      // Continue with defaults if pool data can't be fetched
     }
 
     // Get balances
     const balances = await island.getUnderlyingBalances();
+    const totalSupply = (await island.totalSupply()).toString();
 
-    return {
+    return buildKodiakIslandObject(
       address,
       name,
-      token0: {
-        address: token0Address,
-        symbol: token0Symbol,
-        decimals: token0Decimals
-      },
-      token1: {
-        address: token1Address,
-        symbol: token1Symbol,
-        decimals: token1Decimals
-      },
-      totalSupply: (await island.totalSupply()).toString(),
-      lowerTick: Number(lowerTick),
-      upperTick: Number(upperTick),
-      feeTier: Number(feeTier),
+      token0,
+      token1,
+      totalSupply,
+      Number(lowerTick),
+      Number(upperTick),
+      Number(feeTier),
       manager,
       isManaged,
-      managerFeeBPS: Number(managerFeeBPS),
-      tvl: {
-        token0Amount: balances[0].toString(),
-        token1Amount: balances[1].toString(),
-        usdValue: 0 // Can't determine USD value from on-chain data
-      },
-      apr: {
-        feeApr: 0,
-        combinedApr: 0,
-        isEstimate: true // On-chain data doesn't provide APR information
-      }
-    };
+      Number(managerFeeBPS),
+      balances,
+      tick
+    );
   } catch (error) {
     console.error(`Error fetching Island data: ${error}`);
     return null;
@@ -214,7 +195,7 @@ export async function fetchKodiakIslands(): Promise<KodiakIslandResponse> {
         // Process each island from this deployer
         for (const islandAddress of deployerIslands) {
           try {
-            const islandData = await getIslandData(islandAddress);
+            const islandData = await getIslandDetails(islandAddress);
 
             if (islandData) {
               islands.push(islandData);
@@ -318,13 +299,217 @@ export async function getKodiakOpportunities(
 }
 
 /**
- * Gets a specific Kodiak Island by address
+ * Fetches Kodiak Islands data from the API endpoint
+ * @param options - Options for filtering the API request
+ * @returns Promise with KodiakIslandResponse
  */
-export async function getKodiakIslandByAddress(address: string): Promise<KodiakIsland | null> {
+export async function fetchKodiakIslandsFromApi(
+  options: {
+    chainId?: number;
+    minimumTvl?: number;
+    limit?: number;
+    orderBy?: string;
+    orderDirection?: string;
+  } = {}
+): Promise<KodiakIslandResponse> {
   try {
-    return await getIslandData(address);
-  } catch (error: any) {
-    console.error(`Error getting Kodiak Island ${address}: ${error.message}`);
-    return null;
+    console.log('Fetching Kodiak Islands from API endpoint...');
+    
+    // Default options
+    const {
+      chainId = 80094, // Default to BERA Mainnet
+      minimumTvl = 100, // Default minimum TVL
+      limit = 200, // Default limit
+      orderBy = 'totalApr', // Default ordering by total APR
+      orderDirection = 'desc' // Default to descending order
+    } = options;
+    
+    // Construct the query parameters
+    const params = new URLSearchParams({
+      chainId: chainId.toString(),
+      minimumTvl: minimumTvl.toString(),
+      limit: limit.toString(),
+      orderBy,
+      orderDirection
+    });
+    
+    // Make the API request
+    const response = await axios.get<KodiakApiResponse>(`${KODIAK_API_BASE_URL}/vaults?${params.toString()}`);
+    
+    if (!response.data || !response.data.data) {
+      throw new Error('Invalid response from Kodiak API');
+    }
+    
+    const apiVaults = response.data.data;
+    console.log(`Successfully fetched ${apiVaults.length} islands from API`);
+    
+    // Map the API response to our format
+    const islands = mapApiResponseToIslands(apiVaults);
+    
+    // Count unique token pairs
+    const tokenPairs = new Set();
+    islands.forEach(island => {
+      tokenPairs.add(`${island.token0.symbol}-${island.token1.symbol}`);
+    });
+    
+    return {
+      success: true,
+      data: {
+        islands,
+        stats: {
+          total: islands.length,
+          uniquePairs: tokenPairs.size,
+          networks: ['mainnet']
+        }
+      }
+    };
+  } catch (error) {
+    console.error(`Error fetching Kodiak Islands from API: ${error}`);
+    return {
+      success: false,
+      error: `Failed to fetch Kodiak Islands from API: ${error}`
+    };
   }
-} 
+}
+
+/**
+ * Maps the API response to our KodiakIsland interface
+ * @param apiVaults - Array of vaults from the API
+ * @returns Array of KodiakIsland objects
+ */
+function mapApiResponseToIslands(apiVaults: KodiakApiVault[]): KodiakIsland[] {
+  // First, filter out vaults where either token has a zero price
+  const filteredVaults = apiVaults.filter(vault => {
+    if (vault.token0.price === 0) {
+      console.log(`Filtering out island ${vault.id} (${vault.token0.symbol}-${vault.token1.symbol}) because token0 price is 0`);
+      return false;
+    }
+    if (vault.token1.price === 0) {
+      console.log(`Filtering out island ${vault.id} (${vault.token0.symbol}-${vault.token1.symbol}) because token1 price is 0`);
+      return false;
+    }
+    return true;
+  });
+  
+  // Then map the filtered vaults to our format
+  return filteredVaults.map(vault => {
+    // The API already returns APR values in percentage form
+    // We need to convert them to decimal form for our interface
+    const feeApr = vault.apr / 100;
+    const combinedApr = vault.totalApr / 100;
+    const rewardApr = combinedApr - feeApr; // Calculate reward APR
+    
+    // Extract token0 and token1 balances from the TVL
+    // Since the API doesn't directly provide token amounts, we need to estimate them
+    // This is an approximation based on the token prices and TVL ratio
+    const token0Price = vault.token0.price || 0;
+    const token1Price = vault.token1.price || 0;
+    
+    // Assume a 50/50 split if we don't have more detailed information
+    // In a real implementation, you might want to calculate this more accurately
+    const totalValue = vault.tvl;
+    const token0Value = totalValue / 2;
+    const token1Value = totalValue / 2;
+    
+    const token0Amount = token0Price > 0 ? (token0Value / token0Price).toString() : '0';
+    const token1Amount = token1Price > 0 ? (token1Value / token1Price).toString() : '0';
+    
+    // Use manager treasury as manager if available
+    const manager = vault.managerTreasury || '0x0000000000000000000000000000000000000000';
+    
+    return {
+      address: vault.id,
+      name: vault.tokenLp?.name || `Kodiak Island ${vault.token0.symbol}-${vault.token1.symbol}`,
+      token0: {
+        address: vault.token0.id,
+        symbol: vault.token0.symbol,
+        decimals: vault.token0.decimals
+      },
+      token1: {
+        address: vault.token1.id,
+        symbol: vault.token1.symbol,
+        decimals: vault.token1.decimals
+      },
+      totalSupply: vault.tokenLp?.totalSupply?.toString() || '0',
+      lowerTick: vault.lowerTick,
+      upperTick: vault.upperTick,
+      feeTier: vault.feeTier,
+      manager,
+      isManaged: !!vault.managerTreasury,
+      managerFeeBPS: 0, // Not provided in the API response
+      tvl: {
+        token0Amount,
+        token1Amount,
+        usdValue: vault.tvl
+      },
+      apr: {
+        feeApr,
+        rewardApr, // Add the reward APR field
+        combinedApr,
+        isEstimate: false // Data coming from API, so not an estimate
+      },
+      volumeUSD: (vault.weeklyFeesEarnedUSD * 52).toString(), // Approximating annual volume based on weekly fees
+      weeklyVolumeUSD: vault.weeklyFeesEarnedUSD.toString(),
+      currentPrice: 0, // Not directly provided, would need calculation
+      poolType: 'Island',
+      tick: vault.currentTick
+    };
+  });
+}
+
+/**
+ * Gets Kodiak investment opportunities from the API
+ * @param options Filter options
+ * @returns Array of KodiakIsland objects
+ */
+export async function getKodiakOpportunitiesFromApi(
+  options: {
+    minTvl?: number;
+    includeInactive?: boolean;
+    minVolumeUSD?: number;
+    chainId?: number;
+  } = {}
+): Promise<KodiakIsland[]> {
+  // Set default options
+  const {
+    minTvl = 100, // Default minimum TVL
+    includeInactive = false, // By default, filter out inactive islands
+    chainId = 80094 // Default to BERA Mainnet
+  } = options;
+  
+  try {
+    // Fetch islands from API, already filtering by minTvl
+    const islandsResponse = await fetchKodiakIslandsFromApi({
+      chainId,
+      minimumTvl: minTvl,
+      limit: 200,
+      orderBy: 'totalApr',
+      orderDirection: 'desc'
+    });
+    
+    if (!islandsResponse.success || !islandsResponse.data) {
+      throw new Error(islandsResponse.error || 'Failed to fetch islands');
+    }
+    
+    let islands = islandsResponse.data.islands;
+    
+    // Apply additional filters
+    const activeIslands = islands.filter(island => {
+      // Filter out inactive islands if specified
+      if (!includeInactive) {
+        // Consider an island inactive if both APRs are zero
+        if (island.apr.feeApr === 0 && island.apr.combinedApr === 0) {
+          return false;
+        }
+      }
+      
+      return true;
+    });
+    
+    console.log(`Found ${activeIslands.length} active Kodiak Islands from API`);
+    return activeIslands;
+  } catch (error) {
+    console.error('Error getting Kodiak opportunities from API:', error);
+    return [];
+  }
+}

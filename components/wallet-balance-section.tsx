@@ -3,8 +3,8 @@
 import { TokenData } from '@/lib/alchemy/types'
 import { ToolInvocation } from 'ai'
 import { useEffect, useState } from 'react'
-import { WalletBalance } from './wallet-balance'
 import { CollapsibleMessage } from './collapsible-message'
+import { WalletBalance } from './wallet-balance'
 
 interface WalletBalanceToolResult {
   success: boolean
@@ -53,7 +53,9 @@ export function WalletBalanceSection({
 
     if (tool.state === 'result' && tool.result) {
       try {
-        const result = tool.result as WalletBalanceToolResult // Type assertion
+        // Handle new data structure where wallet data is in the 'data' field
+        const toolResult = tool.result as any
+        const result = toolResult.data || toolResult as WalletBalanceToolResult
 
         if (result.success) {
           setTokens(result.tokens)

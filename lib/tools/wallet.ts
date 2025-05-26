@@ -22,35 +22,59 @@ export const walletBalanceTool = tool({
         )
         
         if (filteredTokens.length === 0) {
-          return {
+          const errorData = {
             success: false,
             message: `No tokens with symbol ${token_symbol} found in wallet.`,
             tokens: []
           }
+          
+          return {
+            _uiDisplayTool: true,
+            summary: `No ${token_symbol} found in wallet`,
+            data: errorData
+          }
         }
         
-        return {
+        const successData = {
           success: true,
           message: `Found ${token_symbol} balance`,
           tokens: filteredTokens,
           filtered: true,
           filter_symbol: token_symbol
         }
+        
+        return {
+          _uiDisplayTool: true,
+          summary: `Found ${token_symbol} balance: ${filteredTokens[0]?.balance || '0'}`,
+          data: successData
+        }
       }
       
       // Return all tokens
-      return {
+      const allTokensData = {
         success: true,
         message: 'Retrieved all wallet balances',
         tokens: walletBalances.tokens,
         filtered: false
       }
+      
+      return {
+        _uiDisplayTool: true,
+        summary: `Found ${walletBalances.tokens.length} tokens in wallet`,
+        data: allTokensData
+      }
     } catch (error) {
       console.error('Error in wallet balance tool:', error)
-      return {
+      const errorData = {
         success: false,
         message: 'Failed to fetch wallet balances',
         tokens: []
+      }
+      
+      return {
+        _uiDisplayTool: true,
+        summary: 'Error fetching wallet balances',
+        data: errorData
       }
     }
   }

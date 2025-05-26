@@ -17,8 +17,9 @@ export function SimpleQuoteDisplay({
     return null
   }
 
-  // Parse the result
-  const result = typeof tool.result === 'string' ? JSON.parse(tool.result) : tool.result
+  // Handle new data structure where quote data is in the 'data' field
+  const toolResult = typeof tool.result === 'string' ? JSON.parse(tool.result) : tool.result
+  const result = toolResult.data || toolResult
   
   // Check if there's an error
   if (result.error) {
