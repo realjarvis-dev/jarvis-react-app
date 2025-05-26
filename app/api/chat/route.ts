@@ -3,7 +3,8 @@ import { createToolCallingStreamResponse } from '@/lib/streaming/create-tool-cal
 import { Model } from '@/lib/types/models'
 import { isProviderEnabled } from '@/lib/utils/registry'
 import { cookies } from 'next/headers'
-import { getUserWallet } from '@/lib/privy/client'
+import { getUser, getUserWallet } from '@/lib/privy/client'
+
 export const maxDuration = 30
 
 const DEFAULT_MODEL: Model = {
@@ -21,6 +22,7 @@ export async function POST(request: Request) {
     const referer = request.headers.get('referer')
     const isSharePage = referer?.includes('/share/')
     const userId = request.headers.get('x-user-id') || 'anonymous'
+    const allowWeb3Tools = request.headers.get('allow-web3-tools') || 'false'
 
     if (isSharePage) {
       return new Response('Chat API is not available on share pages', {
@@ -56,8 +58,20 @@ export async function POST(request: Request) {
       )
     }
 
-    const userEvmWallet = await getUserWallet('ethereum')
-    const userSolWallet = await getUserWallet('solana')
+    let authenticated = false
+    try {
+      await getUser()
+      authenticated = true
+    } catch (error) {
+      console.log('User not logged in')
+    }
+    let userEvmWallet = undefined
+    let userSolWallet = undefined
+    if (authenticated) {
+      userEvmWallet = await getUserWallet('ethereum')
+      userSolWallet = await getUserWallet('solana')
+    }
+
 
 
     const supportsToolCalling = selectedModel.toolCallType === 'native'
@@ -70,7 +84,8 @@ export async function POST(request: Request) {
           searchMode,
           userId,
           userEvmWallet,
-          userSolWallet
+          userSolWallet,
+          allowWeb3Tools
         })
       : createManualToolStreamResponse({
           messages,
@@ -79,7 +94,8 @@ export async function POST(request: Request) {
           searchMode,
           userId,
           userEvmWallet,
-          userSolWallet
+          userSolWallet,
+          allowWeb3Tools
         })
   } catch (error) {
     console.error('API route error:', error)

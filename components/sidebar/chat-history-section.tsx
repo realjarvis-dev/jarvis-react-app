@@ -3,7 +3,7 @@ export const revalidate = 0
 
 import { SidebarGroup, SidebarGroupLabel } from '@/components/ui/sidebar'
 import { getChatsPage } from '@/lib/actions/chat'
-import { privy } from '@/lib/privy/client'
+import { getUserId } from '@/lib/privy/client'
 import { headers } from 'next/headers'
 import { ChatHistoryClient } from './chat-history-client'
 import { ClearHistoryAction } from './clear-history-action'
@@ -17,20 +17,18 @@ export async function ChatHistorySection() {
   // Fetch the initial page of chats
   const headersList = await headers()
 
-  const authToken = headersList.get('authorization')?.replace(/^Bearer /, '')
+  // const authToken = headersList.get('authorization')?.replace(/^Bearer /, '')
 
   let userId = 'anonymous'
 
-  if (authToken) {
-    try {
-      const claims = await privy.verifyAuthToken(authToken)
-      userId = claims.userId
-    } catch (error) {
-      console.error('Failed to verify auth token:', error)
-    }
-  } else {
-    console.log('No auth token found in headers')
+
+  try {
+    userId = await getUserId()
+  } catch (error) {
+    console.log('Failed to get user id:', error)
+    userId = headersList.get('x-user-id') || 'anonymous'
   }
+
 
   let { chats, nextOffset } = await getChatsPage(userId, 20, 0)
   if (userId === 'anonymous') {
