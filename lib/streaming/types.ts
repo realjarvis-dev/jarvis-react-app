@@ -10,4 +10,5 @@ export interface BaseStreamConfig {
   userId: string
   userEvmWallet: WalletWithMetadata | undefined
   userSolWallet: WalletWithMetadata | undefined
+  allowWeb3Tools: string
 }

@@ -1,14 +1,15 @@
+import { getUser, getUserWallet } from '@/lib/privy/client'
 import { createManualToolStreamResponse } from '@/lib/streaming/create-manual-tool-stream'
 import { createToolCallingStreamResponse } from '@/lib/streaming/create-tool-calling-stream'
 import { Model } from '@/lib/types/models'
 import { isProviderEnabled } from '@/lib/utils/registry'
 import { cookies } from 'next/headers'
-import { getUserWallet } from '@/lib/privy/client'
+
 export const maxDuration = 30
 
 const DEFAULT_MODEL: Model = {
-  id: 'gpt-4o-mini',
-  name: 'GPT-4o mini',
+  id: 'gpt-4o',
+  name: 'GPT-4o',
   provider: 'OpenAI',
   providerId: 'openai',
   enabled: true,
@@ -21,6 +22,7 @@ export async function POST(request: Request) {
     const referer = request.headers.get('referer')
     const isSharePage = referer?.includes('/share/')
     const userId = request.headers.get('x-user-id') || 'anonymous'
+    const allowWeb3Tools = request.headers.get('allow-web3-tools') || 'false'
 
     if (isSharePage) {
       return new Response('Chat API is not available on share pages', {
@@ -30,18 +32,9 @@ export async function POST(request: Request) {
     }
 
     const cookieStore = await cookies()
-    const modelJson = cookieStore.get('selectedModel')?.value
     const searchMode = cookieStore.get('search-mode')?.value === 'true'
 
-    let selectedModel = DEFAULT_MODEL
-
-    if (modelJson) {
-      try {
-        selectedModel = JSON.parse(modelJson) as Model
-      } catch (e) {
-        console.error('Failed to parse selected model:', e)
-      }
-    }
+    const selectedModel = DEFAULT_MODEL
 
     if (
       !isProviderEnabled(selectedModel.providerId) ||
@@ -56,8 +49,20 @@ export async function POST(request: Request) {
       )
     }
 
-    const userEvmWallet = await getUserWallet('ethereum')
-    const userSolWallet = await getUserWallet('solana')
+    let authenticated = false
+    try {
+      await getUser()
+      authenticated = true
+    } catch (error) {
+      console.log('User not logged in')
+    }
+    let userEvmWallet = undefined
+    let userSolWallet = undefined
+    if (authenticated) {
+      userEvmWallet = await getUserWallet('ethereum')
+      userSolWallet = await getUserWallet('solana')
+    }
+
 
 
     const supportsToolCalling = selectedModel.toolCallType === 'native'
@@ -70,7 +75,8 @@ export async function POST(request: Request) {
           searchMode,
           userId,
           userEvmWallet,
-          userSolWallet
+          userSolWallet,
+          allowWeb3Tools
         })
       : createManualToolStreamResponse({
           messages,
@@ -79,7 +85,8 @@ export async function POST(request: Request) {
           searchMode,
           userId,
           userEvmWallet,
-          userSolWallet
+          userSolWallet,
+          allowWeb3Tools
         })
   } catch (error) {
     console.error('API route error:', error)

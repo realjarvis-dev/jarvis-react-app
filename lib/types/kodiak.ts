@@ -25,6 +25,7 @@ export interface KodiakIsland {
     };
     apr: {
       feeApr: number;
+      rewardApr?: number;
       combinedApr: number;
       isEstimate: boolean;
     };
@@ -143,7 +144,6 @@ export interface FormattedKodiakIsland {
   management: {
     isManaged: boolean;
     managerAddress: string;
-    managerFee: string;
   };
 }
 
@@ -201,6 +201,7 @@ export function buildKodiakIslandObject(
     },
     apr: {
       feeApr: 0,
+      rewardApr: 0,
       combinedApr: 0,
       isEstimate: true // On-chain data doesn't provide APR information
     },
@@ -282,4 +283,71 @@ export interface IslandSingleDepositParams {
   isToken0: boolean;
   slippageBPS: number; // Slippage in basis points (e.g., 50 for 0.5%)
   minSharesReceived: string; // Minimum shares to receive
+} 
+
+/**
+ * Interface for the raw Kodiak API response
+ */
+export interface KodiakApiVault {
+  id: string;
+  provider: string;
+  lowerTick: number;
+  upperTick: number;
+  currentTick: number;
+  tvl: number;
+  farmTvl: number;
+  apr: number;
+  weeklyFeesEarnedUSD: number;
+  feeTier: number;
+  totalApr: number;
+  lastUpdated: string;
+  isSweetened: boolean;
+  isRewardVault: boolean;
+  isVolatile: boolean;
+  managerTreasury?: string;
+  token0: {
+    id: string;
+    symbol: string;
+    name: string;
+    decimals: number;
+    price: number;
+  };
+  token1: {
+    id: string;
+    symbol: string;
+    name: string;
+    decimals: number;
+    price: number;
+  };
+  farm?: {
+    id: string;
+    provider: string;
+    tvl: number;
+    apr: number;
+    rewardRates: string[];
+    stakingToken: string;
+    rewardTokens: {
+      id: string;
+      symbol: string;
+      name: string;
+      decimals: number;
+      price: number;
+    }[];
+  };
+  tokenLp?: {
+    id: string;
+    symbol: string;
+    name: string;
+    decimals: number;
+    price: number;
+    totalSupply: number;
+  };
+}
+
+/**
+ * Interface for Kodiak API response
+ */
+export interface KodiakApiResponse {
+  data: KodiakApiVault[];
+  count: number;
 } 
