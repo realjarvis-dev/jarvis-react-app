@@ -118,11 +118,45 @@ export function Chat({
     setMessages(savedMessages)
   }, [id])
 
+  const checkTrialLimit = (limitReachCallback: () => void, limitNotReachedCallback: () => void) => {
+    if (!ready) {
+      toast.error('Still initializing, please wait…')
+      return
+    }
+    if (authenticated) {
+      return 
+    }
+    if (anonTrial <= 0) {
+      console.log('anonTrial', anonTrial)
+      limitReachCallback()
+      return
+    }
+
+    setAnonTrial(anonTrial - 1)
+    limitNotReachedCallback()
+  }
+
   const onQuerySelect = (query: string) => {
-    append({
-      role: 'user',
-      content: query
-    })
+    const sendMessage = () => {
+      append({
+        role: 'user',
+        content: query
+      })
+    }
+    if (!ready) {
+      toast.error('Still initializing, please wait…')
+      return
+    }
+    if (!authenticated) {
+      // check trial limit, execute callback if limit reached
+      checkTrialLimit(() => {
+        toast.error('No trials left – please log in!')
+      }, () => {
+        sendMessage()
+      })
+      return
+    }
+    sendMessage()
   }
 
   const handleUpdateAndReloadMessage = async (
@@ -175,29 +209,32 @@ export function Chat({
     return await reload(options)
   }
 
+
+
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    // 1) haven’t initialized Privy yet?
+    const sendMessage = () => {
+      e.preventDefault()
+      setData(undefined)
+      handleSubmit(e)
+    }
     if (!ready) {
       toast.error('Still initializing, please wait…')
       return
     }
-    // 2) anon user out of trials?
-    const isAnon = !authenticated
-
-    if (isAnon && anonTrial <= 0) {
-      toast.error('No trials left – please log in!')
-      e.preventDefault()
-      setData(undefined)
+    if (!authenticated) {
+      // check trial limit, execute callback if limit reached
+      checkTrialLimit(() => {
+        toast.error('No trials left – please log in!')
+        e.preventDefault()
+        setData(undefined)
+      }, () => {
+        sendMessage()
+      })
       return
     }
 
-    // 3) decrement and persist
-    if (isAnon) {
-      setAnonTrial(anonTrial - 1)
-    }
-    e.preventDefault()
-    setData(undefined)
-    handleSubmit(e)
+    // has to keep it for authenticated users
+    sendMessage()
   }
 
   return (
