@@ -386,7 +386,7 @@ export function ChatPanel({
     <> {/* Use a fragment if VideoBackground is fixed and outside the main div's flow */}
       <VideoBackground
         src="/videos/background.mp4" // Ensure this path is correct
-        // poster="/videos/background_poster.jpg" // Optional: path to a poster image
+        poster="/videos/background_poster.jpg" // Optional: path to a poster image
         isActive={showVideoBg}
         playbackRate={0.15} // Adjust playback speed as desired
       />
