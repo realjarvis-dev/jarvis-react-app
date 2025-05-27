@@ -32,7 +32,7 @@ const mobileNoDelegationsText = 'No delegations'
 
 export function WalletMenuItems() {
   const { user, ready: userReady } = usePrivy()
-  const isMobile = useIsMobile()
+  const isMobile = useIsMobile({ maxWidth: 768 })
   
   const router = useRouter()
   const { wallets: solanaWallets, ready: solanaReady } = useSolanaWallets()
