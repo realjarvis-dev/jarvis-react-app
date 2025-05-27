@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { searchSchema } from '../schema/search'
 import { genericSwapTool } from '../tools/generic-swap'
 import { kodiakDepositTool, kodiakOpportunitiesTool } from '../tools/kodiak'
+import { marketChartTool } from '../tools/market-chart'
 import { pendleOpportunitiesTool, pendleQuoteTool, pendleSwapTool } from '../tools/pendle'
 import { privyTransferTool } from '../tools/privy-transfer'
 import { createQuestionTool } from '../tools/question'
@@ -179,6 +180,14 @@ export function createToolRegistry(model: string): ToolRegistry {
       return { success: true, message: `Question asked: ${params.question}` }
     },
     category: ToolCategory.UTILITY
+  })
+  
+  registry.registerTool({
+    name: 'market_chart',
+    description: 'Fetch and display cryptocurrency market chart data',
+    schema: marketChartTool.parameters,
+    execute: async (params, context) => marketChartTool.execute(params, { toolCallId: context?.toolCallId, messages: context?.messages || [] }),
+    category: ToolCategory.WEB
   })
   
   registry.registerTool({
