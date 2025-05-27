@@ -7,8 +7,10 @@ export const getGasPriceTool = tool({
   parameters: z.object({}),
   execute: async () => {
     const gasPrice = await getProposedGasPrice()
+
     return {
-        'gasPrice': `${gasPrice} gwei`
+        gas_price: `${gasPrice} gwei`,
+        complete_time: new Date().toISOString()
     }
   }
 })
