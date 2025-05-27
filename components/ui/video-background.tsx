@@ -38,6 +38,7 @@ export const VideoBackground: React.FC<VideoBackgroundProps> = ({
       className="fixed top-0 left-0 w-screen h-screen object-cover z-0" // Covers the whole screen, behind other content
       src={src}
       key="chat-background-video" // Added key for potential re-renders
+      preload="metadata" // Add this attribute
     >
       Your browser does not support the video tag.
     </video>
