@@ -14,10 +14,26 @@ import {
     } from '@privy-io/react-auth';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import useIsMobile from 'react-responsive';
 
+const desktopEvmText = 'Delegate EVM wallet'
+const desktopSolText = 'Delegate Sol wallet'
+const desktopRevokeText = 'Revoke all delegations'
+const desktopEvmAlreadyDelegatedText = 'EVM wallet already delegated'
+const desktopSolAlreadyDelegatedText = 'Sol wallet already delegated'
+const desktopNoDelegationsText = 'No delegations to revoke'
+
+const mobileEvmText = 'Delegate EVM wallet'
+const mobileSolText = 'Delegate Sol wallet'
+const mobileRevokeText = 'Revoke all'
+const mobileEvmAlreadyDelegatedText = 'EVM delegated'
+const mobileSolAlreadyDelegatedText = 'Sol delegated'
+const mobileNoDelegationsText = 'No delegations'
 
 export function WalletMenuItems() {
   const { user, ready: userReady } = usePrivy()
+  const isMobile = useIsMobile()
+  
   const router = useRouter()
   const { wallets: solanaWallets, ready: solanaReady } = useSolanaWallets()
   const { delegateWallet, revokeWallets } = useHeadlessDelegatedActions();
@@ -38,6 +54,7 @@ export function WalletMenuItems() {
 
   useEffect(() => {
     if (evmReady) {
+      console.log('isMobile', isMobile)
       const evmWalletToDelegate = evmWallets.find((wallet) => wallet.walletClientType === 'privy');
       console.log('evmWalletToDelegate', evmWalletToDelegate)
       setEvmWalletToDelegate(evmWalletToDelegate);
@@ -90,15 +107,15 @@ export function WalletMenuItems() {
       </DropdownMenuItem>
       <DropdownMenuItem onClick={handleDelegateEVMWallet} disabled={evmWalletAlreadyDelegated || !evmReady || !userReady}>
         <ArrowRightCircle className="mr-2 h-4 w-4" />
-        <span>{(evmWalletAlreadyDelegated ? 'EVM wallet already delegated' : 'Delegate EVM wallet')}</span>
+        <span>{(isMobile ? (evmWalletAlreadyDelegated ? mobileEvmAlreadyDelegatedText : mobileEvmText) : (evmWalletAlreadyDelegated ? desktopEvmAlreadyDelegatedText : desktopEvmText))}</span>
       </DropdownMenuItem>
       <DropdownMenuItem onClick={handleDelegateSolWallet} disabled={solanaWalletAlreadyDelegated || !solanaReady || !userReady}>
         <ArrowRightCircle className="mr-2 h-4 w-4" />
-        <span>{(solanaWalletAlreadyDelegated ? 'Sol wallet already delegated' : 'Delegate Sol wallet')}</span>
+        <span>{(isMobile ? (solanaWalletAlreadyDelegated ? mobileSolAlreadyDelegatedText : mobileSolText) : (solanaWalletAlreadyDelegated ? desktopSolAlreadyDelegatedText : desktopSolText))}</span>
       </DropdownMenuItem>
       <DropdownMenuItem onClick={handleRevokeAllDelegations} disabled={!(solanaWalletAlreadyDelegated || evmWalletAlreadyDelegated) || !solanaReady || !userReady}>
         <Unlink2 className="mr-2 h-4 w-4" />
-        <span>{(solanaWalletAlreadyDelegated || evmWalletAlreadyDelegated ? 'Revoke all delegations' : 'No delegations to revoke')}</span>
+        <span>{(isMobile ? (solanaWalletAlreadyDelegated || evmWalletAlreadyDelegated ? mobileRevokeText : mobileNoDelegationsText) : (solanaWalletAlreadyDelegated || evmWalletAlreadyDelegated ? desktopRevokeText : desktopNoDelegationsText))}</span>
       </DropdownMenuItem>
     </>
   )
