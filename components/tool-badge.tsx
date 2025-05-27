@@ -19,6 +19,7 @@ export const ToolBadge: React.FC<ToolBadgeProps> = ({
     video_search: <Film size={14} />,
     pendle_opportunities: <DollarSign size={14} />,
     transfer: <DollarSign size={14} />
+    
   }
 
   return (
