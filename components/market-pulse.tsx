@@ -31,13 +31,11 @@ export function MarketPulse() {
   const animationRef = useRef<number>()
 
   useEffect(() => {
-    const apiKey = process.env.COINGECKO_API_KEY
-    const url = 'https://api.coingecko.com/api/v3/search/trending'
+    const url = '/api/market-pulse'
     const options = {
       method: 'GET',
       headers: {
         accept: 'application/json',
-        'x-cg-demo-api-key': apiKey || '',
       },
     }
 
@@ -99,6 +97,13 @@ export function MarketPulse() {
       ref={scrollRef}
       className="flex overflow-x-auto gap-4 py-1 px-2 hide-scrollbar text-xs sm:text-sm text-white/90 bg-gradient-to-r from-yellow-400/20 via-yellow-300/30 to-yellow-400/20 rounded-full shadow-glow backdrop-blur-sm"
     >
+      {coins.length === 0 && (
+        <div className="animate-pulse flex gap-4 w-full">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-4 w-20 bg-yellow-100/30 rounded" />
+          ))}
+        </div>
+      )}
       {coins.map((coin, index) => (
         <div key={index} className="flex items-center gap-1 whitespace-nowrap">
           <span className="font-semibold">
