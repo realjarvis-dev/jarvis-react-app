@@ -14,7 +14,7 @@ import {
     } from '@privy-io/react-auth';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import useIsMobile from 'react-responsive';
+import useIsMobile from '@/lib/hooks/use-is-mobile';
 
 const desktopEvmText = 'Delegate EVM wallet'
 const desktopSolText = 'Delegate Sol wallet'
@@ -32,7 +32,7 @@ const mobileNoDelegationsText = 'No delegations'
 
 export function WalletMenuItems() {
   const { user, ready: userReady } = usePrivy()
-  const isMobile = useIsMobile({ maxWidth: 768 })
+  const isMobile = useIsMobile()
   
   const router = useRouter()
   const { wallets: solanaWallets, ready: solanaReady } = useSolanaWallets()
