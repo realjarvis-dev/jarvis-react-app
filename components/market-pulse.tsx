@@ -1,9 +1,11 @@
 'use client'
 
 import { TrendingDown, TrendingUp } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
-interface CoinData {
+interface TrendingCoinData {
+  id: string
   name: string
   shortName: string
   price: number
@@ -11,7 +13,7 @@ interface CoinData {
   trend: 'up' | 'down'
 }
 
-function formatPrice(price: number): string {
+function formatTrendingPrice(price: number): string {
   if (price >= 100) {
     // Large prices (e.g., BTC): integer only
     return price.toFixed(0)
@@ -26,18 +28,17 @@ function formatPrice(price: number): string {
 }
 
 export function MarketPulse() {
-  const [coins, setCoins] = useState<CoinData[]>([])
+  const [coins, setCoins] = useState<TrendingCoinData[]>([])
   const scrollRef = useRef<HTMLDivElement>(null)
   const animationRef = useRef<number>()
+  const router = useRouter()
 
   useEffect(() => {
-    const apiKey = process.env.COINGECKO_API_KEY
-    const url = 'https://api.coingecko.com/api/v3/search/trending'
+    const url = '/api/market-pulse'
     const options = {
       method: 'GET',
       headers: {
         accept: 'application/json',
-        'x-cg-demo-api-key': apiKey || '',
       },
     }
 
@@ -46,18 +47,8 @@ export function MarketPulse() {
         const response = await fetch(url, options)
         const json = await response.json()
 
-        const coinsData: CoinData[] = json.coins.map((coin: any) => {
-          const priceChange = coin.item.data.price_change_percentage_24h.usd
-          return {
-            name: coin.item.name,
-            shortName: coin.item.symbol,
-            price: coin.item.data.price,
-            priceChange24h: priceChange,
-            trend: priceChange >= 0 ? 'up' : 'down',
-          }
-        })
-
-        setCoins(coinsData)
+        // The API now returns processed data directly
+        setCoins(json.coins)
       } catch (err) {
         console.error('Error fetching trending coins:', err)
       }
@@ -94,13 +85,41 @@ export function MarketPulse() {
     }
   }, [coins])
 
+  const handleCoinClick = (coin: TrendingCoinData) => {
+    // Create a specific query that will trigger the market data tool
+    const query = `Show me the market chart and analysis for ${coin.name} (${coin.id})`
+    
+    // Navigate to new chat with pre-filled query
+    router.push(`/search?q=${encodeURIComponent(query)}`)
+  }
+
   return (
     <div
       ref={scrollRef}
       className="flex overflow-x-auto gap-4 py-1 px-2 hide-scrollbar text-xs sm:text-sm text-white/90 bg-gradient-to-r from-yellow-400/20 via-yellow-300/30 to-yellow-400/20 rounded-full shadow-glow backdrop-blur-sm"
     >
+      {coins.length === 0 && (
+        <div className="animate-pulse flex gap-4 w-full">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-4 w-20 bg-yellow-100/30 rounded" />
+          ))}
+        </div>
+      )}
       {coins.map((coin, index) => (
-        <div key={index} className="flex items-center gap-1 whitespace-nowrap">
+        <div 
+          key={index} 
+          className="flex items-center gap-1 whitespace-nowrap cursor-pointer hover:bg-white/10 rounded-md px-2 py-1 transition-colors duration-200 select-none"
+          onClick={() => handleCoinClick(coin)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              handleCoinClick(coin)
+            }
+          }}
+          title={`Click to analyze ${coin.name}`}
+        >
           <span className="font-semibold">
             <span className="sm:hidden">{coin.shortName}</span>
             <span className="hidden sm:inline">{coin.name}</span>
@@ -110,7 +129,7 @@ export function MarketPulse() {
               coin.trend === 'down' ? 'text-red-300' : 'text-green-300'
             }`}
           >
-            ${formatPrice(coin.price)}
+            ${formatTrendingPrice(coin.price)}
           </span>
           <span
             className={`hidden sm:flex items-center gap-0.5 ${
