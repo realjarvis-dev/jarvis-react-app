@@ -9,7 +9,7 @@ import { retrieveTool } from '../tools/retrieve'
 import { createSearchTool } from '../tools/search'
 import { createVideoSearchTool } from '../tools/video-search'
 import { walletBalanceTool } from '../tools/wallet'
-
+import { getGasPriceTool } from '../tools/gas-price'
 interface ToolExecutionOptions {
   toolCallId?: string
   messages?: any[]
@@ -146,6 +146,14 @@ export function createToolRegistry(model: string): ToolRegistry {
   const searchTool = createSearchTool(model)
   const videoSearchTool = createVideoSearchTool(model)
   const askQuestionTool = createQuestionTool(model)
+
+  registry.registerTool({
+    name: 'get_gas_price',
+    description: 'Get the proposed gas price',
+    schema: getGasPriceTool.parameters,
+    execute: async (params, context) => getGasPriceTool.execute(params, { toolCallId: context?.toolCallId, messages: context?.messages || [] }),
+    category: ToolCategory.WEB3
+  })
   
   registry.registerTool({
     name: 'search',
