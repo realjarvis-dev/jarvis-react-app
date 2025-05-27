@@ -153,6 +153,55 @@ function InteractiveChart({ data }: { data: MarketDataPoint[] }) {
   const [mousePosition, setMousePosition] = useState<{ x: number; y: number } | null>(null)
   const svgRef = useRef<SVGSVGElement>(null)
 
+  const handleMouseMove = useCallback((event: React.MouseEvent<SVGSVGElement>) => {
+    if (!svgRef.current || data.length === 0) return
+
+    const rect = svgRef.current.getBoundingClientRect()
+    const x = event.clientX - rect.left
+    const y = event.clientY - rect.top
+    
+    // Convert screen coordinates to SVG coordinates
+    const viewBoxWidth = 300
+    const viewBoxHeight = 120
+    
+    const svgX = (x / rect.width) * viewBoxWidth
+    const svgY = (y / rect.height) * viewBoxHeight
+    
+    if (data.length === 0) return
+    
+    const padding = 25
+    const prices = data.map(d => d.price)
+    const minPrice = Math.min(...prices)
+    const maxPrice = Math.max(...prices)
+    const priceRange = maxPrice - minPrice
+    
+    const points = data.map((point, index) => ({
+      x: padding + (index / (data.length - 1)) * (viewBoxWidth - 2 * padding),
+      y: viewBoxHeight - padding - ((point.price - minPrice) / priceRange) * (viewBoxHeight - 2 * padding),
+      data: point
+    }))
+    
+    // Find the closest data point
+    let closestPoint = points[0]
+    let minDistance = Math.abs(svgX - points[0].x)
+    
+    for (let i = 1; i < points.length; i++) {
+      const distance = Math.abs(svgX - points[i].x)
+      if (distance < minDistance) {
+        minDistance = distance
+        closestPoint = points[i]
+      }
+    }
+    
+    setHoveredPoint(closestPoint.data)
+    setMousePosition({ x: closestPoint.x, y: closestPoint.y })
+  }, [data])
+
+  const handleMouseLeave = useCallback(() => {
+    setHoveredPoint(null)
+    setMousePosition(null)
+  }, [])
+  
   if (data.length === 0) return null
 
   const prices = data.map(d => d.price)
@@ -197,39 +246,6 @@ function InteractiveChart({ data }: { data: MarketDataPoint[] }) {
   const priceChange = calculatePriceChange(data)
   const strokeColor = priceChange.isPositive ? '#10b981' : '#ef4444'
   const gradientId = `gradient-${Math.random().toString(36).substr(2, 9)}`
-
-  // Handle mouse movement over the chart
-  const handleMouseMove = useCallback((event: React.MouseEvent<SVGSVGElement>) => {
-    if (!svgRef.current) return
-
-    const rect = svgRef.current.getBoundingClientRect()
-    const x = event.clientX - rect.left
-    const y = event.clientY - rect.top
-    
-    // Convert screen coordinates to SVG coordinates
-    const svgX = (x / rect.width) * viewBoxWidth
-    const svgY = (y / rect.height) * viewBoxHeight
-    
-    // Find the closest data point
-    let closestPoint = points[0]
-    let minDistance = Math.abs(svgX - points[0].x)
-    
-    for (let i = 1; i < points.length; i++) {
-      const distance = Math.abs(svgX - points[i].x)
-      if (distance < minDistance) {
-        minDistance = distance
-        closestPoint = points[i]
-      }
-    }
-    
-    setHoveredPoint(closestPoint.data)
-    setMousePosition({ x: closestPoint.x, y: closestPoint.y })
-  }, [points])
-
-  const handleMouseLeave = useCallback(() => {
-    setHoveredPoint(null)
-    setMousePosition(null)
-  }, [])
 
   return (
     <div className="w-full h-72 relative">
@@ -499,4 +515,4 @@ export function MarketChart({
       </CardContent>
     </Card>
   )
-} 
+}  
