@@ -1,7 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils/index'
-import { Activity, BarChart3, DollarSign, TrendingDown, TrendingUp } from 'lucide-react'
+import { TrendingDown, TrendingUp } from 'lucide-react'
 import { useCallback, useRef, useState } from 'react'
 import { Badge } from './ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
@@ -93,54 +93,53 @@ function MarketStats({ data }: { data: MarketDataPoint[] }) {
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
       <div className="space-y-1">
         <div className="flex items-center gap-1.5">
-          <DollarSign className="h-3.5 w-3.5 text-blue-500" />
           <span className="text-xs font-medium text-muted-foreground">Current Price</span>
         </div>
         <div className="flex flex-col gap-1">
-          <span className="text-lg font-bold">${formatPrice(stats.current.price)}</span>
-          <Badge 
-            variant="outline" 
-            className={cn(
-              "flex items-center gap-1 w-fit text-xs py-0.5 px-1.5 border-0",
-              priceChange.isPositive 
-                ? "bg-green-500/20 text-green-400" 
-                : "bg-red-500/20 text-red-400"
-            )}
-          >
-            {priceChange.isPositive ? (
-              <TrendingUp className="h-2.5 w-2.5" />
-            ) : (
-              <TrendingDown className="h-2.5 w-2.5" />
-            )}
-            {priceChange.change.toFixed(2)}%
-          </Badge>
+          <div className="flex items-center gap-2">
+            <span className="text-base font-bold">${formatPrice(stats.current.price)}</span>
+            <Badge 
+              variant="outline" 
+              className={cn(
+                "flex items-center gap-1 w-fit text-xs py-0.5 px-1.5 border-0",
+                priceChange.isPositive 
+                  ? "bg-green-500/20 text-green-400" 
+                  : "bg-red-500/20 text-red-400"
+              )}
+            >
+              {priceChange.isPositive ? (
+                <TrendingUp className="h-2.5 w-2.5" />
+              ) : (
+                <TrendingDown className="h-2.5 w-2.5" />
+              )}
+              {priceChange.change.toFixed(2)}%
+            </Badge>
+          </div>
         </div>
       </div>
 
       <div className="space-y-1">
         <div className="flex items-center gap-1.5">
-          <BarChart3 className="h-3.5 w-3.5 text-green-500" />
           <span className="text-xs font-medium text-muted-foreground">Market Cap</span>
         </div>
-        <div className="text-lg font-semibold">{formatLargeNumber(stats.current.marketCap)}</div>
+        <div className="text-base font-semibold">{formatLargeNumber(stats.current.marketCap)}</div>
       </div>
 
       <div className="space-y-1">
         <div className="flex items-center gap-1.5">
-          <Activity className="h-3.5 w-3.5 text-purple-500" />
           <span className="text-xs font-medium text-muted-foreground">24h Volume</span>
         </div>
-        <div className="text-lg font-semibold">{formatLargeNumber(stats.current.volume)}</div>
+        <div className="text-base font-semibold">{formatLargeNumber(stats.current.volume)}</div>
       </div>
 
       <div className="space-y-1">
         <div className="flex items-center gap-1.5">
-          <TrendingUp className="h-3.5 w-3.5 text-orange-500" />
           <span className="text-xs font-medium text-muted-foreground">Price Range</span>
         </div>
-        <div className="text-sm space-y-0.5">
-          <div className="text-green-600">${formatPrice(stats.max)}</div>
-          <div className="text-red-600">${formatPrice(stats.min)}</div>
+        <div className="text-base font-semibold flex items-center gap-2">
+          <span>${formatPrice(stats.min)}</span>
+          <span className="text-muted-foreground">-</span>
+          <span>${formatPrice(stats.max)}</span>
         </div>
       </div>
     </div>
@@ -381,10 +380,9 @@ function InteractiveChart({ data }: { data: MarketDataPoint[] }) {
             <g key={i}>
               <text 
                 x={xPos} 
-                y={viewBoxHeight - 12} 
+                y={viewBoxHeight - 8} 
                 textAnchor="middle" 
                 className="text-[4px] fill-muted-foreground font-mono"
-                transform={`rotate(-90 ${xPos} ${viewBoxHeight - 12})`}
               >
                 {dateStr}
               </text>
@@ -455,11 +453,10 @@ export function MarketChart({
 
   if (isLoading) {
     return (
-      <Card className={cn("w-full", className)}>
+      <Card className={cn("w-full bg-background/80 backdrop-blur-sm", className)}>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="h-5 w-5" />
-            Market Chart
+          <CardTitle className="capitalize text-lg">
+            {coinId} {coinId.toUpperCase()}
           </CardTitle>
           <CardDescription>Loading market data...</CardDescription>
         </CardHeader>
@@ -472,11 +469,10 @@ export function MarketChart({
 
   if (data.length === 0) {
     return (
-      <Card className={cn("w-full", className)}>
+      <Card className={cn("w-full bg-background/80 backdrop-blur-sm", className)}>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="h-5 w-5" />
-            Market Chart
+          <CardTitle className="capitalize text-lg">
+            {coinId} {coinId.toUpperCase()}
           </CardTitle>
           <CardDescription>No market data available</CardDescription>
         </CardHeader>
@@ -490,21 +486,15 @@ export function MarketChart({
   }
 
   return (
-    <Card className={cn("w-full", className)}>
+    <Card className={cn("w-full bg-background/80 backdrop-blur-sm", className)}>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2 capitalize text-lg">
-              <Activity className="h-4 w-4" />
-              {coinId} Market Chart
-            </CardTitle>
-            <CardDescription className="text-xs">
-              Last 7 days • {currency} • Hover to explore
-            </CardDescription>
-          </div>
-          <Badge variant="outline" className="text-xs">
-            {timeRange}
-          </Badge>
+          <CardTitle className="capitalize text-lg">
+            {coinId} {coinId.toUpperCase()}
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Last 7 days • {currency}
+          </CardDescription>
         </div>
       </CardHeader>
       <CardContent className="space-y-3 pt-0">
