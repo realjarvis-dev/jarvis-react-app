@@ -204,7 +204,7 @@ export function LifiSwapQuoteSection({
               </div>
               {displayData.fromAmountUSD && (
                 <div className="text-xs text-gray-500 dark:text-gray-400">
-                  ≈ ${parseFloat(displayData.fromAmountUSD).toPrecision(2)}
+                  ≈ ${parseFloat(displayData.fromAmountUSD).toFixed(2)}
                 </div>
               )}
             </div>
@@ -218,7 +218,7 @@ export function LifiSwapQuoteSection({
               </div>
               {displayData.toAmountUSD && (
                 <div className="text-xs text-gray-500 dark:text-gray-400">
-                  ≈ ${parseFloat(displayData.toAmountUSD).toPrecision(2)}
+                  ≈ ${parseFloat(displayData.toAmountUSD).toFixed(2)}
                 </div>
               )}
             </div>

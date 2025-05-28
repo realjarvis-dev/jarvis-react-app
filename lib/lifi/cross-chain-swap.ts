@@ -128,13 +128,13 @@ class LifiService {
 
     if (fromTokenMatches.length === 0) {
       throw new MissingTokenError(
-        `No token matches found for fromToken ${fromToken} on chain ${fromChainId}`
+        `No token matches found for fromToken ${fromToken} on chain ${fromChain.name}`
       )
     }
 
     if (toTokenMatches.length === 0) {
       throw new MissingTokenError(
-        `No token matches found for toToken ${toToken} on chain ${toChainId}`
+        `No token matches found for toToken ${toToken} on chain ${toChain.name}`
       )
     }
 
@@ -186,21 +186,21 @@ export const lifiService = LifiService.getInstance()
 
 // console.log(await fuzzyIntentDetect('ethereum', 'berachain', 'usd', 'wbera'))
 
-// try {
-//   const quote = await lifiService.crossChainSwapQuote(
-//     // Use the service instance
-//     80094,
-//     1,
-//     'wbera',
-//     'usdc',
-//     '100000000000000',
-//     '0x20dC1B6732E7A20aCba461BD37beead4FF5D93c8',
-//     '0x20dC1B6732E7A20aCba461BD37beead4FF5D93c8',
-//     '0.005'
-//   )
-// } catch (error) {
-//   console.log(error)
-// }
+try {
+  const quote = await lifiService.crossChainSwapQuote(
+    // Use the service instance
+    80094,
+    1,
+    'bera',
+    'eth',
+    '1000000000000000',
+    '0x20dC1B6732E7A20aCba461BD37beead4FF5D93c8',
+    '0x20dC1B6732E7A20aCba461BD37beead4FF5D93c8',
+    '0.005'
+  )
+} catch (error) {
+  console.log(error)
+}
 
 
 // const readableQuote = {

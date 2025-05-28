@@ -25,7 +25,7 @@ const getClarifyOutputDetail = (toChain: ChainWithScore, toTokenList: TokenWithS
 }
 
 const bridgeQuoteTool = tool({
-  description: "Get a quote for a cross-chain bridge transfer from user's wallet. can also be single chain swap",
+  description: "Get a quote for a cross-chain bridge transfer from user's wallet. can also be single chain swap. It automatically renders UI on success.",
   parameters: z.object({
     fromChain: z.string().describe("The chain to bridge from, can be chain name or chain symbol. don't have to be exact match"),
     toChain: z.string().describe("The chain to bridge to, can be chain name or chain symbol. don't have to be exact match"),
@@ -123,7 +123,7 @@ const bridgeQuoteTool = tool({
             complete_time: new Date().toISOString()
         }
         return {
-            instruction: 'give user the details of the quote and ask user if they want to proceed with the transaction',
+            instruction: "Don't repeat the quote to user, simply ask user if they want to proceed with the transaction.",
             details: readableQuote
         }
 

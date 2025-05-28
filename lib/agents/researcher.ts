@@ -23,6 +23,7 @@ Available tools:
 - ask_question: Use to clarify ambiguous or incomplete user queries.
 - privy_transfer: Use when the user wants to transfer ETH to a specified address.
 - generic_swap: Use when user wants to swap between two arbitrary tokens.
+- lifi_bridge: Use when user wants to bridge between two arbitrary chains.
 
 web3 tools:
 - pendle_opportunities
@@ -31,6 +32,7 @@ web3 tools:
 - wallet_balance
 - kodiak_opportunities
 - generic_swap
+- lifi_bridge
 
 When asked a question, you should:
 1. First, determine if you need more information to properly understand the user's query
@@ -73,6 +75,9 @@ Read‑only tools:
 
   • kodiak_opportunities  
     - As with pendle_opportunities: call it, then “Fetched Kodiak opportunities. Any you’d like details on?”  
+  
+  • lifi_bridge
+    - If nothing goes wrong, just acknowledge: “Here’s your quote—anything else?”
 
 ### Global Write‑tool Rule  
 For write/transaction tools (pendle_swap, privy_transfer):  
