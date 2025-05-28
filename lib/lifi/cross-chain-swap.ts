@@ -1,6 +1,7 @@
+import { Cacheable } from '@type-cacheable/core'
 import { LifiQuoteResponse } from '../types/lifi'
 import { ChainMatcher, ChainWithScore } from './fuzzy-chain-matcher'
-import { TokenMatcher } from './fuzzy-token-matcher'
+import { TokenMatcher, TokenWithScore } from './fuzzy-token-matcher'
 
 // cache token matcher here
 // const tokenMatcherMap = new Map<number, TokenMatcher>() // Will be moved into the class
@@ -22,15 +23,27 @@ class LifiService {
     return LifiService.instance
   }
 
-
+  /**
+   * Get a quote for a cross-chain swap.
+   * @param fromChainId - The ID of the chain to swap from.
+   * @param toChainId - The ID of the chain to swap to.
+   * @param fromToken - The symbol of the token to swap from.
+   * @param toToken - The symbol of the token to swap to.
+   * @param fromAmount - The amount of the token to swap from.
+   * @param fromAddress - The address of the user's wallet.
+   * @param toAddress - The address of the user's wallet.
+   * @param slippage - The slippage tolerance for the transaction, 0.005 represents 0.5% slippage.
+   * @returns A quote for the cross-chain swap.
+   */
+  @Cacheable({ ttlSeconds: 300 })
   public async crossChainSwapQuote(
     fromChainId: number,
     toChainId: number,
     fromToken: string,
     toToken: string,
     fromAmount: string,
-    fromAddress: string, 
-    toAddress: string, 
+    fromAddress: string,
+    toAddress: string,
     slippage: string
   ): Promise<LifiQuoteResponse> {
     const baseUrl = 'https://li.quest/v1/quote'
@@ -63,7 +76,7 @@ class LifiService {
     toChainString: string,
     fromToken: string,
     toToken: string
-  ) {
+  ): Promise<{ fromChain: ChainWithScore; toChain: ChainWithScore; fromTokenList: TokenWithScore[]; toTokenList: TokenWithScore[] }> {
     // match the chains and tokens
     const fromChainMatches: ChainWithScore[] =
       this.matcher.match(fromChainString)
@@ -82,8 +95,12 @@ class LifiService {
     }
 
     // take the top 1 chain id
-    const fromChainId = fromChainMatches[0].id
-    const toChainId = toChainMatches[0].id
+    const fromChain = fromChainMatches[0]
+    const toChain = toChainMatches[0]
+    const fromChainId = fromChain.id
+    const toChainId = toChain.id
+
+
 
     const fromTokenMatcher = this.getTokenMatcher(fromChainId)
     const toTokenMatcher = this.getTokenMatcher(toChainId)
@@ -129,10 +146,10 @@ class LifiService {
     }
 
     return {
-      fromChainId,
-      toChainId,
-      fromToken: resultFromToken,
-      toToken: resultToToken
+      fromChain,
+      toChain,
+      fromTokenList: resultFromToken,
+      toTokenList: resultToToken
     }
   }
 
@@ -150,8 +167,8 @@ class LifiService {
 export const lifiService = LifiService.getInstance()
 
 // console.log(await fuzzyIntentDetect('ethereum', 'berachain', 'usd', 'wbera'))
-console.log(
-  await lifiService.crossChainSwapQuote(
+
+const quote = await lifiService.crossChainSwapQuote(
     // Use the service instance
     1,
     80094,
@@ -162,4 +179,14 @@ console.log(
     '0x20dC1B6732E7A20aCba461BD37beead4FF5D93c8',
     '0.005'
   )
-)
+
+
+// const readableQuote = {
+
+//   fromAmountUSD: quote.estimate?.fromAmountUSD,
+//   toAmountUSD: quote.estimate?.toAmountUSD,
+//   gasCostsUSD: quote.estimate?.gasCosts?.reduce((acc, curr) => acc + Number(curr.amountUSD), 0),
+//   otherFeeName: quote.estimate?.feeCosts?.map((fee) => fee.name).join(', '),
+//   otherFeeAmountUSD: quote.estimate?.feeCosts?.reduce((acc, curr) => acc + Number(curr.amountUSD), 0)
+// }
+// console.log(readableQuote)

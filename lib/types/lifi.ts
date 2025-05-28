@@ -14,6 +14,8 @@ export interface Estimate {
   fromAmount: string
   toAmount: string
   toAmountMin: string
+  fromAmountUSD?: string
+  toAmountUSD?: string
   feeCosts?: Array<{
     name: string
     description?: string

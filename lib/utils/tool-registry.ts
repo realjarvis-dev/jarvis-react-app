@@ -9,6 +9,7 @@ import { retrieveTool } from '../tools/retrieve'
 import { createSearchTool } from '../tools/search'
 import { createVideoSearchTool } from '../tools/video-search'
 import { walletBalanceTool } from '../tools/wallet'
+import { bridgeQuoteTool } from '../tools/lifi-bridge'
 
 interface ToolExecutionOptions {
   toolCallId?: string
@@ -237,11 +238,19 @@ export function createToolRegistry(model: string): ToolRegistry {
     category: ToolCategory.WEB3
   })
   
+  // registry.registerTool({
+  //   name: 'generic_swap',
+  //   description: 'Execute a swap transaction between two arbitrary tokens',
+  //   schema: genericSwapTool.parameters,
+  //   execute: async (params, context) => genericSwapTool.execute(params, { toolCallId: context?.toolCallId, messages: context?.messages || [] }),
+  //   category: ToolCategory.WEB3
+  // })
+
   registry.registerTool({
-    name: 'generic_swap',
-    description: 'Execute a swap transaction between two arbitrary tokens',
-    schema: genericSwapTool.parameters,
-    execute: async (params, context) => genericSwapTool.execute(params, { toolCallId: context?.toolCallId, messages: context?.messages || [] }),
+    name: 'lifi_bridge_quote',
+    description: bridgeQuoteTool.description || '',
+    schema: bridgeQuoteTool.parameters,
+    execute: async (params, context) => bridgeQuoteTool.execute(params, { toolCallId: context?.toolCallId, messages: context?.messages || [] }),
     category: ToolCategory.WEB3
   })
   
