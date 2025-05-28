@@ -221,11 +221,9 @@ export function ChatPanel({
   const [mounted, setMounted] = useState(false)
   const router = useRouter() // Your existing state
   const inputRef = useRef<HTMLTextAreaElement>(null) // Your existing state
-  const formRef = useRef<HTMLFormElement>(null) // Add form ref
   const isFirstRender = useRef(true) // Your existing state
   const [isComposing, setIsComposing] = useState(false) // Your existing state
   const [enterDisabled, setEnterDisabled] = useState(false) // Your existing state
-  const [initialQueryToSubmit, setInitialQueryToSubmit] = useState<string | null>(null) // Track initial query
   const { ready, authenticated, user } = usePrivy() // Your existing state
   const { evmAddress, solAddress } = useWalletAddresses(
     ready,
@@ -286,8 +284,20 @@ export function ChatPanel({
     const queryToSubmit = urlQuery || query
     
     if (isFirstRender.current && queryToSubmit && queryToSubmit.trim().length > 0) {
-      // Set the initial query to be submitted
-      setInitialQueryToSubmit(queryToSubmit)
+      // Instead of using append, set the input value and submit the form
+      // This ensures the onFinish callback is triggered
+      handleInputChange({
+        target: { value: queryToSubmit }
+      } as React.ChangeEvent<HTMLTextAreaElement>)
+      
+      // Submit the form after a brief delay to ensure input is set
+      setTimeout(() => {
+        const form = document.querySelector('form') as HTMLFormElement
+        if (form) {
+          form.requestSubmit()
+        }
+      }, 100)
+      
       isFirstRender.current = false
       
       // Clear the URL query parameter after using it
@@ -296,25 +306,8 @@ export function ChatPanel({
         window.history.replaceState({}, '', newUrl)
       }
     }
-  }, [query])
-
-  // Handle initial query submission
-  useEffect(() => {
-    if (initialQueryToSubmit && input === '') {
-      // Set the input value
-      handleInputChange({
-        target: { value: initialQueryToSubmit }
-      } as React.ChangeEvent<HTMLTextAreaElement>)
-      
-      // Submit the form after input is set
-      setTimeout(() => {
-        if (formRef.current) {
-          formRef.current.requestSubmit()
-        }
-        setInitialQueryToSubmit(null) // Clear the initial query
-      }, 0)
-    }
-  }, [initialQueryToSubmit, input, handleInputChange])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, handleInputChange])
 
   useEffect(() => {
     if (!ready) {
@@ -550,7 +543,7 @@ export function ChatPanel({
               )}
             </div>
           )}
-          <form onSubmit={handleSubmit} className={cn('w-full relative')} ref={formRef}>
+          <form onSubmit={handleSubmit} className={cn('w-full relative')}>
             {/* Scroll-down button */}
             {!isAutoScroll && messages.length > 0 && (
               <Button
