@@ -6,6 +6,7 @@ import { ChainWithScore } from '../lifi/fuzzy-chain-matcher'
 import { getUserEvmWalletAddress } from '../privy/client'
 import { ethers } from 'ethers'
 import { LifiQuoteResponse } from '../types/lifi'
+import { chainsById } from '../lifi/fuzzy-chain-matcher'
 
 const getClarifyInputAndOutputDetail = (fromChain: ChainWithScore, toChain: ChainWithScore, fromTokenList: TokenWithScore[], toTokenList: TokenWithScore[]) => {
     const possibleInputTokens = fromTokenList.map(token => token.symbol).join(', ')
@@ -91,7 +92,17 @@ const bridgeQuoteTool = tool({
         const quote: LifiQuoteResponse = await lifiService.crossChainSwapQuote(fromChainMatch.id, toChainMatch.id, fromTokenSingle.symbol, toTokenSingle.symbol, inputAmount, userEvmAddress, recipient, slippage)
         const otherFeeArray = quote.estimate?.feeCosts?.map((fee) => ({
             name: fee.name,
+            symbol: fee.token.symbol,
+            chainName: chainsById[fee.token.chainId].name,
+            amount: ethers.formatUnits(fee.amount, fee.token.decimals),
             amountUSD: fee.amountUSD
+        }))
+        const gasFeeArray = quote.estimate?.gasCosts?.map((gas) => ({
+            type: gas.type,
+            symbol: gas.token.symbol,
+            chainName: chainsById[gas.token.chainId].name,
+            amount: ethers.formatUnits(gas.amount, gas.token.decimals),
+            amountUSD: gas.amountUSD
         }))
         const inAmountParsed = ethers.formatUnits(quote.estimate?.fromAmount, inputDecimals)
         const outAmountParsed = ethers.formatUnits(quote.estimate?.toAmount, outputDecimals)
@@ -100,11 +111,15 @@ const bridgeQuoteTool = tool({
             fromChain: fromChainMatch.name,
             fromToken: fromTokenSingle.symbol,
             fromAmountToken: inAmountParsed,
-            toAmountToken: outAmountParsed,
             fromAmountUSD: quote.estimate?.fromAmountUSD,
+            toChain: toChainMatch.name,
+            toToken: toTokenSingle.symbol,
+            toAmountToken: outAmountParsed,
             toAmountUSD: quote.estimate?.toAmountUSD,
+            gasCosts: gasFeeArray,
             gasCostsUSD: quote.estimate?.gasCosts?.reduce((acc, curr) => acc + Number(curr.amountUSD), 0),
-            otherFeeDetails: otherFeeArray
+            otherFeeDetails: otherFeeArray,
+            complete_time: new Date().toISOString()
         }
         return {
             instruction: 'give user the details of the quote and ask user if they want to proceed with the transaction',
