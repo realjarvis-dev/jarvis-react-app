@@ -119,6 +119,7 @@ const bridgeQuoteTool = tool({
             gasCosts: gasFeeArray,
             gasCostsUSD: quote.estimate?.gasCosts?.reduce((acc, curr) => acc + Number(curr.amountUSD), 0),
             otherFeeDetails: otherFeeArray,
+            otherFeeUSD: quote.estimate?.feeCosts?.reduce((acc, curr) => acc + Number(curr.amountUSD), 0),
             complete_time: new Date().toISOString()
         }
         return {

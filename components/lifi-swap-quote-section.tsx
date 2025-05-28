@@ -10,19 +10,36 @@ import { DefaultSkeleton } from './default-skeleton'
 import { ToolArgsSection } from './section'
 
 // Based on readableQuote from lifi-bridge.ts
+interface FeeItem {
+  name: string
+  symbol: string
+  chainName: string
+  amount: string
+  amountUSD: string
+}
+
+interface GasCostItem {
+  type: string
+  symbol: string
+  chainName: string
+  amount: string
+  amountUSD: string
+}
+
 interface LifiQuoteData {
   fromChain: string
   fromToken: string
   fromAmountToken: string
-  toChain: string // Added based on usage
-  toToken: string // Added based on usage
+  toChain: string
+  toToken: string
   toAmountToken: string
   fromAmountUSD?: string
   toAmountUSD?: string
-  gasCostsUSD?: number
-  otherFeeDetails?: Array<{ name: string; amountUSD: string }>
-  complete_time?: string | number // Assuming it might exist for timestamp
-  // Potentially, if an error string is passed directly in details
+  gasCosts?: GasCostItem[]
+  gasCostsUSD?: number // Total gas cost in USD
+  otherFeeUSD?: number // Total other fee cost in USD
+  otherFeeDetails?: FeeItem[]
+  complete_time: string // ISO string
   error?: string
 }
 
@@ -58,10 +75,7 @@ export function LifiSwapQuoteSection({
       className="flex items-center justify-between w-full text-left rounded-md p-1 -ml-1"
       title="Open details"
     >
-      <ToolArgsSection
-        tool="lifi-swap-quote"
-        // Displaying from/to tokens and chains from arguments if available
-      >{`LI.FI Quote: ${tool.args.fromToken} (${tool.args.fromChain}) to ${tool.args.toToken} (${tool.args.toChain})`}</ToolArgsSection>
+      <ToolArgsSection tool="lifi-swap-quote">{`LI.FI Quote: ${tool.args.fromToken} (${tool.args.fromChain}) to ${tool.args.toToken} (${tool.args.toChain})`}</ToolArgsSection>
     </button>
   )
 
@@ -81,12 +95,9 @@ export function LifiSwapQuoteSection({
   }
 
   if (!quoteData && !(isLoading && isToolLoading)) {
-    // If there's no quote data and we are not in a loading state, render nothing or a specific message
-    // For now, returning null if there are no details to show.
     return null
   }
 
-  // Handle clarification messages from the tool
   if (instruction && instruction.startsWith('clarify')) {
     return (
       <CollapsibleMessage
@@ -118,7 +129,6 @@ export function LifiSwapQuoteSection({
     )
   }
 
-  // Handle error messages. Errors can be indicated by instruction or if quoteData is a string (error message).
   const isError =
     (instruction &&
       (instruction.includes('error') || instruction.includes('fail'))) ||
@@ -154,8 +164,6 @@ export function LifiSwapQuoteSection({
     )
   }
 
-  // If quoteData is a string here, it implies it might be an unhandled case or an error string not caught above.
-  // For safety, we should not proceed if it's not the expected object structure.
   if (typeof quoteData === 'string' || !quoteData) {
     return (
       <CollapsibleMessage
@@ -194,7 +202,6 @@ export function LifiSwapQuoteSection({
       <Card className="overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/50 dark:to-indigo-950/50 border border-blue-100 dark:border-blue-900">
         <CardContent className="p-6">
           <div className="flex flex-col gap-4">
-            {/* From Section */}
             <div className="pb-3 border-b border-blue-100 dark:border-blue-900">
               <div className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">
                 From: {displayData.fromChain} ({displayData.fromToken})
@@ -209,15 +216,12 @@ export function LifiSwapQuoteSection({
               )}
             </div>
 
-            {/* To Section */}
             <div className="pb-3 border-b border-blue-100 dark:border-blue-900">
               <div className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">
-                To: {displayData.toChain || 'Unknown Chain'} (
-                {displayData.toToken || 'Unknown Token'})
+                To: {displayData.toChain} ({displayData.toToken})
               </div>
               <div className="text-lg font-bold text-green-700 dark:text-green-400">
-                {displayData.toAmountToken}{' '}
-                {displayData.toToken || 'Unknown Token'}
+                {displayData.toAmountToken} {displayData.toToken}
               </div>
               {displayData.toAmountUSD && (
                 <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -228,37 +232,88 @@ export function LifiSwapQuoteSection({
 
             {/* Fees Section */}
             {(displayData.gasCostsUSD !== undefined ||
+              displayData.otherFeeUSD !== undefined ||
               (displayData.otherFeeDetails &&
                 displayData.otherFeeDetails.length > 0)) && (
               <div className="bg-blue-50 dark:bg-blue-950/40 rounded-lg p-4">
-                <div className="text-sm font-medium text-blue-700 dark:text-blue-400 mb-2">
-                  Estimated Fees
+                <div className="flex justify-between text-sm font-medium text-blue-700 dark:text-blue-400 mb-2">
+                  <span>Total Estimated Fees:</span>
+                  <span>
+                    ~$
+                    {parseFloat(
+                      String(
+                        (displayData.gasCostsUSD || 0) +
+                          (displayData.otherFeeUSD || 0)
+                      )
+                    ).toFixed(2)}
+                  </span>
                 </div>
+
+                {/* Total Gas */}
                 {displayData.gasCostsUSD !== undefined && (
-                  <div className="flex justify-between text-xs mb-1">
-                    <div className="text-gray-600 dark:text-gray-300">
-                      Gas Cost:
+                  <div className="flex justify-between text-xs mb-1 font-semibold">
+                    <div className="text-gray-800 dark:text-gray-100">
+                      Estimated Gas:
                     </div>
                     <div className="text-gray-800 dark:text-gray-100">
-                      ${parseFloat(String(displayData.gasCostsUSD)).toFixed(2)}
+                      ~${parseFloat(String(displayData.gasCostsUSD)).toFixed(2)}
                     </div>
                   </div>
                 )}
-                {displayData.otherFeeDetails &&
-                  displayData.otherFeeDetails.map(
-                    (
-                      fee: { name: string; amountUSD: string },
-                      index: number
-                    ) => (
+                {/* Detailed Gas */}
+                {displayData.gasCosts &&
+                  displayData.gasCosts.map(
+                    (gas: GasCostItem, index: number) => (
                       <div
-                        key={index}
-                        className="flex justify-between text-xs mb-1"
+                        key={`gas-${index}`}
+                        className="flex justify-between text-xs ml-2 mb-0.5"
                       >
                         <div className="text-gray-600 dark:text-gray-300">
-                          {fee.name}:
+                          ↳ {gas.type} ({gas.symbol} on {gas.chainName}):
                         </div>
-                        <div className="text-gray-800 dark:text-gray-100">
-                          ${parseFloat(fee.amountUSD).toFixed(2)}
+                        <div className="text-gray-700 dark:text-gray-200">
+                          {parseFloat(gas.amount).toFixed(4)} {gas.symbol} (~$
+                          {parseFloat(gas.amountUSD).toFixed(2)})
+                        </div>
+                      </div>
+                    )
+                  )}
+
+                {/* Separator if both gas and other fees are present */}
+                {(displayData.gasCostsUSD !== undefined ||
+                  (displayData.gasCosts && displayData.gasCosts.length > 0)) &&
+                  (displayData.otherFeeUSD !== undefined ||
+                    (displayData.otherFeeDetails &&
+                      displayData.otherFeeDetails.length > 0)) && (
+                    <div className="mt-2 pt-2 border-t border-blue-200 dark:border-blue-800"></div>
+                  )}
+
+                {/* Total Other Fees */}
+                {displayData.otherFeeUSD !== undefined && (
+                  <div className="flex justify-between text-xs mb-1 mt-1 font-semibold">
+                    <div className="text-gray-800 dark:text-gray-100">
+                      Estimated Other Fees:
+                    </div>
+                    <div className="text-gray-800 dark:text-gray-100">
+                      ~${parseFloat(String(displayData.otherFeeUSD)).toFixed(2)}
+                    </div>
+                  </div>
+                )}
+
+                {/* Detailed Other Fees */}
+                {displayData.otherFeeDetails &&
+                  displayData.otherFeeDetails.map(
+                    (fee: FeeItem, index: number) => (
+                      <div
+                        key={`other-${index}`}
+                        className="flex justify-between text-xs ml-2 mb-0.5"
+                      >
+                        <div className="text-gray-600 dark:text-gray-300">
+                          ↳ {fee.name} ({fee.symbol} on {fee.chainName}):
+                        </div>
+                        <div className="text-gray-700 dark:text-gray-200">
+                          {parseFloat(fee.amount).toFixed(4)} {fee.symbol} (~$
+                          {parseFloat(fee.amountUSD).toFixed(2)})
                         </div>
                       </div>
                     )
@@ -266,11 +321,13 @@ export function LifiSwapQuoteSection({
               </div>
             )}
 
-            {/* Small timestamp note */}
             {displayData.complete_time && (
               <div className="text-xs text-center text-gray-400 dark:text-gray-500 mt-1">
                 Quote valid as of{' '}
-                {new Date(displayData.complete_time).toLocaleTimeString()}
+                {new Date(displayData.complete_time).toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
               </div>
             )}
           </div>
