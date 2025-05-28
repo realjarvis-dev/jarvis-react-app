@@ -64,7 +64,7 @@ export interface LifiQuoteResponse {
     toAddress?: string
   }
   estimate: Estimate
-  transactionRequest?: TransactionRequest // This can be optional based on the flow
+  transactionRequest: TransactionRequest // This can be optional based on the flow
   // Other potential fields for a Step object
   integrator?: string
   execution?: {
