@@ -12,7 +12,7 @@ import { getLifiQuote } from '../lifi/api'
 const getClarifyInputAndOutputDetail = (fromChain: ChainWithScore, toChain: ChainWithScore, fromTokenList: TokenWithScore[], toTokenList: TokenWithScore[]) => {
     const possibleInputTokens = fromTokenList.map(token => token.symbol).join(', ')
     const possibleOutputTokens = toTokenList.map(token => token.symbol).join(', ')
-    return `Multiple tokens found, please choose the token you want to bridge from and to. Possible input tokens on ${fromChain.name} chain: ${possibleInputTokens}, possible output tokens on ${toChain.chainType} chain: ${possibleOutputTokens}`
+    return `Multiple tokens found, please choose the token you want to bridge from and to. Possible input tokens on ${fromChain.name} chain: ${possibleInputTokens}, possible output tokens on ${toChain.name} chain: ${possibleOutputTokens}`
 }
 
 const getClarifyInputDetail = (fromChain: ChainWithScore, fromTokenList: TokenWithScore[]) => {
