@@ -1,15 +1,14 @@
 import {
   CoreMessage,
   DataStreamWriter,
+  JSONValue,
   generateId,
-  generateText,
-  JSONValue
+  generateText
 } from 'ai'
-import { z } from 'zod'
 import { ExtendedCoreMessage } from '../types'
+import { ErrorType, createErrorResponse, executeWithRetry } from '../utils/error-handling'
 import { getModel, isToolCallSupported } from '../utils/registry'
 import { ToolRegistry, getToolRegistry } from '../utils/tool-registry'
-import { executeWithRetry, ErrorType, createErrorResponse } from '../utils/error-handling'
 import { parseToolCallXml } from './parse-tool-call'
 
 /**
@@ -313,7 +312,8 @@ async function executeManualToolCall(
     'wallet_balance',
     'pendle_quote', 
     'pendle_swap',
-    'kodiak_opportunities'
+    'kodiak_opportunities',
+    'market_chart'
   ].includes(toolName)
   
   if (isUiDisplayedTool) {

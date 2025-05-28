@@ -274,18 +274,31 @@ export function ChatPanel({
     )
   }
 
-  // if query is not empty, submit the query
+  // Handle URL query parameters and pre-filled queries
   useEffect(() => {
-    if (isFirstRender.current && query && query.trim().length > 0) {
+    // Check for URL query parameter
+    const urlParams = new URLSearchParams(window.location.search)
+    const urlQuery = urlParams.get('q')
+    
+    // Use URL query if available, otherwise use the passed query prop
+    const queryToSubmit = urlQuery || query
+    
+    if (isFirstRender.current && queryToSubmit && queryToSubmit.trim().length > 0) {
       append({
         id: Date.now().toString(),
         role: 'user',
-        content: query
-      }) // Added id for consistency
+        content: queryToSubmit
+      })
       isFirstRender.current = false
+      
+      // Clear the URL query parameter after using it
+      if (urlQuery) {
+        const newUrl = window.location.pathname
+        window.history.replaceState({}, '', newUrl)
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, append]) // Added append to dependency array
+  }, [query, append])
 
   useEffect(() => {
     if (!ready) {
