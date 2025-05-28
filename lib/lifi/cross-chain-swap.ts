@@ -3,6 +3,20 @@ import { LifiQuoteResponse } from '../types/lifi'
 import { ChainMatcher, ChainWithScore } from './fuzzy-chain-matcher'
 import { TokenMatcher, TokenWithScore } from './fuzzy-token-matcher'
 
+export class MissingChainError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'MissingChainError'
+  }
+}
+
+export class MissingTokenError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'MissingTokenError'
+  }
+}
+
 // cache token matcher here
 // const tokenMatcherMap = new Map<number, TokenMatcher>() // Will be moved into the class
 
@@ -61,7 +75,8 @@ class LifiService {
     const response = await fetch(`${baseUrl}?${params.toString()}`)
 
     if (!response.ok) {
-      const errorBody = await response.text()
+
+      const errorBody = JSON.stringify(await response.json())
       throw new Error(
         `LI.FI API request failed with status ${response.status}: ${errorBody}`
       )
@@ -76,20 +91,25 @@ class LifiService {
     toChainString: string,
     fromToken: string,
     toToken: string
-  ): Promise<{ fromChain: ChainWithScore; toChain: ChainWithScore; fromTokenList: TokenWithScore[]; toTokenList: TokenWithScore[] }> {
+  ): Promise<{
+    fromChain: ChainWithScore
+    toChain: ChainWithScore
+    fromTokenList: TokenWithScore[]
+    toTokenList: TokenWithScore[]
+  }> {
     // match the chains and tokens
     const fromChainMatches: ChainWithScore[] =
       this.matcher.match(fromChainString)
     const toChainMatches: ChainWithScore[] = this.matcher.match(toChainString)
 
     if (fromChainMatches.length === 0) {
-      throw new Error(
+      throw new MissingChainError(
         `No chain matches found for fromChainString ${fromChainString}`
       )
     }
 
     if (toChainMatches.length === 0) {
-      throw new Error(
+      throw new MissingChainError(
         `No chain matches found for toChainString ${toChainString}`
       )
     }
@@ -100,8 +120,6 @@ class LifiService {
     const fromChainId = fromChain.id
     const toChainId = toChain.id
 
-
-
     const fromTokenMatcher = this.getTokenMatcher(fromChainId)
     const toTokenMatcher = this.getTokenMatcher(toChainId)
 
@@ -109,13 +127,13 @@ class LifiService {
     const toTokenMatches = toTokenMatcher.match(toToken)
 
     if (fromTokenMatches.length === 0) {
-      throw new Error(
+      throw new MissingTokenError(
         `No token matches found for fromToken ${fromToken} on chain ${fromChainId}`
       )
     }
 
     if (toTokenMatches.length === 0) {
-      throw new Error(
+      throw new MissingTokenError(
         `No token matches found for toToken ${toToken} on chain ${toChainId}`
       )
     }
@@ -168,17 +186,21 @@ export const lifiService = LifiService.getInstance()
 
 // console.log(await fuzzyIntentDetect('ethereum', 'berachain', 'usd', 'wbera'))
 
-const quote = await lifiService.crossChainSwapQuote(
-    // Use the service instance
-    1,
-    80094,
-    'usdc',
-    'wbera',
-    '1000000',
-    '0x20dC1B6732E7A20aCba461BD37beead4FF5D93c8',
-    '0x20dC1B6732E7A20aCba461BD37beead4FF5D93c8',
-    '0.005'
-  )
+// try {
+//   const quote = await lifiService.crossChainSwapQuote(
+//     // Use the service instance
+//     80094,
+//     1,
+//     'wbera',
+//     'usdc',
+//     '100000000000000',
+//     '0x20dC1B6732E7A20aCba461BD37beead4FF5D93c8',
+//     '0x20dC1B6732E7A20aCba461BD37beead4FF5D93c8',
+//     '0.005'
+//   )
+// } catch (error) {
+//   console.log(error)
+// }
 
 
 // const readableQuote = {

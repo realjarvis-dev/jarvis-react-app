@@ -1,6 +1,6 @@
 import { tool } from 'ai'
 import { z } from 'zod'
-import { lifiService } from '../lifi/cross-chain-swap'
+import { lifiService, MissingChainError, MissingTokenError } from '../lifi/cross-chain-swap'
 import { TokenWithScore } from '../lifi/fuzzy-token-matcher'
 import { ChainWithScore } from '../lifi/fuzzy-chain-matcher'
 import { getUserEvmWalletAddress } from '../privy/client'
@@ -128,8 +128,14 @@ const bridgeQuoteTool = tool({
         }
 
     } catch (error) {
+        if (error instanceof MissingChainError || error instanceof MissingTokenError) {
+            return {
+                instruction: 'clarify the input and output with user',
+                details: error.message
+            }
+        }
         return {
-            instruction: 'clarify the input and output with user',
+            instruction: 'unexpected error occurred',
             details: error instanceof Error ? error.message : 'Unknown error'
         }
     }

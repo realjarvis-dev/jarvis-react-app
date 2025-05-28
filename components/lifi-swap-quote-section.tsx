@@ -146,7 +146,7 @@ export function LifiSwapQuoteSection({
             <div className="text-red-600 dark:text-red-400 font-medium mb-1">
               Error: Could not retrieve LI.FI Swap Quote
             </div>
-            <div className="text-sm text-red-600/80 dark:text-red-400/80 whitespace-pre-wrap">
+            <div className="text-sm text-red-600/80 dark:text-red-400/80 whitespace-pre-wrap break-all">
               {errorMessage}
             </div>
           </CardContent>
