@@ -67,15 +67,17 @@ export function LifiSwapQuoteSection({
     ? toolResult.details
     : null
   const instruction = toolResult?.instruction as string | undefined
-
-  const header = (
+  const headerLoadingText = 'Fetching best Li.Fi quote:'
+  const headerFailText = 'Fail to fetch quote:'
+  const headerFinishText = 'Li.Fi quote:'
+  const header = (text: string) => (
     <button
       type="button"
       onClick={() => open({ type: 'tool-invocation', toolInvocation: tool })}
       className="flex items-center justify-between w-full text-left rounded-md p-1 -ml-1"
       title="Open details"
     >
-      <ToolArgsSection tool="lifi-swap-quote">{`LI.FI Quote: ${tool.args.fromToken} (${tool.args.fromChain}) to ${tool.args.toToken} (${tool.args.toChain})`}</ToolArgsSection>
+      <ToolArgsSection tool="lifi-swap-quote">{`${text} ${tool.args.fromToken} (${tool.args.fromChain}) to ${tool.args.toToken} (${tool.args.toChain})`}</ToolArgsSection>
     </button>
   )
 
@@ -84,7 +86,7 @@ export function LifiSwapQuoteSection({
       <CollapsibleMessage
         role="assistant"
         isCollapsible={true}
-        header={header}
+        header={header(headerLoadingText)}
         isOpen={isOpen === undefined ? true : isOpen}
         onOpenChange={onOpenChange}
         showIcon={false}
@@ -103,7 +105,7 @@ export function LifiSwapQuoteSection({
       <CollapsibleMessage
         role="assistant"
         isCollapsible={true}
-        header={header}
+        header={header(headerFailText)}
         isOpen={isOpen === undefined ? true : isOpen}
         onOpenChange={onOpenChange}
         showIcon={false}
@@ -136,7 +138,7 @@ export function LifiSwapQuoteSection({
       <CollapsibleMessage
         role="assistant"
         isCollapsible={true}
-        header={header}
+        header={header(headerFailText)}
         isOpen={isOpen === undefined ? true : isOpen}
         onOpenChange={onOpenChange}
         showIcon={false}
@@ -160,7 +162,7 @@ export function LifiSwapQuoteSection({
       <CollapsibleMessage
         role="assistant"
         isCollapsible={true}
-        header={header}
+        header={header(headerFinishText)}
         isOpen={isOpen === undefined ? true : isOpen}
         onOpenChange={onOpenChange}
         showIcon={false}
@@ -185,7 +187,7 @@ export function LifiSwapQuoteSection({
     <CollapsibleMessage
       role="assistant"
       isCollapsible={true}
-      header={header}
+      header={header(headerFinishText)}
       isOpen={isOpen === undefined ? true : isOpen}
       onOpenChange={onOpenChange}
       showIcon={false}
