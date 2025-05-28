@@ -1,7 +1,16 @@
 import Fuse from 'fuse.js'
 import { chains } from './config/lifi/chains'
 
-type Chain = (typeof chains)[number]
+
+type Chain = {
+  key: string
+  chainType: string
+  id: number
+  name: string
+  coin: string
+  mainnet: boolean
+}
+
 export type ChainWithScore = Chain & { score: number }
 
 export class ChainMatcher {
