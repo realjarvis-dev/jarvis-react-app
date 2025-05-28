@@ -1,12 +1,13 @@
 import { tool } from 'ai'
 import { z } from 'zod'
-import { lifiService, MissingChainError, MissingTokenError } from '../lifi/cross-chain-swap'
-import { TokenWithScore } from '../lifi/fuzzy-token-matcher'
-import { ChainWithScore } from '../lifi/fuzzy-chain-matcher'
+import { lifiService, MissingChainError, MissingTokenError } from '../token-matcher/cross-chain-swap'
+import { TokenWithScore } from '../token-matcher/fuzzy-token-matcher'
+import { ChainWithScore } from '../token-matcher/fuzzy-chain-matcher'
 import { getUserEvmWalletAddress } from '../privy/client'
 import { ethers } from 'ethers'
 import { LifiQuoteResponse } from '../types/lifi'
-import { chainsById } from '../lifi/fuzzy-chain-matcher'
+import { chainsById } from '../token-matcher/fuzzy-chain-matcher'
+import { getLifiQuote } from '../lifi/api'
 
 const getClarifyInputAndOutputDetail = (fromChain: ChainWithScore, toChain: ChainWithScore, fromTokenList: TokenWithScore[], toTokenList: TokenWithScore[]) => {
     const possibleInputTokens = fromTokenList.map(token => token.symbol).join(', ')
@@ -89,7 +90,7 @@ const bridgeQuoteTool = tool({
         const inputAmount = ethers.parseUnits(amount, inputDecimals).toString()
 
         // get a quote from lifi service
-        const quote: LifiQuoteResponse = await lifiService.crossChainSwapQuote(fromChainMatch.id, toChainMatch.id, fromTokenSingle.symbol, toTokenSingle.symbol, inputAmount, userEvmAddress, recipient, slippage)
+        const quote: LifiQuoteResponse = await getLifiQuote(fromChainMatch.id, toChainMatch.id, fromTokenSingle.symbol, toTokenSingle.symbol, inputAmount, userEvmAddress, recipient, slippage)
         const otherFeeArray = quote.estimate?.feeCosts?.map((fee) => ({
             name: fee.name,
             symbol: fee.token.symbol,

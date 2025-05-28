@@ -1,6 +1,6 @@
 // fuzzyTokenMatcher.js
 import Fuse from 'fuse.js'
-import { tokensByChain } from './config/tokens'
+import { tokensByChain } from './config/lifi/tokens'
 
 type Token = {
   chainId: number
