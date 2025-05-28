@@ -284,11 +284,20 @@ export function ChatPanel({
     const queryToSubmit = urlQuery || query
     
     if (isFirstRender.current && queryToSubmit && queryToSubmit.trim().length > 0) {
-      append({
-        id: Date.now().toString(),
-        role: 'user',
-        content: queryToSubmit
-      })
+      // Instead of using append, set the input value and submit the form
+      // This ensures the onFinish callback is triggered
+      handleInputChange({
+        target: { value: queryToSubmit }
+      } as React.ChangeEvent<HTMLTextAreaElement>)
+      
+      // Submit the form after a brief delay to ensure input is set
+      setTimeout(() => {
+        const form = document.querySelector('form') as HTMLFormElement
+        if (form) {
+          form.requestSubmit()
+        }
+      }, 100)
+      
       isFirstRender.current = false
       
       // Clear the URL query parameter after using it
@@ -298,7 +307,7 @@ export function ChatPanel({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, append])
+  }, [query, handleInputChange])
 
   useEffect(() => {
     if (!ready) {

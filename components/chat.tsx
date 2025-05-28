@@ -13,7 +13,7 @@ import { toast } from 'sonner'
 import { ChatMessages } from './chat-messages'
 import { ChatPanel } from './chat-panel'
 
-import useLocalStorage from 'use-local-storage-state';
+import useLocalStorage from 'use-local-storage-state'
 
 const TRIAL_KEY = 'anon_trials'
 const MAX_TRIALS = 2
@@ -205,8 +205,6 @@ export function Chat({
     }
     return await reload(options)
   }
-
-
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     const sendMessage = () => {
