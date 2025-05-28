@@ -2,7 +2,7 @@ import Fuse from 'fuse.js';
 import { chains } from './config/chains';
 
 type Chain = (typeof chains)[number];
-type ChainWithScore = Chain & { score: number };
+export type ChainWithScore = Chain & { score: number };
 
 export class ChainMatcher {
   private fuse: Fuse<Chain>;

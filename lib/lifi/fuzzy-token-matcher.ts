@@ -10,7 +10,7 @@ type Token = {
   decimals: number
 }
 
-type TokenWithScore = Token & { score: number }
+export type TokenWithScore = Token & { score: number }
 
 // Define a type for the keys of tokensByChain
 type ChainIdKey = keyof typeof tokensByChain
