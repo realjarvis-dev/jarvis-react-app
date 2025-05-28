@@ -4,6 +4,7 @@ import { ToolInvocation } from 'ai'
 import { GenericSwapCard } from './generic-swap-card'
 import { KodiakDepositCard } from './kodiak-deposit-card'
 import { KodiakOpportunitiesSection } from './kodiak-opportunities-section'
+import { MarketChartSection } from './market-chart-section'
 import { PendleOpportunitiesSection } from './pendle-opportunities-section'
 import { QuestionConfirmation } from './question-confirmation'
 import RetrieveSection from './retrieve-section'
@@ -98,6 +99,14 @@ export function ToolSection({
     case 'kodiak_opportunities':
       return (
         <KodiakOpportunitiesSection
+          tool={tool}
+          isOpen={isOpen}
+          onOpenChange={onOpenChange}
+        />
+      )
+    case 'market_chart':
+      return (
+        <MarketChartSection
           tool={tool}
           isOpen={isOpen}
           onOpenChange={onOpenChange}
