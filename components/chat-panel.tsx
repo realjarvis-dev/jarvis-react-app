@@ -22,6 +22,8 @@ import { CopyableWalletAddressSkeleton } from './copyable-wallet-address-skeleto
 
 import { MarketPulse } from './market-pulse'
 
+import { ChainSelector, ChainType } from './chain-selector'
+import { DemoToggle } from './demo-toggle'
 import { SearchModeToggle } from './search-mode-toggle'
 import { Button } from './ui/button'
 import { IconLogo } from './ui/icons'
@@ -237,6 +239,10 @@ export function ChatPanel({
   const { close: closeArtifact } = useArtifact() // Your existing state
   const { delegateWallet } = useHeadlessDelegatedActions() // Your existing state
   const welcomeSeed = useRef(new Date().getDate()).current // Your existing state
+
+  // Network selection state
+  const [selectedChain, setSelectedChain] = useState<ChainType>('ethereum')
+  const [isDemoMode, setIsDemoMode] = useState(false)
 
   // Apply keyboard avoidance hook
   useKeyboardAvoidance({ ref: inputRef })
@@ -634,6 +640,15 @@ export function ChatPanel({
               >
                 <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto hide-scrollbar">
                   <SearchModeToggle />
+                  <ChainSelector
+                    selectedChain={selectedChain}
+                    onChainChange={setSelectedChain}
+                    isDemoMode={isDemoMode}
+                  />
+                  <DemoToggle
+                    isDemoMode={isDemoMode}
+                    onDemoModeChange={setIsDemoMode}
+                  />
                 </div>
                 <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                   {messages.length > 0 && (
