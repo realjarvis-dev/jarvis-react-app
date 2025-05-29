@@ -15,8 +15,8 @@ export function WalletComponent({ showVideoBg }: WalletComponentProps) {
   // These hooks are now only loaded when the wallet component is rendered
   const { wallets } = useWallets()
   const { wallets: solWallets } = useSolanaWallets()
-  const { delegateActions } = useHeadlessDelegatedActions()
-  const { evmAddress, solAddress } = useWalletAddresses()
+  const { delegateWallet } = useHeadlessDelegatedActions()
+  const { evmAddress, solAddress } = useWalletAddresses(ready, authenticated, user)
 
   // Measure wallet initialization time
   useEffect(() => {
@@ -39,9 +39,9 @@ export function WalletComponent({ showVideoBg }: WalletComponentProps) {
       )
     ) {
       // Delegate actions to the first wallet
-      delegateActions(wallets[0].address)
+      delegateWallet({ address: wallets[0].address, chainType: 'ethereum' })
     }
-  }, [ready, authenticated, wallets, user?.linkedAccounts, delegateActions])
+  }, [ready, authenticated, wallets, user?.linkedAccounts, delegateWallet])
 
   // If not authenticated, show login button
   if (!authenticated) {
@@ -73,15 +73,15 @@ export function WalletComponent({ showVideoBg }: WalletComponentProps) {
     <div className="flex flex-col items-center gap-1">
       {evmAddress && (
         <CopyableWalletAddress
-          address={evmAddress}
-          type="evm"
+          walletAddress={evmAddress}
+          walletAddressIntroText="EVM wallet:"
           className={showVideoBg ? 'text-white/90' : ''}
         />
       )}
       {solAddress && (
         <CopyableWalletAddress
-          address={solAddress}
-          type="sol"
+          walletAddress={solAddress}
+          walletAddressIntroText="Solana wallet:"
           className={showVideoBg ? 'text-white/90' : ''}
         />
       )}
