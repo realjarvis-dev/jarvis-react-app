@@ -21,7 +21,7 @@ import { Button } from './ui/button'
 import { IconLogo } from './ui/icons'
 import { VideoBackground } from './ui/video-background'
 import { WelcomeMessage } from './welcome-messages'
-import { PerformanceMonitor } from './performance-monitor'
+
 
 function useKeyboardAvoidance({
   ref
@@ -50,7 +50,7 @@ function useKeyboardAvoidance({
       if (keyboardHeight > 0) {
         document.body.classList.add('keyboard-visible')
 
-        requestAnimationFrame(() => {
+        setTimeout(() => {
           const scrollContainer = document.getElementById('scroll-container')
           if (scrollContainer && ref.current) {
             scrollContainer.scrollTo({
@@ -58,7 +58,7 @@ function useKeyboardAvoidance({
               behavior: 'smooth'
             })
           }
-        })
+        }, 300)
       } else {
         document.body.classList.remove('keyboard-visible')
       }
@@ -79,7 +79,7 @@ function useKeyboardAvoidance({
         if (keyboardHeight > 0) {
           document.body.classList.add('keyboard-visible')
 
-          requestAnimationFrame(() => {
+          setTimeout(() => {
             const scrollContainer = document.getElementById('scroll-container')
             if (scrollContainer && ref.current) {
               scrollContainer.scrollTo({
@@ -87,7 +87,7 @@ function useKeyboardAvoidance({
                 behavior: 'smooth'
               })
             }
-          })
+          }, 300)
         } else {
           document.body.classList.remove('keyboard-visible')
         }
@@ -144,7 +144,7 @@ function useKeyboardAvoidance({
           )
           document.body.classList.add('keyboard-visible')
 
-          requestAnimationFrame(() => {
+          setTimeout(() => {
             const scrollContainer = document.getElementById('scroll-container')
             if (scrollContainer) {
               scrollContainer.scrollTo({
@@ -152,7 +152,7 @@ function useKeyboardAvoidance({
                 behavior: 'smooth'
               })
             }
-          })
+          }, 300)
         } else {
           document.documentElement.style.setProperty('--keyboard-inset', '0px')
           document.body.classList.remove('keyboard-visible')
@@ -195,11 +195,7 @@ export function ChatPanel({
   isAutoScroll,
   onVideoBgChange // Destructure this prop
 }: ChatPanelProps) {
-  useEffect(() => {
-    if (typeof window !== 'undefined' && window.markChatPanelMounted) {
-      window.markChatPanelMounted();
-    }
-  }, []);
+
 
   const [mounted, setMounted] = useState(false)
   const router = useRouter()
@@ -302,9 +298,6 @@ export function ChatPanel({
   
   return (
     <> {/* Use a fragment if VideoBackground is fixed and outside the main div's flow */}
-      {/* Add performance monitoring */}
-      <PerformanceMonitor type="after" />
-      
       <VideoBackground
         src="/videos/background.mp4" // Ensure this path is correct
         poster="/videos/background_poster.jpg" // Optional: path to a poster image
@@ -422,7 +415,7 @@ export function ChatPanel({
                     e.target.focus({ preventScroll: true })
                   }
 
-                  requestAnimationFrame(() => {
+                  setTimeout(() => {
                     const scrollContainer = document.getElementById('scroll-container')
                     if (scrollContainer) {
                       scrollContainer.scrollTo({
@@ -430,7 +423,7 @@ export function ChatPanel({
                         behavior: 'smooth'
                       })
                     }
-                  })
+                  }, 350)
                 }}
               />
               <div

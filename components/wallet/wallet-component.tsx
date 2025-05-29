@@ -18,15 +18,7 @@ export function WalletComponent({ showVideoBg }: WalletComponentProps) {
   const { delegateWallet } = useHeadlessDelegatedActions()
   const { evmAddress, solAddress } = useWalletAddresses(ready, authenticated, user)
 
-  // Measure wallet initialization time
-  useEffect(() => {
-    if (ready && (wallets.length > 0 || solWallets.length > 0)) {
-      // Mark the end of wallet initialization for performance measurement
-      if (typeof window !== 'undefined' && window.measureWalletInitTime) {
-        window.measureWalletInitTime()
-      }
-    }
-  }, [ready, wallets.length, solWallets.length])
+
 
   // Handle wallet delegation on first login
   useEffect(() => {
