@@ -1,16 +1,15 @@
 import { researcher } from '@/lib/agents/researcher'
 import {
-  convertToCoreMessages,
-  CoreMessage,
-  createDataStreamResponse,
-  DataStreamWriter,
-  streamText
+    convertToCoreMessages,
+    CoreMessage,
+    createDataStreamResponse,
+    DataStreamWriter,
+    streamText
 } from 'ai'
 import { getMaxAllowedTokens, truncateMessages } from '../utils/context-window'
 import { isReasoningModel } from '../utils/registry'
 import { handleStreamFinish } from './handle-stream-finish'
 import { BaseStreamConfig } from './types'
-import { LetterText } from 'lucide-react'
 
 // Function to check if a message contains ask_question tool invocation
 function containsAskQuestionTool(message: CoreMessage) {
@@ -44,7 +43,8 @@ export function createToolCallingStreamResponse(config: BaseStreamConfig) {
           searchMode,
           userEvmWallet: config.userEvmWallet,
           userSolWallet: config.userSolWallet,
-          allowWeb3Tools
+          allowWeb3Tools,
+          networkContext: config.networkContext
         })
 
         // console.log('researcherConfig', researcherConfig)
