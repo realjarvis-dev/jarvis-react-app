@@ -192,7 +192,7 @@ export async function executeSwapTransaction(
     // if (!process.env.PRIVATE_KEY) {
     //   throw new Error('PRIVATE_KEY environment variable is not set.')
     // }
-    const provider = new ethers.JsonRpcProvider(process.env.ETH_RPC_URL || 'http://127.0.0.1:8545')
+    const provider = new ethers.JsonRpcProvider(process.env.ETH_RPC_URL || getConfigByChainId(chainId).rpcUrl)
     console.log(process.env.ETH_RPC_URL)
     const block = await provider.getBlock('latest')
     const baseFee = block?.baseFeePerGas

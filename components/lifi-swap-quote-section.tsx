@@ -110,9 +110,8 @@ export function LifiSwapQuoteSection({
         onOpenChange={onOpenChange}
         showIcon={false}
       >
-        <Card className="bg-yellow-50 border-yellow-200 dark:bg-yellow-950 dark:border-yellow-800 ">
+        <Card className="bg-yellow-50 border-yellow-200 dark:bg-yellow-950 dark:border-yellow-800 w-full">
           <CardContent className="pt-4">
-
             <div className="text-sm text-yellow-600/80 dark:text-yellow-400/80 whitespace-pre-wrap break-all">
               {typeof quoteData === 'string'
                 ? quoteData
@@ -127,8 +126,7 @@ export function LifiSwapQuoteSection({
   const isError =
     (instruction &&
       (instruction.includes('error') || instruction.includes('fail'))) ||
-    (typeof quoteData === 'string' &&
-      quoteData.includes("error"))
+    (typeof quoteData === 'string' && quoteData.includes('error'))
   if (isError) {
     const errorMessage =
       typeof quoteData === 'string'
@@ -143,7 +141,7 @@ export function LifiSwapQuoteSection({
         onOpenChange={onOpenChange}
         showIcon={false}
       >
-        <Card className="bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800">
+        <Card className="bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800 w-full">
           <CardContent className="pt-4">
             <div className="text-red-600 dark:text-red-400 font-medium mb-1">
               Error: Could not retrieve LI.FI Swap Quote
@@ -167,10 +165,10 @@ export function LifiSwapQuoteSection({
         onOpenChange={onOpenChange}
         showIcon={false}
       >
-        <Card className="bg-orange-50 border-orange-200 dark:bg-orange-950 dark:border-orange-800">
+        <Card className="bg-orange-50 border-orange-200 dark:bg-orange-950 dark:border-orange-800 w-full">
           <CardContent className="pt-4">
             <div className="text-orange-600 dark:text-orange-400 font-medium mb-1">
-              Information
+              {toolResult?.title}
             </div>
             <div className="text-sm text-orange-600/80 dark:text-orange-400/80 whitespace-pre-wrap">
               {quoteData || 'No details available for the quote.'}
@@ -192,7 +190,7 @@ export function LifiSwapQuoteSection({
       onOpenChange={onOpenChange}
       showIcon={false}
     >
-      <Card className="overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/50 dark:to-indigo-950/50 border border-blue-100 dark:border-blue-900">
+      <Card className="overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/50 dark:to-indigo-950/50 border border-blue-100 dark:border-blue-900 w-full">
         <CardContent className="p-6">
           <div className="flex flex-col gap-4">
             <div className="pb-3 border-b border-blue-100 dark:border-blue-900">
@@ -249,7 +247,10 @@ export function LifiSwapQuoteSection({
                       Estimated Gas:
                     </div>
                     <div className="text-gray-800 dark:text-gray-100">
-                      ~${parseFloat(String(displayData.gasCostsUSD)).toPrecision(2)}
+                      ~$
+                      {parseFloat(String(displayData.gasCostsUSD)).toPrecision(
+                        2
+                      )}
                     </div>
                   </div>
                 )}
@@ -265,7 +266,8 @@ export function LifiSwapQuoteSection({
                           ↳ {gas.type} ({gas.symbol} on {gas.chainName}):
                         </div>
                         <div className="text-gray-700 dark:text-gray-200">
-                          {parseFloat(gas.amount).toPrecision(4)} {gas.symbol} (~$
+                          {parseFloat(gas.amount).toPrecision(4)} {gas.symbol}{' '}
+                          (~$
                           {parseFloat(gas.amountUSD).toPrecision(2)})
                         </div>
                       </div>
@@ -288,7 +290,10 @@ export function LifiSwapQuoteSection({
                       Estimated Other Fees:
                     </div>
                     <div className="text-gray-800 dark:text-gray-100">
-                      ~${parseFloat(String(displayData.otherFeeUSD)).toPrecision(2)}
+                      ~$
+                      {parseFloat(String(displayData.otherFeeUSD)).toPrecision(
+                        2
+                      )}
                     </div>
                   </div>
                 )}
@@ -305,7 +310,8 @@ export function LifiSwapQuoteSection({
                           ↳ {fee.name} ({fee.symbol} on {fee.chainName}):
                         </div>
                         <div className="text-gray-700 dark:text-gray-200">
-                          {parseFloat(fee.amount).toPrecision(4)} {fee.symbol} (~$
+                          {parseFloat(fee.amount).toPrecision(4)} {fee.symbol}{' '}
+                          (~$
                           {parseFloat(fee.amountUSD).toPrecision(2)})
                         </div>
                       </div>

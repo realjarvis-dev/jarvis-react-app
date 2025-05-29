@@ -91,7 +91,18 @@ const bridgeQuoteTool = tool({
         const inputAmount = ethers.parseUnits(amountIn, inputDecimals).toString()
 
         // get a quote from lifi service
-        const quote: LifiQuoteResponse = await getLifiQuote(fromChainMatch.id, toChainMatch.id, fromTokenSingle.symbol, toTokenSingle.symbol, inputAmount, userEvmAddress, recipient, slippage)
+        let quote: LifiQuoteResponse
+        try {
+            quote = await getLifiQuote(fromChainMatch.id, toChainMatch.id, 
+            fromTokenSingle.symbol, toTokenSingle.symbol, inputAmount, userEvmAddress, recipient, slippage)
+        } catch (error) {
+            return {
+                instruction: 'notify user',
+                title: 'No routes available for the selected combination',
+                details: 'Reasons for that could be: low liquidity, amount selected is too low, gas costs are too high or there are no routes for the selected combination.',
+                more_details: error instanceof Error ? error.message : 'Unknown error'
+            }
+        }
         const otherFeeArray = quote.estimate?.feeCosts?.map((fee) => ({
             name: fee.name,
             symbol: fee.token.symbol,
