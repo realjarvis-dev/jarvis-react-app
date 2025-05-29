@@ -19,8 +19,8 @@ export const MainnetConfig = {
     scanLink: 'etherscan.io',
     rpcUrl: 'https://eth-mainnet.g.alchemy.com/v2/yIRJoLX9TId7oSWYdnflKgthIy59m-vr'
 }
-console.log('process.env.NEXT_PUBLIC_TEST_NET_ENV', process.env.NEXT_PUBLIC_TEST_NET_ENV)
-export const NetworkConfig = process.env.NEXT_PUBLIC_TEST_NET_ENV === 'production' ? MainnetConfig : SepoliaConfig;
+// console.log('process.env.NEXT_PUBLIC_TEST_NET_ENV', process.env.NEXT_PUBLIC_TEST_NET_ENV)
+// export const NetworkConfig = process.env.NEXT_PUBLIC_TEST_NET_ENV === 'production' ? MainnetConfig : SepoliaConfig;
 
 export const BerachainMainnetConfig = {
     name: Network.BERACHAIN_MAINNET,

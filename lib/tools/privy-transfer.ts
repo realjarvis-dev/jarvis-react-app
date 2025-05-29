@@ -4,8 +4,8 @@ import { tool } from 'ai'
 import { ethers } from 'ethers'
 import { v4 as uuidv4 } from 'uuid'
 import { z } from 'zod'
-import { NetworkConfig } from '../config/network'
-import { getUserWallet, privy } from '../privy/client'
+import { getUserWallet } from '../privy/client'
+import { executeSwapTransaction } from '../pendle/transactions'
 
 export const privyTransferTool = tool({
   description: 'Transfer funds to a specified address',
@@ -46,19 +46,29 @@ export const privyTransferTool = tool({
       // convert amount to wei
       const amountInWei = amount * 10 ** 18
 
-      console.log(NetworkConfig)
+      // console.log(NetworkConfig)
 
-      const { hash } = await privy.walletApi.ethereum.sendTransaction({
-        walletId: evmWallet?.id || '',
-        caip2: `eip155:${NetworkConfig.chainId}`,
-        transaction: {
-          to: `0x${addressWithoutPrefix}`,
-          value: amountInWei,
-          gasLimit: 21000,
-          chainId: NetworkConfig.chainId
-        },
-        idempotencyKey: idempotencyKey // unique key for this transaction
+      const hash = await executeSwapTransaction({
+        from: evmWallet.address,
+        to: `0x${addressWithoutPrefix}`,
+        value: amountInWei,
+        data: '0x'
+      }, 1, {
+        estimateGas: false,
+        gasLimit: ethers.toQuantity(21000) as `0x${string}`
       })
+
+      // const { hash } = await privy.walletApi.ethereum.sendTransaction({
+      //   walletId: evmWallet?.id || '',
+      //   caip2: `eip155:${NetworkConfig.chainId}`,
+      //   transaction: {
+      //     to: `0x${addressWithoutPrefix}`,
+      //     value: amountInWei,
+      //     gasLimit: 21000,
+      //     chainId: NetworkConfig.chainId
+      //   },
+      //   idempotencyKey: idempotencyKey // unique key for this transaction
+      // })
       console.log('Transaction send, hash: ', hash)
       return { status: 'success', hash: hash, error_message: '' }
     } catch (error) {
