@@ -26,6 +26,7 @@ export function DemoToggle({ isDemoMode, onDemoModeChange }: DemoToggleProps) {
 
   return (
     <button
+      type="button"
       onClick={() => onDemoModeChange(!isDemoMode)}
       className="flex items-center gap-2 px-3 py-2 border border-input rounded-full bg-background hover:bg-accent transition-colors h-10"
     >
