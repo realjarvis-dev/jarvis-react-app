@@ -25,11 +25,10 @@ import { MarketPulse } from './market-pulse'
 import { useNetwork } from '../lib/context/network-context'
 import { ChainSelector } from './chain-selector'
 import { DemoToggle } from './demo-toggle'
-import { NetworkDebug } from './network-debug'
 import { SearchModeToggle } from './search-mode-toggle'
 import { Button } from './ui/button'
 import { IconLogo } from './ui/icons'
-import { VideoBackground } from './ui/video-background'; // Import the VideoBackground component
+import { VideoBackground } from './ui/video-background'
 import { WelcomeMessage } from './welcome-messages'
 
 // Custom hook for keyboard avoidance on mobile
@@ -413,7 +412,6 @@ export function ChatPanel({
   }
   return (
     <> {/* Use a fragment if VideoBackground is fixed and outside the main div's flow */}
-      <NetworkDebug />
       <VideoBackground
         src="/videos/background.mp4" // Ensure this path is correct
         poster="/videos/background_poster.jpg" // Optional: path to a poster image
