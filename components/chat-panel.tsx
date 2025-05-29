@@ -27,6 +27,7 @@ import { Button } from './ui/button'
 import { IconLogo } from './ui/icons'
 import { VideoBackground } from './ui/video-background'; // Import the VideoBackground component
 import { WelcomeMessage } from './welcome-messages'
+import { PerformanceMonitor } from './performance-monitor'
 
 // Custom hook for keyboard avoidance on mobile
 function useKeyboardAvoidance({
@@ -404,8 +405,16 @@ export function ChatPanel({
       });
     }
   }
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.markChatPanelMounted) {
+      window.markChatPanelMounted();
+    }
+  }, []);
+
   return (
     <> {/* Use a fragment if VideoBackground is fixed and outside the main div's flow */}
+      {/* Add performance monitoring */}
+      <PerformanceMonitor type="before" />
       <VideoBackground
         src="/videos/background.mp4" // Ensure this path is correct
         poster="/videos/background_poster.jpg" // Optional: path to a poster image

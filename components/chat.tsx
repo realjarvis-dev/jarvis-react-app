@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { ChatMessages } from './chat-messages'
-import { ChatPanel } from './chat-panel'
+import { ChatPanelToggle } from './chat-panel-toggle'
 
 import useLocalStorage from 'use-local-storage-state'
 
@@ -252,7 +252,7 @@ export function Chat({
         onUpdateMessage={handleUpdateAndReloadMessage}
         reload={handleReloadFrom}
       />
-      <ChatPanel
+      <ChatPanelToggle
         input={input}
         handleInputChange={handleInputChange}
         handleSubmit={onSubmit}
