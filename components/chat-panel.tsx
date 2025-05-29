@@ -22,8 +22,10 @@ import { CopyableWalletAddressSkeleton } from './copyable-wallet-address-skeleto
 
 import { MarketPulse } from './market-pulse'
 
-import { ChainSelector, ChainType } from './chain-selector'
+import { useNetwork } from '../lib/context/network-context'
+import { ChainSelector } from './chain-selector'
 import { DemoToggle } from './demo-toggle'
+import { NetworkDebug } from './network-debug'
 import { SearchModeToggle } from './search-mode-toggle'
 import { Button } from './ui/button'
 import { IconLogo } from './ui/icons'
@@ -241,8 +243,7 @@ export function ChatPanel({
   const welcomeSeed = useRef(new Date().getDate()).current // Your existing state
 
   // Network selection state
-  const [selectedChain, setSelectedChain] = useState<ChainType>('ethereum')
-  const [isDemoMode, setIsDemoMode] = useState(false)
+  const { selectedChain, setSelectedChain, isDemoMode, setIsDemoMode } = useNetwork()
 
   // Apply keyboard avoidance hook
   useKeyboardAvoidance({ ref: inputRef })
@@ -412,6 +413,7 @@ export function ChatPanel({
   }
   return (
     <> {/* Use a fragment if VideoBackground is fixed and outside the main div's flow */}
+      <NetworkDebug />
       <VideoBackground
         src="/videos/background.mp4" // Ensure this path is correct
         poster="/videos/background_poster.jpg" // Optional: path to a poster image
