@@ -9,7 +9,7 @@ import { retrieveTool } from '../tools/retrieve'
 import { createSearchTool } from '../tools/search'
 import { createVideoSearchTool } from '../tools/video-search'
 import { walletBalanceTool } from '../tools/wallet'
-import { bridgeQuoteTool } from '../tools/lifi-bridge'
+import { bridgeExecuteTool, bridgeQuoteTool } from '../tools/lifi-bridge'
 
 interface ToolExecutionOptions {
   toolCallId?: string
@@ -253,7 +253,14 @@ export function createToolRegistry(model: string): ToolRegistry {
     execute: async (params, context) => bridgeQuoteTool.execute(params, { toolCallId: context?.toolCallId, messages: context?.messages || [] }),
     category: ToolCategory.WEB3
   })
-  
+
+  registry.registerTool({
+    name: 'lifi_bridge_execute',
+    description: bridgeExecuteTool.description || '',
+    schema: bridgeExecuteTool.parameters,
+    execute: async (params, context) => bridgeExecuteTool.execute(params, { toolCallId: context?.toolCallId, messages: context?.messages || [] }),
+    category: ToolCategory.WEB3
+  })
   return registry
 }
 

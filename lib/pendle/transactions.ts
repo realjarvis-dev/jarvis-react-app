@@ -173,11 +173,19 @@ export async function erc20Approval (
 /**
  * Executes a transaction with the given transaction data
  * @param txData Transaction data to execute
+ * @param chainId Chain ID
+ * @param gasOptions Gas options
+ * @param gasLimit Gas limit
+ * @param estimateGas If or not to estimate gas
  * @returns Promise with transaction hash
  */
 export async function executeSwapTransaction(
   txData: TransactionRequest,
-  chainId: number = 1
+  chainId: number = 1,
+  gasOptions?: {
+    gasLimit?: `0x${string}`,
+    estimateGas: boolean
+  }
 ): Promise<{ hash: string }> {
   try {
     // // Verify environment variables are set
@@ -211,23 +219,32 @@ export async function executeSwapTransaction(
 
     const weiBig = BigInt(value || '0')
     const quantity = ethers.toQuantity(weiBig)
+    let gasLimit: `0x${string}`
 
-    // Gas estimation
-    const gasEstimate = await provider.estimateGas({
-      to: txData.to,
-      from: txData.from,
-      data: txData.data,
-      value: txData.value ?? BigInt(0),
-      chainId: chainId
-    })
-    // Add a 20 % buffer
-    const gasLimit = gasEstimate + gasEstimate / BigInt(5)
+    const estimateGas = gasOptions?.estimateGas !== false; // Default to true if not specified or explicitly true
+    if (estimateGas) {
+      // Gas estimation
+      const gasEstimate = await provider.estimateGas({
+        to: txData.to,
+        from: txData.from,
+        data: txData.data,
+        value: txData.value ?? BigInt(0),
+        chainId: chainId
+      })
+      // Add a 20 % buffer
+      gasLimit = ethers.toQuantity(gasEstimate + gasEstimate / BigInt(5)) as `0x${string}`
+    } else {
+      gasLimit = gasOptions?.gasLimit ?? ethers.toQuantity(650000) as `0x${string}`
+    }
 
     // strip the 0x prefix for to, quantity, and data
     const toAddress = (to as string).replace(/^0x/, '')
     const valueHex = quantity.replace(/^0x/, '')
     const dataHex = (data as string).replace(/^0x/, '')
     const fromAddress = (from as string).replace(/^0x/, '')
+
+    console.log('gasLimit', gasLimit)
+    console.log("valueHex", valueHex)
 
     const { signedTransaction, encoding } =
       await privy.walletApi.ethereum.signTransaction({
@@ -240,7 +257,7 @@ export async function executeSwapTransaction(
           value: `0x${valueHex}` as `0x${string}`,
           data: `0x${dataHex}` as `0x${string}`,
           // gasLimit: 650000, //650000
-          gasLimit: ethers.toQuantity(gasLimit) as `0x${string}`,
+          gasLimit: gasLimit,
           maxFeePerGas: ethers.toQuantity(maxFee + priority) as `0x${string}`,
           maxPriorityFeePerGas: ethers.toQuantity(priority) as `0x${string}`,
           nonce: correctNonce

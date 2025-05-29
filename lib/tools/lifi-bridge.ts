@@ -115,6 +115,7 @@ const bridgeQuoteTool = tool({
             fromToken: fromTokenSingle.symbol,
             fromAmountToken: inAmountParsed,
             fromAmountUSD: quote.estimate?.fromAmountUSD,
+            fromTokenAddress: fromTokenSingle.address.toLowerCase(),
             isFromNativeToken: fromTokenSingle.address === '0x0000000000000000000000000000000000000000',
             toChain: toChainMatch.name,
             toChainId: toChainMatch.id,
@@ -128,7 +129,7 @@ const bridgeQuoteTool = tool({
             complete_time: new Date().toISOString()
         }
         return {
-            instruction: "Don't repeat the quote to user, simply ask user if they want to proceed with the transaction.",
+            instruction: "Don't repeat the quote to user, simply ask user if they want to proceed with the transaction. If user wants to proceed, use lifi_bridge_execute tool to execute the transaction.",
             details: readableQuote
         }
 
@@ -149,11 +150,12 @@ const bridgeQuoteTool = tool({
 })
 
 const bridgeExecuteTool = tool({
-  description: "Execute a cross-chain bridge transfer from user's wallet. can also be single chain swap. It automatically renders UI on success.",
+  description: "Execute a cross-chain bridge transfer from user's wallet. can also be single chain swap. This tool should be used after the user has confirmed the quote.",
   parameters: z.object({
     fromChainId: z.number().describe("The chain id to bridge from"),
     fromToken: z.string().describe("The token to bridge from, has to be exact match"),
     fromTokenDecimals: z.number().describe("The decimals of the input token"),
+    fromTokenAddress: z.string().describe("The address of the input token"),
     isFromNativeToken: z.boolean().describe("Whether the input token is the native token of the from chain"),
     toChainId: z.number().describe("The chain id to bridge to"),
     toToken: z.string().describe("The token to bridge to, has to be exact match"),
@@ -162,7 +164,17 @@ const bridgeExecuteTool = tool({
     recipient: z.string().optional().describe("The address to send the bridged tokens to. Default to user's wallet address"),
 
   }),
-  execute: async ({ fromChainId, fromToken, fromTokenDecimals, toChainId, toToken, amountIn, slippage, recipient, isFromNativeToken }) => {
+
+  execute: async ({ fromChainId, fromToken, fromTokenDecimals, fromTokenAddress, toChainId, toToken, amountIn, slippage, recipient, isFromNativeToken }) => {
+    console.log('fromChainId', fromChainId)
+    console.log('fromToken', fromToken)
+    console.log('fromTokenDecimals', fromTokenDecimals)
+    console.log('toChainId', toChainId)
+    console.log('toToken', toToken)
+    console.log('amountIn', amountIn)
+    console.log('slippage', slippage)
+    console.log('recipient', recipient)
+    console.log('isFromNativeToken', isFromNativeToken)
     const userEvmAddress = await getUserEvmWalletAddress()
     if (!userEvmAddress) {
         return {
@@ -183,8 +195,11 @@ const bridgeExecuteTool = tool({
     }
     const protocolAddress = quote.transactionRequest.to as string
 
+    try {
+
+    
     if (!isFromNativeToken) {
-        const {status, message} = await erc20Approval(fromToken, protocolAddress, inputAmount, userEvmAddress, fromChainId)
+        const {status, message} = await erc20Approval(fromTokenAddress, protocolAddress, inputAmount, userEvmAddress, fromChainId)
         if (status === 'fail') {
             return {
                 instruction: 'notify user',
@@ -193,14 +208,42 @@ const bridgeExecuteTool = tool({
         }
     }
     const txData = quote.transactionRequest as TransactionRequest
-    const hash = await executeSwapTransaction(txData, fromChainId)
+    // console.log('txData', txData)
+    const gasLimit = BigInt(quote.estimate?.gasCosts?.reduce((acc, curr) => acc + Number(curr.limit), 0) ?? 0)
+    const hash = await executeSwapTransaction(txData, fromChainId, {
+        estimateGas: gasLimit > 0 ? false : true,
+        gasLimit: gasLimit ? ethers.toQuantity(gasLimit) as `0x${string}` : undefined
+    })
 
 
     return {
         instruction: 'execute the transaction',
         hash: hash
     }
+    } catch (error) {
+      
+        return {
+            instruction: 'unexpected error occurred',
+            details: error instanceof Error ? error.message : 'Unknown error'
+        }
+    }
   }
 })
 
 export { bridgeQuoteTool, bridgeExecuteTool }
+
+
+// const hash = await executeSwapTransaction({
+//     value: '0x38d7ea4c68000',
+//     to: '0x1231DEB6f5749EF6cE6943a275A1D3E7486F4EaE',
+//     data: '0xaf7060fdf18dcd2bccfec0d1ca1c7fc3ec242c4a9692022f3f0e68cc412cdd412008978800000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000010000000000000000000000000020dc1b6732e7a20acba461bd37beead4ff5d93c800000000000000000000000000000000000000000000000000000000002956eb000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000086c6966692d617069000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002a3078303030303030303030303030303030303030303030303030303030303030303030303030303030300000000000000000000000000000000000000000000000000000000000000000000085cd07ea01423b1e937929b44e4ad8c40bbb5e7100000000000000000000000085cd07ea01423b1e937929b44e4ad8c40bbb5e710000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb4800000000000000000000000000000000000000000000000000038d7ea4c6800000000000000000000000000000000000000000000000000000000000000000e0000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000001a4dd9c5f96000000000000000000000000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee00000000000000000000000000000000000000000000000000038d7ea4c68000000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb480000000000000000000000000000000000000000000000000000000000298c1900000000000000000000000000000000000000000000000000000000002956ea0000000000000000000000001231deb6f5749ef6ce6943a275a1d3e7486f4eae0000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000700301ffff0201397ff1542f962076d0bfe58ea045ffa2d347aca0c02aaa39b223fe8d0a0e5c4f27ead9083c756cc204c02aaa39b223fe8d0a0e5c4f27ead9083c756cc200397ff1542f962076d0bfe58ea045ffa2d347aca00085cd07ea01423b1e937929b44e4ad8c40bbb5e71000bb80000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+//     chainId: 1,
+//     gasPrice: '0x7a3a9137',
+//     gasLimit: '0x65900',
+//     from: '0x20dC1B6732E7A20aCba461BD37beead4FF5D93c8'
+//   }, 1, {
+//     estimateGas: false,
+//     gasLimit: "0x65900"
+//   })
+
+  
