@@ -29,3 +29,10 @@ export const berachainMainnetAlchemy = makeAlchemyClient(
 export const berachainBepoliaAlchemy = makeAlchemyClient(
   Network.BERACHAIN_BEPOLIA
 )
+
+export const chainIdToAlchemyClient: Record<number, Alchemy> = {
+  1: mainnetAlchemy,
+  11155111: sepoliaAlchemy,
+  80094: berachainMainnetAlchemy,
+  80069: berachainBepoliaAlchemy
+}

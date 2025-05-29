@@ -3,6 +3,7 @@ import { ethers } from 'ethers'
 import {
   berachainBepoliaAlchemy,
   berachainMainnetAlchemy,
+  chainIdToAlchemyClient,
   mainnetAlchemy,
   sepoliaAlchemy
 } from './client'
@@ -10,31 +11,31 @@ import { nativeAssets } from './native-asset-mapping'
 import { TokenData } from './types'
 
 export async function getMainnetTokenBalance(
-  address: string
+  walletAddress: string
 ): Promise<TokenData[]> {
-  return getTokenBalance(address, mainnetAlchemy)
+  return getTokenBalance(walletAddress, mainnetAlchemy)
 }
 
 export async function getSepoliaTokenBalance(
-  address: string
+  walletAddress: string
 ): Promise<TokenData[]> {
-  return getTokenBalance(address, sepoliaAlchemy)
+  return getTokenBalance(walletAddress, sepoliaAlchemy)
 }
 
 export async function getBerachainMainnetTokenBalance(
-  address: string
+  walletAddress: string
 ): Promise<TokenData[]> {
-  return getTokenBalance(address, berachainMainnetAlchemy)
+  return getTokenBalance(walletAddress, berachainMainnetAlchemy)
 }
 
 export async function getBerachainBepoliaTokenBalance(
-  address: string
+  walletAddress: string
 ): Promise<TokenData[]> {
-  return getTokenBalance(address, berachainBepoliaAlchemy)
+  return getTokenBalance(walletAddress, berachainBepoliaAlchemy)
 }
 
 export async function getTokenBalance(
-  address: string,
+  walletAddress: string,
   alchemy: Alchemy = mainnetAlchemy
 ): Promise<TokenData[]> {
   try {
@@ -43,7 +44,7 @@ export async function getTokenBalance(
 
     try {
       /* ── 1. ERC-20 balances ─────────────────────────────────────────── */
-      const { tokenBalances } = await alchemy.core.getTokenBalances(address)
+      const { tokenBalances } = await alchemy.core.getTokenBalances(walletAddress)
       /* ── 2. Keep only non-zero balances ─────────────────────────────── */
       const nonZero = tokenBalances.filter(
         (tb: TokenBalance) => BigInt(tb.tokenBalance || '0x0') !== BigInt(0)
@@ -73,7 +74,7 @@ export async function getTokenBalance(
     }
 
     /* ── 5. Native ETH balance ──────────────────────────────────────── */
-    const nativeWei = await alchemy.core.getBalance(address, 'latest')
+    const nativeWei = await alchemy.core.getBalance(walletAddress, 'latest')
 
     const ethToken: TokenData = {
       address: ethers.ZeroAddress, // 0x000…000
@@ -97,5 +98,21 @@ const tokenBalanceFunctions = [
   getBerachainMainnetTokenBalance,
   getBerachainBepoliaTokenBalance
 ]
+
+export async function getTokenBalanceByChainId(
+  walletAddress: string,
+  chainId: number
+): Promise<TokenData[]> {
+  return getTokenBalance(walletAddress, chainIdToAlchemyClient[chainId])
+}
+
+export async function getNativeBalanceByChainId(walletAddress: string, chainId: number): Promise<number> {
+  const alchemy = chainIdToAlchemyClient[chainId]
+  const nativeWei = await alchemy.core.getBalance(walletAddress, 'latest')
+
+  return Number(ethers.formatEther(nativeWei.toString()))
+}
+
+console.log(await getNativeBalanceByChainId('0x20dC1B6732E7A20aCba461BD37beead4FF5D93c8', 80094))
 
 export default tokenBalanceFunctions
