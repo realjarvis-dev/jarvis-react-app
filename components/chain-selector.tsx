@@ -5,10 +5,10 @@ import { ChevronDown } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from './ui/button'
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
 } from './ui/dropdown-menu'
 
 export type ChainType = 'ethereum' | 'sepolia' | 'berachain'
@@ -65,29 +65,32 @@ export function ChainSelector({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="min-w-[120px]">
-        {chainOptions.map((option) => {
-          const isDisabled = isDemoMode && option.id !== 'ethereum'
-          
-          return (
-            <DropdownMenuItem
-              key={option.id}
-              onClick={() => {
-                if (!isDisabled) {
+        {chainOptions
+          .filter(option => {
+            // In demo mode, only show Ethereum
+            if (isDemoMode) {
+              return option.id === 'ethereum'
+            }
+            // In normal mode, show all networks
+            return true
+          })
+          .map((option) => {
+            return (
+              <DropdownMenuItem
+                key={option.id}
+                onClick={() => {
                   onChainChange(option.id)
                   setOpen(false)
-                }
-              }}
-              className={cn(
-                'flex items-center cursor-pointer',
-                isDisabled && 'opacity-50 cursor-not-allowed text-muted-foreground',
-                selectedChain === option.id && 'bg-accent'
-              )}
-              disabled={isDisabled}
-            >
-              <span className="text-sm">{option.name}</span>
-            </DropdownMenuItem>
-          )
-        })}
+                }}
+                className={cn(
+                  'flex items-center cursor-pointer',
+                  selectedChain === option.id && 'bg-accent'
+                )}
+              >
+                <span className="text-sm">{option.name}</span>
+              </DropdownMenuItem>
+            )
+          })}
       </DropdownMenuContent>
     </DropdownMenu>
   )
