@@ -1,7 +1,7 @@
 import { WalletWithMetadata } from '@privy-io/server-auth'
 import { CoreMessage, smoothStream, streamText } from 'ai'
 import { getModel } from '../utils/registry'
-import { ToolCategory, getToolRegistry } from '../utils/tool-registry'
+import { getToolRegistry, NetworkContext, ToolCategory } from '../utils/tool-registry'
 
 const get_system_prompt = (searchMode: boolean) => {
   const SYSTEM_PROMPT = `
@@ -56,24 +56,24 @@ When using the ask_question tool:
 - Match the language to the user's language (except option values which must be in English)
 
 ### Global Read‑only Rule  
-IMPORTANT: No matter which read‑only tool you invoke (e.g. pendle_opportunities, wallet_balance, kodiak_opportunities, pendle_quote), **you must never duplicate or describe any of the UI data**. If you’re tempted to repeat a rate, amount, APY, token symbol or address, skip it entirely. 
+IMPORTANT: No matter which read‑only tool you invoke (e.g. pendle_opportunities, wallet_balance, kodiak_opportunities, pendle_quote), **you must never duplicate or describe any of the UI data**. If you're tempted to repeat a rate, amount, APY, token symbol or address, skip it entirely. 
 Instead, simply acknowledge the action and offer next steps. Since you answering is only duplicating the result and make the response unnecessarily long.
 
 Read‑only tools:
   • pendle_opportunities  
     - Call it and let the UI show everything.  
-    - Acknowledge: “Fetched the latest opportunities. Anything you’d like to explore?”  
+    - Acknowledge: "Fetched the latest opportunities. Anything you'd like to explore?"  
 
   • pendle_quote  
-    - If no market given, say: “Which market would you like quoted, or would you like to see opportunities first?”  
-    - Otherwise, “Here’s your quote—anything else?”  
+    - If no market given, say: "Which market would you like quoted, or would you like to see opportunities first?"  
+    - Otherwise, "Here's your quote—anything else?"  
 
   • wallet_balance  
     - Call it; the UI shows balances.  
-    - Acknowledge: “Wallet balances are ready. Want to dig into a particular holding?”  
+    - Acknowledge: "Wallet balances are ready. Want to dig into a particular holding?"  
 
   • kodiak_opportunities  
-    - As with pendle_opportunities: call it, then “Fetched Kodiak opportunities. Any you’d like details on?”  
+    - As with pendle_opportunities: call it, then "Fetched Kodiak opportunities. Any you'd like details on?"  
 
   • market_chart  
     - Call it and let the UI show the chart.  
@@ -85,13 +85,13 @@ For write/transaction tools (pendle_swap, privy_transfer):
   2. Suggest any missing read‑only step (market survey or quote) before moving on.  
   3. Call the tool and let the UI show hashes/amounts.  
   4. **Do not echo** any transaction details—UI handles that.  
-  5. Acknowledge success and ask “What next?”  
+  5. Acknowledge success and ask "What next?"  
 
   • pendle_swap  
     - Remind to check opportunities or quote if skipped.  
 
   • privy_transfer  
-    - Only accept ETH amounts; afterward ask “What’s next?”  
+    - Only accept ETH amounts; afterward ask "What's next?"  
 
 
 Citation Format:
@@ -146,7 +146,8 @@ export function researcher({
   searchMode,
   userEvmWallet,
   userSolWallet,
-  allowWeb3Tools
+  allowWeb3Tools,
+  networkContext
 }: {
   messages: CoreMessage[]
   model: string
@@ -154,8 +155,10 @@ export function researcher({
   userEvmWallet: WalletWithMetadata | undefined
   userSolWallet: WalletWithMetadata | undefined
   allowWeb3Tools: string
+  networkContext?: NetworkContext
 }): ResearcherReturn {
   console.log('searchMode', searchMode)
+  console.log('networkContext', networkContext)
   try {
     const currentDate = new Date().toLocaleString()
 
@@ -163,11 +166,25 @@ export function researcher({
 
     const all_tools = registry.getAllToolNames()
     const search_tools = [...registry.getToolNamesByCategory(ToolCategory.WEB), ...registry.getToolNamesByCategory(ToolCategory.UTILITY)]
-    // const web3_tools = registry.getToolNamesByCategory(ToolCategory.WEB3)
-    let supportedTools = registry.getSupportedToolNames(model)
+    
+    // Use network-aware tool filtering if networkContext is provided
+    let supportedTools = networkContext 
+      ? registry.getSupportedToolNamesForNetwork(model, networkContext)
+      : registry.getSupportedToolNames(model)
+    
     const maxSteps = registry.getMaxSteps(model, searchMode)
 
     let web3_tools = registry.getToolNamesByCategory(ToolCategory.WEB3)
+    
+    // Apply network filtering to web3 tools if networkContext is provided
+    if (networkContext) {
+      web3_tools = web3_tools.filter(toolName => {
+        const toolDef = registry.getTool(toolName)
+        if (!toolDef || !toolDef.supportedNetworks) return true
+        return toolDef.supportedNetworks.includes(networkContext.selectedNetwork)
+      })
+    }
+    
     // remove web3 tools from supported tools if allowWeb3Tools is false
     if (allowWeb3Tools === 'false') {
       supportedTools = supportedTools.filter(tool => !web3_tools.includes(tool))
@@ -185,7 +202,19 @@ You can only execute on behalf of the user if they have wallets and have delegat
 `
     }
 
-    // Create tool list from registry
+    // Add network context info to the prompt
+    let networkInfo = ''
+    if (networkContext) {
+      networkInfo = `
+Network Context:
+- Selected Network: ${networkContext.selectedNetwork}
+- Chain ID: ${networkContext.selectedChainId}
+- Demo Mode: ${networkContext.isDemo ? 'ON' : 'OFF'}
+- RPC URL: ${networkContext.rpcUrl}
+`
+    }
+
+    // Create tool list from registry with network context
     const tool_lst: Record<string, any> = {}
     for (const toolName of supportedTools) {
       const toolDef = registry.getTool(toolName)
@@ -193,28 +222,30 @@ You can only execute on behalf of the user if they have wallets and have delegat
         tool_lst[toolName] = {
           description: toolDef.description,
           parameters: toolDef.schema,
-          execute: toolDef.execute
+          execute: (params: any, context?: any) => toolDef.execute(params, context, networkContext)
         }
       }
     }
 
-    // Create o3-mini specific tool list
+    // Create o3-mini specific tool list with network context
     const o3_mini_tool_lst: Record<string, any> = {}
-    const o3MiniTools = registry.getSupportedToolNames('openai:o3-mini')
+    const o3MiniTools = networkContext 
+      ? registry.getSupportedToolNamesForNetwork('openai:o3-mini', networkContext)
+      : registry.getSupportedToolNames('openai:o3-mini')
+    
     for (const toolName of o3MiniTools) {
       const toolDef = registry.getTool(toolName)
       if (toolDef) {
         o3_mini_tool_lst[toolName] = {
           description: toolDef.description,
           parameters: toolDef.schema,
-          execute: toolDef.execute
+          execute: (params: any, context?: any) => toolDef.execute(params, context, networkContext)
         }
       }
     }
     
-    // console.log("allow web3 tools", allowWeb3Tools)
-    // console.log("supportedTools", supportedTools)
-    // console.log("web3_tools", web3_tools)
+    console.log("supportedTools with network filtering", supportedTools)
+    console.log("web3_tools with network filtering", web3_tools)
     
 
     let prompt = `${
@@ -223,7 +254,7 @@ You can only execute on behalf of the user if they have wallets and have delegat
         : get_system_prompt(searchMode)
     }\nCurrent date and time: ${currentDate}\n${
       model === 'openai:o3-mini' ? '' : userWalletInfo
-    }`
+    }${networkInfo}`
 
     return {
       model: getModel(model),
