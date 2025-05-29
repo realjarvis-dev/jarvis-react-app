@@ -77,7 +77,7 @@ export function LifiSwapQuoteSection({
       className="flex items-center justify-between w-full text-left rounded-md p-1 -ml-1"
       title="Open details"
     >
-      <ToolArgsSection tool="lifi-swap-quote">{`${text} ${tool.args.amount} ${tool.args.fromToken} (${tool.args.fromChain}) to ${tool.args.toToken} (${tool.args.toChain})`}</ToolArgsSection>
+      <ToolArgsSection tool="lifi-swap-quote">{`${text} ${tool.args.amountIn} ${tool.args.fromToken} (${tool.args.fromChain}) to ${tool.args.toToken} (${tool.args.toChain})`}</ToolArgsSection>
     </button>
   )
 

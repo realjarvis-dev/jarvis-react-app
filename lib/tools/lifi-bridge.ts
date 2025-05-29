@@ -153,11 +153,13 @@ const bridgeExecuteTool = tool({
   description: "Execute a cross-chain bridge transfer from user's wallet. can also be single chain swap. This tool should be used after the user has confirmed the quote.",
   parameters: z.object({
     fromChainId: z.number().describe("The chain id to bridge from"),
+    fromChainName: z.string().describe("The name of the chain to bridge from"),
     fromToken: z.string().describe("The token to bridge from, has to be exact match"),
     fromTokenDecimals: z.number().describe("The decimals of the input token"),
     fromTokenAddress: z.string().describe("The address of the input token"),
     isFromNativeToken: z.boolean().describe("Whether the input token is the native token of the from chain"),
     toChainId: z.number().describe("The chain id to bridge to"),
+    toChainName: z.string().describe("The name of the chain to bridge to"),
     toToken: z.string().describe("The token to bridge to, has to be exact match"),
     amountIn: z.string().describe("The amount of input tokens to bridge, in human readable format"),
     slippage: z.string().default('0.005').describe("The slippage tolerance for the transaction, 0.005 represents 0.5% slippage. Default to 0.005"),
@@ -165,7 +167,9 @@ const bridgeExecuteTool = tool({
 
   }),
 
-  execute: async ({ fromChainId, fromToken, fromTokenDecimals, fromTokenAddress, toChainId, toToken, amountIn, slippage, recipient, isFromNativeToken }) => {
+  execute: async ({ fromChainId, fromToken, fromTokenDecimals, 
+    fromTokenAddress, toChainId, toToken, amountIn, 
+    slippage, recipient, isFromNativeToken, fromChainName, toChainName }) => {
     console.log('fromChainId', fromChainId)
     console.log('fromToken', fromToken)
     console.log('fromTokenDecimals', fromTokenDecimals)
@@ -175,6 +179,7 @@ const bridgeExecuteTool = tool({
     console.log('slippage', slippage)
     console.log('recipient', recipient)
     console.log('isFromNativeToken', isFromNativeToken)
+
     const userEvmAddress = await getUserEvmWalletAddress()
     if (!userEvmAddress) {
         return {
@@ -210,21 +215,39 @@ const bridgeExecuteTool = tool({
     const txData = quote.transactionRequest as TransactionRequest
     // console.log('txData', txData)
     const gasLimit = BigInt(quote.estimate?.gasCosts?.reduce((acc, curr) => acc + Number(curr.limit), 0) ?? 0)
-    const hash = await executeSwapTransaction(txData, fromChainId, {
+    const result = await executeSwapTransaction(txData, fromChainId, {
         estimateGas: gasLimit > 0 ? false : true,
         gasLimit: gasLimit ? ethers.toQuantity(gasLimit) as `0x${string}` : undefined
     })
 
 
     return {
-        instruction: 'execute the transaction',
-        hash: hash
+        success: true,
+        transaction_hash: result.hash,
+        swap_details: {
+            from_token_symbol: fromToken,
+            from_token_address: fromTokenAddress,
+            to_token_address: toToken,
+            amount_in_human: amountIn,
+            from_chain_name: fromChainName,
+            to_chain_name: toChainName,
+            complete_time: new Date().toISOString()
+        }
     }
     } catch (error) {
       
         return {
-            instruction: 'unexpected error occurred',
-            details: error instanceof Error ? error.message : 'Unknown error'
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error',
+            swap_details: {
+                from_token_symbol: fromToken,
+                from_token_address: fromTokenAddress,
+                to_token_address: toToken,
+                amount_in_human: amountIn,
+                from_chain_name: fromChainName,
+                to_chain_name: toChainName,
+                complete_time: new Date().toISOString()
+            }
         }
     }
   }
