@@ -4,13 +4,13 @@ import { useArtifact } from '@/components/artifact/artifact-context'
 import { Card, CardContent } from '@/components/ui/card'
 import { CHAT_ID } from '@/lib/constants'
 import { useChat } from '@ai-sdk/react'
+import { faGasPump } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { ToolInvocation } from 'ai'
 import { useState } from 'react'
 import { CollapsibleMessage } from './collapsible-message'
 import { DefaultSkeleton } from './default-skeleton'
 import { ToolArgsSection } from './section'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faGasPump } from '@fortawesome/free-solid-svg-icons'
 
 // Based on readableQuote from lifi-bridge.ts
 interface FeeItem {
@@ -229,30 +229,40 @@ export function LifiSwapQuoteSection({
                   ≈ ${parseFloat(displayData.toAmountUSD).toFixed(2)}
                 </div>
               )}
-              <div className="text-xs text-gray-500 dark:text-gray-400">
-                1 {displayData.toToken} ≈ {(parseFloat(displayData.fromAmountToken || '0') / parseFloat(displayData.toAmountToken || '0')).toPrecision(2)} {displayData.fromToken}
-              </div>
               {(displayData.gasCostsUSD !== undefined ||
                 displayData.otherFeeUSD !== undefined) && (
                 <div className="relative pt-2">
-                  <div
-                    onMouseEnter={() => setShowFeeDetails(true)}
-                    onMouseLeave={() => setShowFeeDetails(false)}
-                    className="flex items-center gap-2 cursor-pointer"
-                  >
-                    <div className="text-sm">
-                    <FontAwesomeIcon icon={faGasPump} /> $
+                  <div className="flex justify-between items-center gap-8 text-sm">
+                    <span className="text-xs text-grey-500 dark:text-grey-400">
+                      1 {displayData.toToken} ≈{' '}
+                      {(
+                        parseFloat(displayData.fromAmountToken || '0') /
+                        parseFloat(displayData.toAmountToken || '1')
+                      ).toPrecision(2)}{' '}
+                      {displayData.fromToken}
+                    </span>
+
+                    <span
+                      className="text-xs text-gray-500 dark:text-gray-400 cursor-pointer"
+                      onMouseEnter={() => setShowFeeDetails(true)}
+                      onMouseLeave={() => setShowFeeDetails(false)}
+                    >
+                      <FontAwesomeIcon
+                        icon={faGasPump}
+                        className="text-xs text-gray-500 dark:text-gray-400"
+                      />{' '}
+                      $
                       {parseFloat(
                         String(
                           (displayData.gasCostsUSD || 0) +
                             (displayData.otherFeeUSD || 0)
                         )
                       ).toPrecision(2)}
-                    </div>
+                    </span>
                   </div>
 
                   {showFeeDetails && (
-                    <div className="absolute top-full left-0 mt-1 z-20 w-full md:w-auto md:min-w-[380px] p-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-xl">
+                    <div className="absolute bottom-full right-0 mb-1 z-20 w-full md:w-auto md:min-w-[380px] p-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-xl">
                       {/* Total Gas */}
                       {displayData.gasCostsUSD !== undefined && (
                         <div className="flex justify-between text-xs mb-1 font-semibold">
@@ -321,8 +331,7 @@ export function LifiSwapQuoteSection({
                               className="flex justify-between text-xs ml-2 mb-0.5"
                             >
                               <div className="text-gray-600 dark:text-gray-300">
-                                ↳ {fee.name} 
-                                ):
+                                ↳ {fee.name}:
                               </div>
                               <div className="text-gray-700 dark:text-gray-200">
                                 {/* {parseFloat(fee.amount).toPrecision(4)}{' '} */}
