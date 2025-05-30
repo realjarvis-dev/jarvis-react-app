@@ -1,4 +1,5 @@
-import { ethers, TransactionRequest } from 'ethers'
+import { TransactionRequest } from 'ethers'
+import { parseUnits, formatUnits, toHex } from 'viem'
 import { erc20Approval, executeSwapTransaction } from '../pendle/transactions'
 import { getUserEvmWalletAddress } from '../privy/client'
 import {
@@ -88,7 +89,7 @@ export const generateLifiBridgeQuote = async (
     }
     const inputDecimals = fromTokenSingle.decimals
     const outputDecimals = toTokenSingle.decimals
-    const inputAmount = ethers.parseUnits(amountIn, inputDecimals).toString()
+    const inputAmount = parseUnits(amountIn, inputDecimals).toString()
 
     let quote: LifiQuoteResponse
     try {
@@ -115,22 +116,22 @@ export const generateLifiBridgeQuote = async (
       name: fee.name,
       symbol: fee.token.symbol,
       chainName: chainsById[fee.token.chainId].name,
-      amount: ethers.formatUnits(fee.amount, fee.token.decimals),
+      amount: formatUnits(BigInt(fee.amount), fee.token.decimals),
       amountUSD: fee.amountUSD
     }))
     const gasFeeArray = quote.estimate?.gasCosts?.map(gas => ({
       type: gas.type,
       symbol: gas.token.symbol,
       chainName: chainsById[gas.token.chainId].name,
-      amount: ethers.formatUnits(gas.amount, gas.token.decimals),
+      amount: formatUnits(BigInt(gas.amount), gas.token.decimals),
       amountUSD: gas.amountUSD
     }))
-    const inAmountParsed = ethers.formatUnits(
-      quote.estimate?.fromAmount,
+    const inAmountParsed = formatUnits(
+      BigInt(quote.estimate?.fromAmount),
       inputDecimals
     )
-    const outAmountParsed = ethers.formatUnits(
-      quote.estimate?.toAmount,
+    const outAmountParsed = formatUnits(
+      BigInt(quote.estimate?.toAmount),
       outputDecimals
     )
 
@@ -183,6 +184,23 @@ export const generateLifiBridgeQuote = async (
   }
 }
 
+// when user don't have native token on the dest chain, trigger this
+const _generateMultiStepQuote = async (
+  fromChainId: number,
+  fromToken: string,
+  fromTokenDecimals: number,
+  fromTokenAddress: string,
+  fromAddress: string,
+  toChainId: number,
+  toChainNativeToken: string,
+  toToken: string,
+  amountIn: string,
+  slippage: string,
+  recipient: string,
+) => {
+
+}
+
 export const executeLifiBridgeTransaction = async (
   fromChainId: number,
   fromToken: string,
@@ -197,15 +215,6 @@ export const executeLifiBridgeTransaction = async (
   fromChainName: string,
   toChainName: string
 ) => {
-  console.log('fromChainId', fromChainId)
-  console.log('fromToken', fromToken)
-  console.log('fromTokenDecimals', fromTokenDecimals)
-  console.log('toChainId', toChainId)
-  console.log('toToken', toToken)
-  console.log('amountIn', amountIn)
-  console.log('slippage', slippage)
-  console.log('recipient', recipient)
-  console.log('isFromNativeToken', isFromNativeToken)
 
   const userEvmAddress = await getUserEvmWalletAddress()
   if (!userEvmAddress) {
@@ -217,7 +226,7 @@ export const executeLifiBridgeTransaction = async (
   if (!recipient) {
     recipient = userEvmAddress
   }
-  const inputAmount = ethers.parseUnits(amountIn, fromTokenDecimals).toString()
+  const inputAmount = parseUnits(amountIn, fromTokenDecimals).toString()
   const quote: LifiQuoteResponse = await getLifiQuote(
     fromChainId,
     toChainId,
@@ -262,7 +271,7 @@ export const executeLifiBridgeTransaction = async (
     const result = await executeSwapTransaction(txData, fromChainId, {
       estimateGas: gasLimit > 0 ? false : true,
       gasLimit: gasLimit
-        ? (ethers.toQuantity(gasLimit) as `0x${string}`)
+        ? toHex(gasLimit)
         : undefined
     })
 
