@@ -5,9 +5,12 @@ import { Card, CardContent } from '@/components/ui/card'
 import { CHAT_ID } from '@/lib/constants'
 import { useChat } from '@ai-sdk/react'
 import { ToolInvocation } from 'ai'
+import { useState } from 'react'
 import { CollapsibleMessage } from './collapsible-message'
 import { DefaultSkeleton } from './default-skeleton'
 import { ToolArgsSection } from './section'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faGasPump } from '@fortawesome/free-solid-svg-icons'
 
 // Based on readableQuote from lifi-bridge.ts
 interface FeeItem {
@@ -62,6 +65,8 @@ export function LifiSwapQuoteSection({
   const { status } = useChat({
     id: CHAT_ID
   })
+  const [showFeeDetails, setShowFeeDetails] = useState(false)
+
   const isLoading = status === 'submitted' || status === 'streaming'
   const isToolLoading = tool.state === 'call'
 
@@ -224,106 +229,113 @@ export function LifiSwapQuoteSection({
                   ≈ ${parseFloat(displayData.toAmountUSD).toFixed(2)}
                 </div>
               )}
-            </div>
-
-            {/* Fees Section */}
-            {(displayData.gasCostsUSD !== undefined ||
-              displayData.otherFeeUSD !== undefined ||
-              (displayData.otherFeeDetails &&
-                displayData.otherFeeDetails.length > 0)) && (
-              <div className="bg-blue-50 dark:bg-blue-950/40 rounded-lg p-4">
-                <div className="flex justify-between text-sm font-medium text-blue-700 dark:text-blue-400 mb-2">
-                  <span>Total Estimated Fees:</span>
-                  <span>
-                    ~$
-                    {parseFloat(
-                      String(
-                        (displayData.gasCostsUSD || 0) +
-                          (displayData.otherFeeUSD || 0)
-                      )
-                    ).toPrecision(2)}
-                  </span>
-                </div>
-
-                {/* Total Gas */}
-                {displayData.gasCostsUSD !== undefined && (
-                  <div className="flex justify-between text-xs mb-1 font-semibold">
-                    <div className="text-gray-800 dark:text-gray-100">
-                      Estimated Gas:
-                    </div>
-                    <div className="text-gray-800 dark:text-gray-100">
-                      ~$
-                      {parseFloat(String(displayData.gasCostsUSD)).toPrecision(
-                        2
-                      )}
-                    </div>
-                  </div>
-                )}
-                {/* Detailed Gas */}
-                {displayData.gasCosts &&
-                  displayData.gasCosts.map(
-                    (gas: GasCostItem, index: number) => (
-                      <div
-                        key={`gas-${index}`}
-                        className="flex justify-between text-xs ml-2 mb-0.5"
-                      >
-                        <div className="text-gray-600 dark:text-gray-300">
-                          ↳ {gas.type} ({gas.symbol} on {gas.chainName}):
-                        </div>
-                        <div className="text-gray-700 dark:text-gray-200">
-                          {parseFloat(gas.amount).toPrecision(4)} {gas.symbol}{' '}
-                          (~$
-                          {parseFloat(gas.amountUSD).toPrecision(2)})
-                        </div>
-                      </div>
-                    )
-                  )}
-
-                {/* Separator if both gas and other fees are present */}
-                {(displayData.gasCostsUSD !== undefined ||
-                  (displayData.gasCosts && displayData.gasCosts.length > 0)) &&
-                  (displayData.otherFeeUSD !== undefined ||
-                    (displayData.otherFeeDetails &&
-                      displayData.otherFeeDetails.length > 0)) && (
-                    <div className="mt-2 pt-2 border-t border-blue-200 dark:border-blue-800"></div>
-                  )}
-
-                {/* Total Other Fees */}
-                {displayData.otherFeeUSD !== undefined && (
-                  <div className="flex justify-between text-xs mb-1 mt-1 font-semibold">
-                    <div className="text-gray-800 dark:text-gray-100">
-                      Estimated Other Fees:
-                    </div>
-                    <div className="text-gray-800 dark:text-gray-100">
-                      ~$
-                      {parseFloat(String(displayData.otherFeeUSD)).toPrecision(
-                        2
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Detailed Other Fees */}
-                {displayData.otherFeeDetails &&
-                  displayData.otherFeeDetails.map(
-                    (fee: FeeItem, index: number) => (
-                      <div
-                        key={`other-${index}`}
-                        className="flex justify-between text-xs ml-2 mb-0.5"
-                      >
-                        <div className="text-gray-600 dark:text-gray-300">
-                          ↳ {fee.name} ({fee.symbol} on {fee.chainName}):
-                        </div>
-                        <div className="text-gray-700 dark:text-gray-200">
-                          {parseFloat(fee.amount).toPrecision(4)} {fee.symbol}{' '}
-                          (~$
-                          {parseFloat(fee.amountUSD).toPrecision(2)})
-                        </div>
-                      </div>
-                    )
-                  )}
+              <div className="text-xs text-gray-500 dark:text-gray-400">
+                1 {displayData.toToken} ≈ {(parseFloat(displayData.fromAmountToken || '0') / parseFloat(displayData.toAmountToken || '0')).toPrecision(2)} {displayData.fromToken}
               </div>
-            )}
+              {(displayData.gasCostsUSD !== undefined ||
+                displayData.otherFeeUSD !== undefined) && (
+                <div className="relative pt-2">
+                  <div
+                    onMouseEnter={() => setShowFeeDetails(true)}
+                    onMouseLeave={() => setShowFeeDetails(false)}
+                    className="flex items-center gap-2 cursor-pointer"
+                  >
+                    <div className="text-sm">
+                    <FontAwesomeIcon icon={faGasPump} /> $
+                      {parseFloat(
+                        String(
+                          (displayData.gasCostsUSD || 0) +
+                            (displayData.otherFeeUSD || 0)
+                        )
+                      ).toPrecision(2)}
+                    </div>
+                  </div>
+
+                  {showFeeDetails && (
+                    <div className="absolute top-full left-0 mt-1 z-20 w-full md:w-auto md:min-w-[380px] p-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-xl">
+                      {/* Total Gas */}
+                      {displayData.gasCostsUSD !== undefined && (
+                        <div className="flex justify-between text-xs mb-1 font-semibold">
+                          <div className="text-gray-800 dark:text-gray-100">
+                            Network Fee:
+                          </div>
+                          <div className="text-gray-800 dark:text-gray-100">
+                            ~$
+                            {parseFloat(
+                              String(displayData.gasCostsUSD)
+                            ).toPrecision(2)}
+                          </div>
+                        </div>
+                      )}
+                      {/* Detailed Gas */}
+                      {displayData.gasCosts &&
+                        displayData.gasCosts.map(
+                          (gas: GasCostItem, index: number) => (
+                            <div
+                              key={`gas-${index}`}
+                              className="flex justify-between text-xs ml-2 mb-0.5"
+                            >
+                              <div className="text-gray-600 dark:text-gray-300">
+                                ↳ {gas.type} ({gas.symbol} on {gas.chainName}):
+                              </div>
+                              <div className="text-gray-700 dark:text-gray-200">
+                                {parseFloat(gas.amount).toPrecision(4)}{' '}
+                                {gas.symbol} (~$
+                                {parseFloat(gas.amountUSD).toPrecision(2)})
+                              </div>
+                            </div>
+                          )
+                        )}
+
+                      {/* Separator if both gas and other fees are present */}
+                      {(displayData.gasCostsUSD !== undefined ||
+                        (displayData.gasCosts &&
+                          displayData.gasCosts.length > 0)) &&
+                        (displayData.otherFeeUSD !== undefined ||
+                          (displayData.otherFeeDetails &&
+                            displayData.otherFeeDetails.length > 0)) && (
+                          <div className="mt-2 pt-2 border-t border-blue-200 dark:border-blue-800"></div>
+                        )}
+
+                      {/* Total Other Fees */}
+                      {displayData.otherFeeUSD !== undefined && (
+                        <div className="flex justify-between text-xs mb-1 mt-1 font-semibold">
+                          <div className="text-gray-800 dark:text-gray-100">
+                            Provider Fee:
+                          </div>
+                          <div className="text-gray-800 dark:text-gray-100">
+                            ~$
+                            {parseFloat(
+                              String(displayData.otherFeeUSD)
+                            ).toPrecision(2)}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Detailed Other Fees */}
+                      {displayData.otherFeeDetails &&
+                        displayData.otherFeeDetails.map(
+                          (fee: FeeItem, index: number) => (
+                            <div
+                              key={`other-${index}`}
+                              className="flex justify-between text-xs ml-2 mb-0.5"
+                            >
+                              <div className="text-gray-600 dark:text-gray-300">
+                                ↳ {fee.name} 
+                                ):
+                              </div>
+                              <div className="text-gray-700 dark:text-gray-200">
+                                {/* {parseFloat(fee.amount).toPrecision(4)}{' '} */}
+                                ~${parseFloat(fee.amountUSD).toPrecision(2)}
+                              </div>
+                            </div>
+                          )
+                        )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
             {/* Auto-fueled Token Section */}
             {(displayData.byProductAmount ||
@@ -353,7 +365,9 @@ export function LifiSwapQuoteSection({
                       ↳ After this transaction:
                     </div>
                     <div className="text-gray-700 dark:text-gray-200">
-                      {Number(displayData.byProductAmountMinusGas).toPrecision(4)}{' '}
+                      {Number(displayData.byProductAmountMinusGas).toPrecision(
+                        4
+                      )}{' '}
                       {displayData.byProductSymbol}
                       {displayData.byProductAmountMinusGasUSD !== undefined &&
                         ` (~$${parseFloat(
