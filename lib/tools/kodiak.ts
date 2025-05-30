@@ -4,6 +4,13 @@ import { getKodiakOpportunitiesFromApi } from '../kodiak/api'
 import { depositToKodiakIsland, IslandSingleDepositParams } from '../kodiak/islandRatio'
 import { tickToPrice } from '../kodiak/utils'
 import { FormattedKodiakIsland } from '../types/kodiak'
+import { NetworkContext } from '../utils/tool-registry'
+
+interface ToolContext {
+  toolCallId?: string
+  messages?: any[]
+  networkContext?: NetworkContext
+}
 
 /**
  * Formats a price value with proper handling of extremely large numbers
@@ -46,13 +53,17 @@ export const kodiakOpportunitiesTool = tool({
       .default(10)
       .describe('Number of opportunities to return (default 10)')
   }),
-  execute: async ({ 
-    apr_gte, 
-    apr_lte, 
-    sort_by = 'tvl', 
-    max_results = 10 
-  }) => {
-    try {
+  execute: async (params, context: ToolContext) => {
+    const { 
+      apr_gte, 
+      apr_lte, 
+      sort_by = 'tvl', 
+      max_results = 10 
+    } = params;
+    
+    const networkContext = context?.networkContext;
+
+    try {      
       // Fetch all active islands with reasonable TVL using the new API endpoint
       const islands = await getKodiakOpportunitiesFromApi({
         minTvl: 10, // Lower threshold to show more islands
@@ -206,13 +217,17 @@ export const kodiakDepositTool = tool({
       .default('0.01')
       .describe('Minimum shares expected to receive from the deposit (default: 0.01)')
   }),
-  execute: async ({ 
-    island_address, 
-    amount, 
-    is_token0 = true, 
-    slippage_bps = 50, 
-    min_shares_received = '0.01'
-  }) => {
+  execute: async (params, context: ToolContext) => {
+    const { 
+      island_address, 
+      amount, 
+      is_token0 = true, 
+      slippage_bps = 50, 
+      min_shares_received = '0.01'
+    } = params;
+    
+    const networkContext = context?.networkContext;
+
     try {
       // Prepare deposit parameters
       const depositParams: IslandSingleDepositParams = {

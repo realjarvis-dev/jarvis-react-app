@@ -6,6 +6,13 @@ import { v4 as uuidv4 } from 'uuid'
 import { z } from 'zod'
 import { NetworkConfig } from '../config/network'
 import { getUserWallet, privy } from '../privy/client'
+import { NetworkContext } from '../utils/tool-registry'
+
+interface ToolContext {
+  toolCallId?: string
+  messages?: any[]
+  networkContext?: NetworkContext
+}
 
 export const privyTransferTool = tool({
   description: 'Transfer funds to a specified address',
@@ -15,7 +22,8 @@ export const privyTransferTool = tool({
       .number()
       .describe('The amount of ETH in the unit of ETH to transfer')
   }),
-  execute: async ({ address, amount }) => {
+  execute: async ({ address, amount }, context: ToolContext) => {
+    const networkContext = context?.networkContext;
     const evmWallet: WalletWithMetadata | undefined = await getUserWallet(
       'ethereum'
     )
@@ -46,16 +54,17 @@ export const privyTransferTool = tool({
       // convert amount to wei
       const amountInWei = amount * 10 ** 18
 
-      console.log(NetworkConfig)
+      // Use chainId from networkContext if available, otherwise fall back to NetworkConfig
+      const chainId = networkContext?.selectedChainId || NetworkConfig.chainId;
 
       const { hash } = await privy.walletApi.ethereum.sendTransaction({
         walletId: evmWallet?.id || '',
-        caip2: `eip155:${NetworkConfig.chainId}`,
+        caip2: `eip155:${chainId}`,
         transaction: {
           to: `0x${addressWithoutPrefix}`,
           value: amountInWei,
           gasLimit: 21000,
-          chainId: NetworkConfig.chainId
+          chainId: chainId
         },
         idempotencyKey: idempotencyKey // unique key for this transaction
       })
