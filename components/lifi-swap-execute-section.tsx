@@ -320,7 +320,7 @@ export function LifiSwapExecuteSection({
                 Failed
               </Badge>
             </div>
-            <div className="text-red-600 dark:text-red-400 text-sm font-medium">
+            <div className="text-red-600 dark:text-red-400 text-sm font-medium whitespace-pre-wrap break-all">
               {result.error || 'Transaction failed'}
             </div>
             {(result.swap_details || args) && (

@@ -81,27 +81,3 @@ export const privyTransferTool = tool({
     }
   }
 })
-
-const RPC_URL = process.env.ETH_RPC_URL || 'https://eth.llamarpc.com'
-const FEED_ADDRESS = ethers.getAddress(
-  '0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419'
-)
-
-export async function fetchEthUsdPrice(): Promise<{
-  price: ethers.BigNumberish
-  decimals: number
-}> {
-  const provider = new ethers.JsonRpcProvider(RPC_URL)
-  // Attach ABI, not interface type
-  const feed = new ethers.Contract(
-    FEED_ADDRESS,
-    AggregatorV3InterfaceABI,
-    provider
-  )
-
-  // latestRoundData() returns a struct:
-  // { roundId, answer, startedAt, updatedAt, answeredInRound }
-  const roundData = await feed.latestRoundData()
-  const decimals: number = await feed.decimals()
-  return { price: roundData.answer, decimals }
-}

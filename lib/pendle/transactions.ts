@@ -102,71 +102,73 @@ export async function getSwapTransactionFromPendle(
 const ERC20_ABI = [
   'function approve(address spender, uint256 amount) external returns (bool)',
   'function allowance(address owner, address spender) external view returns (uint256)',
-  "function decimals() view returns (uint8)",
-  "function symbol() view returns (string)",
-  "function name() view returns (string)"
-];
+  'function decimals() view returns (uint8)',
+  'function symbol() view returns (string)',
+  'function name() view returns (string)'
+]
 
-export async function getERC20Details (
+export async function getERC20Details(
   tokenAddress: string,
   chainId: number = 1
-): Promise<{ decimals: number, symbol: string, name: string }> {
+): Promise<{ decimals: number; symbol: string; name: string }> {
   try {
-    const provider = new ethers.JsonRpcProvider(process.env.ETH_RPC_URL || getConfigByChainId(chainId).rpcUrl);
-    const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
+    const provider = new ethers.JsonRpcProvider(
+      process.env.TEST_RPC_URL || getConfigByChainId(chainId).rpcUrl
+    )
+    const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider)
     const [decimals, symbol, name] = await Promise.all([
-    tokenContract.decimals(),
-    tokenContract.symbol(),
-    tokenContract.name()
-  ]);
-  return { decimals, symbol, name };
+      tokenContract.decimals(),
+      tokenContract.symbol(),
+      tokenContract.name()
+    ])
+    return { decimals, symbol, name }
   } catch (error: any) {
     console.error('Error fetching ERC20 details:', error.message)
     throw new Error(`Failed to get ERC20 details: ${error.message}`)
   }
 }
 
-export async function erc20Approval (
+export async function erc20Approval(
   tokenAddress: string,
   spenderAddress: string,
   amount: string,
   userAddress: string,
   chainId: number = 1
-): Promise<{ status: string, message?: string }> {
-    // default to use the ETH_RPC_URL in env
-    // on localhost can put 127.0.0.1:8545 for local testing
-    // TODO: on deployment have to remove the ETH_RPC_URL for multichain support
-    const provider = new ethers.JsonRpcProvider(process.env.ETH_RPC_URL || getConfigByChainId(chainId).rpcUrl);
-    const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
-    const allowance = await tokenContract.allowance(userAddress, spenderAddress);
-    
-    // Skip approval if allowance is sufficient
-    if (allowance >= BigInt(amount)) {
-      return { status: 'success', message: 'Allowance is sufficient' };
-    }
-    
-    // Generate approval transaction
-    const approvalData = tokenContract.interface.encodeFunctionData('approve', [
-      spenderAddress,
-      amount
-    ]);
+): Promise<{ status: string; message?: string }> {
+  // default to use the TEST_RPC_URL in env
+  // on localhost can put 127.0.0.1:8545 for local testing
+  // TODO: on deployment have to remove the TEST_RPC_URL for multichain support
+  const provider = new ethers.JsonRpcProvider(
+    process.env.TEST_RPC_URL || getConfigByChainId(chainId).rpcUrl
+  )
+  const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider)
+  const allowance = await tokenContract.allowance(userAddress, spenderAddress)
 
-    try {
-      const txData = await executeSwapTransaction({
+  // Skip approval if allowance is sufficient
+  if (allowance >= BigInt(amount)) {
+    return { status: 'success', message: 'Allowance is sufficient' }
+  }
+
+  // Generate approval transaction
+  const approvalData = tokenContract.interface.encodeFunctionData('approve', [
+    spenderAddress,
+    amount
+  ])
+
+  try {
+    const txData = await executeSwapTransaction(
+      {
         to: tokenAddress,
         from: userAddress,
         data: approvalData,
         value: BigInt(0)
-      }, chainId)
-      return { status: 'success', message: txData.hash }
-    } catch (error: any) {
-      return { status: 'fail', message: error.message }
-    }
-
-
-
-
-
+      },
+      chainId
+    )
+    return { status: 'success', message: txData.hash }
+  } catch (error: any) {
+    return { status: 'fail', message: error.message }
+  }
 }
 
 // TODO: add an option to support no gas estimation since kodiak deposit can't be estimated
@@ -183,7 +185,7 @@ export async function executeSwapTransaction(
   txData: TransactionRequest,
   chainId: number = 1,
   gasOptions?: {
-    gasLimit?: `0x${string}`,
+    gasLimit?: `0x${string}`
     estimateGas: boolean
   }
 ): Promise<{ hash: string }> {
@@ -192,8 +194,10 @@ export async function executeSwapTransaction(
     // if (!process.env.PRIVATE_KEY) {
     //   throw new Error('PRIVATE_KEY environment variable is not set.')
     // }
-    const provider = new ethers.JsonRpcProvider(process.env.ETH_RPC_URL || getConfigByChainId(chainId).rpcUrl)
-    console.log(process.env.ETH_RPC_URL)
+    const provider = new ethers.JsonRpcProvider(
+      process.env.TEST_RPC_URL || getConfigByChainId(chainId).rpcUrl
+    )
+    console.log(process.env.TEST_RPC_URL)
     const block = await provider.getBlock('latest')
     const baseFee = block?.baseFeePerGas
     console.log('baseFee', baseFee)
@@ -214,14 +218,16 @@ export async function executeSwapTransaction(
     if (!evmWallet.id) {
       throw new Error('EVM wallet ID not found')
     }
-    const correctNonce = await provider.getTransactionCount(txData.from as `0x${string}`, "pending");
-
+    const correctNonce = await provider.getTransactionCount(
+      txData.from as `0x${string}`,
+      'pending'
+    )
 
     const weiBig = BigInt(value || '0')
     const quantity = ethers.toQuantity(weiBig)
     let gasLimit: `0x${string}`
 
-    const estimateGas = gasOptions?.estimateGas !== false; // Default to true if not specified or explicitly true
+    const estimateGas = gasOptions?.estimateGas !== false // Default to true if not specified or explicitly true
     if (estimateGas) {
       // Gas estimation
       const gasEstimate = await provider.estimateGas({
@@ -232,9 +238,12 @@ export async function executeSwapTransaction(
         chainId: chainId
       })
       // Add a 20 % buffer
-      gasLimit = ethers.toQuantity(gasEstimate + gasEstimate / BigInt(5)) as `0x${string}`
+      gasLimit = ethers.toQuantity(
+        gasEstimate + gasEstimate / BigInt(5)
+      ) as `0x${string}`
     } else {
-      gasLimit = gasOptions?.gasLimit ?? ethers.toQuantity(650000) as `0x${string}`
+      gasLimit =
+        gasOptions?.gasLimit ?? (ethers.toQuantity(650000) as `0x${string}`)
     }
 
     // strip the 0x prefix for to, quantity, and data
@@ -244,7 +253,7 @@ export async function executeSwapTransaction(
     const fromAddress = (from as string).replace(/^0x/, '')
 
     console.log('gasLimit', gasLimit)
-    console.log("valueHex", valueHex)
+    console.log('valueHex', valueHex)
 
     const { signedTransaction, encoding } =
       await privy.walletApi.ethereum.signTransaction({

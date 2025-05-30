@@ -158,7 +158,7 @@ ALCHEMY_API_KEY=    # Get from https://www.alchemy.com/
 You will also need to configure an Ethereum RPC URL if you want to use locally forked mainnet.
 
 ```bash
-ETH_RPC_URL=        # Your Ethereum RPC URL
+TEST_RPC_URL=        # Your Ethereum RPC URL
 ```
 
 ### Enso Setup
