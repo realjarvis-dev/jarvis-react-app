@@ -1,15 +1,14 @@
 import {
   CoreMessage,
   DataStreamWriter,
+  JSONValue,
   generateId,
-  generateText,
-  JSONValue
+  generateText
 } from 'ai'
-import { z } from 'zod'
 import { ExtendedCoreMessage } from '../types'
+import { ErrorType, createErrorResponse, executeWithRetry } from '../utils/error-handling'
 import { getModel, isToolCallSupported } from '../utils/registry'
 import { ToolRegistry, getToolRegistry } from '../utils/tool-registry'
-import { executeWithRetry, ErrorType, createErrorResponse } from '../utils/error-handling'
 import { parseToolCallXml } from './parse-tool-call'
 
 /**
@@ -44,6 +43,7 @@ class ToolResultCache {
   private cache = new Map<string, CacheEntry>()
   private ttlMap: Record<string, number> = {
     search: 5 * 60 * 1000, // 5 minutes
+    gas_price: 1 * 60 * 1000, // 1 minutes
     wallet_balance: 30 * 1000, // 30 seconds
     pendle_opportunities: 60 * 1000, // 1 minute
     pendle_quote: 30 * 1000, // 30 seconds
@@ -312,7 +312,8 @@ async function executeManualToolCall(
     'wallet_balance',
     'pendle_quote', 
     'pendle_swap',
-    'kodiak_opportunities'
+    'kodiak_opportunities',
+    'market_chart'
   ].includes(toolName)
   
   if (isUiDisplayedTool) {

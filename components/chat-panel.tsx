@@ -22,10 +22,13 @@ import { CopyableWalletAddressSkeleton } from './copyable-wallet-address-skeleto
 
 import { MarketPulse } from './market-pulse'
 
+import { useNetwork } from '../lib/context/network-context'
+import { ChainSelector } from './chain-selector'
+import { DemoToggle } from './demo-toggle'
 import { SearchModeToggle } from './search-mode-toggle'
 import { Button } from './ui/button'
 import { IconLogo } from './ui/icons'
-import { VideoBackground } from './ui/video-background'; // Import the VideoBackground component
+import { VideoBackground } from './ui/video-background'
 import { WelcomeMessage } from './welcome-messages'
 
 // Custom hook for keyboard avoidance on mobile
@@ -238,6 +241,9 @@ export function ChatPanel({
   const { delegateWallet } = useHeadlessDelegatedActions() // Your existing state
   const welcomeSeed = useRef(new Date().getDate()).current // Your existing state
 
+  // Network selection state
+  const { selectedChain, setSelectedChain, isDemoMode, setIsDemoMode } = useNetwork()
+
   // Apply keyboard avoidance hook
   useKeyboardAvoidance({ ref: inputRef })
 
@@ -274,18 +280,40 @@ export function ChatPanel({
     )
   }
 
-  // if query is not empty, submit the query
+  // Handle URL query parameters and pre-filled queries
   useEffect(() => {
-    if (isFirstRender.current && query && query.trim().length > 0) {
-      append({
-        id: Date.now().toString(),
-        role: 'user',
-        content: query
-      }) // Added id for consistency
+    // Check for URL query parameter
+    const urlParams = new URLSearchParams(window.location.search)
+    const urlQuery = urlParams.get('q')
+    
+    // Use URL query if available, otherwise use the passed query prop
+    const queryToSubmit = urlQuery || query
+    
+    if (isFirstRender.current && queryToSubmit && queryToSubmit.trim().length > 0) {
+      // Instead of using append, set the input value and submit the form
+      // This ensures the onFinish callback is triggered
+      handleInputChange({
+        target: { value: queryToSubmit }
+      } as React.ChangeEvent<HTMLTextAreaElement>)
+      
+      // Submit the form after a brief delay to ensure input is set
+      setTimeout(() => {
+        const form = document.querySelector('form') as HTMLFormElement
+        if (form) {
+          form.requestSubmit()
+        }
+      }, 100)
+      
       isFirstRender.current = false
+      
+      // Clear the URL query parameter after using it
+      if (urlQuery) {
+        const newUrl = window.location.pathname
+        window.history.replaceState({}, '', newUrl)
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, append]) // Added append to dependency array
+  }, [query, handleInputChange])
 
   useEffect(() => {
     if (!ready) {
@@ -386,7 +414,7 @@ export function ChatPanel({
     <> {/* Use a fragment if VideoBackground is fixed and outside the main div's flow */}
       <VideoBackground
         src="/videos/background.mp4" // Ensure this path is correct
-        // poster="/videos/background_poster.jpg" // Optional: path to a poster image
+        poster="/videos/background_poster.jpg" // Optional: path to a poster image
         isActive={showVideoBg}
         playbackRate={0.15} // Adjust playback speed as desired
       />
@@ -612,6 +640,15 @@ export function ChatPanel({
               >
                 <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto hide-scrollbar">
                   <SearchModeToggle />
+                  <ChainSelector
+                    selectedChain={selectedChain}
+                    onChainChange={setSelectedChain}
+                    isDemoMode={isDemoMode}
+                  />
+                  <DemoToggle
+                    isDemoMode={isDemoMode}
+                    onDemoModeChange={setIsDemoMode}
+                  />
                 </div>
                 <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                   {messages.length > 0 && (

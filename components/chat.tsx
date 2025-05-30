@@ -1,6 +1,7 @@
 'use client'
 
 import { CHAT_ID } from '@/lib/constants'
+import { useNetwork } from '@/lib/context/network-context'
 import { useAutoScroll } from '@/lib/hooks/use-auto-scroll'
 import { cn } from '@/lib/utils'
 import { useChat } from '@ai-sdk/react'
@@ -10,10 +11,9 @@ import { Message } from 'ai/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { toast } from 'sonner'
+import useLocalStorage from 'use-local-storage-state'
 import { ChatMessages } from './chat-messages'
 import { ChatPanel } from './chat-panel'
-
-import useLocalStorage from 'use-local-storage-state';
 
 const TRIAL_KEY = 'anon_trials'
 const MAX_TRIALS = 2
@@ -29,6 +29,7 @@ export function Chat({
 }) {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const { user, ready, authenticated } = usePrivy()
+  const { selectedChain, isDemoMode } = useNetwork()
   const [headers, setHeaders] = useState<Record<string, string>>({})
   const [anonId, setAnonId] = useLocalStorage('anonUserId', { defaultValue: '' });
   const [anonTrial, setAnonTrial] = useLocalStorage('anonTrial', { defaultValue: MAX_TRIALS });
@@ -44,7 +45,9 @@ export function Chat({
       }
       setHeaders({
         'x-user-id': anonId,
-        'allow-web3-tools': 'false'
+        'allow-web3-tools': 'false',
+        'x-selected-chain': selectedChain,
+        'x-demo-mode': isDemoMode.toString()
       })
       return
     } else {
@@ -53,18 +56,22 @@ export function Chat({
           const token = await getAccessToken()
           setHeaders({
             'x-user-id': user!.id,
-            'allow-web3-tools': 'true'
+            'allow-web3-tools': 'true',
+            'x-selected-chain': selectedChain,
+            'x-demo-mode': isDemoMode.toString()
           })
         } catch (error) {
           console.error('Failed to get access token:', error)
           setHeaders({
             'x-user-id': 'anonymous',
-            'allow-web3-tools': 'false'
+            'allow-web3-tools': 'false',
+            'x-selected-chain': selectedChain,
+            'x-demo-mode': isDemoMode.toString()
           })
         }
       })()
     }
-  }, [user?.id, ready, authenticated])
+  }, [user?.id, ready, authenticated, selectedChain, isDemoMode])
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
@@ -205,8 +212,6 @@ export function Chat({
     }
     return await reload(options)
   }
-
-
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     const sendMessage = () => {

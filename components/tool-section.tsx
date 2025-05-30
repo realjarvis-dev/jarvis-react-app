@@ -4,10 +4,12 @@ import { ToolInvocation } from 'ai'
 import { GenericSwapCard } from './generic-swap-card'
 import { KodiakDepositCard } from './kodiak-deposit-card'
 import { KodiakOpportunitiesSection } from './kodiak-opportunities-section'
+import { MarketChartSection } from './market-chart-section'
 import { PendleOpportunitiesSection } from './pendle-opportunities-section'
 import { QuestionConfirmation } from './question-confirmation'
 import RetrieveSection from './retrieve-section'
 import { SearchSection } from './search-section'
+import { GetGasPriceSection } from './get-gas-price-section'
 import { SimpleQuoteDisplay } from './simple-quote-display'
 import { SwapTransactionCard } from './swap-transaction-card'
 import { TransferSection } from './transfer-section'
@@ -104,6 +106,14 @@ export function ToolSection({
           onOpenChange={onOpenChange}
         />
       )
+    case 'market_chart':
+      return (
+        <MarketChartSection
+          tool={tool}
+          isOpen={isOpen}
+          onOpenChange={onOpenChange}
+        />
+      )
     case 'pendle_quote':
       return (
         <div className="flex flex-col space-y-4 py-4">
@@ -178,6 +188,10 @@ export function ToolSection({
     case 'lifi_bridge_execute':
       return (
         <LifiSwapExecuteSection tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
+      )
+    case 'get_gas_price':
+      return (
+        <GetGasPriceSection tool={tool} />
       )
     default:
       return null

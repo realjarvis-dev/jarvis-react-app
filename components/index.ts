@@ -6,3 +6,6 @@ export { SwapTransactionStatus } from './swap-transaction-status'
 export { KodiakDepositCard } from './kodiak-deposit-card'
 export { KodiakDepositStatus } from './kodiak-deposit-status'
 
+// Export market-related components
+export { MarketChart } from './market-chart'
+

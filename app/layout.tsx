@@ -5,6 +5,7 @@ import WrappedPrivyProvider from '@/components/privy-provider'
 import { ThemeProvider } from '@/components/theme-provider'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { Toaster } from '@/components/ui/sonner'
+import { NetworkProvider } from '@/lib/context/network-context'
 import { cn } from '@/lib/utils'
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
@@ -67,17 +68,19 @@ export default async function RootLayout({
 
           disableTransitionOnChange
         >
-          <WrappedPrivyProvider>
-            <SidebarProvider defaultOpen={false}>
-              <AppSidebar />
-              <div className="flex flex-col flex-1 min-w-0"> {/* ADDED min-w-0 HERE */}
-                <Header />
-                <main className="flex flex-1 min-h-0 w-full">
-                  <ArtifactRoot>{children}</ArtifactRoot>
-                </main>
-              </div>
-            </SidebarProvider>
-          </WrappedPrivyProvider>
+          <NetworkProvider>
+            <WrappedPrivyProvider>
+              <SidebarProvider defaultOpen={false}>
+                <AppSidebar />
+                <div className="flex flex-col flex-1 min-w-0"> {/* ADDED min-w-0 HERE */}
+                  <Header />
+                  <main className="flex flex-1 min-h-0 w-full">
+                    <ArtifactRoot>{children}</ArtifactRoot>
+                  </main>
+                </div>
+              </SidebarProvider>
+            </WrappedPrivyProvider>
+          </NetworkProvider>
           <Toaster />
           <Analytics />
         </ThemeProvider>

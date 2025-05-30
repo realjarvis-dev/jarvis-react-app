@@ -19,8 +19,13 @@ export const MainnetConfig = {
     scanLink: 'etherscan.io',
     rpcUrl: 'https://eth-mainnet.g.alchemy.com/v2/yIRJoLX9TId7oSWYdnflKgthIy59m-vr'
 }
-// console.log('process.env.NEXT_PUBLIC_TEST_NET_ENV', process.env.NEXT_PUBLIC_TEST_NET_ENV)
-// export const NetworkConfig = process.env.NEXT_PUBLIC_TEST_NET_ENV === 'production' ? MainnetConfig : SepoliaConfig;
+
+export const TenderlyDemoConfig = {
+    name: Network.ETH_MAINNET, // Using ETH_MAINNET as base for demo mode
+    chainId: 92736,
+    scanLink: 'etherscan.io', // Using etherscan as fallback for demo
+    rpcUrl: 'https://virtual.mainnet.rpc.tenderly.co/fcb5c956-9f40-4ccb-8ea3-249ea2de031d'
+}
 
 export const BerachainMainnetConfig = {
     name: Network.BERACHAIN_MAINNET,
@@ -40,7 +45,8 @@ export const chainIdToNetworkConfig: Record<number, NetworkConfigType> = {
     [BerachainMainnetConfig.chainId]: BerachainMainnetConfig,
     [BepoliaConfig.chainId]: BepoliaConfig,
     [SepoliaConfig.chainId]: SepoliaConfig,
-    [MainnetConfig.chainId]: MainnetConfig
+    [MainnetConfig.chainId]: MainnetConfig,
+    [TenderlyDemoConfig.chainId]: TenderlyDemoConfig
 }
 
 export const getConfigByChainId = (chainId: number) => {

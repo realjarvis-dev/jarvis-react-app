@@ -1,5 +1,6 @@
 import { Alchemy, TokenBalance } from 'alchemy-sdk'
 import { ethers } from 'ethers'
+import { TenderlyDemoConfig } from '../config/network'
 import {
   berachainBepoliaAlchemy,
   berachainMainnetAlchemy,
@@ -32,6 +33,34 @@ export async function getBerachainBepoliaTokenBalance(
   walletAddress: string
 ): Promise<TokenData[]> {
   return getTokenBalance(walletAddress, berachainBepoliaAlchemy)
+}
+
+/**
+ * Get token balances from Tenderly Demo Network (vnet)
+ * Uses direct RPC calls since Alchemy doesn't support custom networks
+ */
+export async function getTenderlyDemoTokenBalance(
+  address: string
+): Promise<TokenData[]> {
+  try {
+    const provider = new ethers.JsonRpcProvider(TenderlyDemoConfig.rpcUrl);
+    
+    // Get native ETH balance
+    const nativeBalance = await provider.getBalance(address);
+    
+    const ethToken: TokenData = {
+      address: ethers.ZeroAddress,
+      name: 'Ether',
+      symbol: 'ETH',
+      balance: ethers.formatEther(nativeBalance),
+      network: 'Tenderly Demo Network'
+    };
+
+    return [ethToken];
+  } catch (error) {
+    console.error('Error fetching Tenderly demo balances:', error);
+    return [];
+  }
 }
 
 export async function getTokenBalance(
@@ -96,7 +125,8 @@ const tokenBalanceFunctions = [
   getMainnetTokenBalance,
   getSepoliaTokenBalance,
   getBerachainMainnetTokenBalance,
-  getBerachainBepoliaTokenBalance
+  getBerachainBepoliaTokenBalance,
+  getTenderlyDemoTokenBalance // Add Tenderly demo network support
 ]
 
 export async function getTokenBalanceByChainId(
