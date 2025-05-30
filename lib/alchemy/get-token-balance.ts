@@ -38,7 +38,7 @@ export async function getTenderlyDemoTokenBalance(
       name: 'Ether',
       symbol: 'ETH',
       balance: ethers.formatEther(nativeBalance),
-      network: 'Tenderly Demo Network'
+      network: 'Ethereum Mainnet (Demo)'
     };
 
     return [ethToken];

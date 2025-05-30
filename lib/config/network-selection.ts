@@ -1,8 +1,8 @@
 import { ChainType } from '@/components/chain-selector'
 import {
-    BerachainMainnetConfig,
-    MainnetConfig,
-    TenderlyDemoConfig
+  BerachainMainnetConfig,
+  MainnetConfig,
+  TenderlyDemoConfig
 } from './network'
 
 export interface NetworkConfig {
@@ -34,7 +34,7 @@ export const NETWORK_CONFIGS: Record<ChainType, NetworkConfig> = {
 // Demo network configuration (Tenderly vnet)
 export const DEMO_NETWORK_CONFIG: NetworkConfig = {
   chainId: TenderlyDemoConfig.chainId,
-  name: 'Ethereum Demo (Tenderly)',
+  name: 'Ethereum Mainnet (Demo)',
   rpcUrl: TenderlyDemoConfig.rpcUrl,
   scanLink: TenderlyDemoConfig.scanLink,
   isDemo: true
