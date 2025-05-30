@@ -1,6 +1,13 @@
 import { ChainWithScore } from '../token-matcher/fuzzy-chain-matcher'
 import { TokenWithScore } from '../token-matcher/fuzzy-token-matcher'
 
+export const noRouteDetails = 'Reasons for that could be: low liquidity, amount selected is too low, gas costs are too high or there are no routes for the selected combination.'
+export const noRouteTitle = 'No routes available for the selected combination'
+
+export const autoFuelFailDetails = 'Reasons for that could be: low liquidity, amount selected is too low, gas costs are too high or there are no routes for the selected combination.'
+export const autoFuelFailTitle = 'Failed to auto-fuel destination chain with input token'
+
+
 export const getClarifyInputAndOutputDetail = (
   fromChain: ChainWithScore,
   toChain: ChainWithScore,

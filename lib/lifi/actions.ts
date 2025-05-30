@@ -16,7 +16,11 @@ import { getLifiQuote } from './api'
 import {
   getClarifyInputAndOutputDetail,
   getClarifyInputDetail,
-  getClarifyOutputDetail
+  getClarifyOutputDetail,
+  noRouteDetails,
+  noRouteTitle,
+  autoFuelFailDetails,
+  autoFuelFailTitle
 } from './utils'
 
 const PREDEFINED_GAS_LIMIT = 1000000
@@ -99,7 +103,39 @@ export const generateLifiBridgeQuote = async (
     if (fromChainMatch.id !== toChainMatch.id) {
       // check user's balance on dest chain
       const balanceDestChain = await getNativeBalanceByChainId(recipient, toChainMatch.id)
-      
+      if (balanceDestChain <= BigInt(0) && autoFuelDestChain) {
+        try {
+          const {status, message, nativeTokenQuote, swapQuote} = await _generateMultiStepQuote(
+            fromChainMatch.id,
+            fromTokenSingle.symbol,
+            fromTokenSingle.decimals,
+            userEvmAddress,
+            toChainMatch.id,
+            toChainMatch.coin,
+            toTokenSingle.symbol,
+            toTokenSingle.decimals,
+            amountIn,
+            slippage,
+            recipient
+          )
+          if (status === 'fail') {
+            return {
+              instruction: 'notify user and ask if they want to turn off auto fuel',
+              title: autoFuelFailTitle,
+              details: autoFuelFailDetails,
+              more_details: message
+            }
+          }
+        } catch (error) {
+          return {
+            instruction: 'notify user',
+            title: noRouteTitle,
+            details: noRouteDetails,
+            more_details: error instanceof Error ? error.message : 'Unknown error'
+          }
+        }
+      }
+
     }
 
 
@@ -122,9 +158,8 @@ export const generateLifiBridgeQuote = async (
     } catch (error) {
       return {
         instruction: 'notify user',
-        title: 'No routes available for the selected combination',
-        details:
-          'Reasons for that could be: low liquidity, amount selected is too low, gas costs are too high or there are no routes for the selected combination.',
+        title: noRouteTitle,
+        details: noRouteDetails,
         more_details: error instanceof Error ? error.message : 'Unknown error'
       }
     }
@@ -208,8 +243,9 @@ const _generateMultiStepQuote = async (
   fromAddress: string,
   toChainId: number,
   toChainNativeTokenSymbol: string,
-  toToken: string,
-  amountIn: string,
+  toTokenSymbol: string,
+  toTokenDecimals: number,
+  amountIn: string, // in human readable format
   slippage: string,
   recipient: string
 ) => {
@@ -236,7 +272,9 @@ const _generateMultiStepQuote = async (
     return {
       status: 'fail',
       message: `Not enough input amount to cover the future gas fee on the destination chain, 
-      or the future gas fee is more than the output token amount`
+      or the future gas fee is more than the output token amount`,
+      nativeTokenQuote,
+      swapQuote: null
     }
   }
   
@@ -244,17 +282,90 @@ const _generateMultiStepQuote = async (
     toChainId,
     toChainId,
     toChainNativeTokenSymbol,
-    toToken,
+    toTokenSymbol,
     amountToSwapInWei.toString(),
     fromAddress,
     recipient,
     slippage
   )
 
+  const otherFeeArray = [...nativeTokenQuote.estimate?.feeCosts || [], ...swapQuote.estimate?.feeCosts || []].map(fee => ({
+    name: fee.name,
+    symbol: fee.token.symbol,
+    chainName: chainsById[fee.token.chainId].name,
+    amount: formatUnits(BigInt(fee.amount), fee.token.decimals),
+    amountUSD: fee.amountUSD
+  }))
+  const gasFeeArray = [...nativeTokenQuote.estimate?.gasCosts || [], ...swapQuote.estimate?.gasCosts || []].map(gas => ({
+    type: gas.type,
+    symbol: gas.token.symbol,
+    chainName: chainsById[gas.token.chainId].name,
+    amount: formatUnits(BigInt(gas.amount), gas.token.decimals),
+    amountUSD: gas.amountUSD
+  }))
+  const inAmountParsed = formatUnits(
+    BigInt(nativeTokenQuote.estimate?.fromAmount),
+    fromTokenDecimals
+  )
+  const outAmountParsed = formatUnits(
+    BigInt(swapQuote.estimate?.toAmount),
+    toTokenDecimals
+  )
+
+  const toChainNativeTokenDecimals = swapQuote.action.fromToken.decimals
+
+  const byProductAmount = formatUnits(
+    BigInt(feeToSave),
+    toChainNativeTokenDecimals
+  )
+  const byProductAmountMinusGas = formatUnits(
+    BigInt(feeToSave) - BigInt(swapQuote.estimate?.gasCosts?.reduce((acc, curr) => acc + Number(curr.amount), 0) ?? 0),
+    toChainNativeTokenDecimals
+  )
+
+  const byProductAmountUSD = Number(nativeTokenQuote.estimate?.toAmountUSD ?? 0) - Number(swapQuote.estimate?.fromAmountUSD ?? 0)
+  const byProductAmountMinusGasUSD = byProductAmountUSD - Number(swapQuote.estimate?.gasCosts?.reduce((acc, curr) => acc + Number(curr.amountUSD), 0) ?? 0)
+
+
+  const readableQuote = {
+    fromChain: chainsById[fromChainId].name,
+    fromChainId: fromChainId,
+    fromToken: fromTokenSymbol,
+    fromAmountToken: inAmountParsed,
+    fromAmountUSD: nativeTokenQuote.estimate?.fromAmountUSD,
+    fromTokenAddress: nativeTokenQuote.action.fromToken.address.toLowerCase(),
+    isFromNativeToken:
+      fromTokenSymbol ===
+      '0x0000000000000000000000000000000000000000',
+    toChain: chainsById[toChainId].name,
+    toChainId: toChainId,
+    toToken: toTokenSymbol,
+    toAmountToken: outAmountParsed,
+    toAmountUSD: swapQuote.estimate?.toAmountUSD,
+    gasCosts: gasFeeArray,
+    gasCostsUSD: gasFeeArray.reduce(
+      (acc, curr) => acc + Number(curr.amountUSD),
+      0
+    ),
+    otherFeeDetails: otherFeeArray,
+    otherFeeUSD: otherFeeArray.reduce(
+      (acc, curr) => acc + Number(curr.amountUSD),
+      0
+    ),
+    byProductAmount: byProductAmount,
+    byProductAmountMinusGas: byProductAmountMinusGas,
+    byProductAmountUSD: byProductAmountUSD,
+    byProductAmountMinusGasUSD: byProductAmountMinusGasUSD,
+    complete_time: new Date().toISOString()
+  }
+
+
   return {
     status: 'success',
+    message: 'Successfully generated a multi-step quote',
     nativeTokenQuote,
-    swapQuote
+    swapQuote,
+    readableQuote
   }
 }
 
