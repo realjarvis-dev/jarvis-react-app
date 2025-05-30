@@ -23,7 +23,7 @@ export const MainnetConfig = {
 export const TenderlyDemoConfig = {
     name: Network.ETH_MAINNET, // Using ETH_MAINNET as base for demo mode
     chainId: 92736,
-    scanLink: 'etherscan.io', // Using etherscan as fallback for demo
+    scanLink: 'dashboard.tenderly.co/explorer/vnet/fcb5c956-9f40-4ccb-8ea3-249ea2de031d', // Updated to use Tenderly vnet explorer
     rpcUrl: 'https://virtual.mainnet.rpc.tenderly.co/fcb5c956-9f40-4ccb-8ea3-249ea2de031d'
 }
 
