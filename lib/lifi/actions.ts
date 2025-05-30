@@ -1,5 +1,7 @@
 import { TransactionRequest } from 'ethers'
-import { parseUnits, formatUnits, toHex } from 'viem'
+import { formatUnits, parseUnits, toHex } from 'viem'
+import { getGasPriceByChainId } from '../alchemy/get-gas-price'
+import { getNativeBalanceByChainId } from '../alchemy/get-token-balance'
 import { erc20Approval, executeSwapTransaction } from '../pendle/transactions'
 import { getUserEvmWalletAddress } from '../privy/client'
 import {
@@ -17,6 +19,8 @@ import {
   getClarifyOutputDetail
 } from './utils'
 
+const PREDEFINED_GAS_LIMIT = 1000000
+
 export const generateLifiBridgeQuote = async (
   fromChain: string,
   toChain: string,
@@ -24,9 +28,13 @@ export const generateLifiBridgeQuote = async (
   toToken: string,
   amountIn: string,
   slippage: string,
-  recipient?: string
+  recipient?: string,
+  autoFuelDestChain?: boolean
 ) => {
   const userEvmAddress = await getUserEvmWalletAddress()
+  if (autoFuelDestChain === undefined) {
+    autoFuelDestChain = true
+  }
   if (!userEvmAddress) {
     return {
       instruction: 'notify user',
@@ -87,6 +95,14 @@ export const generateLifiBridgeQuote = async (
         details: getClarifyOutputDetail(toChainMatch, toTokenList)
       }
     }
+
+    if (fromChainMatch.id !== toChainMatch.id) {
+      // check user's balance on dest chain
+      const balanceDestChain = await getNativeBalanceByChainId(recipient, toChainMatch.id)
+      
+    }
+
+
     const inputDecimals = fromTokenSingle.decimals
     const outputDecimals = toTokenSingle.decimals
     const inputAmount = parseUnits(amountIn, inputDecimals).toString()
@@ -187,18 +203,59 @@ export const generateLifiBridgeQuote = async (
 // when user don't have native token on the dest chain, trigger this
 const _generateMultiStepQuote = async (
   fromChainId: number,
-  fromToken: string,
+  fromTokenSymbol: string,
   fromTokenDecimals: number,
-  fromTokenAddress: string,
   fromAddress: string,
   toChainId: number,
-  toChainNativeToken: string,
+  toChainNativeTokenSymbol: string,
   toToken: string,
   amountIn: string,
   slippage: string,
-  recipient: string,
+  recipient: string
 ) => {
+  // first we get a quote from lifi, use the dest chain's native token
+  const inputAmount = parseUnits(amountIn, fromTokenDecimals).toString()
+  const nativeTokenQuote: LifiQuoteResponse = await getLifiQuote(
+    fromChainId,
+    toChainId,
+    fromTokenSymbol,
+    toChainNativeTokenSymbol,
+    inputAmount,
+    fromAddress,
+    recipient,
+    slippage
+  )
+  const toAmountNativeTokenInWei = BigInt(nativeTokenQuote.estimate?.toAmount ?? '0')
+  const gasPrice = await getGasPriceByChainId(toChainId)
 
+  // save some fee for future operations
+  const feeToSave = gasPrice * BigInt(PREDEFINED_GAS_LIMIT)
+  const amountToSwapInWei = toAmountNativeTokenInWei - feeToSave
+
+  if (amountToSwapInWei < BigInt(0) || amountToSwapInWei < feeToSave) {
+    return {
+      status: 'fail',
+      message: `Not enough input amount to cover the future gas fee on the destination chain, 
+      or the future gas fee is more than the output token amount`
+    }
+  }
+  
+  const swapQuote = await getLifiQuote(
+    toChainId,
+    toChainId,
+    toChainNativeTokenSymbol,
+    toToken,
+    amountToSwapInWei.toString(),
+    fromAddress,
+    recipient,
+    slippage
+  )
+
+  return {
+    status: 'success',
+    nativeTokenQuote,
+    swapQuote
+  }
 }
 
 export const executeLifiBridgeTransaction = async (
@@ -215,7 +272,6 @@ export const executeLifiBridgeTransaction = async (
   fromChainName: string,
   toChainName: string
 ) => {
-
   const userEvmAddress = await getUserEvmWalletAddress()
   if (!userEvmAddress) {
     return {
@@ -270,9 +326,7 @@ export const executeLifiBridgeTransaction = async (
     )
     const result = await executeSwapTransaction(txData, fromChainId, {
       estimateGas: gasLimit > 0 ? false : true,
-      gasLimit: gasLimit
-        ? toHex(gasLimit)
-        : undefined
+      gasLimit: gasLimit ? toHex(gasLimit) : undefined
     })
 
     return {

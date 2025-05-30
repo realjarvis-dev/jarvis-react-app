@@ -1,5 +1,5 @@
 import { Alchemy, TokenBalance } from 'alchemy-sdk'
-import { ethers } from 'ethers'
+import { ethers, id } from 'ethers'
 import { TenderlyDemoConfig } from '../config/network'
 import {
   berachainBepoliaAlchemy,
@@ -136,11 +136,17 @@ export async function getTokenBalanceByChainId(
   return getTokenBalance(walletAddress, chainIdToAlchemyClient[chainId])
 }
 
-export async function getNativeBalanceByChainId(walletAddress: string, chainId: number): Promise<number> {
+/** 
+ * Get the native balance of a wallet on a given chain, in wei
+ * @param walletAddress - The address of the wallet to get the balance of
+ * @param chainId - The chain id to get the balance of
+ * @returns The native balance of the wallet on the given chain
+ */
+export async function getNativeBalanceByChainId(walletAddress: string, chainId: number): Promise<bigint> {
   const alchemy = chainIdToAlchemyClient[chainId]
   const nativeWei = await alchemy.core.getBalance(walletAddress, 'latest')
 
-  return Number(ethers.formatEther(nativeWei.toString()))
+  return nativeWei.toBigInt()
 }
 
 console.log(await getNativeBalanceByChainId('0x20dC1B6732E7A20aCba461BD37beead4FF5D93c8', 80094))
