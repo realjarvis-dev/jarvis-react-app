@@ -2,10 +2,8 @@ import { Alchemy, TokenBalance } from 'alchemy-sdk'
 import { ethers } from 'ethers'
 import { TenderlyDemoConfig } from '../config/network'
 import {
-  berachainBepoliaAlchemy,
   berachainMainnetAlchemy,
-  mainnetAlchemy,
-  sepoliaAlchemy
+  mainnetAlchemy
 } from './client'
 import { nativeAssets } from './native-asset-mapping'
 import { TokenData } from './types'
@@ -16,22 +14,10 @@ export async function getMainnetTokenBalance(
   return getTokenBalance(address, mainnetAlchemy)
 }
 
-export async function getSepoliaTokenBalance(
-  address: string
-): Promise<TokenData[]> {
-  return getTokenBalance(address, sepoliaAlchemy)
-}
-
 export async function getBerachainMainnetTokenBalance(
   address: string
 ): Promise<TokenData[]> {
   return getTokenBalance(address, berachainMainnetAlchemy)
-}
-
-export async function getBerachainBepoliaTokenBalance(
-  address: string
-): Promise<TokenData[]> {
-  return getTokenBalance(address, berachainBepoliaAlchemy)
 }
 
 /**
@@ -122,9 +108,7 @@ export async function getTokenBalance(
 
 const tokenBalanceFunctions = [
   getMainnetTokenBalance,
-  getSepoliaTokenBalance,
   getBerachainMainnetTokenBalance,
-  getBerachainBepoliaTokenBalance,
   getTenderlyDemoTokenBalance // Add Tenderly demo network support
 ]
 

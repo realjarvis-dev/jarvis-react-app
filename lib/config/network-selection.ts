@@ -2,7 +2,6 @@ import { ChainType } from '@/components/chain-selector'
 import {
     BerachainMainnetConfig,
     MainnetConfig,
-    SepoliaConfig,
     TenderlyDemoConfig
 } from './network'
 
@@ -21,13 +20,6 @@ export const NETWORK_CONFIGS: Record<ChainType, NetworkConfig> = {
     name: 'Ethereum Mainnet',
     rpcUrl: MainnetConfig.rpcUrl,
     scanLink: MainnetConfig.scanLink,
-    isDemo: false
-  },
-  sepolia: {
-    chainId: SepoliaConfig.chainId,
-    name: 'Sepolia Testnet',
-    rpcUrl: SepoliaConfig.rpcUrl,
-    scanLink: SepoliaConfig.scanLink,
     isDemo: false
   },
   berachain: {
@@ -71,5 +63,5 @@ export function getAvailableChains(isDemoMode: boolean): ChainType[] {
   }
   
   // In normal mode, all chains are available
-  return ['ethereum', 'sepolia', 'berachain']
+  return ['ethereum', 'berachain']
 } 

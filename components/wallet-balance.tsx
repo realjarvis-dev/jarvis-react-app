@@ -99,17 +99,9 @@ export function WalletBalance({
     // For non-demo mode, match based on the selected chain
     switch (selectedChain) {
       case 'ethereum':
-        return normalizedTokenNetwork.includes('eth_mainnet') || 
-               normalizedTokenNetwork.includes('ethereum') ||
-               normalizedTokenNetwork === 'eth-mainnet'
-      case 'sepolia':
-        return normalizedTokenNetwork.includes('eth_sepolia') || 
-               normalizedTokenNetwork.includes('sepolia') ||
-               normalizedTokenNetwork === 'eth-sepolia'
+        return normalizedTokenNetwork.includes('eth-mainnet')
       case 'berachain':
-        // Include both mainnet and testnet tokens for berachain
-        return normalizedTokenNetwork.includes('berachain') || 
-               normalizedTokenNetwork.includes('bera')
+        return normalizedTokenNetwork.includes('berachain-mainnet')
       default:
         return false
     }
