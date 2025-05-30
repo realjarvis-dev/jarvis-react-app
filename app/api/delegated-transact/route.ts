@@ -1,8 +1,8 @@
 export const runtime = 'nodejs'
+import { TenderlyDemoConfig } from '@/lib/config/network'
 import { getUserWallet, privy } from '@/lib/privy/client'
 import { StaticJsonRpcProvider } from '@ethersproject/providers'
 import {
-  calculateTotalGasEstimate,
   populateTransactionRequest
 } from '@privy-io/js-sdk-core'
 import { WalletWithMetadata } from '@privy-io/server-auth'
@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
   try {
     // 1. Create data payload for transaction
     const recipientAddress = '0xa9516C8AA7425D6190345a038eB8C4799C786Bb8'
-    const chainId = 11155111 // Sepolia testnet
+    const chainId = TenderlyDemoConfig.chainId // Tenderly demo network
     const weiBig = BigInt('1000000000000000') // 0.001 ETH in wei
 
     // Create base transaction request
@@ -38,16 +38,11 @@ export async function GET(req: NextRequest) {
     console.log('Transaction request created:', txRequest)
 
     // 2. Set up provider and populate transaction request
-    const rpcUrl =
-      'https://spring-winter-card.quiknode.pro/4c0eadc40decd3a5f3e156d1e446127d87c5279a/'
+    const rpcUrl = TenderlyDemoConfig.rpcUrl
     const provider = new StaticJsonRpcProvider(rpcUrl, {
-      name: 'sepolia',
-      chainId: 11155111
+      name: 'tenderly-demo',
+      chainId: chainId
     })
-    // const provider = new JsonRpcProvider(
-    //   rpcUrl,
-    //   { name: 'sepolia', chainId: 11155111 }
-    // );
 
     // Get the wallet address
     const walletAddress = evmWallet?.address || ''
