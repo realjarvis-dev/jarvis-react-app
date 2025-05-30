@@ -13,7 +13,7 @@ import { useEffect, useRef, useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import useLocalStorage from 'use-local-storage-state'
 import { ChatMessages } from './chat-messages'
-import { ChatPanel } from './chat-panel'
+import { ChatPanel } from './optimized-chat-panel'
 
 const TRIAL_KEY = 'anon_trials'
 const MAX_TRIALS = 2
