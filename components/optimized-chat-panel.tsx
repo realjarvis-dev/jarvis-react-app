@@ -17,6 +17,9 @@ import { LazyWallet } from './wallet'
 import { MarketPulse } from './market-pulse'
 
 import { SearchModeToggle } from './search-mode-toggle'
+import { ChainSelector } from './chain-selector'
+import { DemoToggle } from './demo-toggle'
+import { useNetwork } from '../lib/context/network-context'
 import { Button } from './ui/button'
 import { IconLogo } from './ui/icons'
 import { VideoBackground } from './ui/video-background'
@@ -208,6 +211,8 @@ export function ChatPanel({
   
   const { close: closeArtifact } = useArtifact()
   const welcomeSeed = useRef(new Date().getDate()).current
+  
+  const { selectedChain, setSelectedChain, isDemoMode, setIsDemoMode } = useNetwork()
 
   useKeyboardAvoidance({ ref: inputRef })
 
@@ -434,6 +439,15 @@ export function ChatPanel({
               >
                 <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto hide-scrollbar">
                   <SearchModeToggle />
+                  <ChainSelector
+                    selectedChain={selectedChain}
+                    onChainChange={setSelectedChain}
+                    isDemoMode={isDemoMode}
+                  />
+                  <DemoToggle
+                    isDemoMode={isDemoMode}
+                    onDemoModeChange={setIsDemoMode}
+                  />
                 </div>
                 <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                   {messages.length > 0 && (
