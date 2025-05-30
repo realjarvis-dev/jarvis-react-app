@@ -17,7 +17,7 @@ import { walletBalanceTool } from '../tools/wallet'
  * Network context passed to tools
  */
 export interface NetworkContext {
-  selectedNetwork: 'ethereum' | 'sepolia' | 'berachain' | 'demo'
+  selectedNetwork: 'ethereum' | 'berachain' | 'demo'
   selectedChainId: number
   isDemo: boolean
   rpcUrl: string
@@ -42,7 +42,7 @@ export interface ToolDefinition<T = any> {
   schema: z.ZodType<T>
   execute: (params: T, context?: ToolContext) => Promise<any> | PromiseLike<any>
   category: ToolCategory
-  supportedNetworks?: ('ethereum' | 'sepolia' | 'berachain' | 'demo')[]
+  supportedNetworks?: ('ethereum' | 'berachain' | 'demo')[]
 }
 
 /**
@@ -192,7 +192,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'sepolia', 'berachain', 'demo']
+    supportedNetworks: ['ethereum', 'berachain', 'demo']
   })
   
   registry.registerTool({
@@ -302,7 +302,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'sepolia', 'berachain', 'demo']
+    supportedNetworks: ['ethereum', 'berachain', 'demo']
   })
   
   registry.registerTool({
@@ -315,7 +315,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'sepolia', 'berachain', 'demo']
+    supportedNetworks: ['ethereum', 'berachain', 'demo']
   })
   
   registry.registerTool({
@@ -354,7 +354,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'sepolia', 'berachain', 'demo']
+    supportedNetworks: ['ethereum', 'berachain', 'demo']
   })
   
   return registry

@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger
 } from './ui/dropdown-menu'
 
-export type ChainType = 'ethereum' | 'sepolia' | 'berachain'
+export type ChainType = 'ethereum' | 'berachain'
 
 interface ChainOption {
   id: ChainType
@@ -23,10 +23,6 @@ const chainOptions: ChainOption[] = [
   {
     id: 'ethereum',
     name: 'Ethereum'
-  },
-  {
-    id: 'sepolia',
-    name: 'Sepolia'
   },
   {
     id: 'berachain',

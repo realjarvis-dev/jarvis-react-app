@@ -5,7 +5,7 @@ import { NetworkContext } from './tool-registry'
  * Convert network context from React context to tool registry format
  */
 export function createNetworkContext(
-  selectedChain: 'ethereum' | 'sepolia' | 'berachain',
+  selectedChain: 'ethereum' | 'berachain',
   isDemoMode: boolean,
   activeNetwork: any
 ): NetworkContext {
