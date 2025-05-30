@@ -13,11 +13,6 @@ import { createSearchTool } from '../tools/search'
 import { createVideoSearchTool } from '../tools/video-search'
 import { walletBalanceTool } from '../tools/wallet'
 
-interface ToolExecutionOptions {
-  toolCallId?: string
-  messages?: any[]
-}
-
 /**
  * Network context passed to tools
  */
@@ -30,13 +25,22 @@ export interface NetworkContext {
 }
 
 /**
+ * Tool context interface that matches what tools expect
+ */
+export interface ToolContext {
+  toolCallId?: string
+  messages?: any[]
+  networkContext: NetworkContext
+}
+
+/**
  * Interface for tool definition with schema and execution function
  */
 export interface ToolDefinition<T = any> {
   name: string
   description: string
   schema: z.ZodType<T>
-  execute: (params: T, context?: any, networkContext?: NetworkContext) => Promise<any> | PromiseLike<any>
+  execute: (params: T, context?: ToolContext) => Promise<any> | PromiseLike<any>
   category: ToolCategory
   supportedNetworks?: ('ethereum' | 'sepolia' | 'berachain' | 'demo')[]
 }
@@ -182,7 +186,11 @@ export function createToolRegistry(model: string): ToolRegistry {
     name: 'get_gas_price',
     description: 'Get the proposed gas price',
     schema: getGasPriceTool.parameters,
-    execute: async (params, context, networkContext) => getGasPriceTool.execute(params, { toolCallId: context?.toolCallId, messages: context?.messages || [] }),
+    execute: async (params, context) => getGasPriceTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
     category: ToolCategory.WEB3,
     supportedNetworks: ['ethereum', 'sepolia', 'berachain', 'demo']
   })
@@ -191,7 +199,11 @@ export function createToolRegistry(model: string): ToolRegistry {
     name: 'search',
     description: 'Search the web for information',
     schema: searchSchema,
-    execute: async (params, context, networkContext) => searchTool.execute(params, { toolCallId: context?.toolCallId, messages: context?.messages || [] }),
+    execute: async (params, context) => searchTool.execute(params, { 
+      toolCallId: context?.toolCallId || 'unknown', 
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
     category: ToolCategory.WEB
   })
   
@@ -199,7 +211,11 @@ export function createToolRegistry(model: string): ToolRegistry {
     name: 'retrieve',
     description: 'Get detailed content from specific URLs',
     schema: retrieveTool.parameters,
-    execute: async (params, context, networkContext) => retrieveTool.execute(params, { toolCallId: context?.toolCallId, messages: context?.messages || [] }),
+    execute: async (params, context) => retrieveTool.execute(params, { 
+      toolCallId: context?.toolCallId || 'unknown', 
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
     category: ToolCategory.WEB
   })
   
@@ -207,7 +223,11 @@ export function createToolRegistry(model: string): ToolRegistry {
     name: 'videoSearch',
     description: 'Search for video content',
     schema: videoSearchTool.parameters,
-    execute: async (params, context, networkContext) => videoSearchTool.execute(params, { toolCallId: context?.toolCallId, messages: context?.messages || [] }),
+    execute: async (params, context) => videoSearchTool.execute(params, { 
+      toolCallId: context?.toolCallId || 'unknown', 
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
     category: ToolCategory.WEB
   })
   
@@ -215,7 +235,7 @@ export function createToolRegistry(model: string): ToolRegistry {
     name: 'ask_question',
     description: 'Ask clarifying questions to the user',
     schema: askQuestionTool.parameters,
-    execute: async (params, context, networkContext) => {
+    execute: async (params, context) => {
       return { success: true, message: `Question asked: ${params.question}` }
     },
     category: ToolCategory.UTILITY
@@ -225,7 +245,11 @@ export function createToolRegistry(model: string): ToolRegistry {
     name: 'market_chart',
     description: 'Fetch and display cryptocurrency market chart data',
     schema: marketChartTool.parameters,
-    execute: async (params, context, networkContext) => marketChartTool.execute(params, { toolCallId: context?.toolCallId, messages: context?.messages || [] }),
+    execute: async (params, context) => marketChartTool.execute(params, { 
+      toolCallId: context?.toolCallId || 'unknown', 
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
     category: ToolCategory.WEB
   })
   
@@ -233,7 +257,11 @@ export function createToolRegistry(model: string): ToolRegistry {
     name: 'pendle_opportunities',
     description: 'Get Pendle yield opportunities on Ethereum',
     schema: pendleOpportunitiesTool.parameters,
-    execute: async (params, context, networkContext) => pendleOpportunitiesTool.execute(params, { toolCallId: context?.toolCallId, messages: context?.messages || [] }),
+    execute: async (params, context) => pendleOpportunitiesTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
     category: ToolCategory.WEB3,
     supportedNetworks: ['ethereum', 'demo']
   })
@@ -242,7 +270,11 @@ export function createToolRegistry(model: string): ToolRegistry {
     name: 'pendle_quote',
     description: 'Get a quote for swapping ETH to a Pendle token',
     schema: pendleQuoteTool.parameters,
-    execute: async (params, context, networkContext) => pendleQuoteTool.execute(params, { toolCallId: context?.toolCallId, messages: context?.messages || [] }),
+    execute: async (params, context) => pendleQuoteTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
     category: ToolCategory.WEB3,
     supportedNetworks: ['ethereum', 'demo']
   })
@@ -251,7 +283,11 @@ export function createToolRegistry(model: string): ToolRegistry {
     name: 'pendle_swap',
     description: pendleSwapTool.description || '',
     schema: pendleSwapTool.parameters,
-    execute: async (params, context, networkContext) => pendleSwapTool.execute(params, { toolCallId: context?.toolCallId, messages: context?.messages || [] }),
+    execute: async (params, context) => pendleSwapTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
     category: ToolCategory.WEB3,
     supportedNetworks: ['ethereum', 'demo']
   })
@@ -260,7 +296,11 @@ export function createToolRegistry(model: string): ToolRegistry {
     name: 'wallet_balance',
     description: 'Get wallet balance information',
     schema: walletBalanceTool.parameters,
-    execute: async (params, context, networkContext) => walletBalanceTool.execute(params, { toolCallId: context?.toolCallId, messages: context?.messages || [] }),
+    execute: async (params, context) => walletBalanceTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
     category: ToolCategory.WEB3,
     supportedNetworks: ['ethereum', 'sepolia', 'berachain', 'demo']
   })
@@ -269,7 +309,11 @@ export function createToolRegistry(model: string): ToolRegistry {
     name: 'privy_transfer',
     description: 'Transfer ETH to a specified address',
     schema: privyTransferTool.parameters,
-    execute: async (params, context, networkContext) => privyTransferTool.execute(params, { toolCallId: context?.toolCallId, messages: context?.messages || [] }),
+    execute: async (params, context) => privyTransferTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
     category: ToolCategory.WEB3,
     supportedNetworks: ['ethereum', 'sepolia', 'berachain', 'demo']
   })
@@ -278,7 +322,11 @@ export function createToolRegistry(model: string): ToolRegistry {
     name: 'kodiak_opportunities',
     description: 'Get Kodiak Island yield opportunities on Berachain',
     schema: kodiakOpportunitiesTool.parameters,
-    execute: async (params, context, networkContext) => kodiakOpportunitiesTool.execute(params, { toolCallId: context?.toolCallId, messages: context?.messages || [] }),
+    execute: async (params, context) => kodiakOpportunitiesTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
     category: ToolCategory.WEB3,
     supportedNetworks: ['berachain']
   })
@@ -287,7 +335,11 @@ export function createToolRegistry(model: string): ToolRegistry {
     name: 'kodiak_deposit',
     description: 'Deposit a single token into a Kodiak Island yield opportunity on Berachain',
     schema: kodiakDepositTool.parameters,
-    execute: async (params, context, networkContext) => kodiakDepositTool.execute(params, { toolCallId: context?.toolCallId, messages: context?.messages || [] }),
+    execute: async (params, context) => kodiakDepositTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
     category: ToolCategory.WEB3,
     supportedNetworks: ['berachain']
   })
@@ -296,7 +348,11 @@ export function createToolRegistry(model: string): ToolRegistry {
     name: 'generic_swap',
     description: 'Execute a swap transaction between two arbitrary tokens',
     schema: genericSwapTool.parameters,
-    execute: async (params, context, networkContext) => genericSwapTool.execute(params, { toolCallId: context?.toolCallId, messages: context?.messages || [] }),
+    execute: async (params, context) => genericSwapTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
     category: ToolCategory.WEB3,
     supportedNetworks: ['ethereum', 'sepolia', 'berachain', 'demo']
   })
