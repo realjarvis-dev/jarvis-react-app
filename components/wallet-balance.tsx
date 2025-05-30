@@ -93,18 +93,44 @@ export function WalletBalance({
   className = ''
 }: WalletBalanceProps) {
   const [expanded, setExpanded] = useState(false)
-  const { activeNetwork } = useNetwork()
+  const { activeNetwork, selectedChain, isDemoMode } = useNetwork()
 
   const tokensList = tokens || []
 
-  // Filter tokens based on the selected network
-  const filteredTokens = tokensList.filter(token => {
-    // Case-insensitive network name matching
-    // This handles differences in formatting between token.network and activeNetwork.name
-    return token.network.toLowerCase().includes(activeNetwork.name.toLowerCase()) ||
-           activeNetwork.name.toLowerCase().includes(token.network.toLowerCase())
-  })
+  // Helper function to determine if a token belongs to the selected network
+  const matchesSelectedNetwork = (tokenNetwork: string) => {
+    // Normalize the token network name for comparison
+    const normalizedTokenNetwork = tokenNetwork.toLowerCase()
+    
+    // Handle demo mode specially - only show Tenderly tokens in demo mode
+    if (isDemoMode) {
+      return normalizedTokenNetwork.includes('tenderly') || 
+             normalizedTokenNetwork.includes('demo')
+    }
+    
+    // For non-demo mode, match based on the selected chain
+    switch (selectedChain) {
+      case 'ethereum':
+        return normalizedTokenNetwork.includes('eth_mainnet') || 
+               normalizedTokenNetwork.includes('mainnet') ||
+               normalizedTokenNetwork.includes('ethereum') ||
+               normalizedTokenNetwork === 'eth-mainnet'
+      case 'sepolia':
+        return normalizedTokenNetwork.includes('eth_sepolia') || 
+               normalizedTokenNetwork.includes('sepolia') ||
+               normalizedTokenNetwork === 'eth-sepolia'
+      case 'berachain':
+        // Include both mainnet and testnet tokens for berachain
+        return normalizedTokenNetwork.includes('berachain') || 
+               normalizedTokenNetwork.includes('bera')
+      default:
+        return false
+    }
+  }
 
+  // Filter tokens based on the selected network using our improved matching
+  const filteredTokens = tokensList.filter(token => matchesSelectedNetwork(token.network))
+  
   // Group tokens by network (we'll only have one network after filtering)
   const tokensByNetwork = filteredTokens.reduce((acc, token) => {
     if (!acc[token.network]) {
