@@ -103,18 +103,15 @@ export function MarketPulse() {
     router.push(`/search?q=${encodeURIComponent(query)}`)
   }
 
+  if (!coins || coins.length === 0) {
+    return null;
+  }
+
   return (
     <div
       ref={scrollRef}
       className="flex overflow-x-auto gap-4 py-1 px-2 hide-scrollbar text-xs sm:text-sm text-white/90 bg-gradient-to-r from-yellow-400/20 via-yellow-300/30 to-yellow-400/20 rounded-full shadow-glow backdrop-blur-sm"
     >
-      {(isLoading || coins.length === 0) && (
-        <div className="animate-pulse flex gap-4 w-full">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-4 w-20 bg-yellow-100/30 rounded" />
-          ))}
-        </div>
-      )}
       {coins.map((coin, index) => (
         <div 
           key={index} 
