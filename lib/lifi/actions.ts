@@ -14,39 +14,35 @@ import { TokenWithScore } from '../token-matcher/fuzzy-token-matcher'
 import { LifiQuoteResponse } from '../types/lifi'
 import { getLifiQuote } from './api'
 import {
+  autoFuelFailDetails,
+  autoFuelFailTitle,
   getClarifyInputAndOutputDetail,
   getClarifyInputDetail,
   getClarifyOutputDetail,
   noRouteDetails,
-  noRouteTitle,
-  autoFuelFailDetails,
-  autoFuelFailTitle
+  noRouteTitle
 } from './utils'
 
-const PREDEFINED_GAS_LIMIT = 1000000
+const PREDEFINED_GAS_LIMIT = 1200000
 
 export const generateLifiBridgeQuote = async (
   fromChain: string,
   toChain: string,
   fromToken: string,
   toToken: string,
+  fromAddress: string,
   amountIn: string,
   slippage: string,
   recipient?: string,
   autoFuelDestChain?: boolean
 ) => {
-  const userEvmAddress = await getUserEvmWalletAddress()
+  // const userEvmAddress = await getUserEvmWalletAddress()
   if (autoFuelDestChain === undefined) {
     autoFuelDestChain = true
   }
-  if (!userEvmAddress) {
-    return {
-      instruction: 'notify user',
-      details: "User's embedded wallet not found"
-    }
-  }
+
   if (!recipient) {
-    recipient = userEvmAddress
+    recipient = fromAddress
   }
   try {
     const {
@@ -102,14 +98,23 @@ export const generateLifiBridgeQuote = async (
 
     if (fromChainMatch.id !== toChainMatch.id) {
       // check user's balance on dest chain
-      const balanceDestChain = await getNativeBalanceByChainId(recipient, toChainMatch.id)
+      const balanceDestChain = await getNativeBalanceByChainId(
+        recipient,
+        toChainMatch.id
+      )
       if (balanceDestChain <= BigInt(0) && autoFuelDestChain) {
         try {
-          const {status, message, nativeTokenQuote, swapQuote} = await _generateMultiStepQuote(
+          const {
+            status,
+            message,
+            nativeTokenQuote,
+            swapQuote,
+            readableQuote
+          } = await _generateMultiStepQuote(
             fromChainMatch.id,
             fromTokenSingle.symbol,
             fromTokenSingle.decimals,
-            userEvmAddress,
+            fromAddress,
             toChainMatch.id,
             toChainMatch.coin,
             toTokenSingle.symbol,
@@ -120,24 +125,30 @@ export const generateLifiBridgeQuote = async (
           )
           if (status === 'fail') {
             return {
-              instruction: 'notify user and ask if they want to turn off auto fuel',
+              instruction:
+                'notify user and ask if they want to turn off auto fuel',
               title: autoFuelFailTitle,
               details: autoFuelFailDetails,
               more_details: message
             }
+          }
+          return {
+            instruction:
+              `Don't repeat the quote to user, simply ask user if they want to proceed with the transaction. Explain to user that they don't have any native token on the destination chain, so we automatically fueled the token for future transactions. 
+If user wants to proceed, use lifi_bridge_execute tool to execute the transaction.`,
+            details: readableQuote
           }
         } catch (error) {
           return {
             instruction: 'notify user',
             title: noRouteTitle,
             details: noRouteDetails,
-            more_details: error instanceof Error ? error.message : 'Unknown error'
+            more_details:
+              error instanceof Error ? error.message : 'Unknown error'
           }
         }
       }
-
     }
-
 
     const inputDecimals = fromTokenSingle.decimals
     const outputDecimals = toTokenSingle.decimals
@@ -151,7 +162,7 @@ export const generateLifiBridgeQuote = async (
         fromTokenSingle.symbol,
         toTokenSingle.symbol,
         inputAmount,
-        userEvmAddress,
+        fromAddress,
         recipient,
         slippage
       )
@@ -175,7 +186,8 @@ export const generateLifiBridgeQuote = async (
       symbol: gas.token.symbol,
       chainName: chainsById[gas.token.chainId].name,
       amount: formatUnits(BigInt(gas.amount), gas.token.decimals),
-      amountUSD: gas.amountUSD
+      amountUSD: gas.amountUSD,
+      gasLimit: gas.limit
     }))
     const inAmountParsed = formatUnits(
       BigInt(quote.estimate?.fromAmount),
@@ -185,6 +197,8 @@ export const generateLifiBridgeQuote = async (
       BigInt(quote.estimate?.toAmount),
       outputDecimals
     )
+    // console.log(JSON.stringify(quote, null, 2))
+
 
     const readableQuote = {
       fromChain: fromChainMatch.name,
@@ -215,7 +229,7 @@ export const generateLifiBridgeQuote = async (
     }
     return {
       instruction:
-        "Don't repeat the quote to user, simply ask user if they want to proceed with the transaction. If user wants to proceed, use lifi_bridge_execute tool to execute the transaction.",
+        `Don't repeat the quote to user, simply ask user if they want to proceed with the transaction. If user wants to proceed, use lifi_bridge_execute tool to execute the transaction.`,
       details: readableQuote
     }
   } catch (error) {
@@ -261,12 +275,21 @@ const _generateMultiStepQuote = async (
     recipient,
     slippage
   )
-  const toAmountNativeTokenInWei = BigInt(nativeTokenQuote.estimate?.toAmount ?? '0')
-  const gasPrice = await getGasPriceByChainId(toChainId)
+  const toAmountNativeTokenInWei = BigInt(
+    nativeTokenQuote.estimate?.toAmount ?? '0'
+  )
+  let gasPrice = await getGasPriceByChainId(toChainId)
+  gasPrice = gasPrice * BigInt(12) / BigInt(10)
 
   // save some fee for future operations
   const feeToSave = gasPrice * BigInt(PREDEFINED_GAS_LIMIT)
   const amountToSwapInWei = toAmountNativeTokenInWei - feeToSave
+  // console.log("gasPrice", gasPrice)
+  // console.log("feeToSave", feeToSave)
+  // console.log("toAmountNativeToken", formatUnits(toAmountNativeTokenInWei, nativeTokenQuote.action.toToken.decimals))
+  // console.log("feeToSave in human readable", formatUnits(feeToSave, nativeTokenQuote.action.toToken.decimals))
+  // console.log("amountToSwapInWei", amountToSwapInWei)
+  // console.log("amountToSwapInWei in human readable", formatUnits(amountToSwapInWei, nativeTokenQuote.action.toToken.decimals))
 
   if (amountToSwapInWei < BigInt(0) || amountToSwapInWei < feeToSave) {
     return {
@@ -277,7 +300,7 @@ const _generateMultiStepQuote = async (
       swapQuote: null
     }
   }
-  
+
   const swapQuote = await getLifiQuote(
     toChainId,
     toChainId,
@@ -289,19 +312,26 @@ const _generateMultiStepQuote = async (
     slippage
   )
 
-  const otherFeeArray = [...nativeTokenQuote.estimate?.feeCosts || [], ...swapQuote.estimate?.feeCosts || []].map(fee => ({
+  const otherFeeArray = [
+    ...(nativeTokenQuote.estimate?.feeCosts || []),
+    ...(swapQuote.estimate?.feeCosts || [])
+  ].map(fee => ({
     name: fee.name,
     symbol: fee.token.symbol,
     chainName: chainsById[fee.token.chainId].name,
     amount: formatUnits(BigInt(fee.amount), fee.token.decimals),
     amountUSD: fee.amountUSD
   }))
-  const gasFeeArray = [...nativeTokenQuote.estimate?.gasCosts || [], ...swapQuote.estimate?.gasCosts || []].map(gas => ({
+  const gasFeeArray = [
+    ...(nativeTokenQuote.estimate?.gasCosts || []),
+    ...(swapQuote.estimate?.gasCosts || [])
+  ].map(gas => ({
     type: gas.type,
     symbol: gas.token.symbol,
     chainName: chainsById[gas.token.chainId].name,
     amount: formatUnits(BigInt(gas.amount), gas.token.decimals),
-    amountUSD: gas.amountUSD
+    amountUSD: gas.amountUSD,
+    gasLimit: gas.limit
   }))
   const inAmountParsed = formatUnits(
     BigInt(nativeTokenQuote.estimate?.fromAmount),
@@ -319,13 +349,27 @@ const _generateMultiStepQuote = async (
     toChainNativeTokenDecimals
   )
   const byProductAmountMinusGas = formatUnits(
-    BigInt(feeToSave) - BigInt(swapQuote.estimate?.gasCosts?.reduce((acc, curr) => acc + Number(curr.amount), 0) ?? 0),
+    BigInt(feeToSave) -
+      BigInt(
+        swapQuote.estimate?.gasCosts?.reduce(
+          (acc, curr) => acc + Number(curr.amount),
+          0
+        ) ?? 0
+      ),
     toChainNativeTokenDecimals
   )
 
-  const byProductAmountUSD = Number(nativeTokenQuote.estimate?.toAmountUSD ?? 0) - Number(swapQuote.estimate?.fromAmountUSD ?? 0)
-  const byProductAmountMinusGasUSD = byProductAmountUSD - Number(swapQuote.estimate?.gasCosts?.reduce((acc, curr) => acc + Number(curr.amountUSD), 0) ?? 0)
-
+  const byProductAmountUSD =
+    Number(nativeTokenQuote.estimate?.toAmountUSD ?? 0) -
+    Number(swapQuote.estimate?.fromAmountUSD ?? 0)
+  const byProductAmountMinusGasUSD =
+    byProductAmountUSD -
+    Number(
+      swapQuote.estimate?.gasCosts?.reduce(
+        (acc, curr) => acc + Number(curr.amountUSD),
+        0
+      ) ?? 0
+    )
 
   const readableQuote = {
     fromChain: chainsById[fromChainId].name,
@@ -335,8 +379,7 @@ const _generateMultiStepQuote = async (
     fromAmountUSD: nativeTokenQuote.estimate?.fromAmountUSD,
     fromTokenAddress: nativeTokenQuote.action.fromToken.address.toLowerCase(),
     isFromNativeToken:
-      fromTokenSymbol ===
-      '0x0000000000000000000000000000000000000000',
+      fromTokenSymbol === '0x0000000000000000000000000000000000000000',
     toChain: chainsById[toChainId].name,
     toChainId: toChainId,
     toToken: toTokenSymbol,
@@ -356,9 +399,13 @@ const _generateMultiStepQuote = async (
     byProductAmountMinusGas: byProductAmountMinusGas,
     byProductAmountUSD: byProductAmountUSD,
     byProductAmountMinusGasUSD: byProductAmountMinusGasUSD,
+    byProductSymbol: toChainNativeTokenSymbol,
     complete_time: new Date().toISOString()
   }
-
+  // console.log("========Native token quote========")
+  // console.log(JSON.stringify(nativeTokenQuote, null, 2))
+  // console.log("========Swap quote========")
+  // console.log(JSON.stringify(swapQuote, null, 2))
 
   return {
     status: 'success',
@@ -469,3 +516,21 @@ export const executeLifiBridgeTransaction = async (
     }
   }
 }
+
+// // test a quote from eth to polygon
+// const testQuote = async () => {
+//   const quote = await generateLifiBridgeQuote(
+//     '1',
+//     'berachain',
+//     'ETH',
+//     'wbera',
+//     '0xa9516C8AA7425D6190345a038eB8C4799C786Bb8',
+//     '0.01',
+//     '0.05',
+//     '0xa9516C8AA7425D6190345a038eB8C4799C786Bb8',
+//     true
+//   )
+//   console.log(JSON.stringify(quote, null, 2))
+// }
+
+// testQuote()

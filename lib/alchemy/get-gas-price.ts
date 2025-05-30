@@ -11,4 +11,4 @@ export const getGasPriceByChainId = async (chainId: number): Promise<bigint> => 
   return gasPrice.toBigInt()
 }
 
-console.log(await getGasPriceByChainId(80094))
+// console.log(await getGasPriceByChainId(80094))

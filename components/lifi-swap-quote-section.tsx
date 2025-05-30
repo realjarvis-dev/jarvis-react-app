@@ -39,6 +39,11 @@ interface LifiQuoteData {
   gasCostsUSD?: number // Total gas cost in USD
   otherFeeUSD?: number // Total other fee cost in USD
   otherFeeDetails?: FeeItem[]
+  byProductAmount?: string
+  byProductAmountMinusGas?: string
+  byProductAmountUSD?: number
+  byProductAmountMinusGasUSD?: number
+  byProductSymbol?: string
   complete_time: string // ISO string
   error?: string
 }
@@ -317,6 +322,50 @@ export function LifiSwapQuoteSection({
                       </div>
                     )
                   )}
+              </div>
+            )}
+
+            {/* Auto-fueled Token Section */}
+            {(displayData.byProductAmount ||
+              displayData.byProductAmountUSD) && (
+              <div className="bg-green-50 dark:bg-green-950/40 rounded-lg p-4">
+                <div className="text-sm font-medium text-green-700 dark:text-green-400 mb-2">
+                  Auto-fueled Native Token on {displayData.toChain}:
+                </div>
+                {displayData.byProductAmount && (
+                  <div className="flex justify-between text-xs mb-1">
+                    <div className="text-gray-800 dark:text-gray-100">
+                      Amount Fueled:
+                    </div>
+                    <div className="text-gray-800 dark:text-gray-100">
+                      {Number(displayData.byProductAmount).toPrecision(4)}{' '}
+                      {displayData.byProductSymbol}
+                      {displayData.byProductAmountUSD !== undefined &&
+                        `(~$${parseFloat(
+                          String(displayData.byProductAmountUSD)
+                        ).toFixed(2)})`}
+                    </div>
+                  </div>
+                )}
+                {displayData.byProductAmountMinusGas && (
+                  <div className="flex justify-between text-xs mb-1">
+                    <div className="text-gray-600 dark:text-gray-300">
+                      ↳ After this transaction:
+                    </div>
+                    <div className="text-gray-700 dark:text-gray-200">
+                      {Number(displayData.byProductAmountMinusGas).toPrecision(4)}{' '}
+                      {displayData.byProductSymbol}
+                      {displayData.byProductAmountMinusGasUSD !== undefined &&
+                        ` (~$${parseFloat(
+                          String(displayData.byProductAmountMinusGasUSD)
+                        ).toFixed(2)})`}
+                    </div>
+                  </div>
+                )}
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                  This amount was automatically swapped to the native token of
+                  the destination chain to cover future transaction fees.
+                </div>
               </div>
             )}
 

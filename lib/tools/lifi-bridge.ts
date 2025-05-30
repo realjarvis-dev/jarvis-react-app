@@ -4,6 +4,7 @@ import {
   executeLifiBridgeTransaction,
   generateLifiBridgeQuote
 } from '../lifi/actions'
+import { getUserEvmWalletAddress } from '../privy/client'
 
 const bridgeQuoteTool = tool({
   description:
@@ -56,11 +57,19 @@ const bridgeQuoteTool = tool({
     slippage,
     recipient
   }) => {
+    const userEvmAddress = await getUserEvmWalletAddress()
+    if (!userEvmAddress) {
+      return {
+        instruction: 'notify user',
+        details: "User's embedded wallet not found"
+      }
+    }
     return await generateLifiBridgeQuote(
       fromChain,
       toChain,
       fromToken,
       toToken,
+      userEvmAddress,
       amountIn,
       slippage,
       recipient

@@ -16,7 +16,8 @@ export class ChainMatcher {
     this.fuse = new Fuse(chainList, {
       keys: [
         { name: 'name', weight: 0.5 },
-        { name: 'coin', weight: 0.2 }
+        { name: 'coin', weight: 0.2 },
+        { name: 'id', weight: 0.3 }
       ],
       threshold,
       ignoreLocation: true,
