@@ -22,7 +22,8 @@ export const privyTransferTool = tool({
       .number()
       .describe('The amount of ETH in the unit of ETH to transfer')
   }),
-  execute: async ({ address, amount }, context: ToolContext) => {
+  execute: async (params, context: ToolContext) => {
+    const { address, amount } = params;
     const networkContext = context?.networkContext;
     const evmWallet: WalletWithMetadata | undefined = await getUserWallet(
       'ethereum'

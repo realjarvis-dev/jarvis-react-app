@@ -1,6 +1,13 @@
-import { tool } from 'ai'
 import { retrieveSchema } from '@/lib/schema/retrieve'
 import { SearchResults as SearchResultsType } from '@/lib/types'
+import { tool } from 'ai'
+import { NetworkContext } from '../utils/tool-registry'
+
+interface ToolContext {
+  toolCallId?: string
+  messages?: any[]
+  networkContext?: NetworkContext
+}
 
 const CONTENT_CHARACTER_LIMIT = 10000
 
@@ -79,7 +86,9 @@ async function fetchTavilyExtractData(
 export const retrieveTool = tool({
   description: 'Retrieve content from the web',
   parameters: retrieveSchema,
-  execute: async ({ url }) => {
+  execute: async (params, context?: ToolContext) => {
+    const { url } = params;
+    
     let results: SearchResultsType | null
 
     // Use Jina if the API key is set, otherwise use Tavily

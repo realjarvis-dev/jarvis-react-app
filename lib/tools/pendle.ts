@@ -10,11 +10,18 @@ import {
   getSwapTransactionFromPendle
 } from '../pendle/transactions'
 import { getUserEvmWalletAddress } from '../privy/client'
+import { NetworkContext } from '../utils/tool-registry'
 
 // ETH address constants
 const ETH_ADDRESS_IDENTIFIER = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
 const ETH_ADDRESS_PENDLE = '0x0000000000000000000000000000000000000000'
 const ETH_SYMBOL_IDENTIFIER = 'ETH'
+
+interface ToolContext {
+  toolCallId?: string
+  messages?: any[]
+  networkContext?: NetworkContext
+}
 
 export const pendleOpportunitiesTool = tool({
   description:
@@ -39,7 +46,7 @@ export const pendleOpportunitiesTool = tool({
         'Maximum APY in percentage (e.g., 10 for 10%). Filters for APY <= value/100. Optional.'
       )
   }),
-  execute: async (params, context: any) => {
+  execute: async (params, context: ToolContext) => {
     const { max_results, apy_gte, apy_lte } = params;
     const networkContext = context?.networkContext;
     
@@ -110,7 +117,7 @@ export const pendleQuoteTool = tool({
         'The token type - "pt" for Principal Token or "yt" for Yield Token. Default to pt as only pt trading is available now.'
       )
   }),
-  execute: async (params, context: any) => {
+  execute: async (params, context: ToolContext) => {
     const {
       market_address,
       token_out_address,
@@ -206,7 +213,7 @@ export const pendleSwapTool = tool({
         'Display name for the output token (e.g., "PT eETH", "ETH"). If not provided, a generic name or address will be used.'
       )
   }),
-  execute: async (params, context: any) => {
+  execute: async (params, context: ToolContext) => {
     const {
       market_address,
       input_token_address,

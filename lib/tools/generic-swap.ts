@@ -84,13 +84,15 @@ export const genericSwapTool = tool({
     Use this tool when user request and swap and no protocol is in the context
     `,
   parameters: parameters,
-  execute: async ({
-    tokenInSymbol,
-    tokenOutSymbol,
-    amountInHuman,
-    slippage = 0.01,
-    chainId = 1
-  }, context: ToolContext) => {
+  execute: async (params, context: ToolContext) => {
+    const {
+      tokenInSymbol,
+      tokenOutSymbol,
+      amountInHuman,
+      slippage = 0.01,
+      chainId = 1
+    } = params;
+    
     const networkContext = context?.networkContext;
     // Use chainId from networkContext if available, otherwise use the parameter
     const effectiveChainId = networkContext?.selectedChainId || chainId;
@@ -194,7 +196,7 @@ export const genericSwapTool = tool({
       await logToFile(logFilePath, logContent)
 
       // TODO: uncomment this when ready
-      const result = await executeSwapTransaction(txData, chainId=effectiveChainId)
+      const result = await executeSwapTransaction(txData, effectiveChainId)
 
       const completeTime = new Date().toISOString()
 
