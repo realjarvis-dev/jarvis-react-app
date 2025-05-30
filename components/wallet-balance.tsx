@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { TokenData } from '@/lib/alchemy/types'
+import { useNetwork } from '@/lib/context/network-context'
 import { useState } from 'react'
 
 const TokenRow = ({ token }: { token: TokenData }) => {
@@ -92,11 +93,20 @@ export function WalletBalance({
   className = ''
 }: WalletBalanceProps) {
   const [expanded, setExpanded] = useState(false)
+  const { activeNetwork } = useNetwork()
 
   const tokensList = tokens || []
 
-  // Group tokens by network
-  const tokensByNetwork = tokensList.reduce((acc, token) => {
+  // Filter tokens based on the selected network
+  const filteredTokens = tokensList.filter(token => {
+    // Case-insensitive network name matching
+    // This handles differences in formatting between token.network and activeNetwork.name
+    return token.network.toLowerCase().includes(activeNetwork.name.toLowerCase()) ||
+           activeNetwork.name.toLowerCase().includes(token.network.toLowerCase())
+  })
+
+  // Group tokens by network (we'll only have one network after filtering)
+  const tokensByNetwork = filteredTokens.reduce((acc, token) => {
     if (!acc[token.network]) {
       acc[token.network] = []
     }
@@ -111,7 +121,7 @@ export function WalletBalance({
     return a.localeCompare(b)
   })
 
-  const totalTokenCount = tokensList.length
+  const totalTokenCount = filteredTokens.length
   const hasMultipleNetworks = sortedNetworks.length > 1
 
   return (
@@ -174,10 +184,10 @@ export function WalletBalance({
           </div>
         )}
 
-        {!isLoading && !error && tokensList.length === 0 && (
+        {!isLoading && !error && filteredTokens.length === 0 && (
           <div className="py-8 text-center">
             <p className="text-gray-500 mb-2">
-              {'No tokens found in this wallet'}
+              {'No tokens found for the selected network'}
             </p>
           </div>
         )}
