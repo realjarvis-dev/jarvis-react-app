@@ -273,7 +273,10 @@ Network Context:
         tool_lst[toolName] = {
           description: toolDef.description,
           parameters: toolDef.schema,
-          execute: (params: any, context?: any) => toolDef.execute(params, context, networkContext)
+          execute: (params: any, context?: any) => toolDef.execute(params, {
+            ...context,
+            networkContext
+          })
         }
       }
     }
@@ -290,7 +293,10 @@ Network Context:
         o3_mini_tool_lst[toolName] = {
           description: toolDef.description,
           parameters: toolDef.schema,
-          execute: (params: any, context?: any) => toolDef.execute(params, context, networkContext)
+          execute: (params: any, context?: any) => toolDef.execute(params, {
+            ...context,
+            networkContext
+          })
         }
       }
     }

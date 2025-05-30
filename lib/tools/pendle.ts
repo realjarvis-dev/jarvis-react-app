@@ -10,11 +10,18 @@ import {
   getSwapTransactionFromPendle
 } from '../pendle/transactions'
 import { getUserEvmWalletAddress } from '../privy/client'
+import { NetworkContext } from '../utils/tool-registry'
 
 // ETH address constants
 const ETH_ADDRESS_IDENTIFIER = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
 const ETH_ADDRESS_PENDLE = '0x0000000000000000000000000000000000000000'
 const ETH_SYMBOL_IDENTIFIER = 'ETH'
+
+interface ToolContext {
+  toolCallId?: string
+  messages?: any[]
+  networkContext?: NetworkContext
+}
 
 export const pendleOpportunitiesTool = tool({
   description:
@@ -39,38 +46,55 @@ export const pendleOpportunitiesTool = tool({
         'Maximum APY in percentage (e.g., 10 for 10%). Filters for APY <= value/100. Optional.'
       )
   }),
-  execute: async ({ max_results = 10, apy_gte, apy_lte }) => {
-    const all = await getPendleMarkets()
-    // console.log(max_results, apy_gte, apy_lte) // Original log
-    // console.log(all)
-
-    // Convert percentage inputs to decimals if they are provided
-    let decimal_apy_gte = undefined
-    if (typeof apy_gte === 'number') {
-      decimal_apy_gte = apy_gte / 100
-    }
-
-    let decimal_apy_lte = undefined
-    if (typeof apy_lte === 'number') {
-      decimal_apy_lte = apy_lte / 100
-    }
-
-    // console.log(max_results, `original apy_gte: ${apy_gte}, converted: ${decimal_apy_gte}`, `original apy_lte: ${apy_lte}, converted: ${decimal_apy_lte}`);
-
-    let filtered = all
-    if (decimal_apy_gte !== undefined)
-      filtered = filtered.filter(o => o.impliedApy >= decimal_apy_gte!)
-    if (decimal_apy_lte !== undefined)
-      filtered = filtered.filter(o => o.impliedApy <= decimal_apy_lte!)
-    filtered.sort((a, b) => b.impliedApy - a.impliedApy)
-    const results = filtered.slice(0, max_results)
+  execute: async (params, context: ToolContext) => {
+    const { max_results, apy_gte, apy_lte } = params;
+    const networkContext = context?.networkContext;
     
-    // Return minimal data for streaming, but include full data for UI
-    return {
-      _uiDisplayTool: true,
-      summary: `Found ${results.length} Pendle yield opportunities`,
-      count: results.length,
-      data: results
+    try {
+      const markets = await getPendleMarkets()
+
+      // Convert percentage inputs to decimals if they are provided
+      let decimal_apy_gte = undefined
+      if (typeof apy_gte === 'number') {
+        decimal_apy_gte = apy_gte / 100
+      }
+
+      let decimal_apy_lte = undefined
+      if (typeof apy_lte === 'number') {
+        decimal_apy_lte = apy_lte / 100
+      }
+
+      // console.log(max_results, `original apy_gte: ${apy_gte}, converted: ${decimal_apy_gte}`, `original apy_lte: ${apy_lte}, converted: ${decimal_apy_lte}`);
+
+      let filtered = markets
+      if (decimal_apy_gte !== undefined)
+        filtered = filtered.filter(o => o.impliedApy >= decimal_apy_gte!)
+      if (decimal_apy_lte !== undefined)
+        filtered = filtered.filter(o => o.impliedApy <= decimal_apy_lte!)
+      filtered.sort((a, b) => b.impliedApy - a.impliedApy)
+      const results = filtered.slice(0, max_results)
+      
+      // Return minimal data for streaming, but include full data for UI
+      return {
+        _uiDisplayTool: true,
+        summary: `Found ${results.length} Pendle yield opportunities`,
+        count: results.length,
+        data: results
+      }
+    } catch (error: any) {
+      console.log(error)
+      const errorData = {
+        error: error.message || 'Failed to get opportunities',
+        max_results,
+        apy_gte,
+        apy_lte
+      }
+      
+      return {
+        _uiDisplayTool: true,
+        summary: `Error getting opportunities: ${error.message || 'Failed to get opportunities'}`,
+        data: errorData
+      }
     }
   }
 })
@@ -93,12 +117,15 @@ export const pendleQuoteTool = tool({
         'The token type - "pt" for Principal Token or "yt" for Yield Token. Default to pt as only pt trading is available now.'
       )
   }),
-  execute: async ({
-    market_address,
-    token_out_address,
-    market_name,
-    token_type
-  }) => {
+  execute: async (params, context: ToolContext) => {
+    const {
+      market_address,
+      token_out_address,
+      market_name,
+      token_type
+    } = params;
+    const networkContext = context?.networkContext;
+    
     try {
       // Format full token name with PT/YT prefix
       const fullTokenName = `${token_type.toUpperCase()} ${market_name}`
@@ -186,15 +213,18 @@ export const pendleSwapTool = tool({
         'Display name for the output token (e.g., "PT eETH", "ETH"). If not provided, a generic name or address will be used.'
       )
   }),
-  execute: async ({
-    market_address,
-    input_token_address,
-    output_token_address,
-    amount_in_human,
-    slippage = 0.01,
-    input_token_name_display,
-    output_token_name_display
-  }) => {
+  execute: async (params, context: ToolContext) => {
+    const {
+      market_address,
+      input_token_address,
+      output_token_address,
+      amount_in_human,
+      slippage = 0.01,
+      input_token_name_display,
+      output_token_name_display
+    } = params;
+    const networkContext = context?.networkContext;
+    
     try {
       const evmWalletAddress = await getUserEvmWalletAddress()
       if (!evmWalletAddress) {

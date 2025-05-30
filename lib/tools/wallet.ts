@@ -1,6 +1,13 @@
 import { tool } from 'ai'
 import { z } from 'zod'
+import { NetworkContext } from '../utils/tool-registry'
 import { getWalletBalances } from '../utils/wallet'
+
+interface ToolContext {
+  toolCallId?: string
+  messages?: any[]
+  networkContext?: NetworkContext
+}
 
 export const walletBalanceTool = tool({
   description: 'Get wallet balance information for all tokens or a specific token.',
@@ -10,7 +17,10 @@ export const walletBalanceTool = tool({
     token_symbol: z.string().optional()
       .describe('Specific token symbol to filter by (e.g., "ETH", "DAI", etc.)')
   }),
-  execute: async ({ wallet_address, token_symbol }) => {
+  execute: async (params, context: ToolContext) => {
+    const { wallet_address, token_symbol } = params;
+    const networkContext = context?.networkContext;
+    
     try {
       const walletBalances = await getWalletBalances(wallet_address)
       

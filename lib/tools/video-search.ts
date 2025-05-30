@@ -1,5 +1,12 @@
 import { getSearchSchemaForModel } from '@/lib/schema/search'
 import { tool } from 'ai'
+import { NetworkContext } from '../utils/tool-registry'
+
+interface ToolContext {
+  toolCallId?: string
+  messages?: any[]
+  networkContext?: NetworkContext
+}
 
 /**
  * Creates a video search tool with the appropriate schema for the model.
@@ -8,7 +15,9 @@ export function createVideoSearchTool(fullModel: string) {
   return tool({
     description: 'Search for videos from YouTube',
     parameters: getSearchSchemaForModel(fullModel),
-    execute: async ({ query }) => {
+    execute: async (params, context?: ToolContext) => {
+      const { query } = params;
+      
       try {
         const response = await fetch('https://google.serper.dev/videos', {
           method: 'POST',
