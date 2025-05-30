@@ -14,21 +14,22 @@ export async function ChatHistorySection() {
     return null
   }
 
-  // Fetch the initial page of chats
   const headersList = await headers()
 
-  // const authToken = headersList.get('authorization')?.replace(/^Bearer /, '')
-
   let userId = 'anonymous'
-
-
-  try {
-    userId = await getUserId()
-  } catch (error) {
-    console.log('Failed to get user id:', error)
-    userId = headersList.get('x-user-id') || 'anonymous'
+  const cookies = headersList.get('cookie') || ''
+  // Only call getUserId if the token is present in cookies
+  if (cookies.includes('privy-token=')) {
+    try {
+      userId = await getUserId()
+    } catch (error) {
+      console.log('Failed to get user id:', error)
+      userId = headersList.get('x-user-id') || 'anonymous'
+    }
+  } else {
+    // No token, so default to anonymous
+    userId = 'anonymous'
   }
-
 
   let { chats, nextOffset } = await getChatsPage(userId, 20, 0)
   if (userId === 'anonymous') {
