@@ -112,7 +112,6 @@ export function WalletBalance({
     switch (selectedChain) {
       case 'ethereum':
         return normalizedTokenNetwork.includes('eth_mainnet') || 
-               normalizedTokenNetwork.includes('mainnet') ||
                normalizedTokenNetwork.includes('ethereum') ||
                normalizedTokenNetwork === 'eth-mainnet'
       case 'sepolia':
