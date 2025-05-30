@@ -47,6 +47,11 @@ export function MarketPulse() {
         const response = await fetch(url, options)
         const json = await response.json()
 
+        if (json.error || !json.coins || !Array.isArray(json.coins)) {
+          console.error('Error fetching trending coins:', json.error || 'Invalid response format')
+          return // Keep existing coins state, don't update with undefined
+        }
+
         // The API now returns processed data directly
         setCoins(json.coins)
       } catch (err) {
