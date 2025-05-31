@@ -19,8 +19,7 @@ import { SidebarCloseButton } from './sidebar-close-button'
 // Immediate console log to verify module loading
 console.log('[AppSidebar] Module loaded')
 
-export default async function AppSidebar() {
-  // Immediate console log to verify component function execution
+export default function AppSidebar() {
   console.log('[AppSidebar] Component function called')
 
   return (

@@ -70,11 +70,7 @@ export const Header: React.FC = () => {
       <WelcomePopup open={showWelcomePopup} onClose={handleCloseWelcomePopup}/>
       
       <div className="flex items-center">
-        {ready && authenticated && (
-          <SidebarTrigger 
-            className={open ? 'hidden' : ''} 
-          />
-        )}
+        {ready && authenticated && !open && <SidebarTrigger />}
       </div>
 
       <div className="flex items-center">
