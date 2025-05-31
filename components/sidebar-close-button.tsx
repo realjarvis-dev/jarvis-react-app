@@ -9,24 +9,15 @@ export function SidebarCloseButton() {
   const { toggleSidebar } = useSidebar()
   const isMobile = useIsMobile()
 
-  console.log('SidebarCloseButton render - isMobile:', isMobile)
-  console.log('SidebarCloseButton render - toggleSidebar:', toggleSidebar)
-
   if (isMobile) {
-    console.log('SidebarCloseButton: hiding on mobile')
     return null
-  }
-
-  const handleClick = () => {
-    console.log('SidebarCloseButton: clicked, calling toggleSidebar')
-    toggleSidebar()
   }
 
   return (
     <Button
       variant="ghost"
       size="icon"
-      onClick={handleClick}
+      onClick={toggleSidebar}
       className="h-6 w-6 hover:bg-sidebar-accent"
     >
       <X size={16} />

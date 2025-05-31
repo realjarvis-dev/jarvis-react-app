@@ -1,5 +1,3 @@
-'use client'
-
 import {
   Sidebar,
   SidebarContent,
@@ -21,7 +19,7 @@ import { SidebarCloseButton } from './sidebar-close-button'
 // Immediate console log to verify module loading
 console.log('[AppSidebar] Module loaded')
 
-export default function AppSidebar() {
+export default async function AppSidebar() {
   console.log('[AppSidebar] Component function called')
 
   return (
