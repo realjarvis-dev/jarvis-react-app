@@ -3,9 +3,15 @@
 import { Button } from '@/components/ui/button'
 import { useSidebar } from '@/components/ui/sidebar'
 import { X } from 'lucide-react'
+import useIsMobile from '@/lib/hooks/use-is-mobile'
 
 export function SidebarCloseButton() {
   const { toggleSidebar } = useSidebar()
+  const isMobile = useIsMobile()
+
+  if (isMobile) {
+    return null
+  }
 
   return (
     <Button
