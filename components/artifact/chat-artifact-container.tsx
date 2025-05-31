@@ -7,7 +7,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup
 } from '@/components/ui/resizable'
-import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar'
+import { useSidebar } from '@/components/ui/sidebar'
 import { useMediaQuery } from '@/lib/hooks/use-media-query'
 import { cn } from '@/lib/utils'
 import React, { useEffect, useState } from 'react'
@@ -36,34 +36,17 @@ export function ChatArtifactContainer({
   if (isMobile) {
     return (
       <div className="relative flex flex-col w-full h-full min-h-0">
-        {/* SidebarTrigger for mobile */}
-        <div className="absolute top-4 left-4 z-50">
-          {(!open || isMobileSidebar) && ( // Assuming 'open' refers to main sidebar state
-            <SidebarTrigger className="animate-fade-in" />
-          )}
-        </div>
-
-        {/* Main content area for children (Chat component) */}
         <div className="flex flex-1 flex-col w-full min-h-0">
           {children}
         </div>
 
-        {/* InspectorDrawer for mobile */}
         <InspectorDrawer />
       </div>
     )
   }
 
-  // Desktop: Resizable panels
   return (
-    <div className="relative flex-1 min-h-0 h-full flex"> {/* Added relative for absolute trigger, h-full */}
-      {/* SidebarTrigger for desktop */}
-      <div className="absolute top-4 left-4 z-50">
-         {/* Conditionally render based on sidebar state if it's a collapsible desktop sidebar */}
-         {(!open || isMobileSidebar) && ( // Review this condition for desktop
-            <SidebarTrigger className="animate-fade-in" />
-          )}
-      </div>
+    <div className="relative flex-1 min-h-0 h-full flex">
       <ResizablePanelGroup
         direction="horizontal"
         className="flex flex-1 min-w-0 h-full"

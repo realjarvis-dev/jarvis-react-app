@@ -5,8 +5,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarRail,
-  SidebarTrigger
+  SidebarRail
 } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
 import { Plus } from 'lucide-react'
@@ -34,7 +33,6 @@ export default async function AppSidebar() {
             Jarvis
           </Link>
         </div>
-        <SidebarTrigger />
       </SidebarHeader>
       <SidebarContent className="flex flex-col px-2 py-4 h-full">
         <SidebarMenu>
