@@ -20,7 +20,7 @@ interface NetworkProviderProps {
 
 export function NetworkProvider({ children }: NetworkProviderProps) {
   const [selectedChain, setSelectedChain] = useState<ChainType>('ethereum')
-  const [isDemoMode, setIsDemoMode] = useState(false)
+  const [isDemoMode, setIsDemoMode] = useState(true) // Default to true
 
   // Calculate active network based on current state
   const activeNetwork = getActiveNetworkConfig(isDemoMode, selectedChain)
@@ -53,4 +53,4 @@ export function useNetwork() {
     throw new Error('useNetwork must be used within a NetworkProvider')
   }
   return context
-} 
+}
