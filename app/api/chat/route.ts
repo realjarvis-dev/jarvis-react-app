@@ -66,7 +66,7 @@ export async function POST(request: Request) {
     }
 
     // Extract network context from request headers
-    const selectedChainHeader = request.headers.get('x-selected-chain') as 'ethereum' | 'sepolia' | 'berachain' | null
+    const selectedChainHeader = request.headers.get('x-selected-chain') as 'ethereum' | 'berachain' | null
     const isDemoModeHeader = request.headers.get('x-demo-mode') === 'true'
     
     // Create network context if chain information is provided

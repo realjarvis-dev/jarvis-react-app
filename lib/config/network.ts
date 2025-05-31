@@ -6,12 +6,6 @@ type NetworkConfigType = {
     scanLink: string,
     rpcUrl: string
 }
-export const SepoliaConfig = {
-    name: Network.ETH_SEPOLIA,
-    chainId: 11155111,
-    scanLink: 'sepolia.etherscan.io',
-    rpcUrl: 'https://eth-sepolia.g.alchemy.com/v2/yIRJoLX9TId7oSWYdnflKgthIy59m-vr'
-}
 
 export const MainnetConfig = {
     name: Network.ETH_MAINNET,
@@ -28,7 +22,7 @@ export const TenderlyDemoConfig = {
 }
 
 console.log('process.env.NEXT_PUBLIC_TEST_NET_ENV', process.env.NEXT_PUBLIC_TEST_NET_ENV)
-export const NetworkConfig = process.env.NEXT_PUBLIC_TEST_NET_ENV === 'production' ? MainnetConfig : SepoliaConfig;
+export const NetworkConfig = MainnetConfig;
 
 export const BerachainMainnetConfig = {
     name: Network.BERACHAIN_MAINNET,
@@ -37,17 +31,8 @@ export const BerachainMainnetConfig = {
     rpcUrl: 'https://berachain-mainnet.g.alchemy.com/v2/yIRJoLX9TId7oSWYdnflKgthIy59m-vr'
 }
 
-export const BepoliaConfig = {
-    name: Network.BERACHAIN_BEPOLIA,
-    chainId: 80069,
-    scanLink: 'testnet.berascan.com',
-    rpcUrl: 'https://berachain-bepolia.g.alchemy.com/v2/yIRJoLX9TId7oSWYdnflKgthIy59m-vr'
-}
-
 export const chainIdToNetworkConfig: Record<number, NetworkConfigType> = {
     [BerachainMainnetConfig.chainId]: BerachainMainnetConfig,
-    [BepoliaConfig.chainId]: BepoliaConfig,
-    [SepoliaConfig.chainId]: SepoliaConfig,
     [MainnetConfig.chainId]: MainnetConfig,
     [TenderlyDemoConfig.chainId]: TenderlyDemoConfig
 }

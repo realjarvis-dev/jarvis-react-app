@@ -22,10 +22,6 @@ function makeAlchemyClient(
 
 // 3. Instantiate all your clients in one place
 export const mainnetAlchemy = makeAlchemyClient(Network.ETH_MAINNET)
-export const sepoliaAlchemy = makeAlchemyClient(Network.ETH_SEPOLIA)
 export const berachainMainnetAlchemy = makeAlchemyClient(
   Network.BERACHAIN_MAINNET
-)
-export const berachainBepoliaAlchemy = makeAlchemyClient(
-  Network.BERACHAIN_BEPOLIA
 )

@@ -11,11 +11,13 @@ import {
   DropdownMenuTrigger
 } from './ui/dropdown-menu'
 
+
 // Example SVG icons for chains
 const ChainIcons: Record<string, string> = {
   ethereum: '/icons/chains/ethereum-eth.svg',
   berachain: '/icons/chains/berachain.svg',
 }
+
 
 export type ChainType = 'ethereum' | 'berachain'
 
@@ -26,8 +28,10 @@ interface ChainOption {
 }
 
 const chainOptions: ChainOption[] = [
+
   { id: 'ethereum', name: 'Ethereum' },
   { id: 'berachain', name: 'Berachain' }
+
 ]
 
 interface ChainSelectorProps {
