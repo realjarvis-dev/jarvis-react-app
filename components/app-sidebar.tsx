@@ -5,26 +5,23 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarRail,
-  useSidebar
+  SidebarRail
 } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
-import { Plus, X } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import Link from 'next/link'
 import { Suspense } from 'react'
 import { ChatHistorySection } from './sidebar/chat-history-section'
 import { ChatHistorySkeleton } from './sidebar/chat-history-skeleton'
 import { IconLogo } from './ui/icons'
-import { Button } from './ui/button'
+import { SidebarCloseButton } from './sidebar-close-button'
 
 // Immediate console log to verify module loading
 console.log('[AppSidebar] Module loaded')
 
-export default function AppSidebar() {
+export default async function AppSidebar() {
   // Immediate console log to verify component function execution
   console.log('[AppSidebar] Component function called')
-  
-  const { toggleSidebar } = useSidebar()
 
   return (
     <Sidebar side="left" variant="sidebar" collapsible="offcanvas">
@@ -38,15 +35,7 @@ export default function AppSidebar() {
           </Link>
         </div>
         <div className="flex items-center px-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleSidebar}
-            className="h-6 w-6 hover:bg-sidebar-accent"
-          >
-            <X size={16} />
-            <span className="sr-only">Close sidebar</span>
-          </Button>
+          <SidebarCloseButton />
         </div>
       </SidebarHeader>
       <SidebarContent className="flex flex-col px-2 py-4 h-full">
