@@ -12,11 +12,10 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { usePrivy } from '@privy-io/react-auth'
-import { Link2, LogIn, Palette, Settings2 } from 'lucide-react'
+import { Link2, LogIn, Settings2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { ExternalLinkItems } from './external-link-items'
-import { ThemeMenuItems } from './theme-menu-items'
 
 // Define props for GuestMenu
 interface GuestMenuProps {
@@ -41,7 +40,11 @@ export default function GuestMenu({ login }: GuestMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="ring-0 outline-none focus:ring-0 focus:outline-none focus:shadow-none active:ring-0 active:outline-none active:shadow-none bg-transparent hover:bg-transparent active:bg-transparent rounded-md"
+        >
           <Settings2 className="h-5 w-5" /> {/* Choose an icon */}
           <span className="sr-only">Open menu</span>
         </Button>

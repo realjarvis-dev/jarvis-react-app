@@ -12,10 +12,9 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { usePrivy } from '@privy-io/react-auth'
-import { Link2, LogOut, Palette, Settings2, Wallet } from 'lucide-react'
+import { Link2, LogOut, Settings2, Wallet } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { ExternalLinkItems } from './external-link-items'
-import { ThemeMenuItems } from './theme-menu-items'
 import { Button } from './ui/button'
 import { WalletMenuItems } from './wallet-menu-items'
 
@@ -51,10 +50,14 @@ export default function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-      <Button variant="ghost" size="icon">
-          <Settings2 className="h-5 w-5" /> {/* Choose an icon */}
-          <span className="sr-only">Open menu</span>
-        </Button>
+      <Button
+  variant="ghost"
+  size="icon"
+  className="ring-0 outline-none focus:ring-0 focus:outline-none focus:shadow-none active:ring-0 active:outline-none active:shadow-none bg-transparent hover:bg-transparent active:bg-transparent rounded-md"
+>
+  <Settings2 className="h-5 w-5" />
+  <span className="sr-only">Open menu</span>
+</Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-60" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">

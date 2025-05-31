@@ -1,56 +1,64 @@
 'use client'
 
 import { cn } from '@/lib/utils'
+import { FlaskConical } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { Toggle } from './ui/toggle'
 
 interface DemoToggleProps {
-  isDemoMode: boolean
-  onDemoModeChange: (enabled: boolean) => void
+  isDemoMode?: boolean
+  onDemoModeChange?: (enabled: boolean) => void
 }
 
 export function DemoToggle({ isDemoMode, onDemoModeChange }: DemoToggleProps) {
   const [mounted, setMounted] = useState(false)
+  const [internalDemoMode, setInternalDemoMode] = useState(isDemoMode ?? true)
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
+  useEffect(() => {
+    if (typeof isDemoMode === 'boolean') setInternalDemoMode(isDemoMode)
+  }, [isDemoMode])
+
   if (!mounted) {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 border border-input rounded-full bg-background h-10">
-        <div className="w-6 h-3 bg-muted rounded-full" />
-        <span className="text-xs text-muted-foreground">DEMO</span>
-      </div>
+      <Toggle
+        aria-label="Toggle demo mode"
+        variant="outline"
+        className={cn(
+          'gap-1 px-3 border border-input text-muted-foreground bg-background',
+          'hover:bg-accent hover:text-accent-foreground rounded-full',
+          'h-8 sm:h-10',
+          'transition-colors duration-150'
+        )}
+      >
+        <FlaskConical className="size-4" />
+        <span className="text-xs">Demo</span>
+      </Toggle>
     )
   }
 
   return (
-    <button
-      type="button"
-      onClick={() => onDemoModeChange(!isDemoMode)}
-      className="flex items-center gap-2 px-3 py-2 border border-input rounded-full bg-background hover:bg-accent transition-colors h-10"
+    <Toggle
+      aria-label="Toggle demo mode"
+      pressed={internalDemoMode}
+      onPressedChange={val => {
+        setInternalDemoMode(val)
+        onDemoModeChange?.(val)
+      }}
+      variant="outline"
+      className={cn(
+        'gap-1 px-3 border border-input text-muted-foreground bg-background',
+        'data-[state=on]:bg-accent-blue data-[state=on]:text-accent-blue-foreground data-[state=on]:border-accent-blue-border',
+        'hover:bg-accent hover:text-accent-foreground rounded-full',
+        'h-8 sm:h-10',
+        'transition-colors duration-150'
+      )}
     >
-      <div
-        className="relative w-6 h-3 rounded-full transition-all duration-200 cursor-pointer"
-        style={{
-          backgroundColor: isDemoMode ? '#22c55e' : '#d1d5db'
-        }}
-      >
-        <div
-          className={cn(
-            'absolute top-0.5 w-2 h-2 bg-white rounded-full transition-all duration-200 shadow-sm',
-            isDemoMode ? 'translate-x-3' : 'translate-x-0.5'
-          )}
-        />
-      </div>
-      <span 
-        className="text-xs font-medium transition-colors"
-        style={{
-          color: isDemoMode ? '#16a34a' : '#6b7280'
-        }}
-      >
-        DEMO
-      </span>
-    </button>
+      <FlaskConical className="size-4" />
+      <span className="text-xs font-medium">Demo</span>
+    </Toggle>
   )
-} 
+}
