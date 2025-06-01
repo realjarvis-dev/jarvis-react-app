@@ -17,7 +17,7 @@ import UserMenu from './user-menu'
 import WelcomePopup from './welcome-popup'
 
 export const Header: React.FC = () => {
-  const { open } = useSidebar()
+  const { open, isMobile: isMobileSidebar } = useSidebar()
   const { authenticated, ready } = usePrivy()
   const router = useRouter()
   const [showWelcomePopup, setShowWelcomePopup] = useState(false)
@@ -69,7 +69,7 @@ export const Header: React.FC = () => {
     >
       <WelcomePopup open={showWelcomePopup} onClose={handleCloseWelcomePopup}/>
       <div className="flex items-center gap-2">
-        {ready && authenticated && <SidebarTrigger />}
+        {ready && authenticated && (!open || isMobileSidebar) && <SidebarTrigger />}
         <a href="/" className="flex items-center gap-2">
           <span className="sr-only">Jarvis</span>
         </a>
