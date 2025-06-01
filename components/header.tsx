@@ -1,6 +1,6 @@
 'use client'
 
-import { useSidebar } from '@/components/ui/sidebar'
+import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
 import {
   useHeadlessDelegatedActions,
@@ -68,7 +68,8 @@ export const Header: React.FC = () => {
       )}
     >
       <WelcomePopup open={showWelcomePopup} onClose={handleCloseWelcomePopup}/>
-      <div className="flex items-center">
+      <div className="flex items-center gap-2">
+        {ready && authenticated && <SidebarTrigger />}
         <a href="/" className="flex items-center gap-2">
           <span className="sr-only">Jarvis</span>
         </a>
