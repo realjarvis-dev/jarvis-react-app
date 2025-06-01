@@ -13,8 +13,6 @@ export async function ChatHistorySection() {
   if (!enableSaveChatHistory) {
     return null
   }
-  
-  return null
 
   const headersList = await headers()
 
@@ -36,10 +34,10 @@ export async function ChatHistorySection() {
   
   try {
     const result = await getChatsPage(userId, 20, 0)
-    chats = result.chats
+    chats = result.chats || []
     nextOffset = result.nextOffset
   } catch (error) {
-    console.log('Failed to fetch chat history:', error)
+    console.log('Failed to fetch chat history (Redis error):', error)
     chats = []
     nextOffset = null
   }
@@ -48,6 +46,7 @@ export async function ChatHistorySection() {
     chats = []
     nextOffset = null
   }
+
   return (
     <div className="flex flex-col flex-1 h-full">
       <SidebarGroup>
