@@ -7,7 +7,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup
 } from '@/components/ui/resizable'
-import { useSidebar } from '@/components/ui/sidebar'
+import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar'
 import { useMediaQuery } from '@/lib/hooks/use-media-query'
 import { cn } from '@/lib/utils'
 import React, { useEffect, useState } from 'react'
@@ -36,6 +36,12 @@ export function ChatArtifactContainer({
   if (isMobile) {
     return (
       <div className="relative flex flex-col w-full h-full min-h-0">
+        <div className="absolute top-4 left-4 z-50">
+          {(!open || isMobileSidebar) && (
+            <SidebarTrigger className="animate-fade-in" />
+          )}
+        </div>
+
         <div className="flex flex-1 flex-col w-full min-h-0">
           {children}
         </div>
@@ -47,6 +53,11 @@ export function ChatArtifactContainer({
 
   return (
     <div className="relative flex-1 min-h-0 h-full flex">
+      <div className="absolute top-4 left-4 z-50">
+        {(!open || isMobileSidebar) && (
+          <SidebarTrigger className="animate-fade-in" />
+        )}
+      </div>
       <ResizablePanelGroup
         direction="horizontal"
         className="flex flex-1 min-w-0 h-full"
