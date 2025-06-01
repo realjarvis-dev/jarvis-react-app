@@ -74,7 +74,7 @@ export default async function RootLayout({
                 <AppSidebar />
                 <div className="flex flex-col flex-1 min-w-0"> {/* ADDED min-w-0 HERE */}
                   <Header />
-                  <main className="flex flex-1 min-h-0 w-full">
+                  <main className="flex flex-1 min-h-0 w-full pt-14">
                     <ArtifactRoot>{children}</ArtifactRoot>
                   </main>
                 </div>

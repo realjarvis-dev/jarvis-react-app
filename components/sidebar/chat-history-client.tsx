@@ -89,8 +89,8 @@ export function ChatHistoryClient({
         </div>
       ) : (
         <SidebarMenu>
-          {chats.map(
-            (chat: Chat) => chat && <ChatMenuItem key={chat.id} chat={chat} />
+          {chats.map((chat: Chat, index) => 
+            chat && <ChatMenuItem key={`${chat.id}-${index}`} chat={chat} />
           )}
         </SidebarMenu>
       )}

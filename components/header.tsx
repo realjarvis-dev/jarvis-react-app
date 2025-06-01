@@ -1,6 +1,6 @@
 'use client'
 
-import { useSidebar } from '@/components/ui/sidebar'
+import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
 import {
   useHeadlessDelegatedActions,
@@ -17,7 +17,7 @@ import UserMenu from './user-menu'
 import WelcomePopup from './welcome-popup'
 
 export const Header: React.FC = () => {
-  const { open } = useSidebar()
+  const { open, isMobile: isMobileSidebar } = useSidebar()
   const { authenticated, ready } = usePrivy()
   const router = useRouter()
   const [showWelcomePopup, setShowWelcomePopup] = useState(false)
@@ -63,15 +63,14 @@ export const Header: React.FC = () => {
   return (
     <header
       className={cn(
-        'fixed top-0 right-0 p-2 flex justify-between items-center z-10 backdrop-blur-none bg-transparent transition-[width] duration-200 ease-linear',
-        open ? 'md:w-[calc(100%-var(--sidebar-width))]' : 'md:w-full',
-        'w-full'
+        'fixed top-0 left-0 right-0 h-14 px-4 flex justify-between items-center z-50 bg-transparent border-b border-border/20',
+        'safe-area-inset-top'
       )}
     >
       <WelcomePopup open={showWelcomePopup} onClose={handleCloseWelcomePopup}/>
-      <div className="flex items-center space-x-4">
-        <a href="/">
-          {/* <IconLogo className={cn('w-5 h-5')} /> */}
+      <div className="flex items-center gap-2">
+        {ready && authenticated && <SidebarTrigger />}
+        <a href="/" className="flex items-center gap-2">
           <span className="sr-only">Jarvis</span>
         </a>
       </div>
