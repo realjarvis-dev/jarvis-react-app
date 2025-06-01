@@ -23,13 +23,7 @@ export default async function AppSidebar() {
 
   return (
     <Sidebar side="left" variant="sidebar" collapsible="offcanvas">
-      <SidebarHeader className="flex items-center gap-2 px-2 py-3">
-        <a href="/" className="size-5">
-          <IconLogo className={cn('size-5')} />
-        </a>
-        <Link href="/" className="font-semibold text-sm">
-          Jarvis
-        </Link>
+      <SidebarHeader className="px-2 py-3">
       </SidebarHeader>
       <SidebarContent className="flex flex-col px-2 py-4 h-full">
         <SidebarMenu>
