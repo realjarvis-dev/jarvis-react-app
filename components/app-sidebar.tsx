@@ -5,7 +5,8 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarRail
+  SidebarRail,
+  SidebarTrigger
 } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
 import { Plus } from 'lucide-react'
@@ -14,7 +15,6 @@ import { Suspense } from 'react'
 import { ChatHistorySection } from './sidebar/chat-history-section'
 import { ChatHistorySkeleton } from './sidebar/chat-history-skeleton'
 import { IconLogo } from './ui/icons'
-import { SidebarCloseButton } from './sidebar-close-button'
 
 // Immediate console log to verify module loading
 console.log('[AppSidebar] Module loaded')
@@ -34,7 +34,7 @@ export default async function AppSidebar() {
           </Link>
         </div>
         <div className="flex items-center px-2">
-          <SidebarCloseButton />
+          <SidebarTrigger />
         </div>
       </SidebarHeader>
       <SidebarContent className="flex flex-col px-2 py-4 h-full">
