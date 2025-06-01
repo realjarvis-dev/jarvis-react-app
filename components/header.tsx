@@ -69,7 +69,7 @@ export const Header: React.FC = () => {
     >
       <WelcomePopup open={showWelcomePopup} onClose={handleCloseWelcomePopup}/>
       <div className="flex items-center gap-2">
-        {ready && authenticated && (!open || isMobileSidebar) && <SidebarTrigger />}
+        {ready && authenticated && <SidebarTrigger />}
         <a href="/" className="flex items-center gap-2">
           <span className="sr-only">Jarvis</span>
         </a>
