@@ -29,7 +29,19 @@ export async function ChatHistorySection() {
     userId = 'anonymous'
   }
 
-  let { chats, nextOffset } = await getChatsPage(userId, 20, 0)
+  let chats: any[] = []
+  let nextOffset: number | null = null
+  
+  try {
+    const result = await getChatsPage(userId, 20, 0)
+    chats = result.chats
+    nextOffset = result.nextOffset
+  } catch (error) {
+    console.log('Failed to fetch chat history:', error)
+    chats = []
+    nextOffset = null
+  }
+  
   if (userId === 'anonymous') {
     chats = []
     nextOffset = null
