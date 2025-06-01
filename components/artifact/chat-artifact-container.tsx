@@ -38,9 +38,7 @@ export function ChatArtifactContainer({
       <div className="relative flex flex-col w-full h-full min-h-0">
         {/* SidebarTrigger for mobile */}
         <div className="absolute top-4 left-4 z-50">
-          {(!open || isMobileSidebar) && ( // Assuming 'open' refers to main sidebar state
-            <SidebarTrigger className="animate-fade-in" />
-          )}
+          <SidebarTrigger className="animate-fade-in" />
         </div>
 
         {/* Main content area for children (Chat component) */}
@@ -59,10 +57,7 @@ export function ChatArtifactContainer({
     <div className="relative flex-1 min-h-0 h-full flex"> {/* Added relative for absolute trigger, h-full */}
       {/* SidebarTrigger for desktop */}
       <div className="absolute top-4 left-4 z-50">
-         {/* Conditionally render based on sidebar state if it's a collapsible desktop sidebar */}
-         {(!open || isMobileSidebar) && ( // Review this condition for desktop
-            <SidebarTrigger className="animate-fade-in" />
-          )}
+        <SidebarTrigger className="animate-fade-in" />
       </div>
       <ResizablePanelGroup
         direction="horizontal"
