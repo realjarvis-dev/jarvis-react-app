@@ -33,9 +33,7 @@ export default async function AppSidebar() {
             Jarvis
           </Link>
         </div>
-        <div className="flex items-center px-2">
-          <SidebarTrigger />
-        </div>
+        <SidebarTrigger />
       </SidebarHeader>
       <SidebarContent className="flex flex-col px-2 py-4 h-full">
         <SidebarMenu>
