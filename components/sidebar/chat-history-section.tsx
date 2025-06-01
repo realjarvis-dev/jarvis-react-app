@@ -13,6 +13,8 @@ export async function ChatHistorySection() {
   if (!enableSaveChatHistory) {
     return null
   }
+  
+  return null
 
   const headersList = await headers()
 
