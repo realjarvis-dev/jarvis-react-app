@@ -36,10 +36,12 @@ export function ChatArtifactContainer({
   if (isMobile) {
     return (
       <div className="relative flex flex-col w-full h-full min-h-0">
-        {/* SidebarTrigger for mobile */}
-        <div className="absolute top-4 left-4 z-50">
-          <SidebarTrigger className="animate-fade-in" />
-        </div>
+        {/* SidebarTrigger for mobile - only show when sidebar is closed */}
+        {!openMobile && (
+          <div className="absolute top-4 left-4 z-50">
+            <SidebarTrigger className="animate-fade-in" />
+          </div>
+        )}
 
         {/* Main content area for children (Chat component) */}
         <div className="flex flex-1 flex-col w-full min-h-0">
@@ -55,10 +57,12 @@ export function ChatArtifactContainer({
   // Desktop: Resizable panels
   return (
     <div className="relative flex-1 min-h-0 h-full flex"> {/* Added relative for absolute trigger, h-full */}
-      {/* SidebarTrigger for desktop */}
-      <div className="absolute top-4 left-4 z-50">
-        <SidebarTrigger className="animate-fade-in" />
-      </div>
+      {/* SidebarTrigger for desktop - only show when sidebar is closed */}
+      {!open && (
+        <div className="absolute top-4 left-4 z-50">
+          <SidebarTrigger className="animate-fade-in" />
+        </div>
+      )}
       <ResizablePanelGroup
         direction="horizontal"
         className="flex flex-1 min-w-0 h-full"
