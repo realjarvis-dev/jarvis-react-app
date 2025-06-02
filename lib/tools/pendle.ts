@@ -10,7 +10,7 @@ import {
   getSwapTransactionFromPendle
 } from '../pendle/transactions'
 import { getUserEvmWalletAddress } from '../privy/client'
-import { NetworkContext } from '../utils/tool-registry'
+import { NetworkContext } from '../types/context'
 
 // ETH address constants
 const ETH_ADDRESS_IDENTIFIER = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'

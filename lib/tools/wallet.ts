@@ -1,6 +1,6 @@
 import { tool } from 'ai'
 import { z } from 'zod'
-import { NetworkContext } from '../utils/tool-registry'
+import { NetworkContext } from '../types/context'
 import { getWalletBalances } from '../utils/wallet'
 
 interface ToolContext {
