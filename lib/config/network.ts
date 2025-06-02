@@ -11,8 +11,8 @@ export const MainnetConfig = {
     name: Network.ETH_MAINNET,
     chainId: 1,
     scanLink: 'etherscan.io',
-    // rpcUrl: 'https://eth-mainnet.g.alchemy.com/v2/yIRJoLX9TId7oSWYdnflKgthIy59m-vr'
-    rpcUrl: 'https://virtual.mainnet.rpc.tenderly.co/ee6b4080-0224-4394-9498-4510c16df471'
+    rpcUrl: 'https://eth-mainnet.g.alchemy.com/v2/yIRJoLX9TId7oSWYdnflKgthIy59m-vr'
+    // rpcUrl: 'https://virtual.mainnet.rpc.tenderly.co/ee6b4080-0224-4394-9498-4510c16df471'
 }
 
 export const PolygonConfig = {
