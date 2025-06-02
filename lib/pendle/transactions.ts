@@ -197,7 +197,8 @@ export async function executeSwapTransaction(
     const provider = new ethers.JsonRpcProvider(
       process.env.TEST_RPC_URL || getConfigByChainId(chainId).rpcUrl
     )
-    console.log(process.env.TEST_RPC_URL)
+    console.log("RPC URL",  process.env.TEST_RPC_URL || getConfigByChainId(chainId).rpcUrl)
+    // console.log(getConfigByChainId(chainId).rpcUrl)
     const block = await provider.getBlock('latest')
     const baseFee = block?.baseFeePerGas
     console.log('baseFee', baseFee)

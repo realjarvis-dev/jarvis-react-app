@@ -24,6 +24,7 @@ import {
 } from './utils'
 
 const PREDEFINED_GAS_LIMIT = 1200000
+const NATIVE_TOKEN_STRING = '0x0000000000000000000000000000000000000000'
 
 export const generateLifiBridgeQuote = async (
   fromChain: string,
@@ -102,7 +103,7 @@ export const generateLifiBridgeQuote = async (
         recipient,
         toChainMatch.id
       )
-      if (balanceDestChain <= BigInt(0) && autoFuelDestChain) {
+      if (balanceDestChain <= BigInt(0) && autoFuelDestChain && toTokenSingle.symbol !== toChainMatch.coin) {
         try {
           const {
             status,
@@ -133,10 +134,9 @@ export const generateLifiBridgeQuote = async (
             }
           }
           return {
-            instruction:
-              `Don't repeat the quote to user, simply ask user if they want to proceed with the transaction. Explain to user that they don't have any native token on the destination chain, so we automatically fueled the token for future transactions. 
+            instruction: `Don't repeat the quote to user, simply ask user if they want to proceed with the transaction. Explain to user that they don't have any native token on the destination chain, so we automatically fueled the token for future transactions. 
 If user wants to proceed, use lifi_bridge_execute tool to execute the transaction.`,
-            details: readableQuote
+            details: { ...readableQuote, auto_fuel_decision: true }
           }
         } catch (error) {
           return {
@@ -199,7 +199,6 @@ If user wants to proceed, use lifi_bridge_execute tool to execute the transactio
     )
     // console.log(JSON.stringify(quote, null, 2))
 
-
     const readableQuote = {
       fromChain: fromChainMatch.name,
       fromChainId: fromChainMatch.id,
@@ -207,9 +206,7 @@ If user wants to proceed, use lifi_bridge_execute tool to execute the transactio
       fromAmountToken: inAmountParsed,
       fromAmountUSD: quote.estimate?.fromAmountUSD,
       fromTokenAddress: fromTokenSingle.address.toLowerCase(),
-      isFromNativeToken:
-        fromTokenSingle.address ===
-        '0x0000000000000000000000000000000000000000',
+      isFromNativeToken: fromTokenSingle.address === NATIVE_TOKEN_STRING,
       toChain: toChainMatch.name,
       toChainId: toChainMatch.id,
       toToken: toTokenSingle.symbol,
@@ -225,11 +222,11 @@ If user wants to proceed, use lifi_bridge_execute tool to execute the transactio
         (acc, curr) => acc + Number(curr.amountUSD),
         0
       ),
+      auto_fuel_decision: false,
       complete_time: new Date().toISOString()
     }
     return {
-      instruction:
-        `Don't repeat the quote to user, simply ask user if they want to proceed with the transaction. If user wants to proceed, use lifi_bridge_execute tool to execute the transaction.`,
+      instruction: `Don't repeat the quote to user, simply ask user if they want to proceed with the transaction. If user wants to proceed, use lifi_bridge_execute tool to execute the transaction.`,
       details: readableQuote
     }
   } catch (error) {
@@ -279,7 +276,7 @@ const _generateMultiStepQuote = async (
     nativeTokenQuote.estimate?.toAmount ?? '0'
   )
   let gasPrice = await getGasPriceByChainId(toChainId)
-  gasPrice = gasPrice * BigInt(12) / BigInt(10)
+  gasPrice = (gasPrice * BigInt(12)) / BigInt(10)
 
   // save some fee for future operations
   const feeToSave = gasPrice * BigInt(PREDEFINED_GAS_LIMIT)
@@ -417,6 +414,7 @@ const _generateMultiStepQuote = async (
 }
 
 export const executeLifiBridgeTransaction = async (
+  fromAddress: string,
   fromChainId: number,
   fromToken: string,
   fromTokenDecimals: number,
@@ -500,10 +498,12 @@ export const executeLifiBridgeTransaction = async (
         complete_time: new Date().toISOString()
       }
     }
-  } catch (error) {
+  } catch (error: any) {
+    const errorMessage =
+      error?.message || 'Unknown error during transaction execution'
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: errorMessage,
       swap_details: {
         from_token_symbol: fromToken,
         from_token_address: fromTokenAddress,
@@ -517,20 +517,158 @@ export const executeLifiBridgeTransaction = async (
   }
 }
 
-// // test a quote from eth to polygon
-// const testQuote = async () => {
-//   const quote = await generateLifiBridgeQuote(
-//     '1',
-//     'berachain',
-//     'ETH',
-//     'wbera',
-//     '0xa9516C8AA7425D6190345a038eB8C4799C786Bb8',
-//     '0.01',
-//     '0.05',
-//     '0xa9516C8AA7425D6190345a038eB8C4799C786Bb8',
-//     true
-//   )
-//   console.log(JSON.stringify(quote, null, 2))
-// }
+export const executeLifiBridgeTransactionWithAutoFuel = async (
+  fromUserAddress: string,
+  fromChainId: number,
+  fromToken: string,
+  fromTokenDecimals: number,
+  fromTokenAddress: string,
+  toChainId: number,
+  toToken: string,
+  amountIn: string,
+  slippage: string,
+  recipient: string | undefined,
+  isFromNativeToken: boolean,
+  fromChainName: string,
+  toChainName: string
+) => {
+  console.log('executeLifiBridgeTransactionWithAutoFuel', {
+    fromUserAddress,
+    fromChainId,
+    fromToken,
+    fromTokenDecimals,
+    fromTokenAddress,
+    toChainId,
+    toToken,
+    amountIn,
+    slippage,
+    recipient,
+    isFromNativeToken,
+    fromChainName,
+    toChainName
+  })
+  const destChain = chainsById[toChainId]
+  if (!recipient) {
+    recipient = fromUserAddress
+  }
+  const defaultToTokenDecimals = 18
+  const { status, message, nativeTokenQuote, swapQuote, readableQuote } =
+    await _generateMultiStepQuote(
+      fromChainId,
+      fromToken,
+      fromTokenDecimals,
+      fromUserAddress,
+      toChainId,
+      destChain.coin,
+      toToken,
+      defaultToTokenDecimals, // does not matter since we don't display the result, we can use the result from the quote if actually needed
+      amountIn,
+      slippage,
+      recipient
+    )
+  if (status === 'fail') {
+    return {
+      success: false,
+      details: message
+    }
+  }
+  if (
+    !nativeTokenQuote.transactionRequest.to ||
+    !swapQuote?.transactionRequest.to
+  ) {
+    return {
+      success: false,
+      details: "Li.fi's protocol address not found."
+    }
+  }
+  // console.log("nativeTokenQuote", JSON.stringify(nativeTokenQuote, null, 2))
+  // console.log("swapQuote", JSON.stringify(swapQuote, null, 2))
+  // collect all the toAddress
+  const transactionSteps = [nativeTokenQuote, swapQuote].map(quote => {
+    const protocolAddress = quote.transactionRequest.to as string
+    const approvalAmount = quote.action.fromAmount
+    const needApprovalTokenAddress = quote.action.fromToken.address
+    const needApprovalChainId = quote.action.fromToken.chainId
+    const isNativeToken = needApprovalTokenAddress === NATIVE_TOKEN_STRING
+    const txData = quote.transactionRequest as TransactionRequest
+    const gasLimit = BigInt(
+      quote.estimate?.gasCosts?.reduce(
+        (acc, curr) => acc + Number(curr.limit),
+        0
+      ) ?? 0
+    )
+    return {
+      protocolAddress,
+      needApprovalTokenAddress,
+      approvalAmount,
+      needApprovalChainId,
+      isNativeToken,
+      txData,
+      gasLimit
+    }
+  })
 
-// testQuote()
+  try {
+    const resultList = []
+    for (const step of transactionSteps) {
+      const {
+        protocolAddress,
+        needApprovalTokenAddress,
+        isNativeToken,
+        approvalAmount,
+        needApprovalChainId,
+        txData,
+        gasLimit
+      } = step
+      if (!isNativeToken) {
+        const { status, message } = await erc20Approval(
+          needApprovalTokenAddress,
+          protocolAddress,
+          approvalAmount,
+          fromUserAddress,
+          needApprovalChainId
+        )
+        if (status === 'fail') {
+          return {
+            instruction: 'notify user',
+            details: message
+          }
+        }
+      }
+      const result = await executeSwapTransaction(txData, needApprovalChainId, {
+        estimateGas: gasLimit > 0 ? false : true,
+        gasLimit: gasLimit ? toHex(gasLimit) : undefined
+      })
+      resultList.push({
+        success: true,
+        transaction_hash: result.hash
+      })
+    }
+    return {
+      success: true,
+      transaction_hash: resultList[0].transaction_hash,
+      swap_transaction_hash: resultList[1].transaction_hash,
+      swap_details: {
+        from_token_symbol: fromToken,
+        from_token_address: fromTokenAddress,
+        to_token_address: toToken,
+        amount_in_human: amountIn,
+        from_chain_name: fromChainName,
+        to_chain_name: toChainName,
+        intermediate_token_symbol: readableQuote.byProductSymbol,
+        complete_time: new Date().toISOString()
+      }
+    }
+  } catch (e) {
+    const errorMessage =
+      e instanceof Error
+        ? e.message
+        : 'Unknown error during transaction execution'
+    return {
+      instruction: 'notify user',
+      details: errorMessage
+    }
+  }
+}
+
+ 

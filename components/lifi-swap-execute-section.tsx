@@ -207,6 +207,11 @@ export function LifiSwapExecuteSection({
   const etherscanBaseUrl = fromChainId
     ? getConfigByChainId(fromChainId).scanLink
     : ''
+  
+  const toChainId = args?.toChainId
+  const toEtherscanBaseUrl = toChainId
+    ? getConfigByChainId(toChainId).scanLink
+    : ''
 
   const bridgeText = isBridge ? 'bridge' : 'swap'
   const bridgeTextCapitalized = isBridge ? 'Bridge' : 'Swap'
@@ -398,7 +403,9 @@ export function LifiSwapExecuteSection({
                 <div className="pt-2 mt-2 border-t border-gray-100 dark:border-gray-800">
                   <div className="flex justify-between items-center">
                     <div className="text-xs text-gray-500 dark:text-gray-400">
-                      Transaction:
+                      {"Transaction: " + (result.swap_details?.intermediate_token_symbol ? 
+                        (`${result.swap_details?.from_token_symbol} on ${result.swap_details?.from_chain_name}` + 
+                        ' -> ' + `${result.swap_details?.intermediate_token_symbol} on ${result.swap_details?.to_chain_name}`) : "")}
                     </div>
                     <a
                       href={`https://${etherscanBaseUrl}/tx/${result.transaction_hash}`}
@@ -408,6 +415,27 @@ export function LifiSwapExecuteSection({
                     >
                       {result.transaction_hash.slice(0, 8)}...
                       {result.transaction_hash.slice(-6)}
+                      <LinkIcon className="h-3 w-3 ml-1" />
+                    </a>
+                  </div>
+                </div>
+              )}
+              {result.swap_transaction_hash && toEtherscanBaseUrl && (
+                <div className="pt-2 mt-2 border-t border-gray-100 dark:border-gray-800">
+                  <div className="flex justify-between items-center">
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      {"Transaction: " + (result.swap_details?.intermediate_token_symbol ? 
+                        (`${result.swap_details?.intermediate_token_symbol} on ${result.swap_details?.to_chain_name}` + 
+                        ' -> ' + `${args?.toToken} on ${args?.toChainName}`) : "")}
+                    </div>
+                    <a
+                      href={`https://${toEtherscanBaseUrl}/tx/${result.swap_transaction_hash}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs font-medium text-blue-600 dark:text-blue-400 flex items-center hover:underline"
+                    >
+                      {result.swap_transaction_hash.slice(0, 8)}...
+                      {result.swap_transaction_hash.slice(-6)}
                       <LinkIcon className="h-3 w-3 ml-1" />
                     </a>
                   </div>
