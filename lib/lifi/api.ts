@@ -32,7 +32,8 @@ export async function getLifiQuote(
       fromAmount: fromAmount,
       fromAddress: fromAddress,
       toAddress: toAddress,
-      slippage: slippage
+      slippage: slippage,
+      // order: 'FASTEST'
     })
 
     const response = await fetch(`${baseUrl}?${params.toString()}`)

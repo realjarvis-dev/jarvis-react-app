@@ -14,7 +14,19 @@ export const MainnetConfig = {
     rpcUrl: 'https://eth-mainnet.g.alchemy.com/v2/yIRJoLX9TId7oSWYdnflKgthIy59m-vr'
     // rpcUrl: 'https://virtual.mainnet.rpc.tenderly.co/ee6b4080-0224-4394-9498-4510c16df471'
 }
-
+export const BaseMainnetConfig = {
+    name: Network.BASE_MAINNET,
+    chainId: 8453,
+    scanLink: 'basescan.org',
+    rpcUrl: 'https://base-mainnet.g.alchemy.com/v2/yIRJoLX9TId7oSWYdnflKgthIy59m-vr'
+    // rpcUrl: 'https://virtual.base.rpc.tenderly.co/3233a1c6-a61f-4411-8c4b-04d4bc434fc2'
+}
+export const ArbitrumConfig = {
+    name: Network.ARB_MAINNET,
+    chainId: 42161,
+    scanLink: 'arbiscan.io',
+    rpcUrl: 'https://arb-mainnet.g.alchemy.com/v2/yIRJoLX9TId7oSWYdnflKgthIy59m-vr'
+}
 export const PolygonConfig = {
     name: Network.MATIC_MAINNET,
     chainId: 137,
@@ -37,11 +49,21 @@ export const BerachainMainnetConfig = {
     rpcUrl: 'https://berachain-mainnet.g.alchemy.com/v2/yIRJoLX9TId7oSWYdnflKgthIy59m-vr'
 }
 
+export const OptimismConfig = {
+    name: Network.OPT_MAINNET,
+    chainId: 10,
+    scanLink: 'optimistic.etherscan.io',
+    rpcUrl: 'https://opt-mainnet.g.alchemy.com/v2/yIRJoLX9TId7oSWYdnflKgthIy59m-vr'
+}
+
 export const chainIdToNetworkConfig: Record<number, NetworkConfigType> = {
     [BerachainMainnetConfig.chainId]: BerachainMainnetConfig,
     [MainnetConfig.chainId]: MainnetConfig,
     [TenderlyDemoConfig.chainId]: TenderlyDemoConfig,
-    [PolygonConfig.chainId]: PolygonConfig
+    [PolygonConfig.chainId]: PolygonConfig,
+    [BaseMainnetConfig.chainId]: BaseMainnetConfig,
+    [ArbitrumConfig.chainId]: ArbitrumConfig,
+    [OptimismConfig.chainId]: OptimismConfig
 }
 
 export const getConfigByChainId = (chainId: number) => {
@@ -50,3 +72,5 @@ export const getConfigByChainId = (chainId: number) => {
     }
     throw new Error(`No config found for chainId: ${chainId}`);
 }
+
+// console.log(getConfigByChainId(42161))

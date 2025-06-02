@@ -10,7 +10,7 @@ import {
   MissingTokenError
 } from '../token-matcher/cross-chain-swap'
 import { chainsById } from '../token-matcher/fuzzy-chain-matcher'
-import { TokenWithScore } from '../token-matcher/fuzzy-token-matcher'
+import { TokenMatcher, TokenWithScore } from '../token-matcher/fuzzy-token-matcher'
 import { LifiQuoteResponse } from '../types/lifi'
 import { getLifiQuote } from './api'
 import {
@@ -23,7 +23,7 @@ import {
   noRouteTitle
 } from './utils'
 
-const PREDEFINED_GAS_LIMIT = 1200000
+const PREDEFINED_GAS_LIMIT = 2000000
 const NATIVE_TOKEN_STRING = '0x0000000000000000000000000000000000000000'
 
 export const generateLifiBridgeQuote = async (
@@ -103,6 +103,10 @@ export const generateLifiBridgeQuote = async (
         recipient,
         toChainMatch.id
       )
+      const nativeCoinSymbol = toChainMatch.coin
+      const tokenMatcher = new TokenMatcher(toChainMatch.id)
+      const nativeCoin = tokenMatcher.match(nativeCoinSymbol)
+      const nativeCoinDecimals = nativeCoin[0].decimals
       if (balanceDestChain <= BigInt(0) && autoFuelDestChain && toTokenSingle.symbol !== toChainMatch.coin) {
         try {
           const {
@@ -275,7 +279,7 @@ const _generateMultiStepQuote = async (
   const toAmountNativeTokenInWei = BigInt(
     nativeTokenQuote.estimate?.toAmount ?? '0'
   )
-  let gasPrice = await getGasPriceByChainId(toChainId)
+  let gasPrice = await getGasPriceByChainId(toChainId) * BigInt(3)
   gasPrice = (gasPrice * BigInt(12)) / BigInt(10)
 
   // save some fee for future operations
@@ -480,10 +484,13 @@ export const executeLifiBridgeTransaction = async (
         0
       ) ?? 0
     )
-    const result = await executeSwapTransaction(txData, fromChainId, {
-      estimateGas: gasLimit > 0 ? false : true,
-      gasLimit: gasLimit ? toHex(gasLimit) : undefined
-    })
+    console.log("quote in execute", JSON.stringify(quote, null, 2))
+    
+    // const result = await executeSwapTransaction(txData, fromChainId, {
+    //   estimateGas: gasLimit > 0 ? false : true,
+    //   gasLimit: gasLimit ? toHex(gasLimit) : undefined
+    // })
+    const result = await executeSwapTransaction(txData, fromChainId)
 
     return {
       success: true,
@@ -610,7 +617,8 @@ export const executeLifiBridgeTransactionWithAutoFuel = async (
 
   try {
     const resultList = []
-    for (const step of transactionSteps) {
+
+    for (const [index, step] of transactionSteps.entries()) {
       const {
         protocolAddress,
         needApprovalTokenAddress,
@@ -620,6 +628,20 @@ export const executeLifiBridgeTransactionWithAutoFuel = async (
         txData,
         gasLimit
       } = step
+      if (index === 1) {
+        // wait until the native token appear on the user's wallet
+        // set time out here
+        const startTime = Date.now()
+        const interval = setInterval(async () => {
+          const balance = await getNativeBalanceByChainId(recipient, toChainId);
+          if (balance > BigInt(0)) {
+            clearInterval(interval);
+            console.log("native token appeared in the user's wallet");
+          }
+        }, 1000)
+        const elapsedMs = Date.now() - startTime
+        console.log(`Native token appeared after ${elapsedMs} ms (≈ ${(elapsedMs / 1000).toFixed(1)} s)`)
+      }
       if (!isNativeToken) {
         const { status, message } = await erc20Approval(
           needApprovalTokenAddress,

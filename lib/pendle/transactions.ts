@@ -203,7 +203,7 @@ export async function executeSwapTransaction(
     const baseFee = block?.baseFeePerGas
     console.log('baseFee', baseFee)
     const maxFee = baseFee ? BigInt(baseFee) * BigInt(2) : BigInt(1010690044) // ~2× base fee
-    const priority = ethers.parseUnits('1', 'gwei') // 1 gwei tip
+    const priority = ethers.parseUnits('0', 'gwei') // 1 gwei tip
 
     console.log('Sending transaction...')
     // console.log('txData', txData)
@@ -255,6 +255,9 @@ export async function executeSwapTransaction(
 
     console.log('gasLimit', gasLimit)
     console.log('valueHex', valueHex)
+    console.log('chainId', chainId)
+    console.log('maxFee', maxFee)
+    console.log('priority', priority)
 
     const { signedTransaction, encoding } =
       await privy.walletApi.ethereum.signTransaction({

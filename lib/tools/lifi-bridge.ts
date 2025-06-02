@@ -55,12 +55,12 @@ const bridgeQuoteTool = tool({
     const {fromChain, toChain, fromToken, toToken, amountIn, slippage, recipient, enableAutoFuel } = params
     // const fromChain = context?.networkContext?.selectedNetwork || 'ethereum'
     const fromChainInContext = context?.networkContext?.selectedNetwork
-    if (fromChain.toLowerCase() !== fromChainInContext?.toLowerCase()) {
-      return {
-        instruction: 'notify user',
-        details: "Please use the correct fromChain for the tool, or switch to the correct network"
-      }
-    }
+    // if (fromChain.toLowerCase() !== fromChainInContext?.toLowerCase()) {
+    //   return {
+    //     instruction: 'notify user',
+    //     details: "Please use the correct fromChain for the tool, or switch to the correct network"
+    //   }
+    // }
     const userEvmAddress = await getUserEvmWalletAddress()
     if (!userEvmAddress) {
       return {
@@ -138,13 +138,13 @@ const bridgeExecuteTool = tool({
     toChainName,
     autoFuel
   }, context: ToolContext) => {
-    const fromChainInContext = context?.networkContext?.selectedNetwork
-    if (fromChainId.toString() !== fromChainInContext?.toLowerCase()) {
-      return {
-        instruction: 'notify user',
-        details: "Please use the correct fromChain for the tool, or switch to the correct network"
-      }
-    }
+    const fromChainIdInContext = context?.networkContext?.selectedChainId
+    // if (fromChainId.toString() !== fromChainIdInContext?.toString()) {
+    //   return {
+    //     instruction: 'notify user',
+    //     details: "Please use the correct fromChain for the tool, or switch to the correct network"
+    //   }
+    // }
     const userEvmAddress = await getUserEvmWalletAddress()
     if (!userEvmAddress) {
       return {
