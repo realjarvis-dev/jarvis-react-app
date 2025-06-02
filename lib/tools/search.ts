@@ -9,6 +9,13 @@ import {
 import { sanitizeUrl } from '@/lib/utils'
 import { tool } from 'ai'
 import Exa from 'exa-js'
+import { NetworkContext } from '../utils/tool-registry'
+
+interface ToolContext {
+  toolCallId?: string
+  messages?: any[]
+  networkContext?: NetworkContext
+}
 
 /**
  * Creates a search tool with the appropriate schema for the given model.
@@ -17,13 +24,15 @@ export function createSearchTool(fullModel: string) {
   return tool({
     description: 'Search the web for information',
     parameters: getSearchSchemaForModel(fullModel),
-    execute: async ({
-      query,
-      max_results = 20,
-      search_depth = 'basic', // Default for standard schema
-      include_domains = [],
-      exclude_domains = []
-    }) => {
+    execute: async (params, context?: ToolContext) => {
+      const { 
+        query,
+        max_results = 20,
+        search_depth = 'basic',
+        include_domains = [],
+        exclude_domains = []
+      } = params;
+      
       // Ensure max_results is at least 10
       const minResults = 10
       const effectiveMaxResults = Math.max(

@@ -1,18 +1,16 @@
 'use client'
 
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle
 } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { TokenData } from '@/lib/alchemy/types'
-import { useState } from 'react'
+import { useNetwork } from '@/lib/context/network-context'
 
 const TokenRow = ({ token }: { token: TokenData }) => {
   // Format balance to a nice readable format (e.g., 9979.99 ETH)
@@ -40,13 +38,10 @@ const TokenRow = ({ token }: { token: TokenData }) => {
   )
 }
 
-const NetworkSection = ({ network, tokens, isExpanded }: { 
+const NetworkSection = ({ network, tokens }: { 
   network: string
   tokens: TokenData[]
-  isExpanded: boolean 
 }) => {
-  const displayTokens = isExpanded ? tokens : tokens.slice(0, 2)
-  
   return (
     <div className="mb-6 last:mb-0">
       <div className="flex items-center justify-between mb-3">
@@ -58,17 +53,12 @@ const NetworkSection = ({ network, tokens, isExpanded }: {
         </Badge>
       </div>
       <div className="space-y-2 pl-2 border-l-2 border-gray-200 dark:border-gray-700">
-        {displayTokens.map(token => (
+        {tokens.map(token => (
           <TokenRow
             key={`${token.address}-${token.network}`}
             token={token}
           />
         ))}
-        {!isExpanded && tokens.length > 2 && (
-          <div className="py-2 px-3 text-sm text-gray-500 dark:text-gray-400">
-            +{tokens.length - 2} more tokens...
-          </div>
-        )}
       </div>
     </div>
   )
@@ -91,12 +81,37 @@ export function WalletBalance({
   error,
   className = ''
 }: WalletBalanceProps) {
-  const [expanded, setExpanded] = useState(false)
+  const { activeNetwork, selectedChain, isDemoMode } = useNetwork()
 
   const tokensList = tokens || []
 
-  // Group tokens by network
-  const tokensByNetwork = tokensList.reduce((acc, token) => {
+  // Helper function to determine if a token belongs to the selected network
+  const matchesSelectedNetwork = (tokenNetwork: string) => {
+    // Normalize the token network name for comparison
+    const normalizedTokenNetwork = tokenNetwork.toLowerCase()
+    
+    // Handle demo mode specially - only show Tenderly tokens in demo mode
+    if (isDemoMode) {
+      return normalizedTokenNetwork.includes('tenderly') || 
+             normalizedTokenNetwork.includes('demo')
+    }
+    
+    // For non-demo mode, match based on the selected chain
+    switch (selectedChain) {
+      case 'ethereum':
+        return normalizedTokenNetwork.includes('eth-mainnet')
+      case 'berachain':
+        return normalizedTokenNetwork.includes('berachain-mainnet')
+      default:
+        return false
+    }
+  }
+
+  // Filter tokens based on the selected network using our improved matching
+  const filteredTokens = tokensList.filter(token => matchesSelectedNetwork(token.network))
+  
+  // Group tokens by network (we'll only have one network after filtering)
+  const tokensByNetwork = filteredTokens.reduce((acc, token) => {
     if (!acc[token.network]) {
       acc[token.network] = []
     }
@@ -111,7 +126,7 @@ export function WalletBalance({
     return a.localeCompare(b)
   })
 
-  const totalTokenCount = tokensList.length
+  const totalTokenCount = filteredTokens.length
   const hasMultipleNetworks = sortedNetworks.length > 1
 
   return (
@@ -174,10 +189,10 @@ export function WalletBalance({
           </div>
         )}
 
-        {!isLoading && !error && tokensList.length === 0 && (
+        {!isLoading && !error && filteredTokens.length === 0 && (
           <div className="py-8 text-center">
             <p className="text-gray-500 mb-2">
-              {'No tokens found in this wallet'}
+              {'No tokens found for the selected network'}
             </p>
           </div>
         )}
@@ -189,24 +204,11 @@ export function WalletBalance({
                 key={network}
                 network={network}
                 tokens={tokensByNetwork[network]}
-                isExpanded={expanded}
               />
             ))}
           </div>
         )}
       </CardContent>
-
-      {totalTokenCount > 4 && (
-        <CardFooter className="flex justify-center border-t pt-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setExpanded(!expanded)}
-          >
-            {expanded ? 'Show Less' : 'Show All Tokens'}
-          </Button>
-        </CardFooter>
-      )}
     </Card>
   )
 }

@@ -1,7 +1,8 @@
 import { WalletWithMetadata } from '@privy-io/server-auth'
 import { CoreMessage, smoothStream, streamText } from 'ai'
 import { getModel } from '../utils/registry'
-import { getToolRegistry, NetworkContext, ToolCategory } from '../utils/tool-registry'
+import { getToolRegistry, ToolCategory } from '../utils/tool-registry'
+import { NetworkContext } from '../types/context'
 
 const get_system_prompt = (searchMode: boolean, supportedTools: string[], registry: any, networkContext?: NetworkContext) => {
   // Generate dynamic tool descriptions based on actually supported tools
@@ -265,7 +266,7 @@ You can only execute on behalf of the user if they have wallets and have delegat
     if (networkContext) {
       networkInfo = `
 Network Context:
-- Selected Network: ${networkContext.selectedNetwork}
+- Selected Network: ${networkContext.selectedNetwork} (default fromChain for bridging, default chain for swapping and transfer)
 - Chain ID: ${networkContext.selectedChainId}
 - Demo Mode: ${networkContext.isDemo ? 'ON' : 'OFF'}
 - RPC URL: ${networkContext.rpcUrl}
@@ -280,7 +281,10 @@ Network Context:
         tool_lst[toolName] = {
           description: toolDef.description,
           parameters: toolDef.schema,
-          execute: (params: any, context?: any) => toolDef.execute(params, context, networkContext)
+          execute: (params: any, context?: any) => toolDef.execute(params, {
+            ...context,
+            networkContext
+          })
         }
       }
     }
@@ -297,7 +301,10 @@ Network Context:
         o3_mini_tool_lst[toolName] = {
           description: toolDef.description,
           parameters: toolDef.schema,
-          execute: (params: any, context?: any) => toolDef.execute(params, context, networkContext)
+          execute: (params: any, context?: any) => toolDef.execute(params, {
+            ...context,
+            networkContext
+          })
         }
       }
     }

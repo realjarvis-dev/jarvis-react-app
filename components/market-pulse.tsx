@@ -29,6 +29,7 @@ function formatTrendingPrice(price: number): string {
 
 export function MarketPulse() {
   const [coins, setCoins] = useState<TrendingCoinData[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const scrollRef = useRef<HTMLDivElement>(null)
   const animationRef = useRef<number>()
   const router = useRouter()
@@ -44,13 +45,22 @@ export function MarketPulse() {
 
     async function fetchTrendingCoins() {
       try {
+        setIsLoading(true)
         const response = await fetch(url, options)
         const json = await response.json()
 
+        if (json.error || !json.coins || !Array.isArray(json.coins)) {
+          console.error('Error fetching trending coins:', json.error || 'Invalid response format')
+          setIsLoading(true) // Keep loading state active when there's an error
+          return
+        }
+
         // The API now returns processed data directly
         setCoins(json.coins)
+        setIsLoading(false)
       } catch (err) {
         console.error('Error fetching trending coins:', err)
+        setIsLoading(true) // Keep loading state active when there's an error
       }
     }
 
@@ -93,18 +103,15 @@ export function MarketPulse() {
     router.push(`/search?q=${encodeURIComponent(query)}`)
   }
 
+  if (!coins || coins.length === 0) {
+    return null;
+  }
+
   return (
     <div
       ref={scrollRef}
       className="flex overflow-x-auto gap-4 py-1 px-2 hide-scrollbar text-xs sm:text-sm text-white/90 bg-gradient-to-r from-yellow-400/20 via-yellow-300/30 to-yellow-400/20 rounded-full shadow-glow backdrop-blur-sm"
     >
-      {coins.length === 0 && (
-        <div className="animate-pulse flex gap-4 w-full">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-4 w-20 bg-yellow-100/30 rounded" />
-          ))}
-        </div>
-      )}
       {coins.map((coin, index) => (
         <div 
           key={index} 

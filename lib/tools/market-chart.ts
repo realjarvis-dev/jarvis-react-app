@@ -1,6 +1,13 @@
 import { tool } from 'ai'
 import { z } from 'zod'
 import { fetchMarketChart, processMarketChartData } from '../coingecko/market-chart'
+import { NetworkContext } from '../utils/tool-registry'
+
+interface ToolContext {
+  toolCallId?: string
+  messages?: any[]
+  networkContext?: NetworkContext
+}
 
 export const marketChartTool = tool({
   description: 'Fetch and display cryptocurrency market chart data from CoinGecko. This tool automatically renders a market chart UI with price history, statistics, and trends.',
@@ -16,7 +23,9 @@ export const marketChartTool = tool({
       .default('usd')
       .describe('Target currency for price data (default: "usd")')
   }),
-  execute: async ({ coin_id, days = 7, currency = 'usd' }) => {
+  execute: async (params, context?: ToolContext) => {
+    const { coin_id, days = 7, currency = 'usd' } = params;
+    
     try {
       // Fetch raw market chart data from CoinGecko
       const rawData = await fetchMarketChart(coin_id, days, currency)

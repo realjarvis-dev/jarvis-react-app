@@ -2,8 +2,8 @@ import { Alchemy, TokenBalance } from 'alchemy-sdk'
 import { ethers, id } from 'ethers'
 import { TenderlyDemoConfig } from '../config/network'
 import {
-  berachainBepoliaAlchemy,
   berachainMainnetAlchemy,
+  berachainBepoliaAlchemy,
   chainIdToAlchemyClient,
   mainnetAlchemy,
   sepoliaAlchemy
@@ -53,7 +53,7 @@ export async function getTenderlyDemoTokenBalance(
       name: 'Ether',
       symbol: 'ETH',
       balance: ethers.formatEther(nativeBalance),
-      network: 'Tenderly Demo Network'
+      network: 'Ethereum Mainnet (Demo)'
     };
 
     return [ethToken];
@@ -123,9 +123,7 @@ export async function getTokenBalance(
 
 const tokenBalanceFunctions = [
   getMainnetTokenBalance,
-  getSepoliaTokenBalance,
   getBerachainMainnetTokenBalance,
-  getBerachainBepoliaTokenBalance,
   getTenderlyDemoTokenBalance // Add Tenderly demo network support
 ]
 
@@ -149,6 +147,6 @@ export async function getNativeBalanceByChainId(walletAddress: string, chainId: 
   return nativeWei.toBigInt()
 }
 
-console.log(await getNativeBalanceByChainId('0x20dC1B6732E7A20aCba461BD37beead4FF5D93c8', 80094))
+// console.log(await getNativeBalanceByChainId('0x20dC1B6732E7A20aCba461BD37beead4FF5D93c8', 80094))
 
 export default tokenBalanceFunctions

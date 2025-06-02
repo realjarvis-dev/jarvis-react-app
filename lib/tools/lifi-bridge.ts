@@ -7,7 +7,7 @@ import {
 } from '../lifi/actions'
 import { getUserEvmWalletAddress } from '../privy/client'
 import { chainsById } from '../token-matcher/fuzzy-chain-matcher'
-
+import { ToolContext } from '../types/context'
 const bridgeQuoteTool = tool({
   description:
     "Get a quote for a cross-chain bridge transfer from user's wallet. can also be single chain swap. It automatically renders UI on success.",
@@ -51,16 +51,16 @@ const bridgeQuoteTool = tool({
       ),
     enableAutoFuel: z.boolean().describe('Whether to auto fuel the destination chain when the native balance is low, default to true')
   }),
-  execute: async ({
-    fromChain,
-    toChain,
-    fromToken,
-    toToken,
-    amountIn,
-    slippage,
-    recipient,
-    enableAutoFuel
-  }) => {
+  execute: async (params, context: ToolContext) => {
+    const {fromChain, toChain, fromToken, toToken, amountIn, slippage, recipient, enableAutoFuel } = params
+    // const fromChain = context?.networkContext?.selectedNetwork || 'ethereum'
+    const fromChainInContext = context?.networkContext?.selectedNetwork
+    if (fromChain.toLowerCase() !== fromChainInContext?.toLowerCase()) {
+      return {
+        instruction: 'notify user',
+        details: "Please use the correct fromChain for the tool, or switch to the correct network"
+      }
+    }
     const userEvmAddress = await getUserEvmWalletAddress()
     if (!userEvmAddress) {
       return {
@@ -137,7 +137,14 @@ const bridgeExecuteTool = tool({
     fromChainName,
     toChainName,
     autoFuel
-  }) => {
+  }, context: ToolContext) => {
+    const fromChainInContext = context?.networkContext?.selectedNetwork
+    if (fromChainId.toString() !== fromChainInContext?.toLowerCase()) {
+      return {
+        instruction: 'notify user',
+        details: "Please use the correct fromChain for the tool, or switch to the correct network"
+      }
+    }
     const userEvmAddress = await getUserEvmWalletAddress()
     if (!userEvmAddress) {
       return {
