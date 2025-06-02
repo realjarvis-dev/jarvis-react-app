@@ -18,6 +18,15 @@ export const MainnetConfig = {
     chainId: 1,
     scanLink: 'etherscan.io',
     rpcUrl: 'https://eth-mainnet.g.alchemy.com/v2/yIRJoLX9TId7oSWYdnflKgthIy59m-vr'
+    // rpcUrl: 'https://virtual.mainnet.rpc.tenderly.co/ee6b4080-0224-4394-9498-4510c16df471'
+}
+
+export const PolygonConfig = {
+    name: Network.MATIC_MAINNET,
+    chainId: 137,
+    scanLink: 'polygonscan.com',
+    rpcUrl: 'https://polygon-mainnet.g.alchemy.com/v2/yIRJoLX9TId7oSWYdnflKgthIy59m-vr'
+    // rpcUrl: 'https://virtual.polygon.rpc.tenderly.co/fa7f4f0a-086a-4f67-8e97-f3898af82f53'
 }
 
 export const TenderlyDemoConfig = {
@@ -46,7 +55,8 @@ export const chainIdToNetworkConfig: Record<number, NetworkConfigType> = {
     [BepoliaConfig.chainId]: BepoliaConfig,
     [SepoliaConfig.chainId]: SepoliaConfig,
     [MainnetConfig.chainId]: MainnetConfig,
-    [TenderlyDemoConfig.chainId]: TenderlyDemoConfig
+    [TenderlyDemoConfig.chainId]: TenderlyDemoConfig,
+    [PolygonConfig.chainId]: PolygonConfig
 }
 
 export const getConfigByChainId = (chainId: number) => {
