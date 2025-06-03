@@ -48,6 +48,10 @@ export const KodiakOpportunitiesTable: React.FC<KodiakOpportunitiesTableProps> =
             <TableHead className="font-semibold text-gray-400 text-right">Pool TVL</TableHead>
             <TableHead className="font-semibold text-gray-400 text-right">APR</TableHead>
             <TableHead className="font-semibold text-gray-400 text-center">Managed</TableHead>
+            <TableHead className="font-semibold text-gray-400 text-center">Bault</TableHead>
+            <TableHead className="font-semibold text-gray-400 text-right">Bault APR</TableHead>
+            <TableHead className="font-semibold text-gray-400 text-right">Bault TVL</TableHead>
+            <TableHead className="font-semibold text-gray-400 text-right">Bault Price</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -100,10 +104,24 @@ export const KodiakOpportunitiesTable: React.FC<KodiakOpportunitiesTableProps> =
                     <div className="whitespace-nowrap text-green-400">+ {boostApr}</div>
                   )}
                 </TableCell>
-                <TableCell className="text-center py-3 text-xs whitespace-nowrap">
+                <TableCell className="text-center py-3 text-xs border-r border-r-gray-800/20 whitespace-nowrap">
                   <span className={`px-2 py-1 rounded text-xs ${island.management.isManaged ? "bg-blue-600/20 text-blue-400" : "bg-amber-700/20 text-amber-400"}`}>
                     {island.management.isManaged ? "Yes" : "No"}
                   </span>
+                </TableCell>
+                <TableCell className="text-center py-3 text-xs border-r border-r-gray-800/20 whitespace-nowrap">
+                  <span className={`px-2 py-1 rounded text-xs ${island.bault.hasBault ? "bg-green-600/20 text-green-400" : "bg-gray-700/20 text-gray-400"}`}>
+                    {island.bault.hasBault ? "Yes" : "No"}
+                  </span>
+                </TableCell>
+                <TableCell className="text-right py-3 text-xs border-r border-r-gray-800/20 whitespace-nowrap">
+                  {island.bault.hasBault ? island.bault.apr : "-"}
+                </TableCell>
+                <TableCell className="text-right py-3 text-xs border-r border-r-gray-800/20 whitespace-nowrap">
+                  {island.bault.hasBault ? formatTVL(island.bault.tvl) : "-"}
+                </TableCell>
+                <TableCell className="text-right py-3 text-xs whitespace-nowrap">
+                  {island.bault.hasBault ? island.bault.price : "-"}
                 </TableCell>
               </TableRow>
             );

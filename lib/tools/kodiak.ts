@@ -42,24 +42,66 @@ export const kodiakOpportunitiesTool = tool({
       .describe(
         'Maximum APR in percentage (e.g., 10 for 10%). Filters for APR <= value. Optional.'
       ),
+    bault_apr_gte: z
+      .number()
+      .optional()
+      .describe(
+        'Minimum Bault APR in percentage (e.g., 50 for 50%). Filters islands with baults having APR >= value. Optional.'
+      ),
+    bault_apr_lte: z
+      .number()
+      .optional()
+      .describe(
+        'Maximum Bault APR in percentage (e.g., 100 for 100%). Filters islands with baults having APR <= value. Optional.'
+      ),
+    bault_tvl_gte: z
+      .number()
+      .optional()
+      .describe(
+        'Minimum Bault TVL in USD (e.g., 10000 for $10,000). Filters islands with baults having TVL >= value. Optional.'
+      ),
+    bault_tvl_lte: z
+      .number()
+      .optional()
+      .describe(
+        'Maximum Bault TVL in USD (e.g., 100000 for $100,000). Filters islands with baults having TVL <= value. Optional.'
+      ),
     sort_by: z
-      .enum(['apr', 'tvl'])
+      .enum(['apr', 'tvl', 'bault_apr'])
       .default('apr')
-      .describe('Field to sort by: "apr" or "tvl" (default: "tvl")'),
+      .describe('Field to sort by: "apr", "tvl", or "bault_apr" (default: "tvl")'),
     max_results: z
       .number()
       .min(1)
       .max(50)
       .default(10)
-      .describe('Number of opportunities to return (default 10)')
+      .describe('Number of opportunities to return (default 10)'),
+    bault_filter: z
+      .enum(['only', 'exclude', 'include'])
+      .optional()
+      .describe('Filter islands by bault status: "only" (only show islands with baults), "exclude" (hide islands with baults), or "include" (show all islands, default). Note: If any bault_apr_* or bault_tvl_* filters are used, this is automatically set to "only".')
   }),
   execute: async (params, context: ToolContext) => {
     const { 
       apr_gte, 
       apr_lte, 
+      bault_apr_gte,
+      bault_apr_lte,
+      bault_tvl_gte,
+      bault_tvl_lte,
       sort_by = 'tvl', 
-      max_results = 10 
+      max_results = 10,
+      bault_filter: userBaultFilter
     } = params;
+    
+    // If any bault-specific filters are set, automatically filter for baults only
+    // unless the user explicitly specified a different filter
+    let bault_filter = userBaultFilter;
+    if (!userBaultFilter && (bault_apr_gte !== undefined || bault_apr_lte !== undefined || 
+        bault_tvl_gte !== undefined || bault_tvl_lte !== undefined)) {
+      bault_filter = 'only';
+      console.log('Automatically filtering for islands with baults due to bault-specific filters');
+    }
     
     const networkContext = context?.networkContext;
 
@@ -67,7 +109,8 @@ export const kodiakOpportunitiesTool = tool({
       // Fetch all active islands with reasonable TVL using the new API endpoint
       const islands = await getKodiakOpportunitiesFromApi({
         minTvl: 10, // Lower threshold to show more islands
-        includeInactive: false
+        includeInactive: false,
+        filterBaults: bault_filter // Pass the bault filter to the API function
       });
       
       // Filter out islands with null tick data (Uniswap V2 pools)
@@ -93,9 +136,92 @@ export const kodiakOpportunitiesTool = tool({
         );
       }
       
+      // Filter by bault status if not already filtered at API level
+      if (bault_filter) {
+        if (bault_filter === 'only') {
+          // Only show islands with baults
+          filteredIslands = filteredIslands.filter(island => 
+            island.baults && island.baults.length > 0
+          );
+          console.log(`Filtered to ${filteredIslands.length} islands with baults`);
+        } else if (bault_filter === 'exclude') {
+          // Exclude islands with baults
+          filteredIslands = filteredIslands.filter(island => 
+            !island.baults || island.baults.length === 0
+          );
+          console.log(`Filtered to ${filteredIslands.length} islands without baults`);
+        }
+      }
+      
+      // Apply Bault APR filters if provided
+      if (bault_apr_gte !== undefined) {
+        filteredIslands = filteredIslands.filter(island => {
+          // Keep only islands with baults and APR above threshold
+          if (!island.baults || island.baults.length === 0) {
+            return false; // Filter out islands without baults
+          }
+          return island.baults[0].apy >= bault_apr_gte;
+        });
+        console.log(`Filtered to ${filteredIslands.length} islands with bault APR >= ${bault_apr_gte}%`);
+      }
+      
+      if (bault_apr_lte !== undefined) {
+        filteredIslands = filteredIslands.filter(island => {
+          // Keep only islands with baults and APR below threshold
+          if (!island.baults || island.baults.length === 0) {
+            return false; // Filter out islands without baults
+          }
+          return island.baults[0].apy <= bault_apr_lte;
+        });
+        console.log(`Filtered to ${filteredIslands.length} islands with bault APR <= ${bault_apr_lte}%`);
+      }
+      
+      // Apply Bault TVL filters if provided
+      if (bault_tvl_gte !== undefined) {
+        filteredIslands = filteredIslands.filter(island => {
+          // Keep only islands with baults and TVL above threshold
+          if (!island.baults || island.baults.length === 0) {
+            return false; // Filter out islands without baults
+          }
+          const baultTVL = island.baults[0].totalAssets * island.baults[0].price;
+          return baultTVL >= bault_tvl_gte;
+        });
+        console.log(`Filtered to ${filteredIslands.length} islands with bault TVL >= $${bault_tvl_gte.toLocaleString()}`);
+      }
+      
+      if (bault_tvl_lte !== undefined) {
+        filteredIslands = filteredIslands.filter(island => {
+          // Keep only islands with baults and TVL below threshold
+          if (!island.baults || island.baults.length === 0) {
+            return false; // Filter out islands without baults
+          }
+          const baultTVL = island.baults[0].totalAssets * island.baults[0].price;
+          return baultTVL <= bault_tvl_lte;
+        });
+        console.log(`Filtered to ${filteredIslands.length} islands with bault TVL <= $${bault_tvl_lte.toLocaleString()}`);
+      }
+      
       // Sort islands by specified field
       if (sort_by === 'apr') {
         filteredIslands.sort((a, b) => b.apr.combinedApr - a.apr.combinedApr);
+      } else if (sort_by === 'bault_apr') {
+        // Sort by bault APY - put islands with baults at the top
+        filteredIslands.sort((a, b) => {
+          // If neither has a bault, maintain current order
+          if ((!a.baults || a.baults.length === 0) && (!b.baults || b.baults.length === 0)) {
+            return 0;
+          }
+          // If only a has a bault, put a first
+          if (a.baults && a.baults.length > 0 && (!b.baults || b.baults.length === 0)) {
+            return -1;
+          }
+          // If only b has a bault, put b first
+          if ((!a.baults || a.baults.length === 0) && b.baults && b.baults.length > 0) {
+            return 1;
+          }
+          // Both have baults, compare their APYs
+          return b.baults![0].apy - a.baults![0].apy;
+        });
       } else {
         // Default: sort by TVL
         filteredIslands.sort((a, b) => b.tvl.usdValue - a.tvl.usdValue);
@@ -148,6 +274,21 @@ export const kodiakOpportunitiesTool = tool({
         // Format TVL in USD
         const poolTVL = '$' + Number(island.tvl.usdValue).toLocaleString();
         
+        // Process bault information if available
+        const hasBault = !!(island.baults && island.baults.length > 0);
+        let baultApr = '';
+        let baultTvl = '';
+        let baultPrice = '';
+        let baultId = '';
+        
+        if (hasBault && island.baults && island.baults.length > 0) {
+          const bault = island.baults[0]; // Get the first bault
+          baultApr = (bault.apy).toFixed(2) + '%';
+          baultTvl = '$' + (bault.totalAssets * bault.price).toLocaleString();
+          baultPrice = bault.price.toFixed(4);
+          baultId = bault.id;
+        }
+        
         return {
           poolName: `${island.token0.symbol} - ${island.token1.symbol}`,
           feeTier,
@@ -170,14 +311,52 @@ export const kodiakOpportunitiesTool = tool({
           management: {
             isManaged: island.isManaged,
             managerAddress: island.manager
+          },
+          bault: {
+            hasBault,
+            apr: baultApr,
+            tvl: baultTvl,
+            price: baultPrice,
+            id: baultId
           }
         };
       });
       
+      // Build a summary that includes active filters
+      let filterDescription = '';
+      
+      // Add bault filter description
+      if (bault_filter === 'only') {
+        filterDescription += ' with baults';
+      } else if (bault_filter === 'exclude') {
+        filterDescription += ' without baults';
+      }
+      
+      // Add bault APR filter description
+      if (bault_apr_gte !== undefined && bault_apr_lte !== undefined) {
+        filterDescription += ` and bault APR between ${bault_apr_gte}%-${bault_apr_lte}%`;
+      } else if (bault_apr_gte !== undefined) {
+        filterDescription += ` and bault APR ≥ ${bault_apr_gte}%`;
+      } else if (bault_apr_lte !== undefined) {
+        filterDescription += ` and bault APR ≤ ${bault_apr_lte}%`;
+      }
+      
+      // Add bault TVL filter description
+      if (bault_tvl_gte !== undefined || bault_tvl_lte !== undefined) {
+        filterDescription += ' and bault TVL';
+        if (bault_tvl_gte !== undefined && bault_tvl_lte !== undefined) {
+          filterDescription += ` between $${bault_tvl_gte.toLocaleString()}-$${bault_tvl_lte.toLocaleString()}`;
+        } else if (bault_tvl_gte !== undefined) {
+          filterDescription += ` ≥ $${bault_tvl_gte.toLocaleString()}`;
+        } else if (bault_tvl_lte !== undefined) {
+          filterDescription += ` ≤ $${bault_tvl_lte.toLocaleString()}`;
+        }
+      }
+      
       // Return minimal data for streaming, but include full data for UI
       return {
         _uiDisplayTool: true,
-        summary: `Found ${formattedIslands.length} Kodiak Island opportunities`,
+        summary: `Found ${formattedIslands.length} Kodiak Island opportunities${filterDescription}`,
         count: formattedIslands.length,
         data: formattedIslands
       };

@@ -343,6 +343,12 @@ export async function fetchKodiakIslandsFromApi(
     const apiVaults = response.data.data;
     console.log(`Successfully fetched ${apiVaults.length} islands from API`);
     
+    // Check for baults in the response
+    const vaultsWithBaults = apiVaults.filter(vault => vault.baults && vault.baults.length > 0);
+    if (vaultsWithBaults.length > 0) {
+      console.log(`Found ${vaultsWithBaults.length} islands with active baults`);
+    }
+    
     // Map the API response to our format
     const islands = mapApiResponseToIslands(apiVaults);
     
@@ -452,7 +458,9 @@ function mapApiResponseToIslands(apiVaults: KodiakApiVault[]): KodiakIsland[] {
       weeklyVolumeUSD: vault.weeklyFeesEarnedUSD.toString(),
       currentPrice: 0, // Not directly provided, would need calculation
       poolType: 'Island',
-      tick: vault.currentTick
+      tick: vault.currentTick,
+      // Add baults data if available
+      baults: vault.baults
     };
   });
 }
@@ -468,13 +476,15 @@ export async function getKodiakOpportunitiesFromApi(
     includeInactive?: boolean;
     minVolumeUSD?: number;
     chainId?: number;
+    filterBaults?: 'only' | 'exclude' | 'include'; // 'only' shows only islands with baults, 'exclude' hides islands with baults, 'include' shows all
   } = {}
 ): Promise<KodiakIsland[]> {
   // Set default options
   const {
     minTvl = 100, // Default minimum TVL
     includeInactive = false, // By default, filter out inactive islands
-    chainId = 80094 // Default to BERA Mainnet
+    chainId = 80094, // Default to BERA Mainnet
+    filterBaults = 'include' // By default, include all islands regardless of baults status
   } = options;
   
   try {
@@ -494,7 +504,7 @@ export async function getKodiakOpportunitiesFromApi(
     let islands = islandsResponse.data.islands;
     
     // Apply additional filters
-    const activeIslands = islands.filter(island => {
+    const filteredIslands = islands.filter(island => {
       // Filter out inactive islands if specified
       if (!includeInactive) {
         // Consider an island inactive if both APRs are zero
@@ -503,11 +513,20 @@ export async function getKodiakOpportunitiesFromApi(
         }
       }
       
+      // Filter by baults
+      if (filterBaults === 'only') {
+        // Only show islands with active baults
+        return island.baults && island.baults.length > 0;
+      } else if (filterBaults === 'exclude') {
+        // Exclude islands with baults
+        return !island.baults || island.baults.length === 0;
+      }
+      
       return true;
     });
     
-    console.log(`Found ${activeIslands.length} active Kodiak Islands from API`);
-    return activeIslands;
+    console.log(`Found ${filteredIslands.length} active Kodiak Islands from API`);
+    return filteredIslands;
   } catch (error) {
     console.error('Error getting Kodiak opportunities from API:', error);
     return [];
