@@ -25,7 +25,8 @@ interface PrivyTransferResult {
     to: string
     amount: number
     complete_time: string
-    chainId?: number 
+    chainId?: number
+    chainExplorerName?: string
   }
 }
 
@@ -64,7 +65,7 @@ export function TransferSection({
                   rel="noopener noreferrer"
                   className="text-blue-500 hover:underline"
                 >
-                  EtherScan
+                  {toolResult.transaction_details?.chainExplorerName}
                 </a>
               </p>
             )}

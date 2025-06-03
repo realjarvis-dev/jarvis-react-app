@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { getGasPriceByChainId } from '../blocknative/get-gas-price'
 import { executeSwapTransaction } from '../pendle/transactions'
 import { getUserWallet } from '../privy/client'
+import { getConfigByChainId } from '../config/network'
 
 import { ToolContext } from '../types/context'
 
@@ -69,7 +70,6 @@ export const privyTransferTool = tool({
         }
       )
 
-      console.log('Transaction send, hash: ', tx.hash)
       return {
         status: 'success',
         hash: tx.hash,
@@ -77,7 +77,11 @@ export const privyTransferTool = tool({
           to: address,
           amount: amount,
           complete_time: new Date().toISOString(),
-          chainId: chainId
+          chainId: chainId,
+          chainExplorerName:
+            networkContext?.selectedNetwork === 'demo'
+              ? 'demo dashboard'
+              : `${getConfigByChainId(chainId).displayName} explorer`
         },
         error_message: ''
       }
