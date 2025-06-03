@@ -1,9 +1,51 @@
 'use client'
 
-import { useEffect } from 'react'
-import { usePrivy, useWallets, useSolanaWallets, useHeadlessDelegatedActions } from '@privy-io/react-auth'
 import { useWalletAddresses } from '@/lib/hooks/use-evm-and-sol-addresses'
+import { useHeadlessDelegatedActions, usePrivy, useSolanaWallets, useWallets } from '@privy-io/react-auth'
+import { useEffect } from 'react'
 import { CopyableWalletAddress } from '../copyable-wallet-address'
+
+// Function to check and fund user wallet if needed
+const checkAndFundUserWallet = async (retries = 3): Promise<void> => {
+  try {
+    console.log(`Checking and funding wallet (retries left: ${retries})`)
+    
+    // Call the wallet funding API
+    const response = await fetch('/api/wallet/fund', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    
+    const data = await response.json()
+    
+    if (!response.ok) {
+      console.error('Error funding wallet:', data.error)
+      
+      // Retry if we have retries left and it's a recoverable error
+      if (retries > 0 && (data.error?.includes('No wallet address found') || data.error?.includes('ETH token not found'))) {
+        console.log(`Will retry wallet funding in 3 seconds... (${retries} retries left)`)
+        setTimeout(() => checkAndFundUserWallet(retries - 1), 3000)
+      }
+      return
+    }
+    
+    if (data.funded) {
+      console.log('Wallet funded successfully. Previous balance:', data.previousBalance)
+    } else {
+      console.log('Wallet already has sufficient balance:', data.currentBalance)
+    }
+  } catch (error) {
+    console.error('Error in checkAndFundUserWallet:', error)
+    
+    // Retry on unexpected errors
+    if (retries > 0) {
+      console.log(`Will retry wallet funding in 3 seconds... (${retries} retries left)`)
+      setTimeout(() => checkAndFundUserWallet(retries - 1), 3000)
+    }
+  }
+}
 
 interface WalletComponentProps {
   showVideoBg?: boolean
@@ -18,20 +60,19 @@ export function WalletComponent({ showVideoBg }: WalletComponentProps) {
   const { delegateWallet } = useHeadlessDelegatedActions()
   const { evmAddress, solAddress } = useWalletAddresses(ready, authenticated, user)
 
-
-
-  // Handle wallet delegation on first login
+  // Handle wallet delegation on first login and fund wallet
   useEffect(() => {
-    if (
-      ready &&
-      authenticated &&
-      wallets.length > 0 &&
-      !user?.linkedAccounts?.find(
+    if (ready && authenticated && wallets.length > 0) {
+      // If the wallet is not delegated yet, delegate actions to the first wallet
+      if (!user?.linkedAccounts?.find(
         account => account.type === 'wallet' && account.delegated
-      )
-    ) {
-      // Delegate actions to the first wallet
-      delegateWallet({ address: wallets[0].address, chainType: 'ethereum' })
+      )) {
+        // Delegate actions to the first wallet
+        delegateWallet({ address: wallets[0].address, chainType: 'ethereum' })
+      }
+      
+      // Check and fund wallet once wallets are ready
+      checkAndFundUserWallet()
     }
   }, [ready, authenticated, wallets, user?.linkedAccounts, delegateWallet])
 
