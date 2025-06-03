@@ -3,18 +3,46 @@
 import { useSidebar } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
 import {
-  useHeadlessDelegatedActions,
-  useLogin,
-  usePrivy,
-  WalletWithMetadata,
-  type LinkedAccountWithMetadata,
-  type User
+    useLogin,
+    usePrivy,
+    type LinkedAccountWithMetadata,
+    type User
 } from '@privy-io/react-auth'
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 import GuestMenu from './guest-menu'
 import UserMenu from './user-menu'
 import WelcomePopup from './welcome-popup'
+
+// Function to check and fund user wallet if needed
+const checkAndFundUserWallet = async (): Promise<void> => {
+  try {
+    console.log('Checking and funding wallet if needed')
+    
+    // Call the wallet funding API
+    const response = await fetch('/api/wallet/fund', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    
+    const data = await response.json()
+    
+    if (!response.ok) {
+      console.error('Error funding wallet:', data.error)
+      return
+    }
+    
+    if (data.funded) {
+      console.log('Wallet funded successfully. Previous balance:', data.previousBalance)
+    } else {
+      console.log('Wallet already has sufficient balance:', data.currentBalance)
+    }
+  } catch (error) {
+    console.error('Error in checkAndFundUserWallet:', error)
+  }
+}
 
 export const Header: React.FC = () => {
   const { open } = useSidebar()
@@ -37,10 +65,11 @@ export const Header: React.FC = () => {
       loginAccount: LinkedAccountWithMetadata | null
     }) => {
       try {
-
         const { user, isNewUser, wasAlreadyAuthenticated } = params
         console.log('Login complete in Header:', params)
 
+        // Check and fund user wallet after successful login
+        await checkAndFundUserWallet()
 
         if (isNewUser) {
           setShowWelcomePopup(true)
