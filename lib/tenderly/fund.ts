@@ -177,4 +177,37 @@ export function tokenToWei(tokenAmount: string, decimals: number): string {
   const multiplier = BigInt(10 ** decimals);
   const weiAmount = BigInt(Math.floor(parseFloat(tokenAmount) * Number(multiplier)));
   return `0x${weiAmount.toString(16)}`;
+}
+
+/**
+ * Tool for the agent to fund a user's wallet with 0.1 ETH
+ * This function only works in Demo VNet environment
+ * 
+ * @param walletAddress - The wallet address to fund
+ * @param networkConfig - The current network configuration
+ * @returns Promise with the RPC response or an error
+ */
+export async function fundUserWallet(
+  walletAddress: string,
+  isDemo: boolean
+): Promise<TenderlyRpcResponse | { error: string }> {
+  // Check if we're in Demo VNet
+  if (!isDemo) {
+    return { 
+      error: "Funding is only available in Demo environment" 
+    };
+  }
+
+  try {
+    // Convert 0.1 ETH to wei in hex format
+    const fundAmount = ethToWei("0.1");
+    
+    // Call the addBalanceVnet function with the wallet address
+    return await addBalanceVnet([walletAddress], fundAmount);
+  } catch (error) {
+    console.error('Error funding user wallet:', error);
+    return {
+      error: `Failed to fund wallet: ${error instanceof Error ? error.message : String(error)}`
+    };
+  }
 } 
