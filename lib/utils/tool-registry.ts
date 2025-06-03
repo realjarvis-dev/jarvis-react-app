@@ -355,7 +355,7 @@ export function createToolRegistry(model: string): ToolRegistry {
     supportedNetworks: ['ethereum', 'berachain', 'demo']
   })
 
-  // Disabled as lifi bridge is used instead
+  // Disabled enso swap as lifi bridge is used instead, it covers both cross-chain bridging and non cross-chain swap
 
   // registry.registerTool({
   //   name: 'generic_swap',
