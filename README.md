@@ -151,6 +151,7 @@ Jarvis: "Strategy deployed! I'll manage this 24/7 and notify you of any
 - [Privy](https://www.privy.io/) - Authentication and embedded wallets
 - [Enso Network](https://docs.enso.build/home) - Multi-protocol integration layer
 - [Alchemy](https://www.alchemy.com/) - Blockchain data and infrastructure
+- [Li.fi](https://docs.li.fi/) - Multi-chain bridging support
 
 ### Integrated Protocols
 
