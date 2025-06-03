@@ -11,7 +11,7 @@ import { createQuestionTool } from '../tools/question'
 import { retrieveTool } from '../tools/retrieve'
 import { createSearchTool } from '../tools/search'
 import { createVideoSearchTool } from '../tools/video-search'
-import { walletBalanceTool } from '../tools/wallet'
+import { fundWalletTool, walletBalanceTool } from '../tools/wallet'
 
 /**
  * Network context passed to tools
@@ -355,6 +355,19 @@ export function createToolRegistry(model: string): ToolRegistry {
     } as any),
     category: ToolCategory.WEB3,
     supportedNetworks: ['ethereum', 'berachain', 'demo']
+  })
+  
+  registry.registerTool({
+    name: 'fund_wallet',
+    description: 'Fund a wallet with ETH (only available in Demo mode)',
+    schema: fundWalletTool.parameters,
+    execute: async (params, context) => fundWalletTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3,
+    supportedNetworks: ['demo'] // Only available in demo mode
   })
   
   return registry

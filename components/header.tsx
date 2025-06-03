@@ -3,10 +3,8 @@
 import { useSidebar } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
 import {
-  useHeadlessDelegatedActions,
   useLogin,
   usePrivy,
-  WalletWithMetadata,
   type LinkedAccountWithMetadata,
   type User
 } from '@privy-io/react-auth'
@@ -37,10 +35,8 @@ export const Header: React.FC = () => {
       loginAccount: LinkedAccountWithMetadata | null
     }) => {
       try {
-
         const { user, isNewUser, wasAlreadyAuthenticated } = params
         console.log('Login complete in Header:', params)
-
 
         if (isNewUser) {
           setShowWelcomePopup(true)
