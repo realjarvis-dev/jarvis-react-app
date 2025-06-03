@@ -2,9 +2,10 @@ import { tool } from 'ai'
 import { z } from 'zod'
 import {
   executeLifiBridgeTransaction,
-  executeLifiBridgeTransactionWithAutoFuel,
+  // executeLifiBridgeTransactionWithAutoFuel,
   generateLifiBridgeQuote
 } from '../lifi/actions'
+import { executeLifiBridgeTransactionWithAutoFuel } from '../lifi/auto-fuel-helper'
 import { getUserEvmWalletAddress } from '../privy/client'
 import { chainsById } from '../token-matcher/fuzzy-chain-matcher'
 import { ToolContext } from '../types/context'
