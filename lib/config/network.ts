@@ -4,11 +4,13 @@ type NetworkConfigType = {
     name: Network,
     chainId: number,
     scanLink: string,
-    rpcUrl: string
+    rpcUrl: string,
+    displayName: string
 }
 
 export const MainnetConfig = {
     name: Network.ETH_MAINNET,
+    displayName: 'Ethereum',
     chainId: 1,
     scanLink: 'etherscan.io',
     rpcUrl: 'https://eth-mainnet.g.alchemy.com/v2/yIRJoLX9TId7oSWYdnflKgthIy59m-vr'
@@ -16,6 +18,7 @@ export const MainnetConfig = {
 }
 export const BaseMainnetConfig = {
     name: Network.BASE_MAINNET,
+    displayName: 'Base',
     chainId: 8453,
     scanLink: 'basescan.org',
     rpcUrl: 'https://base-mainnet.g.alchemy.com/v2/yIRJoLX9TId7oSWYdnflKgthIy59m-vr'
@@ -23,12 +26,14 @@ export const BaseMainnetConfig = {
 }
 export const ArbitrumConfig = {
     name: Network.ARB_MAINNET,
+    displayName: 'Arbitrum',
     chainId: 42161,
     scanLink: 'arbiscan.io',
     rpcUrl: 'https://arb-mainnet.g.alchemy.com/v2/yIRJoLX9TId7oSWYdnflKgthIy59m-vr'
 }
 export const PolygonConfig = {
     name: Network.MATIC_MAINNET,
+    displayName: 'Polygon',
     chainId: 137,
     scanLink: 'polygonscan.com',
     rpcUrl: 'https://polygon-mainnet.g.alchemy.com/v2/yIRJoLX9TId7oSWYdnflKgthIy59m-vr'
@@ -37,6 +42,7 @@ export const PolygonConfig = {
 
 export const TenderlyDemoConfig = {
     name: Network.ETH_MAINNET, // Using ETH_MAINNET as base for demo mode
+    displayName: 'Demo',
     chainId: 92736,
     scanLink: 'dashboard.tenderly.co/explorer/vnet/fcb5c956-9f40-4ccb-8ea3-249ea2de031d', // Updated to use Tenderly vnet explorer
     rpcUrl: 'https://virtual.mainnet.rpc.tenderly.co/fcb5c956-9f40-4ccb-8ea3-249ea2de031d'
@@ -44,6 +50,7 @@ export const TenderlyDemoConfig = {
 
 export const BerachainMainnetConfig = {
     name: Network.BERACHAIN_MAINNET,
+    displayName: "Berachain",
     chainId: 80094,
     scanLink: 'berascan.com',
     rpcUrl: 'https://berachain-mainnet.g.alchemy.com/v2/yIRJoLX9TId7oSWYdnflKgthIy59m-vr'
@@ -51,6 +58,7 @@ export const BerachainMainnetConfig = {
 
 export const OptimismConfig = {
     name: Network.OPT_MAINNET,
+    displayName: "Optimism",
     chainId: 10,
     scanLink: 'optimistic.etherscan.io',
     rpcUrl: 'https://opt-mainnet.g.alchemy.com/v2/yIRJoLX9TId7oSWYdnflKgthIy59m-vr'
