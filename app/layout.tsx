@@ -1,4 +1,5 @@
 import AppSidebar from '@/components/app-sidebar'
+import { ArtifactProvider } from '@/components/artifact/artifact-context'
 import ArtifactRoot from '@/components/artifact/artifact-root'
 import Header from '@/components/header'
 import WrappedPrivyProvider from '@/components/privy-provider'
@@ -46,9 +47,9 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({
   children
-}: Readonly<{
+}: {
   children: React.ReactNode
-}>) {
+}) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -61,23 +62,28 @@ export default async function RootLayout({
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
-
-          enableSystem={false} // Set enableSystem to false
-
-          // enableSystem
-
+          enableSystem={false}
           disableTransitionOnChange
         >
           <NetworkProvider>
             <WrappedPrivyProvider>
               <SidebarProvider defaultOpen={false}>
-                <AppSidebar />
-                <div className="flex flex-col flex-1 min-w-0"> {/* ADDED min-w-0 HERE */}
+                {/* Wrap the main content (that eventually renders ChatPanel)
+                    with ArtifactProvider */}
+                <ArtifactProvider>
+                  <AppSidebar />
                   <Header />
-                  <main className="flex flex-1 min-h-0 w-full">
-                    <ArtifactRoot>{children}</ArtifactRoot>
-                  </main>
-                </div>
+                  <div
+                    className="flex flex-col flex-1 overflow-hidden pt-[56px] px-4 sm:px-6"
+                    style={{
+                      paddingTop: `calc(56px + env(safe-area-inset-top))`
+                    }}
+                  >
+                    <main className="flex-1 w-full overflow-auto">
+                      <ArtifactRoot>{children}</ArtifactRoot>
+                    </main>
+                  </div>
+                </ArtifactProvider>
               </SidebarProvider>
             </WrappedPrivyProvider>
           </NetworkProvider>
