@@ -24,7 +24,7 @@ const get_system_prompt = (searchMode: boolean, supportedTools: string[], regist
       kodiak_opportunities: `- kodiak_opportunities: Use when the user asks about Kodiak Island yield opportunities on Berachain. This tool returns a list of current Kodiak opportunities with APY and liquidity information.`,
       kodiak_deposit: `- kodiak_deposit: Use when the user wants to deposit tokens into a Kodiak Island yield opportunity on Berachain.`,
       get_gas_price: `- get_gas_price: Use when the user asks about current gas prices for transactions.`,
-      fund_wallet: `- fund_wallet: Use when the user requests their wallet to be funded with 0.1 ETH in demo mode. Only works in the Demo environment.`
+      fund_wallet: `- fund_wallet: Use when the user requests their wallet to be funded with ETH in demo mode. Only works in the Demo environment.`
     }
     
     // Only include descriptions for supported tools
@@ -83,7 +83,7 @@ const get_system_prompt = (searchMode: boolean, supportedTools: string[], regist
     - Confirm swap details before execution.`,
       fund_wallet: `  • fund_wallet  
     - Only available in Demo environment.
-    - Funds the user's wallet with 0.1 ETH.`
+    - Funds the user's wallet with ETH.`
     }
 
     const writeTools = ['pendle_swap', 'privy_transfer', 'kodiak_deposit', 'generic_swap', 'fund_wallet']

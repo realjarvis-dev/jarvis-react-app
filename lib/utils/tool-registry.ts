@@ -359,7 +359,7 @@ export function createToolRegistry(model: string): ToolRegistry {
   
   registry.registerTool({
     name: 'fund_wallet',
-    description: 'Fund a wallet with 0.1 ETH (only available in Demo mode)',
+    description: 'Fund a wallet with ETH (only available in Demo mode)',
     schema: fundWalletTool.parameters,
     execute: async (params, context) => fundWalletTool.execute(params, {
       toolCallId: context?.toolCallId || 'unknown',
