@@ -1,7 +1,7 @@
 import { tool } from 'ai'
 import { z } from 'zod'
 import { getProposedGasPrice } from '../etherscan/gas-price'
-import { NetworkContext } from '../utils/tool-registry'
+import { NetworkContext } from '../types/context'
 
 interface ToolContext {
   toolCallId?: string
