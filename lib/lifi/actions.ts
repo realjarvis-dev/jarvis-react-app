@@ -43,9 +43,10 @@ export const generateLifiBridgeQuote = async (
   autoFuelDestChain?: boolean
 ) => {
   // const userEvmAddress = await getUserEvmWalletAddress()
-  if (autoFuelDestChain === undefined) {
-    autoFuelDestChain = true
-  }
+  // if (autoFuelDestChain === undefined) {
+  //   autoFuelDestChain = true
+  // }
+  autoFuelDestChain = false
 
   if (!recipient) {
     recipient = fromAddress
@@ -117,9 +118,8 @@ export const generateLifiBridgeQuote = async (
       console.log("balanceDestChain", balanceDestChain)
       console.log("blockNativeGasPrice", blockNativeGasPrice)
       console.log("GAS_LIMIT", blockNativeGasPrice * BigInt(LOWER_BOUND_GAS_LIMIT))
-      if (
+      if (autoFuelDestChain &&
         balanceDestChain <= blockNativeGasPrice * BigInt(LOWER_BOUND_GAS_LIMIT) &&
-        autoFuelDestChain &&
         toTokenSingle.symbol !== toChainMatch.coin
       ) {
         try {
