@@ -3,10 +3,10 @@
 import { useSidebar } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
 import {
-    useLogin,
-    usePrivy,
-    type LinkedAccountWithMetadata,
-    type User
+  useLogin,
+  usePrivy,
+  type LinkedAccountWithMetadata,
+  type User
 } from '@privy-io/react-auth'
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
