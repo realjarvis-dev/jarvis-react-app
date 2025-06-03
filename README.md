@@ -194,6 +194,7 @@ PRIVY_APP_SECRET=   # Get from https://www.privy.io/
 PRIVY_SIGNING_KEY=  # Get from https://www.privy.io/
 OPENAI_API_KEY=     # Get from https://platform.openai.com/api-keys
 TAVILY_API_KEY=     # Get from https://app.tavily.com/home
+TENDERLY_ADMIN_RPC_URL= # Get from Tenderly dashboard (required for demo mode wallet funding)
 ```
 
 For optional features configuration (Redis, SearXNG, etc.), see [CONFIGURATION.md](./docs/CONFIGURATION.md)

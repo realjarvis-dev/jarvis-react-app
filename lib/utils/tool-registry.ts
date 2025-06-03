@@ -11,9 +11,9 @@ import { createQuestionTool } from '../tools/question'
 import { retrieveTool } from '../tools/retrieve'
 import { createSearchTool } from '../tools/search'
 import { createVideoSearchTool } from '../tools/video-search'
-import { walletBalanceTool } from '../tools/wallet'
 import { bridgeExecuteTool, bridgeQuoteTool } from '../tools/lifi-bridge'
 import { ToolContext, NetworkContext } from '../types/context'
+import { fundWalletTool, walletBalanceTool } from '../tools/wallet'
 
 
 
@@ -355,6 +355,20 @@ export function createToolRegistry(model: string): ToolRegistry {
     supportedNetworks: ['ethereum', 'berachain', 'demo']
   })
 
+  
+  registry.registerTool({
+    name: 'fund_wallet',
+    description: 'Fund a wallet with ETH (only available in Demo mode)',
+    schema: fundWalletTool.parameters,
+    execute: async (params, context) => fundWalletTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3,
+    supportedNetworks: ['demo']
+  })
+
   // Disabled enso swap as lifi bridge is used instead, it covers both cross-chain bridging and non cross-chain swap
 
   // registry.registerTool({
@@ -369,6 +383,10 @@ export function createToolRegistry(model: string): ToolRegistry {
   //   category: ToolCategory.WEB3,
   //   supportedNetworks: ['ethereum', 'berachain', 'demo']
   // })
+
+
+  
+
   return registry
 }
 

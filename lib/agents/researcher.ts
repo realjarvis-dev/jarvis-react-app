@@ -24,9 +24,7 @@ const get_system_prompt = (searchMode: boolean, supportedTools: string[], regist
       generic_swap: `- generic_swap: Use when user wants to swap between two arbitrary tokens.`,
       kodiak_opportunities: `- kodiak_opportunities: Use when the user asks about Kodiak Island yield opportunities on Berachain. This tool returns a list of current Kodiak opportunities with APY and liquidity information.`,
       kodiak_deposit: `- kodiak_deposit: Use when the user wants to deposit tokens into a Kodiak Island yield opportunity on Berachain.`,
-      get_gas_price: `- get_gas_price: Use when the user asks about current gas prices for transactions.`,
-      lifi_bridge_quote: `- lifi_bridge_quote: Use when user wants to swap arbitrary tokens, in one chain or between two arbitrary chains to get a quote.`,
-      lifi_bridge_execute: `- lifi_bridge_execute: Use when user wants to swap arbitrary tokens, in one chain or between two arbitrary chains to execute the transaction.`,
+      get_gas_price: `- get_gas_price: Use when the user asks about current gas prices for transactions.`
     }
     
     // Only include descriptions for supported tools
@@ -85,12 +83,10 @@ const get_system_prompt = (searchMode: boolean, supportedTools: string[], regist
       kodiak_deposit: `  • kodiak_deposit  
     - Remind to check opportunities if skipped.`,
       generic_swap: `  • generic_swap  
-    - Confirm swap details before execution.`,
-      lifi_bridge_execute: `  • lifi_bridge_execute  
-    - Only use after getting a quote and got confirmation from user.`,
+    - Confirm swap details before execution.`
     }
 
-    const writeTools = ['pendle_swap', 'privy_transfer', 'kodiak_deposit', 'generic_swap', 'lifi_bridge_execute']
+    const writeTools = ['pendle_swap', 'privy_transfer', 'kodiak_deposit', 'generic_swap']
       .filter(tool => supportedTools.includes(tool))
       .map(tool => writeToolsDescriptions[tool])
       .filter(Boolean)
