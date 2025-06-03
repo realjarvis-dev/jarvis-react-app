@@ -178,7 +178,8 @@ export async function erc20Approval(
  * @param chainId Chain ID
  * @param gasOptions Gas options
  * @param gasLimit Gas limit
- * @param estimateGas If or not to estimate gas
+ * @param estimateGas If or not to estimate gas in this function
+ * @param getGasPriceFunction Function to get gas price by chain Id
  * @returns Promise with transaction hash
  */
 export async function executeSwapTransaction(
@@ -186,7 +187,9 @@ export async function executeSwapTransaction(
   chainId: number = 1,
   gasOptions?: {
     gasLimit?: `0x${string}`
-    estimateGas: boolean
+    estimateGas: boolean,
+    gasPrice?: `0x${string}`,
+    getGasPriceFunction?: (chainId: number) => Promise<{ maxPriceInMemPool: bigint, maxPriorityFeePerGas: bigint, maxFeePerGas: bigint }>
   }
 ): Promise<{ hash: string }> {
   try {
@@ -203,7 +206,14 @@ export async function executeSwapTransaction(
     const baseFee = block?.baseFeePerGas
     console.log('baseFee', baseFee)
     const maxFee = baseFee ? BigInt(baseFee) * BigInt(2) : BigInt(1010690044) // ~2× base fee
-    const priority = ethers.parseUnits('0', 'gwei') // 1 gwei tip
+    const priority = ethers.parseUnits('1', 'gwei') // 1 gwei tip
+    let maxFeePerGas = maxFee + priority
+    let maxPriorityFeePerGas = priority
+    if (gasOptions?.getGasPriceFunction) {
+      const estimateGasPrice = await gasOptions.getGasPriceFunction(chainId)
+      maxFeePerGas = estimateGasPrice.maxFeePerGas
+      maxPriorityFeePerGas = estimateGasPrice.maxPriorityFeePerGas
+    }
 
     console.log('Sending transaction...')
     // console.log('txData', txData)
@@ -252,12 +262,12 @@ export async function executeSwapTransaction(
     const valueHex = quantity.replace(/^0x/, '')
     const dataHex = (data as string).replace(/^0x/, '')
     const fromAddress = (from as string).replace(/^0x/, '')
-
+    console.log('gasOptions', gasOptions)
     console.log('gasLimit', gasLimit)
     console.log('valueHex', valueHex)
     console.log('chainId', chainId)
-    console.log('maxFee', maxFee)
-    console.log('priority', priority)
+    console.log('maxFeePerGas', maxFeePerGas)
+    console.log('maxPriorityFeePerGas', maxPriorityFeePerGas)
 
     const { signedTransaction, encoding } =
       await privy.walletApi.ethereum.signTransaction({
@@ -271,8 +281,9 @@ export async function executeSwapTransaction(
           data: `0x${dataHex}` as `0x${string}`,
           // gasLimit: 650000, //650000
           gasLimit: gasLimit,
-          maxFeePerGas: ethers.toQuantity(maxFee + priority) as `0x${string}`,
-          maxPriorityFeePerGas: ethers.toQuantity(priority) as `0x${string}`,
+          // gasPrice: gasOptions?.gasPrice ?? undefined,
+          maxFeePerGas: ethers.toQuantity(maxFeePerGas) as `0x${string}`,
+          maxPriorityFeePerGas: ethers.toQuantity(maxPriorityFeePerGas) as `0x${string}`,
           nonce: correctNonce
         },
         idempotencyKey: uuidv4() // unique key for this transaction

@@ -1,6 +1,7 @@
 import { TransactionRequest } from 'ethers'
 import { formatUnits, parseUnits, toHex } from 'viem'
-import { getGasPriceByChainId } from '../alchemy/get-gas-price'
+import { getGasPriceByChainId } from '../blocknative/get-gas-price'
+import { getGasPriceByChainId as getGasPriceByChainIdAlchemy } from '../alchemy/get-gas-price'
 import { getNativeBalanceByChainId } from '../alchemy/get-token-balance'
 import { erc20Approval, executeSwapTransaction } from '../pendle/transactions'
 import { getUserEvmWalletAddress } from '../privy/client'
@@ -10,7 +11,10 @@ import {
   MissingTokenError
 } from '../token-matcher/cross-chain-swap'
 import { chainsById } from '../token-matcher/fuzzy-chain-matcher'
-import { TokenMatcher, TokenWithScore } from '../token-matcher/fuzzy-token-matcher'
+import {
+  TokenMatcher,
+  TokenWithScore
+} from '../token-matcher/fuzzy-token-matcher'
 import { LifiQuoteResponse } from '../types/lifi'
 import { getLifiQuote } from './api'
 import {
@@ -23,7 +27,8 @@ import {
   noRouteTitle
 } from './utils'
 
-const PREDEFINED_GAS_LIMIT = 2000000
+const PREDEFINED_GAS_LIMIT = 1000000
+const LOWER_BOUND_GAS_LIMIT = 700000
 const NATIVE_TOKEN_STRING = '0x0000000000000000000000000000000000000000'
 
 export const generateLifiBridgeQuote = async (
@@ -107,7 +112,16 @@ export const generateLifiBridgeQuote = async (
       const tokenMatcher = new TokenMatcher(toChainMatch.id)
       const nativeCoin = tokenMatcher.match(nativeCoinSymbol)
       const nativeCoinDecimals = nativeCoin[0].decimals
-      if (balanceDestChain <= BigInt(0) && autoFuelDestChain && toTokenSingle.symbol !== toChainMatch.coin) {
+      const blockNativeGasPriceResponse = await getGasPriceByChainId(toChainMatch.id)
+      const blockNativeGasPrice = blockNativeGasPriceResponse.maxPriorityFeePerGas + blockNativeGasPriceResponse.maxFeePerGas
+      console.log("balanceDestChain", balanceDestChain)
+      console.log("blockNativeGasPrice", blockNativeGasPrice)
+      console.log("GAS_LIMIT", blockNativeGasPrice * BigInt(LOWER_BOUND_GAS_LIMIT))
+      if (
+        balanceDestChain <= blockNativeGasPrice * BigInt(LOWER_BOUND_GAS_LIMIT) &&
+        autoFuelDestChain &&
+        toTokenSingle.symbol !== toChainMatch.coin
+      ) {
         try {
           const {
             status,
@@ -138,7 +152,7 @@ export const generateLifiBridgeQuote = async (
             }
           }
           return {
-            instruction: `Don't repeat the quote to user, simply ask user if they want to proceed with the transaction. Explain to user that they don't have any native token on the destination chain, so we automatically fueled the token for future transactions. 
+            instruction: `Don't repeat the quote to user, simply ask user if they want to proceed with the transaction. Explain to user that they are low on native token on the destination chain, so we automatically fueled the token for future transactions. 
 If user wants to proceed, use lifi_bridge_execute tool to execute the transaction.`,
             details: { ...readableQuote, auto_fuel_decision: true }
           }
@@ -279,8 +293,8 @@ const _generateMultiStepQuote = async (
   const toAmountNativeTokenInWei = BigInt(
     nativeTokenQuote.estimate?.toAmount ?? '0'
   )
-  let gasPrice = await getGasPriceByChainId(toChainId) * BigInt(3)
-  gasPrice = (gasPrice * BigInt(12)) / BigInt(10)
+  const { maxPriceInMemPool, maxPriorityFeePerGas, maxFeePerGas } = await getGasPriceByChainId(toChainId)
+  let gasPrice = maxPriorityFeePerGas + maxFeePerGas
 
   // save some fee for future operations
   const feeToSave = gasPrice * BigInt(PREDEFINED_GAS_LIMIT)
@@ -484,13 +498,24 @@ export const executeLifiBridgeTransaction = async (
         0
       ) ?? 0
     )
-    console.log("quote in execute", JSON.stringify(quote, null, 2))
-    
+    // console.log('quote in execute', JSON.stringify(quote, null, 2))
+
     // const result = await executeSwapTransaction(txData, fromChainId, {
     //   estimateGas: gasLimit > 0 ? false : true,
     //   gasLimit: gasLimit ? toHex(gasLimit) : undefined
     // })
-    const result = await executeSwapTransaction(txData, fromChainId)
+    // assume txData.gasPrice is a hex string like "0x …"
+    // const oldGas = BigInt(txData.gasPrice as `0x${string}`)
+
+    // // multiply by 1.2 ⇒ multiply by 12, divide by 10
+    // const newGas = (oldGas * BigInt(12)) / BigInt(10)
+
+    // // convert back to a hex string (Ethereum‐style)
+    // const gasPriceHex = "0x" + newGas.toString(16) as `0x${string}`
+    const result = await executeSwapTransaction(txData, fromChainId, {
+      estimateGas: true,
+      getGasPriceFunction: getGasPriceByChainId
+    })
 
     return {
       success: true,
@@ -539,21 +564,7 @@ export const executeLifiBridgeTransactionWithAutoFuel = async (
   fromChainName: string,
   toChainName: string
 ) => {
-  console.log('executeLifiBridgeTransactionWithAutoFuel', {
-    fromUserAddress,
-    fromChainId,
-    fromToken,
-    fromTokenDecimals,
-    fromTokenAddress,
-    toChainId,
-    toToken,
-    amountIn,
-    slippage,
-    recipient,
-    isFromNativeToken,
-    fromChainName,
-    toChainName
-  })
+
   const destChain = chainsById[toChainId]
   if (!recipient) {
     recipient = fromUserAddress
@@ -633,14 +644,18 @@ export const executeLifiBridgeTransactionWithAutoFuel = async (
         // set time out here
         const startTime = Date.now()
         const interval = setInterval(async () => {
-          const balance = await getNativeBalanceByChainId(recipient, toChainId);
-          if (balance > BigInt(0)) {
-            clearInterval(interval);
-            console.log("native token appeared in the user's wallet");
+          const balance = await getNativeBalanceByChainId(recipient, toChainId)
+          if (balance > BigInt(nativeTokenQuote.estimate.toAmountMin)) {
+            clearInterval(interval)
+            console.log("native token appeared in the user's wallet")
           }
         }, 1000)
         const elapsedMs = Date.now() - startTime
-        console.log(`Native token appeared after ${elapsedMs} ms (≈ ${(elapsedMs / 1000).toFixed(1)} s)`)
+        console.log(
+          `Native token appeared after ${elapsedMs} ms (≈ ${(
+            elapsedMs / 1000
+          ).toFixed(1)} s)`
+        )
       }
       if (!isNativeToken) {
         const { status, message } = await erc20Approval(
@@ -659,7 +674,8 @@ export const executeLifiBridgeTransactionWithAutoFuel = async (
       }
       const result = await executeSwapTransaction(txData, needApprovalChainId, {
         estimateGas: gasLimit > 0 ? false : true,
-        gasLimit: gasLimit ? toHex(gasLimit) : undefined
+        gasLimit: gasLimit ? toHex(gasLimit) : undefined,
+        getGasPriceFunction: getGasPriceByChainId
       })
       resultList.push({
         success: true,
@@ -692,5 +708,3 @@ export const executeLifiBridgeTransactionWithAutoFuel = async (
     }
   }
 }
-
- 

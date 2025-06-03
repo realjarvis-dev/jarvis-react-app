@@ -15,12 +15,12 @@ const bridgeQuoteTool = tool({
     fromChain: z
       .string()
       .describe(
-        "The chain to bridge from, can be chain name or chain symbol. don't have to be exact match"
+        "The chain to bridge from, can be chain name or chain symbol. don't have to be exact match. Default to network context's network as fromChain unless user specify"
       ),
     toChain: z
       .string()
       .describe(
-        "The chain to bridge to, can be chain name or chain symbol. don't have to be exact match"
+        "The chain to bridge to, can be chain name or chain symbol. don't have to be exact match. Default to network context's network as toChain unless user specify"
       ),
     fromToken: z
       .string()
@@ -49,10 +49,11 @@ const bridgeQuoteTool = tool({
       .describe(
         "The address to send the bridged tokens to. Default to user's wallet address"
       ),
-    enableAutoFuel: z.boolean().describe('Whether to auto fuel the destination chain when the native balance is low, default to true')
+    // diable for now
+    // enableAutoFuel: z.boolean().describe('Whether to auto fuel the destination chain when the native balance is low, default to true')
   }),
   execute: async (params, context: ToolContext) => {
-    const {fromChain, toChain, fromToken, toToken, amountIn, slippage, recipient, enableAutoFuel } = params
+    const {fromChain, toChain, fromToken, toToken, amountIn, slippage, recipient } = params
     // const fromChain = context?.networkContext?.selectedNetwork || 'ethereum'
     const fromChainInContext = context?.networkContext?.selectedNetwork
     // if (fromChain.toLowerCase() !== fromChainInContext?.toLowerCase()) {
@@ -77,7 +78,7 @@ const bridgeQuoteTool = tool({
       amountIn,
       slippage,
       recipient,
-      enableAutoFuel
+      false
     )
   }
 })
@@ -120,7 +121,7 @@ const bridgeExecuteTool = tool({
       .describe(
         "The address to send the bridged tokens to. Default to user's wallet address"
       ),
-    autoFuel: z.boolean().describe('Whether to auto fuel the destination chain, decision made by quote tool')
+    // autoFuel: z.boolean().describe('Whether to auto fuel the destination chain, decision made by quote tool')
   }),
 
   execute: async ({
@@ -136,7 +137,7 @@ const bridgeExecuteTool = tool({
     isFromNativeToken,
     fromChainName,
     toChainName,
-    autoFuel
+    // autoFuel
   }, context: ToolContext) => {
     const fromChainIdInContext = context?.networkContext?.selectedChainId
     // if (fromChainId.toString() !== fromChainIdInContext?.toString()) {
@@ -154,23 +155,23 @@ const bridgeExecuteTool = tool({
     }
   
 
-    if (autoFuel) {
-      return await executeLifiBridgeTransactionWithAutoFuel(
-        userEvmAddress,
-        fromChainId,
-        fromToken,
-        fromTokenDecimals,
-        fromTokenAddress,
-        toChainId,
-        toToken,
-        amountIn,
-        slippage,
-        recipient,
-        isFromNativeToken,
-        fromChainName,
-        toChainName
-      )
-    }
+    // if (autoFuel) {
+    //   return await executeLifiBridgeTransactionWithAutoFuel(
+    //     userEvmAddress,
+    //     fromChainId,
+    //     fromToken,
+    //     fromTokenDecimals,
+    //     fromTokenAddress,
+    //     toChainId,
+    //     toToken,
+    //     amountIn,
+    //     slippage,
+    //     recipient,
+    //     isFromNativeToken,
+    //     fromChainName,
+    //     toChainName
+    //   )
+    // }
     
     return await executeLifiBridgeTransaction(
       userEvmAddress,

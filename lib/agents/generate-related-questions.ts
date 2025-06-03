@@ -52,7 +52,7 @@ export async function generateRelatedQuestions(
       })
       return result // Success, exit the loop and return
     } catch (error) {
-      console.log('Error generating related questions:', error)
+      // console.log('Error generating related questions:', error)
       throw error
     }
 }
