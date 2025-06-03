@@ -4,10 +4,10 @@ import { getGasPriceByChainId } from '../blocknative/get-gas-price'
 import { erc20Approval, executeSwapTransaction } from '../pendle/transactions'
 import { getUserEvmWalletAddress } from '../privy/client'
 import {
-  lifiService,
+  crossChainMatcher,
   MissingChainError,
   MissingTokenError
-} from '../token-matcher/cross-chain-swap'
+} from '../token-matcher/cross-chain-matcher'
 import { chainsById } from '../token-matcher/fuzzy-chain-matcher'
 import {
   TokenMatcher,
@@ -54,7 +54,7 @@ export const generateLifiBridgeQuote = async (
       toChain: toChainMatch,
       fromTokenList,
       toTokenList
-    } = await lifiService.fuzzyIntentDetect(
+    } = await crossChainMatcher.fuzzyIntentDetect(
       fromChain,
       toChain,
       fromToken,

@@ -1,5 +1,4 @@
-// import { Cacheable } from '@type-cacheable/core'
-import { LifiQuoteResponse } from '../types/lifi'
+import { Cacheable } from '@type-cacheable/core'
 import { ChainMatcher, ChainWithScore } from './fuzzy-chain-matcher'
 import { TokenMatcher, TokenWithScore } from './fuzzy-token-matcher'
 
@@ -20,8 +19,8 @@ export class MissingTokenError extends Error {
 // cache token matcher here
 // const tokenMatcherMap = new Map<number, TokenMatcher>() // Will be moved into the class
 
-class LifiService {
-  private static instance: LifiService
+class CrossChainMatcher {
+  private static instance: CrossChainMatcher
   private matcher: ChainMatcher
   private tokenMatcherMap: Map<number, TokenMatcher>
 
@@ -30,15 +29,17 @@ class LifiService {
     this.tokenMatcherMap = new Map<number, TokenMatcher>()
   }
 
-  public static getInstance(): LifiService {
-    if (!LifiService.instance) {
-      LifiService.instance = new LifiService()
+  public static getInstance(): CrossChainMatcher {
+    if (!CrossChainMatcher.instance) {
+      CrossChainMatcher.instance = new CrossChainMatcher()
     }
-    return LifiService.instance
+    return CrossChainMatcher.instance
   }
 
 
-
+  @Cacheable({
+    ttlSeconds: 60 * 60 * 24, // 1 day
+  })
   public async fuzzyIntentDetect(
     fromChainString: string,
     toChainString: string,
@@ -135,7 +136,7 @@ class LifiService {
 }
 
 // Export the singleton instance
-export const lifiService = LifiService.getInstance()
+export const crossChainMatcher = CrossChainMatcher.getInstance()
 
 // console.log(await fuzzyIntentDetect('ethereum', 'berachain', 'usd', 'wbera'))
 
