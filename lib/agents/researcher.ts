@@ -86,7 +86,7 @@ const get_system_prompt = (searchMode: boolean, supportedTools: string[], regist
     - Confirm swap details before execution.`
     }
 
-    const writeTools = ['pendle_swap', 'privy_transfer', 'kodiak_deposit', 'generic_swap']
+    const writeTools = ['pendle_swap', 'privy_transfer', 'kodiak_deposit', 'generic_swap', 'lifi_bridge_execute']
       .filter(tool => supportedTools.includes(tool))
       .map(tool => writeToolsDescriptions[tool])
       .filter(Boolean)
