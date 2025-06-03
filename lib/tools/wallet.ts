@@ -4,6 +4,8 @@ import { fundUserWallet } from '../tenderly/fund'
 import { NetworkContext } from '../utils/tool-registry'
 import { getWalletBalances } from '../utils/wallet'
 
+import { REQUESTED_FUNDING_AMOUNT } from '../tenderly/fund'
+
 interface ToolContext {
   toolCallId?: string
   messages?: any[]
@@ -92,7 +94,7 @@ export const walletBalanceTool = tool({
 })
 
 export const fundWalletTool = tool({
-  description: 'Fund a wallet with 0.1 ETH (only works in Demo mode)',
+  description: `Fund a wallet with ${REQUESTED_FUNDING_AMOUNT} ETH (only works in Demo mode)`,
   parameters: z.object({
     wallet_address: z.string()
       .describe('EVM wallet address to fund with 0.1 ETH')

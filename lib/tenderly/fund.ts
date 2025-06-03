@@ -3,10 +3,16 @@
  * 
  * These functions use Tenderly's custom JSON-RPC methods to fund wallets
  * on virtual networks (vnets). Requires admin RPC URL access.
+ * 
+ * Required environment variable:
+ * - TENDERLY_ADMIN_RPC_URL: The admin RPC URL for your Tenderly virtual network
  */
 
 // Admin RPC URL for Tenderly vnet - should be different from regular RPC
 const TENDERLY_ADMIN_RPC_URL = process.env.TENDERLY_ADMIN_RPC_URL;
+
+// Configuration constants
+const REQUESTED_FUNDING_AMOUNT = 0.1; // ETH - amount to fund wallet with
 
 interface TenderlyRpcResponse {
   jsonrpc: string;
@@ -184,7 +190,7 @@ export function tokenToWei(tokenAmount: string, decimals: number): string {
  * This function only works in Demo VNet environment
  * 
  * @param walletAddress - The wallet address to fund
- * @param networkConfig - The current network configuration
+ * @param isDemo - Whether the current network is in demo mode
  * @returns Promise with the RPC response or an error
  */
 export async function fundUserWallet(
@@ -199,8 +205,8 @@ export async function fundUserWallet(
   }
 
   try {
-    // Convert 0.1 ETH to wei in hex format
-    const fundAmount = ethToWei("0.1");
+    // Convert requested funding amount to wei in hex format
+    const fundAmount = ethToWei(REQUESTED_FUNDING_AMOUNT.toString());
     
     // Call the addBalanceVnet function with the wallet address
     return await addBalanceVnet([walletAddress], fundAmount);
