@@ -5,6 +5,7 @@ import { ethers } from 'ethers'
 import { z } from 'zod'
 import { executeSwapTransaction } from '../pendle/transactions'
 import { getUserWallet } from '../privy/client'
+import { getGasPriceByChainId } from '../blocknative/get-gas-price'
 
 import { ToolContext } from '../types/context'
 
@@ -57,7 +58,8 @@ export const privyTransferTool = tool({
         data: '0x'
       }, chainId, {
         estimateGas: false,
-        gasLimit: ethers.toQuantity(21000) as `0x${string}`
+        gasLimit: ethers.toQuantity(21000) as `0x${string}`,
+        getGasPriceFunction: getGasPriceByChainId
       })
 
 
