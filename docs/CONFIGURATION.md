@@ -8,6 +8,7 @@ This guide covers the optional features and their configuration in Jarvis.
 - [Search Providers](#search-providers)
 - [Web3 Setup](#web3-setup)
   - [Privy Setup](#privy-setup)
+  - [Tenderly Setup](#tenderly-setup)
   - [Alchemy Setup](#alchemy-setup)
   - [Enso Setup](#enso-setup)
 - [Additional AI Providers](#additional-ai-providers)
@@ -142,6 +143,21 @@ PRIVY_APP_SECRET=   # Get from https://www.privy.io/
 PRIVY_SIGNING_KEY=  # Get from https://www.privy.io/
 ```
 
+### Tenderly Setup
+
+Tenderly is used for Virtual Network (VNet) functionality in the demo environment.
+
+1. Create an account or log in at [Tenderly](https://tenderly.co/).
+2. Set up a Virtual Network in your Tenderly dashboard.
+3. Configure your `.env.local` with the admin RPC URL:
+
+```bash
+# Tenderly - Virtual Network for Demo Mode
+TENDERLY_ADMIN_RPC_URL=  # Admin RPC URL for your Tenderly Virtual Network
+```
+
+This environment variable is required for the wallet funding functionality in demo mode.
+
 ### Alchemy Setup
 
 Alchemy is used for balance and token checking on the blockchain.
@@ -158,7 +174,7 @@ ALCHEMY_API_KEY=    # Get from https://www.alchemy.com/
 You will also need to configure an Ethereum RPC URL if you want to use locally forked mainnet.
 
 ```bash
-ETH_RPC_URL=        # Your Ethereum RPC URL
+TEST_RPC_URL=        # Your Ethereum RPC URL
 ```
 
 ### Enso Setup

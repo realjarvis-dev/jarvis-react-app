@@ -34,6 +34,14 @@ export interface KodiakIsland {
     currentPrice?: number;
     poolType?: string;
     tick?: number;
+    baults?: {
+      id: string;
+      totalAssets: number;
+      totalSupply: number;
+      price: number;
+      apy: number;
+      blacklisted: boolean;
+    }[];
   }
   
   export interface KodiakPoolData {
@@ -144,6 +152,15 @@ export interface FormattedKodiakIsland {
   management: {
     isManaged: boolean;
     managerAddress: string;
+  };
+  
+  // Bault information
+  bault: {
+    hasBault: boolean;
+    apr: string;
+    tvl: string;
+    price: string;
+    id?: string;
   };
 }
 
@@ -342,6 +359,14 @@ export interface KodiakApiVault {
     price: number;
     totalSupply: number;
   };
+  baults?: {
+    id: string;
+    totalAssets: number;
+    totalSupply: number;
+    price: number;
+    apy: number;
+    blacklisted: boolean;
+  }[];
 }
 
 /**

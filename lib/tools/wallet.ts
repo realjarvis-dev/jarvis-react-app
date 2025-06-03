@@ -1,6 +1,16 @@
 import { tool } from 'ai'
 import { z } from 'zod'
+import { NetworkContext } from '../types/context'
+import { fundUserWallet } from '../tenderly/fund'
 import { getWalletBalances } from '../utils/wallet'
+
+import { REQUESTED_FUNDING_AMOUNT } from '../tenderly/fund'
+
+interface ToolContext {
+  toolCallId?: string
+  messages?: any[]
+  networkContext?: NetworkContext
+}
 
 export const walletBalanceTool = tool({
   description: 'Get wallet balance information for all tokens or a specific token.',
@@ -10,7 +20,10 @@ export const walletBalanceTool = tool({
     token_symbol: z.string().optional()
       .describe('Specific token symbol to filter by (e.g., "ETH", "DAI", etc.)')
   }),
-  execute: async ({ wallet_address, token_symbol }) => {
+  execute: async (params, context: ToolContext) => {
+    const { wallet_address, token_symbol } = params;
+    const networkContext = context?.networkContext;
+    
     try {
       const walletBalances = await getWalletBalances(wallet_address)
       
@@ -76,6 +89,71 @@ export const walletBalanceTool = tool({
         summary: 'Error fetching wallet balances',
         data: errorData
       }
+    }
+  }
+})
+
+export const fundWalletTool = tool({
+  description: `Fund a wallet with ${REQUESTED_FUNDING_AMOUNT} ETH (only works in Demo mode)`,
+  parameters: z.object({
+    wallet_address: z.string()
+      .describe('EVM wallet address to fund with 0.1 ETH')
+  }),
+  execute: async (params, context: ToolContext) => {
+    const { wallet_address } = params;
+    const networkContext = context?.networkContext;
+    
+    if (!networkContext) {
+      return {
+        _uiDisplayTool: true,
+        summary: 'Cannot fund wallet: Missing network context',
+        data: {
+          success: false,
+          message: 'Missing network context. Cannot determine if in demo mode.'
+        }
+      };
+    }
+    
+    try {
+      // Check if we're in demo mode using the isDemo property from the NetworkContext
+      const isDemo = networkContext.isDemo;
+      
+      // Call the funding function
+      const result = await fundUserWallet(wallet_address, isDemo);
+      
+      // Check for error in the result
+      if ('error' in result) {
+        return {
+          _uiDisplayTool: true,
+          summary: `Wallet funding failed: ${result.error}`,
+          data: {
+            success: false,
+            message: result.error
+          }
+        };
+      }
+      
+      return {
+        _uiDisplayTool: true,
+        summary: `Successfully funded wallet with 0.1 ETH`,
+        data: {
+          success: true,
+          message: 'Successfully funded wallet with 0.1 ETH',
+          amount: '0.1 ETH',
+          wallet: wallet_address
+        }
+      };
+    } catch (error) {
+      console.error('Error in fund wallet tool:', error);
+      
+      return {
+        _uiDisplayTool: true,
+        summary: 'Error funding wallet',
+        data: {
+          success: false,
+          message: `Failed to fund wallet: ${error instanceof Error ? error.message : String(error)}`
+        }
+      };
     }
   }
 })

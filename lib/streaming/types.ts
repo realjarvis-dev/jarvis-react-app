@@ -1,6 +1,7 @@
+import { WalletWithMetadata } from '@privy-io/server-auth'
 import { Message } from 'ai'
 import { Model } from '../types/models'
-import { WalletWithMetadata } from '@privy-io/server-auth'
+import { NetworkContext } from '../types/context'
 
 export interface BaseStreamConfig {
   messages: Message[]
@@ -11,4 +12,5 @@ export interface BaseStreamConfig {
   userEvmWallet: WalletWithMetadata | undefined
   userSolWallet: WalletWithMetadata | undefined
   allowWeb3Tools: string
+  networkContext?: NetworkContext
 }

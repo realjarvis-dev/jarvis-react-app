@@ -1,8 +1,8 @@
 import { ethers } from "ethers";
-import tokenBalanceFunctions, { getTokenBalance } from "../alchemy/get-token-balance";
-import { getUserEvmWalletAddress } from '../privy/client';
+import tokenBalanceFunctions from "../alchemy/get-token-balance";
 import { TokenData } from "../alchemy/types";
-import { BepoliaConfig } from "../config/network";
+import { getUserEvmWalletAddress } from '../privy/client';
+
 // ERC20 standard interface
 const ERC20_ABI = [
   "function balanceOf(address) view returns (uint256)",
@@ -21,11 +21,6 @@ const KNOWN_TOKENS = [
   "0x6B175474E89094C44Da98b954EedeAC495271d0F", // DAI
   // Add more tokens as you discover them
 ];
-
-const KNOWN_BEPOLIA_TOKENS = [
-  "0xFCBD14DC51f0A4d49d5E53C2E0950e0bC26d0Dce", // Honey
-  "0x6969696969696969696969696969696969696969", // WBERA
-]
 
 export interface WalletBalanceResult {
   tokens: TokenData[];
@@ -52,7 +47,7 @@ async function getTokenData(tokenAddress: string, walletAddress: string, provide
         symbol,
         name,
         balance: formattedBalance,
-        network: BepoliaConfig.name
+        network: "Unknown Network"
       };
     }
     return null;
@@ -115,7 +110,6 @@ async function discoverTokens(walletAddress: string, provider: ethers.JsonRpcPro
 // Main function to get all token balances
 export async function getWalletBalances(
   walletAddressParam?: string,
-  // rpcUrl: string = process.env.ETH_RPC_URL || 'http://127.0.0.1:8545'
 ): Promise<WalletBalanceResult> {
   // Use provided wallet address or environment variable
   const walletAddress = walletAddressParam || await getUserEvmWalletAddress();
@@ -123,28 +117,16 @@ export async function getWalletBalances(
     throw new Error("No wallet address provided and user does not have EVM wallet.");
   }
   
-  const bepoliaProvider = new ethers.JsonRpcProvider(BepoliaConfig.rpcUrl);
-  let bepoliaTokenData: TokenData[] = []
-  for (const token of KNOWN_BEPOLIA_TOKENS) {
-    const tokenData = await getTokenData(token, walletAddress, bepoliaProvider)
-    if (tokenData) {
-      bepoliaTokenData.push(tokenData)
-    }
-  }
   try {
-
-
     const tokenDataPromises = tokenBalanceFunctions.map(fn => fn(walletAddress));
     const allTokenData = await Promise.all(tokenDataPromises);
 
     // Flatten the results if each function returns an array, otherwise adjust as needed
     const tokenData = allTokenData.flat();
-
-
     
     // Create the final result object
     return {
-      tokens: [...tokenData, ...bepoliaTokenData] as TokenData[]
+      tokens: tokenData as TokenData[]
     };
   } catch (error) {
     console.error("Error fetching wallet balances:", error);

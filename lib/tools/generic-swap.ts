@@ -1,13 +1,20 @@
-import { tool } from 'ai'
-import { ethers } from 'ethers'
-import { appendFile } from 'fs'
-import { mkdir } from 'fs/promises'
-import path, { dirname } from 'path' // Added import for path operations
-import { promisify } from 'util'
-import { z } from 'zod'
-import { ensoSwap } from '../enso/swap' // Import ensoSwap
-import { erc20Approval, executeSwapTransaction } from '../pendle/transactions'
-import { getUserEvmWalletAddress } from '../privy/client'
+import { tool } from 'ai';
+import { ethers } from 'ethers';
+import { appendFile } from 'fs';
+import { mkdir } from 'fs/promises';
+import path, { dirname } from 'path'; // Added import for path operations
+import { promisify } from 'util';
+import { z } from 'zod';
+import { ensoSwap } from '../enso/swap'; // Import ensoSwap
+import { erc20Approval, executeSwapTransaction } from '../pendle/transactions';
+import { getUserEvmWalletAddress } from '../privy/client';
+import { NetworkContext } from '../types/context';
+
+interface ToolContext {
+  toolCallId?: string
+  messages?: any[]
+  networkContext?: NetworkContext
+}
 
 const tokenAddressMap: Record<string, string> = {
   ETH: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
@@ -77,13 +84,19 @@ export const genericSwapTool = tool({
     Use this tool when user request and swap and no protocol is in the context
     `,
   parameters: parameters,
-  execute: async ({
-    tokenInSymbol,
-    tokenOutSymbol,
-    amountInHuman,
-    slippage = 0.01,
-    chainId = 1
-  }) => {
+  execute: async (params, context: ToolContext) => {
+    const {
+      tokenInSymbol,
+      tokenOutSymbol,
+      amountInHuman,
+      slippage = 0.01,
+      chainId = 1
+    } = params;
+    
+    const networkContext = context?.networkContext;
+    // Use chainId from networkContext if available, otherwise use the parameter
+    const effectiveChainId = networkContext?.selectedChainId || chainId;
+    
     const tokenOutAddress = tokenAddressMap[tokenOutSymbol].toLowerCase()
     const tokenInAddress = tokenAddressMap[tokenInSymbol].toLowerCase()
     const tokenInDecimals = tokenDecimalMap[tokenInSymbol]
@@ -99,7 +112,7 @@ export const genericSwapTool = tool({
     logContent += `Token Out Symbol: ${tokenOutSymbol}\n`
     logContent += `Amount In Human: ${amountInHuman}\n`
     logContent += `Slippage: ${slippage}\n`
-    logContent += `Chain ID: ${chainId}\n`
+    logContent += `Chain ID: ${effectiveChainId}\n`
 
     await logToFile(logFilePath, logContent)
 
@@ -156,7 +169,7 @@ export const genericSwapTool = tool({
 
       // General swap (ETH -> Token or Token -> Token) using ensoSwap
       txData = await ensoSwap({
-          chainId: chainId,
+          chainId: effectiveChainId,
           tokenIn: actualTokenInAddress,
           tokenOut: ethers.getAddress(tokenOutAddress.toLowerCase()), // Validate/checksum
           fromAddress: evmWalletAddress,
@@ -173,7 +186,7 @@ export const genericSwapTool = tool({
 
       if (erc20Input) {
         const approvalResult = await erc20Approval(tokenInAddress, txData.to,
-            amountInBaseUnits, evmWalletAddress, chainId)
+            amountInBaseUnits, evmWalletAddress, effectiveChainId)
         if (approvalResult.status === 'fail') {
           throw new Error(approvalResult.message)
         }
@@ -183,7 +196,7 @@ export const genericSwapTool = tool({
       await logToFile(logFilePath, logContent)
 
       // TODO: uncomment this when ready
-      const result = await executeSwapTransaction(txData, chainId=chainId)
+      const result = await executeSwapTransaction(txData, effectiveChainId)
 
       const completeTime = new Date().toISOString()
 
@@ -205,7 +218,7 @@ export const genericSwapTool = tool({
           to_token_address: ethers.getAddress(tokenOutAddress.toLowerCase()),
           amount_in_human: amountInHuman,
           amount_in_base_units: amountInBaseUnits,
-          chain_id: chainId,
+          chain_id: effectiveChainId,
           complete_time: completeTime
         }
       }
@@ -222,7 +235,7 @@ export const genericSwapTool = tool({
           from_token_address: tokenInAddress,
           to_token_address: tokenOutAddress,
           amount_in_human: amountInHuman,
-          chain_id: chainId
+          chain_id: effectiveChainId
         }
       }
     }

@@ -1,7 +1,9 @@
+import { getActiveNetworkConfig } from '@/lib/config/network-selection'
 import { getUser, getUserWallet } from '@/lib/privy/client'
 import { createManualToolStreamResponse } from '@/lib/streaming/create-manual-tool-stream'
 import { createToolCallingStreamResponse } from '@/lib/streaming/create-tool-calling-stream'
 import { Model } from '@/lib/types/models'
+import { createNetworkContext } from '@/lib/utils/network-utils'
 import { isProviderEnabled } from '@/lib/utils/registry'
 import { cookies } from 'next/headers'
 
@@ -63,7 +65,26 @@ export async function POST(request: Request) {
       userSolWallet = await getUserWallet('solana')
     }
 
-
+    // Extract network context from request headers
+    const selectedChainHeader = request.headers.get('x-selected-chain') as 'ethereum' | 'berachain' | null
+    const isDemoModeHeader = request.headers.get('x-demo-mode') === 'true'
+    
+    // Create network context if chain information is provided
+    let networkContext
+    if (selectedChainHeader) {
+      try {
+        const activeNetwork = getActiveNetworkConfig(isDemoModeHeader, selectedChainHeader)
+        
+        networkContext = createNetworkContext(
+          selectedChainHeader,
+          isDemoModeHeader,
+          activeNetwork
+        )
+      } catch (error) {
+        console.error('Error creating network context:', error)
+        // Continue without network context
+      }
+    }
 
     const supportsToolCalling = selectedModel.toolCallType === 'native'
     console.log('supportsToolCalling', supportsToolCalling)
@@ -76,7 +97,8 @@ export async function POST(request: Request) {
           userId,
           userEvmWallet,
           userSolWallet,
-          allowWeb3Tools
+          allowWeb3Tools,
+          networkContext
         })
       : createManualToolStreamResponse({
           messages,
@@ -86,7 +108,8 @@ export async function POST(request: Request) {
           userId,
           userEvmWallet,
           userSolWallet,
-          allowWeb3Tools
+          allowWeb3Tools,
+          networkContext
         })
   } catch (error) {
     console.error('API route error:', error)

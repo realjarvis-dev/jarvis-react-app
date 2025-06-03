@@ -9,7 +9,9 @@ import { ExtendedCoreMessage } from '../types'
 import { ErrorType, createErrorResponse, executeWithRetry } from '../utils/error-handling'
 import { getModel, isToolCallSupported } from '../utils/registry'
 import { ToolRegistry, getToolRegistry } from '../utils/tool-registry'
+
 import { parseToolCallXml } from './parse-tool-call'
+import { NetworkContext } from '../types/context'
 
 /**
  * Result of a tool execution
@@ -104,6 +106,15 @@ class ToolResultCache {
 
 const toolResultCache = new ToolResultCache()
 
+// Create a default network context for tools that require it
+const defaultNetworkContext: NetworkContext = {
+  selectedNetwork: 'ethereum',
+  selectedChainId: 1,
+  isDemo: false,
+  rpcUrl: '',
+  config: {} as any
+};
+
 /**
  * Execute a tool call using the tool registry
  */
@@ -147,7 +158,10 @@ async function executeNativeToolCall(
       toolDefinitions[toolName] = {
         description: tool.description,
         parameters: tool.schema,
-        execute: tool.execute
+        execute: (params: any, context?: any) => tool.execute(params, {
+          ...context,
+          networkContext: defaultNetworkContext
+        })
       }
     }
   }
@@ -273,7 +287,7 @@ async function executeManualToolCall(
     try {
       toolResults = await tool.execute(
         toolParams,
-        { toolCallId, messages: [] }
+        { toolCallId, messages: [], networkContext: defaultNetworkContext }
       )
       
       toolResultCache.storeResult(toolName, toolParams, toolResults)
