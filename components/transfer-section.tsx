@@ -1,10 +1,11 @@
 'use client'
 
+import { getConfigByChainId } from '@/lib/config/network' // Import getConfigByChainId
 import type { ToolInvocation } from 'ai'
 import React from 'react' // Added React import for JSX
 import { CollapsibleMessage } from './collapsible-message' // Assuming this can be reused
 import { Section, ToolArgsSection } from './section' // Assuming this can be reused
-import { MainnetConfig } from '@/lib/config/network'
+// import { MainnetConfig } from '@/lib/config/network'
 interface TransferSectionProps {
   tool: ToolInvocation
   isOpen: boolean
@@ -20,6 +21,12 @@ interface PrivyTransferResult {
   status: 'success' | 'fail'
   hash?: string
   error_message?: any
+  transaction_details?: {
+    to: string
+    amount: number
+    complete_time: string
+    chainId?: number 
+  }
 }
 
 export function TransferSection({
@@ -42,14 +49,17 @@ export function TransferSection({
     case 'result':
       const toolResult = tool.result as PrivyTransferResult
       if (toolResult.status === 'success' || toolResult.hash) {
+        const chainId = toolResult.transaction_details?.chainId || 1 // Default to 1 if not provided
+        const scanLink = getConfigByChainId(chainId).scanLink
+
         statusDisplay = (
           <div>
             <p className="text-black-600">Transaction completed!</p>
-            {toolResult.hash && (
+            {toolResult.hash && scanLink && (
               <p>
-                View on {' '}
+                View on{' '}
                 <a
-                  href={`https://${MainnetConfig.scanLink}/tx/${toolResult.hash}`}
+                  href={`https://${scanLink}/tx/${toolResult.hash}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-500 hover:underline"
