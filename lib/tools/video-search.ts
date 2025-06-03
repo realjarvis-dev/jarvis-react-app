@@ -1,12 +1,7 @@
 import { getSearchSchemaForModel } from '@/lib/schema/search'
 import { tool } from 'ai'
-import { NetworkContext } from '../utils/tool-registry'
+import { ToolContext } from '../types/context';
 
-interface ToolContext {
-  toolCallId?: string
-  messages?: any[]
-  networkContext?: NetworkContext
-}
 
 /**
  * Creates a video search tool with the appropriate schema for the model.

@@ -4,7 +4,7 @@ import type { ToolInvocation } from 'ai'
 import React from 'react' // Added React import for JSX
 import { CollapsibleMessage } from './collapsible-message' // Assuming this can be reused
 import { Section, ToolArgsSection } from './section' // Assuming this can be reused
-import { NetworkConfig } from '@/lib/config/network'
+import { MainnetConfig } from '@/lib/config/network'
 interface TransferSectionProps {
   tool: ToolInvocation
   isOpen: boolean
@@ -49,7 +49,7 @@ export function TransferSection({
               <p>
                 View on {' '}
                 <a
-                  href={`https://${NetworkConfig.scanLink}/tx/${toolResult.hash}`}
+                  href={`https://${MainnetConfig.scanLink}/tx/${toolResult.hash}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-500 hover:underline"

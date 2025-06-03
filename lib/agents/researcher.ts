@@ -1,7 +1,8 @@
 import { WalletWithMetadata } from '@privy-io/server-auth'
 import { CoreMessage, smoothStream, streamText } from 'ai'
 import { getModel } from '../utils/registry'
-import { getToolRegistry, NetworkContext, ToolCategory } from '../utils/tool-registry'
+import { getToolRegistry, ToolCategory } from '../utils/tool-registry'
+import { NetworkContext } from '../types/context'
 
 const get_system_prompt = (searchMode: boolean, supportedTools: string[], registry: any, networkContext?: NetworkContext) => {
   // Generate dynamic tool descriptions based on actually supported tools
@@ -23,8 +24,7 @@ const get_system_prompt = (searchMode: boolean, supportedTools: string[], regist
       generic_swap: `- generic_swap: Use when user wants to swap between two arbitrary tokens.`,
       kodiak_opportunities: `- kodiak_opportunities: Use when the user asks about Kodiak Island yield opportunities on Berachain. This tool returns a list of current Kodiak opportunities with APY and liquidity information.`,
       kodiak_deposit: `- kodiak_deposit: Use when the user wants to deposit tokens into a Kodiak Island yield opportunity on Berachain.`,
-      get_gas_price: `- get_gas_price: Use when the user asks about current gas prices for transactions.`,
-      fund_wallet: `- fund_wallet: Use when the user requests their wallet to be funded with ETH in demo mode. Only works in the Demo environment.`
+      get_gas_price: `- get_gas_price: Use when the user asks about current gas prices for transactions.`
     }
     
     // Only include descriptions for supported tools
@@ -59,10 +59,13 @@ const get_system_prompt = (searchMode: boolean, supportedTools: string[], regist
     - As with pendle_opportunities: call it, then "Fetched Kodiak opportunities. Any you'd like details on?"`,
       market_chart: `  • market_chart  
     - Call it and let the UI show the chart.  
-    - Acknowledge: "Here's the market chart. Need data for a different timeframe or coin?"`
+    - Acknowledge: "Here's the market chart. Need data for a different timeframe or coin?"`,
+      lifi_bridge_quote: `  • lifi_bridge_quote
+    - If nothing goes wrong, just acknowledge: “Here’s your quote—anything else?”`,
+
     }
 
-    const readOnlyTools = ['pendle_opportunities', 'pendle_quote', 'wallet_balance', 'kodiak_opportunities', 'market_chart']
+    const readOnlyTools = ['pendle_opportunities', 'pendle_quote', 'wallet_balance', 'kodiak_opportunities', 'market_chart', 'lifi_bridge_quote']
       .filter(tool => supportedTools.includes(tool))
       .map(tool => readOnlyToolsDescriptions[tool])
       .filter(Boolean)
@@ -80,13 +83,10 @@ const get_system_prompt = (searchMode: boolean, supportedTools: string[], regist
       kodiak_deposit: `  • kodiak_deposit  
     - Remind to check opportunities if skipped.`,
       generic_swap: `  • generic_swap  
-    - Confirm swap details before execution.`,
-      fund_wallet: `  • fund_wallet  
-    - Only available in Demo environment.
-    - Funds the user's wallet with ETH.`
+    - Confirm swap details before execution.`
     }
 
-    const writeTools = ['pendle_swap', 'privy_transfer', 'kodiak_deposit', 'generic_swap', 'fund_wallet']
+    const writeTools = ['pendle_swap', 'privy_transfer', 'kodiak_deposit', 'generic_swap', 'lifi_bridge_execute']
       .filter(tool => supportedTools.includes(tool))
       .map(tool => writeToolsDescriptions[tool])
       .filter(Boolean)
@@ -262,7 +262,7 @@ You can only execute on behalf of the user if they have wallets and have delegat
     if (networkContext) {
       networkInfo = `
 Network Context:
-- Selected Network: ${networkContext.selectedNetwork}
+- Selected Network: ${networkContext.selectedNetwork} (default fromChain for bridging, default chain for swapping and transfer)
 - Chain ID: ${networkContext.selectedChainId}
 - Demo Mode: ${networkContext.isDemo ? 'ON' : 'OFF'}
 - RPC URL: ${networkContext.rpcUrl}

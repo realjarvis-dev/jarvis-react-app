@@ -1,5 +1,5 @@
 import { useNetwork } from '../context/network-context'
-import { NetworkContext } from './tool-registry'
+import { NetworkContext } from '../types/context'
 
 /**
  * Convert network context from React context to tool registry format

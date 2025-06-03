@@ -1,7 +1,7 @@
 import { retrieveSchema } from '@/lib/schema/retrieve'
 import { SearchResults as SearchResultsType } from '@/lib/types'
 import { tool } from 'ai'
-import { NetworkContext } from '../utils/tool-registry'
+import { NetworkContext } from '../types/context'
 
 interface ToolContext {
   toolCallId?: string

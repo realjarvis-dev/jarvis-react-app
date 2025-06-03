@@ -1,7 +1,7 @@
 import { tool } from 'ai'
 import { z } from 'zod'
+import { NetworkContext } from '../types/context'
 import { fundUserWallet } from '../tenderly/fund'
-import { NetworkContext } from '../utils/tool-registry'
 import { getWalletBalances } from '../utils/wallet'
 
 import { REQUESTED_FUNDING_AMOUNT } from '../tenderly/fund'

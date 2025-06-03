@@ -1,6 +1,6 @@
 # 🤖 Jarvis: Unifying Web3 with Autonomous Agent
 
-![Jarvis User Interface](/public/images/UI.png "Unifying Web3 with Autonomous Agent")
+![Jarvis User Interface](/public/images/UI.png 'Unifying Web3 with Autonomous Agent')
 
 ## 🚀 What is Jarvis?
 
@@ -8,26 +8,30 @@
 
 In a fragmented DeFi landscape with thousands of protocols and complex interactions, Jarvis serves as your unified gateway - an intelligent layer that understands your goals and autonomously orchestrates across the entire Web3 ecosystem to achieve them.
 
-Simply tell Jarvis what you want: *"Earn 3% monthly yield"*, *"Protect my portfolio from volatility"*, or *"Find the best yield for my idle USDC"*. Your autonomous agent then analyzes opportunities across 160+ protocols, constructs optimal strategies, and executes them 24/7 - all through natural conversation.
+Simply tell Jarvis what you want: _"Earn 3% monthly yield"_, _"Protect my portfolio from volatility"_, or _"Find the best yield for my idle USDC"_. Your autonomous agent then analyzes opportunities across 160+ protocols, constructs optimal strategies, and executes them 24/7 - all through natural conversation.
 
 ## ✨ The Vision
 
 ### 🌐 **Unifying Fragmented DeFi**
+
 - One interface to access the entire Web3 ecosystem
 - No more jumping between protocols or managing multiple positions
 - Your agent handles all the complexity behind the scenes
 
 ### 🤖 **True Financial Autonomy**
+
 - Agents that act on your behalf, not just respond to commands
 - Proactive optimization and rebalancing
 - 24/7 monitoring and execution without human intervention
 
 ### 🔮 **Intent-Based Web3**
+
 - Move from "how" to "what" - just state your goals
 - Natural language replaces complex transactions
 - AI translates intent into optimal on-chain actions
 
 ### 🛡️ **Democratizing Sophisticated Strategies**
+
 - Institutional-grade portfolio management for everyone
 - Access strategies previously available only to whales
 - No coding or DeFi expertise required
@@ -39,21 +43,21 @@ You: "I want to preserve my wealth and earn steady income"
 
 Jarvis: "I'll create a diversified strategy across multiple protocols to achieve this.
         Here's my recommendation:
-        
+
         • 30% in RWA yields (tokenized treasuries) - 5.2% APY
-        • 25% in blue-chip lending (Aave, Compound) - 3.8% APY  
+        • 25% in blue-chip lending (Aave, Compound) - 3.8% APY
         • 25% in ETH liquid staking derivatives - 4.5% APY
         • 20% in stablecoin liquidity pools - 6.1% APY
-        
+
         Expected return: 4.7% APY with minimal volatility
         Automatic rebalancing: Daily
         Risk monitoring: Real-time
-        
+
         Should I deploy this autonomous strategy?"
 
 You: "Yes, go ahead"
 
-Jarvis: "Strategy deployed! I'll manage this 24/7 and notify you of any 
+Jarvis: "Strategy deployed! I'll manage this 24/7 and notify you of any
         significant changes. Your first yield payment arrives in 24 hours."
 ```
 
@@ -105,14 +109,14 @@ Jarvis: "Strategy deployed! I'll manage this 24/7 and notify you of any
 
 ## 🌟 Why Jarvis?
 
-| Traditional DeFi | Jarvis Autonomous Agents |
-|-----------------|-------------------------|
+| Traditional DeFi                    | Jarvis Autonomous Agents             |
+| ----------------------------------- | ------------------------------------ |
 | Navigate 100s of protocols manually | One unified interface to all of DeFi |
-| Constant monitoring required | Autonomous 24/7 management |
-| Complex transactions | Natural language commands |
-| Miss opportunities while sleeping | Your agent never sleeps |
-| One protocol at a time | Orchestrate across 160+ protocols |
-| Technical expertise required | Anyone can be a DeFi power user |
+| Constant monitoring required        | Autonomous 24/7 management           |
+| Complex transactions                | Natural language commands            |
+| Miss opportunities while sleeping   | Your agent never sleeps              |
+| One protocol at a time              | Orchestrate across 160+ protocols    |
+| Technical expertise required        | Anyone can be a DeFi power user      |
 
 ## 🧱 Stack
 
@@ -147,6 +151,7 @@ Jarvis: "Strategy deployed! I'll manage this 24/7 and notify you of any
 - [Privy](https://www.privy.io/) - Authentication and embedded wallets
 - [Enso Network](https://docs.enso.build/home) - Multi-protocol integration layer
 - [Alchemy](https://www.alchemy.com/) - Blockchain data and infrastructure
+- [Li.fi](https://docs.li.fi/) - Multi-chain bridging support
 
 ### Integrated Protocols
 
@@ -180,7 +185,7 @@ Fill in the required environment variables in `.env.local`:
 ```bash
 # Required for Core Functionality
 
-ETH_RPC_URL=        # Get from customized rpc provider or local forked mainnet
+TEST_RPC_URL=        # Get from customized rpc provider or local forked mainnet
 NEXT_PUBLIC_TEST_NET_ENV=production | development
 ALCHEMY_API_KEY=    # Get from https://www.alchemy.com/
 ENSO_API_KEY=       # Get from https://docs.enso.build/home
@@ -213,11 +218,13 @@ Visit `http://localhost:3000` to experience autonomous Web3!
 ## ✅ Verified Models
 
 ### OpenAI
+
 - gpt-4o (Recommended for production)
 - gpt-4o-mini
 - gpt-4-turbo
 
 ### Coming Soon
+
 - Anthropic Claude
 - Google Gemini
 - Local models via Ollama
@@ -225,18 +232,21 @@ Visit `http://localhost:3000` to experience autonomous Web3!
 ## 🗺️ Roadmap
 
 ### Phase 1: Foundation (Completed ✅)
+
 - [x] Core autonomous agent framework
 - [x] Multi-protocol integration via Enso
 - [x] Natural language understanding
 - [x] Embedded wallet infrastructure
 
 ### Phase 2: Intelligence (In Progress 🚧)
+
 - [ ] Advanced strategy optimization algorithms
 - [ ] Multi-chain agent coordination
 - [ ] Backtesting and simulation engine
 - [ ] Social strategy marketplace
 
 ### Phase 3: Scale (Upcoming 🔮)
+
 - [ ] Mobile companion app
 - [ ] Institutional agent features
 - [ ] Custom agent training
@@ -244,6 +254,7 @@ Visit `http://localhost:3000` to experience autonomous Web3!
 - [ ] Cross-chain liquidity aggregation
 
 ### Phase 4: Ecosystem (Future 🌟)
+
 - [ ] Agent-to-agent communication protocol
 - [ ] Decentralized agent marketplace
 - [ ] Custom strategy NFTs
@@ -301,6 +312,7 @@ Special thanks to the Enso Network team, our protocol partners, and the entire D
 ## 👥 Contributors
 
 ### Jarvis Contributors
+
 Thanks to everyone who has contributed to the Jarvis autonomous agent platform!
 
 - allen@thejarvis.xyz
@@ -308,6 +320,7 @@ Thanks to everyone who has contributed to the Jarvis autonomous agent platform!
 - gaurav@thejarvis.xyz
 
 ### Original Project
+
 Jarvis was originally forked from [[Morphic](https://github.com/miurla/morphic)] and has since evolved into a completely different platform focused on autonomous Web3 agents. We acknowledge the foundational work of the original contributors.
 
 ---

@@ -11,27 +11,11 @@ import { createQuestionTool } from '../tools/question'
 import { retrieveTool } from '../tools/retrieve'
 import { createSearchTool } from '../tools/search'
 import { createVideoSearchTool } from '../tools/video-search'
+import { bridgeExecuteTool, bridgeQuoteTool } from '../tools/lifi-bridge'
+import { ToolContext, NetworkContext } from '../types/context'
 import { fundWalletTool, walletBalanceTool } from '../tools/wallet'
 
-/**
- * Network context passed to tools
- */
-export interface NetworkContext {
-  selectedNetwork: 'ethereum' | 'berachain' | 'demo'
-  selectedChainId: number
-  isDemo: boolean
-  rpcUrl: string
-  config: NetworkConfig
-}
 
-/**
- * Tool context interface that matches what tools expect
- */
-export interface ToolContext {
-  toolCallId?: string
-  messages?: any[]
-  networkContext: NetworkContext
-}
 
 /**
  * Interface for tool definition with schema and execution function
@@ -344,18 +328,33 @@ export function createToolRegistry(model: string): ToolRegistry {
     supportedNetworks: ['berachain']
   })
   
+
   registry.registerTool({
-    name: 'generic_swap',
-    description: 'Execute a swap transaction between two arbitrary tokens',
-    schema: genericSwapTool.parameters,
-    execute: async (params, context) => genericSwapTool.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
+    name: 'lifi_bridge_quote',
+    description: bridgeQuoteTool.description || '',
+    schema: bridgeQuoteTool.parameters,
+    execute: async (params, context) => bridgeQuoteTool.execute(params, { 
+      toolCallId: context?.toolCallId || 'unknown', 
       messages: context?.messages || [],
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
     supportedNetworks: ['ethereum', 'berachain', 'demo']
   })
+
+  registry.registerTool({
+    name: 'lifi_bridge_execute',
+    description: bridgeExecuteTool.description || '',
+    schema: bridgeExecuteTool.parameters,
+    execute: async (params, context) => bridgeExecuteTool.execute(params, { 
+      toolCallId: context?.toolCallId || 'unknown', 
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3,
+    supportedNetworks: ['ethereum', 'berachain', 'demo']
+  })
+
   
   registry.registerTool({
     name: 'fund_wallet',
@@ -367,9 +366,27 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['demo'] // Only available in demo mode
+    supportedNetworks: ['demo']
   })
+
+  // Disabled enso swap as lifi bridge is used instead, it covers both cross-chain bridging and non cross-chain swap
+
+  // registry.registerTool({
+  //   name: 'generic_swap',
+  //   description: 'Execute a swap transaction between two arbitrary tokens',
+  //   schema: genericSwapTool.parameters,
+  //   execute: async (params, context) => genericSwapTool.execute(params, { 
+  //     toolCallId: context?.toolCallId || 'unknown', 
+  //     messages: context?.messages || [],
+  //     networkContext: context?.networkContext!
+  //   } as any),
+  //   category: ToolCategory.WEB3,
+  //   supportedNetworks: ['ethereum', 'berachain', 'demo']
+  // })
+
+
   
+
   return registry
 }
 

@@ -4,7 +4,7 @@ import { getKodiakOpportunitiesFromApi } from '../kodiak/api'
 import { depositToKodiakIsland, IslandSingleDepositParams } from '../kodiak/islandRatio'
 import { tickToPrice } from '../kodiak/utils'
 import { FormattedKodiakIsland } from '../types/kodiak'
-import { NetworkContext } from '../utils/tool-registry'
+import { NetworkContext } from '../types/context'
 
 interface ToolContext {
   toolCallId?: string
