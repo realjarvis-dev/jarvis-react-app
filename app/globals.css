@@ -58,6 +58,8 @@
 
     /* Virtual keyboard inset value for mobile devices */
     --keyboard-inset: 0px;
+
+    --safe-top: calc(env(safe-area-inset-top, 0px) + 16px);
   }
 
   .dark {
