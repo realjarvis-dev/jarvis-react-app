@@ -1,7 +1,11 @@
-import { getTenderlyDemoTokenBalance } from '@/lib/alchemy/get-token-balance'
-import { getUserEvmWalletAddress, verifyAccessToken } from '@/lib/privy/client'
-import { ethToWei, setBalanceVnet } from '@/lib/tenderly/fund'
-import { NextRequest, NextResponse } from 'next/server'
+import { getTenderlyDemoTokenBalance } from '@/lib/alchemy/get-token-balance';
+import { getUserEvmWalletAddress, verifyAccessToken } from '@/lib/privy/client';
+import { ethToWei, setBalanceVnet } from '@/lib/tenderly/fund';
+import { NextRequest, NextResponse } from 'next/server';
+
+// Configuration constants
+const FUNDING_THRESHOLD = 0.1; // ETH - minimum balance threshold
+const FUNDING_AMOUNT = 1.0; // ETH - amount to fund the wallet with
 
 export async function GET(req: NextRequest) {
   try {
@@ -40,13 +44,13 @@ export async function GET(req: NextRequest) {
     
     const ethBalance = parseFloat(ethToken.balance)
     
-    // If balance is less than 1 ETH, fund the wallet
-    if (ethBalance < 0.1) {
-      // Convert 1 ETH to wei (hex string)
-      const oneEthInWei = ethToWei('1.0')
+    // If balance is less than the funding threshold, fund the wallet
+    if (ethBalance < FUNDING_THRESHOLD) {
+      // Convert funding amount to wei (hex string)
+      const fundingAmountInWei = ethToWei(FUNDING_AMOUNT.toString())
       
       // Fund the wallet using Tenderly's setBalanceVnet function
-      const result = await setBalanceVnet([walletAddress], oneEthInWei)
+      const result = await setBalanceVnet([walletAddress], fundingAmountInWei)
       
       return NextResponse.json({
         success: true,
@@ -62,7 +66,7 @@ export async function GET(req: NextRequest) {
         walletAddress,
         currentBalance: ethBalance,
         funded: false,
-        message: 'Wallet already has sufficient balance (>= 1 ETH)'
+        message: `Wallet already has sufficient balance (>= ${FUNDING_THRESHOLD} ETH)`
       })
     }
   } catch (error: any) {
