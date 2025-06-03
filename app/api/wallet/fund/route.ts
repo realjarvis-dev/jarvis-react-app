@@ -41,9 +41,9 @@ export async function GET(req: NextRequest) {
     const ethBalance = parseFloat(ethToken.balance)
     
     // If balance is less than 1 ETH, fund the wallet
-    if (ethBalance < 2.0) {
+    if (ethBalance < 0.1) {
       // Convert 1 ETH to wei (hex string)
-      const oneEthInWei = ethToWei('2.0')
+      const oneEthInWei = ethToWei('1.0')
       
       // Fund the wallet using Tenderly's setBalanceVnet function
       const result = await setBalanceVnet([walletAddress], oneEthInWei)
