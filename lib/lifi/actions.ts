@@ -103,70 +103,70 @@ export const generateLifiBridgeQuote = async (
       }
     }
 
-    if (fromChainMatch.id !== toChainMatch.id) {
-      // check user's balance on dest chain
-      const balanceDestChain = await getNativeBalanceByChainId(
-        recipient,
-        toChainMatch.id
-      )
-      const nativeCoinSymbol = toChainMatch.coin
-      const tokenMatcher = new TokenMatcher(toChainMatch.id)
-      const nativeCoin = tokenMatcher.match(nativeCoinSymbol)
-      const nativeCoinDecimals = nativeCoin[0].decimals
-      const blockNativeGasPriceResponse = await getGasPriceByChainId(toChainMatch.id)
-      const blockNativeGasPrice = blockNativeGasPriceResponse.maxPriorityFeePerGas + blockNativeGasPriceResponse.maxFeePerGas
-      console.log("balanceDestChain", balanceDestChain)
-      console.log("blockNativeGasPrice", blockNativeGasPrice)
-      console.log("GAS_LIMIT", blockNativeGasPrice * BigInt(LOWER_BOUND_GAS_LIMIT))
-      if (autoFuelDestChain &&
-        balanceDestChain <= blockNativeGasPrice * BigInt(LOWER_BOUND_GAS_LIMIT) &&
-        toTokenSingle.symbol !== toChainMatch.coin
-      ) {
-        try {
-          const {
-            status,
-            message,
-            nativeTokenQuote,
-            swapQuote,
-            readableQuote
-          } = await _generateMultiStepQuote(
-            fromChainMatch.id,
-            fromTokenSingle.symbol,
-            fromTokenSingle.decimals,
-            fromAddress,
-            toChainMatch.id,
-            toChainMatch.coin,
-            toTokenSingle.symbol,
-            toTokenSingle.decimals,
-            amountIn,
-            slippage,
-            recipient
-          )
-          if (status === 'fail') {
-            return {
-              instruction:
-                'notify user and ask if they want to turn off auto fuel',
-              title: autoFuelFailTitle,
-              details: autoFuelFailDetails,
-              more_details: message
-            }
-          }
-          return {
-            instruction: `Don't repeat the quote to user, simply ask user if they want to proceed with the transaction. Explain to user that they are low on native token on the destination chain, so we automatically fueled the token for future transactions. 
-If user wants to proceed, use lifi_bridge_execute tool to execute the transaction.`,
-            details: { ...readableQuote, auto_fuel_decision: true }
-          }
-        } catch (error) {
-          return {
-            instruction: 'notify user',
-            title: noRouteTitle,
-            details: noRouteDetails,
-            more_details:
-              error instanceof Error ? error.message : 'Unknown error'
-          }
-        }
-      }
-    }
+//     if (fromChainMatch.id !== toChainMatch.id) {
+//       // check user's balance on dest chain
+//       const balanceDestChain = await getNativeBalanceByChainId(
+//         recipient,
+//         toChainMatch.id
+//       )
+//       const nativeCoinSymbol = toChainMatch.coin
+//       const tokenMatcher = new TokenMatcher(toChainMatch.id)
+//       const nativeCoin = tokenMatcher.match(nativeCoinSymbol)
+//       const nativeCoinDecimals = nativeCoin[0].decimals
+//       const blockNativeGasPriceResponse = await getGasPriceByChainId(toChainMatch.id)
+//       const blockNativeGasPrice = blockNativeGasPriceResponse.maxPriorityFeePerGas + blockNativeGasPriceResponse.maxFeePerGas
+//       console.log("balanceDestChain", balanceDestChain)
+//       console.log("blockNativeGasPrice", blockNativeGasPrice)
+//       console.log("GAS_LIMIT", blockNativeGasPrice * BigInt(LOWER_BOUND_GAS_LIMIT))
+//       if (autoFuelDestChain &&
+//         balanceDestChain <= blockNativeGasPrice * BigInt(LOWER_BOUND_GAS_LIMIT) &&
+//         toTokenSingle.symbol !== toChainMatch.coin
+//       ) {
+//         try {
+//           const {
+//             status,
+//             message,
+//             nativeTokenQuote,
+//             swapQuote,
+//             readableQuote
+//           } = await _generateMultiStepQuote(
+//             fromChainMatch.id,
+//             fromTokenSingle.symbol,
+//             fromTokenSingle.decimals,
+//             fromAddress,
+//             toChainMatch.id,
+//             toChainMatch.coin,
+//             toTokenSingle.symbol,
+//             toTokenSingle.decimals,
+//             amountIn,
+//             slippage,
+//             recipient
+//           )
+//           if (status === 'fail') {
+//             return {
+//               instruction:
+//                 'notify user and ask if they want to turn off auto fuel',
+//               title: autoFuelFailTitle,
+//               details: autoFuelFailDetails,
+//               more_details: message
+//             }
+//           }
+//           return {
+//             instruction: `Don't repeat the quote to user, simply ask user if they want to proceed with the transaction. Explain to user that they are low on native token on the destination chain, so we automatically fueled the token for future transactions. 
+// If user wants to proceed, use lifi_bridge_execute tool to execute the transaction.`,
+//             details: { ...readableQuote, auto_fuel_decision: true }
+//           }
+//         } catch (error) {
+//           return {
+//             instruction: 'notify user',
+//             title: noRouteTitle,
+//             details: noRouteDetails,
+//             more_details:
+//               error instanceof Error ? error.message : 'Unknown error'
+//           }
+//         }
+//       }
+//     }
 
     const inputDecimals = fromTokenSingle.decimals
     const outputDecimals = toTokenSingle.decimals
