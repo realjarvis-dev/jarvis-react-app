@@ -1,6 +1,6 @@
 export async function GET(request: Request) {
   try {
-    const response = await fetch('anvil-fork:8545', {
+    const response = await fetch('http://anvil-fork:8545', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
