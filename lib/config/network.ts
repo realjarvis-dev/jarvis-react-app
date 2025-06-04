@@ -40,14 +40,20 @@ export const PolygonConfig = {
     // rpcUrl: 'https://virtual.polygon.rpc.tenderly.co/fa7f4f0a-086a-4f67-8e97-f3898af82f53'
 }
 
+// export const TenderlyDemoConfig = {
+//     name: Network.ETH_MAINNET, // Using ETH_MAINNET as base for demo mode
+//     displayName: 'Demo',
+//     chainId: 92736,
+//     scanLink: 'dashboard.tenderly.co/explorer/vnet/fcb5c956-9f40-4ccb-8ea3-249ea2de031d', // Updated to use Tenderly vnet explorer
+//     rpcUrl: 'https://virtual.mainnet.rpc.tenderly.co/fcb5c956-9f40-4ccb-8ea3-249ea2de031d'
+// }
 export const TenderlyDemoConfig = {
-    name: Network.ETH_MAINNET, // Using ETH_MAINNET as base for demo mode
-    displayName: 'Demo',
-    chainId: 92736,
-    scanLink: 'dashboard.tenderly.co/explorer/vnet/fcb5c956-9f40-4ccb-8ea3-249ea2de031d', // Updated to use Tenderly vnet explorer
-    rpcUrl: 'https://virtual.mainnet.rpc.tenderly.co/fcb5c956-9f40-4ccb-8ea3-249ea2de031d'
-}
-
+        name: Network.ETH_MAINNET, // Using ETH_MAINNET as base for demo mode
+        displayName: 'Demo',
+        chainId: 1,
+        scanLink: 'dashboard.tenderly.co/explorer/vnet/ce583582-c194-4405-bfc5-6ee33e99fa8b', // Updated to use Tenderly vnet explorer
+        rpcUrl: 'https://virtual.mainnet.rpc.tenderly.co/ce583582-c194-4405-bfc5-6ee33e99fa8b'
+    }
 export const BerachainMainnetConfig = {
     name: Network.BERACHAIN_MAINNET,
     displayName: "Berachain",
@@ -67,14 +73,17 @@ export const OptimismConfig = {
 export const chainIdToNetworkConfig: Record<number, NetworkConfigType> = {
     [BerachainMainnetConfig.chainId]: BerachainMainnetConfig,
     [MainnetConfig.chainId]: MainnetConfig,
-    [TenderlyDemoConfig.chainId]: TenderlyDemoConfig,
+    // [TenderlyDemoConfig.chainId]: TenderlyDemoConfig,
     [PolygonConfig.chainId]: PolygonConfig,
     [BaseMainnetConfig.chainId]: BaseMainnetConfig,
     [ArbitrumConfig.chainId]: ArbitrumConfig,
     [OptimismConfig.chainId]: OptimismConfig
 }
 
-export const getConfigByChainId = (chainId: number) => {
+export const getConfigByChainId = (chainId: number, isDemo=false) => {
+    if (isDemo || chainId === 92736) {
+        return TenderlyDemoConfig
+    }
     if (chainId in chainIdToNetworkConfig) {
         return chainIdToNetworkConfig[chainId];
     }
