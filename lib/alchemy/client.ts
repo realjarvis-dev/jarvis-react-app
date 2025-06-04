@@ -1,5 +1,5 @@
 import { Alchemy, AlchemySettings, Network } from 'alchemy-sdk'
-
+import { TenderlyDemoConfig } from '../config/network'
 // 1. Define your shared defaults
 const API_KEY = process.env.ALCHEMY_API_KEY!
 const DEFAULT_OVERRIDES: Partial<AlchemySettings> = {
@@ -19,6 +19,13 @@ function makeAlchemyClient(
     ...opts
   })
 }
+
+export const demoAlchemy = makeAlchemyClient(Network.ETH_MAINNET, {
+  connectionInfoOverrides: {
+    skipFetchSetup: true,
+    url: TenderlyDemoConfig.rpcUrl
+  }
+})
 
 // 3. Instantiate all your clients in one place
 export const mainnetAlchemy = makeAlchemyClient(Network.ETH_MAINNET)
@@ -43,4 +50,11 @@ export const chainIdToAlchemyClient: Record<number, Alchemy> = {
   8453: baseAlchemy,
   42161: arbitrumAlchemy,
   10: optimismAlchemy
+}
+
+export const getAlchemyClient = (chainId: number, isDemo=false) => {
+  if (isDemo) {
+    return demoAlchemy
+  }
+  return chainIdToAlchemyClient[chainId]
 }

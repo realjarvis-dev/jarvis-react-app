@@ -51,8 +51,8 @@ export const TenderlyDemoConfig = {
         name: Network.ETH_MAINNET, // Using ETH_MAINNET as base for demo mode
         displayName: 'Demo',
         chainId: 1,
-        scanLink: 'dashboard.tenderly.co/explorer/vnet/ce583582-c194-4405-bfc5-6ee33e99fa8b', // Updated to use Tenderly vnet explorer
-        rpcUrl: 'https://virtual.mainnet.rpc.tenderly.co/ce583582-c194-4405-bfc5-6ee33e99fa8b'
+        scanLink: undefined, 
+        rpcUrl: process.env.NEXT_PUBLIC_TEST_NET_ENV === "development" ? 'https://virtual.mainnet.rpc.tenderly.co/ce583582-c194-4405-bfc5-6ee33e99fa8b' : 'http://anvil-fork:8545'
     }
 export const BerachainMainnetConfig = {
     name: Network.BERACHAIN_MAINNET,

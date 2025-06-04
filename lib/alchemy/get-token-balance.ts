@@ -1,12 +1,14 @@
 import { Alchemy, TokenBalance } from 'alchemy-sdk'
 import { ethers, id } from 'ethers'
 import { TenderlyDemoConfig } from '../config/network'
+import { DEMO_NETWORK_CONFIG } from '../config/network-selection'
 import {
   berachainMainnetAlchemy,
   berachainBepoliaAlchemy,
   chainIdToAlchemyClient,
   mainnetAlchemy,
-  sepoliaAlchemy
+  sepoliaAlchemy,
+  demoAlchemy
 } from './client'
 import { nativeAssets } from './native-asset-mapping'
 import { TokenData } from './types'
@@ -43,20 +45,21 @@ export async function getTenderlyDemoTokenBalance(
   address: string
 ): Promise<TokenData[]> {
   try {
-    const provider = new ethers.JsonRpcProvider(TenderlyDemoConfig.rpcUrl);
+    return getTokenBalance(address, demoAlchemy, true)
+  //   const provider = new ethers.JsonRpcProvider(TenderlyDemoConfig.rpcUrl);
     
-    // Get native ETH balance
-    const nativeBalance = await provider.getBalance(address);
+  //   // Get native ETH balance
+  //   const nativeBalance = await provider.getBalance(address);
     
-    const ethToken: TokenData = {
-      address: ethers.ZeroAddress,
-      name: 'Ether',
-      symbol: 'ETH',
-      balance: ethers.formatEther(nativeBalance),
-      network: 'Ethereum Mainnet (Demo)'
-    };
+  //   const ethToken: TokenData = {
+  //     address: ethers.ZeroAddress,
+  //     name: 'Ether',
+  //     symbol: 'ETH',
+  //     balance: ethers.formatEther(nativeBalance),
+  //     network: 'Ethereum Mainnet (Demo)'
+  //   };
 
-    return [ethToken];
+  //   return [ethToken];
   } catch (error) {
     console.error('Error fetching Tenderly demo balances:', error);
     return [];
@@ -65,7 +68,8 @@ export async function getTenderlyDemoTokenBalance(
 
 export async function getTokenBalance(
   walletAddress: string,
-  alchemy: Alchemy = mainnetAlchemy
+  alchemy: Alchemy = mainnetAlchemy,
+  isDemo: boolean = false
 ): Promise<TokenData[]> {
   try {
     // Initialize erc20 outside the inner try block
@@ -94,7 +98,7 @@ export async function getTokenBalance(
           name: meta.name ?? 'Unknown',
           symbol: meta.symbol ?? 'UNK',
           balance: ethers.formatUnits(rawBig, meta.decimals ?? 18),
-          network: alchemy.config.network
+          network: isDemo ? DEMO_NETWORK_CONFIG.name : alchemy.config.network
         }
       })
     } catch (err) {
@@ -110,7 +114,7 @@ export async function getTokenBalance(
       name: nativeAssets[alchemy.config.network].name,
       symbol: nativeAssets[alchemy.config.network].symbol,
       balance: ethers.formatEther(nativeWei.toString()),
-      network: alchemy.config.network
+      network: isDemo ? DEMO_NETWORK_CONFIG.name : alchemy.config.network
     }
 
     /* ── 6. Combine and return ──────────────────────────────────────── */
