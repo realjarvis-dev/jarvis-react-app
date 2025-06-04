@@ -163,6 +163,9 @@ const bridgeExecuteTool = tool({
       }
     }
     const isDemo = context?.networkContext?.isDemo
+    if (isDemo) {
+      slippage = '0.1'
+    }
 
     // if (autoFuel) {
     //   return await executeLifiBridgeTransactionWithAutoFuel(
