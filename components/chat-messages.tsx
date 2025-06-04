@@ -3,7 +3,7 @@ import { ChatRequestOptions, JSONValue, Message } from 'ai'
 import { useEffect, useMemo, useState } from 'react'
 import { RenderMessage } from './render-message'
 import { ToolSection } from './tool-section'
-import { Spinner } from './ui/spinner'
+import { AgentThinkingSpinner } from './ui/agent-thinking-spinner'
 
 interface ChatMessagesProps {
   messages: Message[]
@@ -133,9 +133,9 @@ export function ChatMessages({
               addToolResult={addToolResult}
             />
           ) : (
-            <Spinner className="mb-4" />
+            <AgentThinkingSpinner className="mb-4 ml-8" />
           ))}
-        <div  />
+        <div />
       </div>
       <div ref={anchorRef} className="h-24" />
     </div>
