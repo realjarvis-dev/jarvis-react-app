@@ -24,6 +24,7 @@ import {
   noRouteDetails,
   noRouteTitle
 } from './utils'
+import { getConfigByChainId } from '../config/network'
 
 
 const NATIVE_TOKEN_STRING = '0x0000000000000000000000000000000000000000'
@@ -39,7 +40,7 @@ export const generateLifiBridgeQuote = async (
   recipient?: string,
   autoFuelDestChain?: boolean
 ) => {
-  // const userEvmAddress = await getUserEvmWalletAddress()
+  // const fromAddress = await getUserEvmWalletAddress()
   // if (autoFuelDestChain === undefined) {
   //   autoFuelDestChain = true
   // }
@@ -49,6 +50,13 @@ export const generateLifiBridgeQuote = async (
     recipient = fromAddress
   }
   try {
+    console.log('fromChain', fromChain)
+    console.log('toChain', toChain)
+    console.log('fromToken', fromToken)
+    console.log('toToken', toToken)
+    console.log('fromAddress', fromAddress)
+    console.log('amountIn', amountIn)
+    console.log('slippage', slippage)
     const {
       fromChain: fromChainMatch,
       toChain: toChainMatch,
@@ -276,17 +284,20 @@ export const executeLifiBridgeTransaction = async (
   recipient: string | undefined,
   isFromNativeToken: boolean,
   fromChainName: string,
-  toChainName: string
+  toChainName: string,
+  isDemo: boolean = false
 ) => {
-  const userEvmAddress = await getUserEvmWalletAddress()
-  if (!userEvmAddress) {
-    return {
-      instruction: 'notify user',
-      details: "User's embedded wallet not found"
-    }
-  }
+  let result: { hash: string }
+  result = { hash: '' }
+  // const userEvmAddress = await getUserEvmWalletAddress()
+  // if (!userEvmAddress) {
+  //   return {
+  //     instruction: 'notify user',
+  //     details: "User's embedded wallet not found"
+  //   }
+  // }
   if (!recipient) {
-    recipient = userEvmAddress
+    recipient = fromAddress
   }
   const inputAmount = parseUnits(amountIn, fromTokenDecimals).toString()
   const quote: LifiQuoteResponse = await getLifiQuote(
@@ -295,7 +306,7 @@ export const executeLifiBridgeTransaction = async (
     fromToken,
     toToken,
     inputAmount,
-    userEvmAddress,
+    fromAddress,
     recipient,
     slippage
   )
@@ -313,7 +324,7 @@ export const executeLifiBridgeTransaction = async (
         fromTokenAddress,
         protocolAddress,
         inputAmount,
-        userEvmAddress,
+        fromAddress,
         fromChainId
       )
       if (status === 'fail') {
@@ -344,10 +355,22 @@ export const executeLifiBridgeTransaction = async (
 
     // // convert back to a hex string (Ethereum‐style)
     // const gasPriceHex = "0x" + newGas.toString(16) as `0x${string}`
-    const result = await executeSwapTransaction(txData, fromChainId, {
-      estimateGas: true,
-      getGasPriceFunction: getGasPriceByChainId
-    })
+    
+    if (!isDemo) {
+    result = await executeSwapTransaction(txData, fromChainId, {
+        estimateGas: true,
+        getGasPriceFunction: getGasPriceByChainId
+      }, isDemo)
+    } else {
+      result = await executeSwapTransaction(txData, 1, {
+        estimateGas: false,
+        gasLimit: gasLimit ? toHex(gasLimit) : undefined,
+        getGasPriceFunction: getGasPriceByChainId
+      }, isDemo)
+    }
+    const explorerLink = isDemo ? getConfigByChainId(92736).scanLink : getConfigByChainId(fromChainId).scanLink
+    const explorerLinkWithHash = `https://${explorerLink}/tx/${result.hash}`
+    
 
     return {
       success: true,
@@ -359,6 +382,7 @@ export const executeLifiBridgeTransaction = async (
         amount_in_human: amountIn,
         from_chain_name: fromChainName,
         to_chain_name: toChainName,
+        explorer_link: explorerLinkWithHash,
         complete_time: new Date().toISOString()
       }
     }
@@ -368,6 +392,7 @@ export const executeLifiBridgeTransaction = async (
     return {
       success: false,
       error: errorMessage,
+      hash: result?.hash || '',
       swap_details: {
         from_token_symbol: fromToken,
         from_token_address: fromTokenAddress,

@@ -233,7 +233,8 @@ export const pendleSwapTool = tool({
         )
       }
 
-      const chainId = 1 // Assuming Ethereum mainnet for Pendle
+      const chainId = networkContext?.selectedChainId // Assuming Ethereum mainnet for Pendle
+      const isDemo = networkContext?.isDemo
 
       let actualTokenInAddress = input_token_address.toLowerCase().trim()
       let actualTokenOutAddress = output_token_address.toLowerCase().trim()
@@ -326,7 +327,7 @@ export const pendleSwapTool = tool({
       } 
 
       // Execute the transaction
-      const result = await executeSwapTransaction(txData, chainId)
+      const result = await executeSwapTransaction(txData, chainId, {estimateGas: true}, isDemo)
 
       const swapData = {
         success: true,
@@ -337,7 +338,8 @@ export const pendleSwapTool = tool({
           amount_in: `${amount_in_human} ${displayTokenIn}`,
           input_token_address: actualTokenInAddress,
           output_token_address: actualTokenOutAddress,
-          complete_time: new Date().toISOString()
+          complete_time: new Date().toISOString(),
+          chainId: chainId
         }
       }
 

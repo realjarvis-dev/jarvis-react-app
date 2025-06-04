@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { SwapTransactionStatus } from './swap-transaction-status'
+import { useNetwork } from '@/lib/context/network-context'
 
 interface LifiSwapExecuteSectionProps {
   tool: any // AI tool invocation, specifically bridgeExecuteTool
@@ -204,8 +205,9 @@ export function LifiSwapExecuteSection({
       : undefined
 
   const fromChainId = args?.fromChainId
+  const { isDemoMode } = useNetwork()
   const etherscanBaseUrl = fromChainId
-    ? getConfigByChainId(fromChainId).scanLink
+    ? getConfigByChainId(fromChainId, isDemoMode).scanLink
     : ''
   
   const toChainId = args?.toChainId

@@ -8,6 +8,14 @@ export const chains = [
       "mainnet": true
     },
     {
+      "key": "demo",
+      "chainType": "EVM",
+      "name": "Demo",
+      "coin": "ETH",
+      "id": 1,
+      "mainnet": true
+    },
+    {
       "key": "bsc",
       "chainType": "EVM",
       "name": "BSC",
