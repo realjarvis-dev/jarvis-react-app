@@ -12,6 +12,8 @@ import {
 } from './client'
 import { nativeAssets } from './native-asset-mapping'
 import { TokenData } from './types'
+import { ERC20_ABI } from '../kodiak/abi'
+import { getDemoTokenData, commonlyUsedTokensArray, commonlyUsedPTTokensArray } from './utils'
 
 export async function getMainnetTokenBalance(
   walletAddress: string
@@ -45,21 +47,33 @@ export async function getTenderlyDemoTokenBalance(
   address: string
 ): Promise<TokenData[]> {
   try {
-    return getTokenBalance(address, demoAlchemy, true)
+    const allTokenData: TokenData[] = []
+    const provider = new ethers.JsonRpcProvider(TenderlyDemoConfig.rpcUrl);
+    for (const tokenAddress of commonlyUsedPTTokensArray) {
+      const tokenData = await getDemoTokenData(tokenAddress, address, provider)
+      if (tokenData) allTokenData.push(tokenData)
+    }
+    for (const tokenAddress of commonlyUsedTokensArray) {
+      const tokenData = await getDemoTokenData(tokenAddress, address, provider)
+      if (tokenData) allTokenData.push(tokenData)
+    }
+
   //   const provider = new ethers.JsonRpcProvider(TenderlyDemoConfig.rpcUrl);
     
-  //   // Get native ETH balance
-  //   const nativeBalance = await provider.getBalance(address);
-    
-  //   const ethToken: TokenData = {
-  //     address: ethers.ZeroAddress,
-  //     name: 'Ether',
-  //     symbol: 'ETH',
-  //     balance: ethers.formatEther(nativeBalance),
-  //     network: 'Ethereum Mainnet (Demo)'
-  //   };
+      // Get native ETH balance
+      const nativeBalance = await provider.getBalance(address);
+      
+      const ethToken: TokenData = {
+        address: ethers.ZeroAddress,
+        name: 'Ether',
+        symbol: 'ETH',
+        balance: ethers.formatEther(nativeBalance),
+        network: DEMO_NETWORK_CONFIG.name
+      };
+      allTokenData.push(ethToken)
 
-  //   return [ethToken];
+    return allTokenData
+
   } catch (error) {
     console.error('Error fetching Tenderly demo balances:', error);
     return [];
@@ -130,6 +144,7 @@ const tokenBalanceFunctions = [
   getBerachainMainnetTokenBalance,
   getTenderlyDemoTokenBalance // Add Tenderly demo network support
 ]
+
 
 export async function getTokenBalanceByChainId(
   walletAddress: string,
