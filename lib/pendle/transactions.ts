@@ -190,17 +190,23 @@ export async function executeSwapTransaction(
     estimateGas: boolean,
     gasPrice?: `0x${string}`,
     getGasPriceFunction?: (chainId: number) => Promise<{ maxPriceInMemPool: bigint, maxPriorityFeePerGas: bigint, maxFeePerGas: bigint }>
-  }
+  },
+  isDemo: boolean = false
 ): Promise<{ hash: string }> {
   try {
     // // Verify environment variables are set
     // if (!process.env.PRIVATE_KEY) {
     //   throw new Error('PRIVATE_KEY environment variable is not set.')
     // }
-    const provider = new ethers.JsonRpcProvider(
+    let provider: ethers.JsonRpcProvider
+    if (!isDemo) {
+      provider = new ethers.JsonRpcProvider(
       process.env.TEST_RPC_URL || getConfigByChainId(chainId).rpcUrl
-    )
-    console.log("RPC URL",  process.env.TEST_RPC_URL || getConfigByChainId(chainId).rpcUrl)
+    ) } else {
+      provider = new ethers.JsonRpcProvider(getConfigByChainId(1, true).rpcUrl)
+      console.log('in demo mode, using rpc url', getConfigByChainId(1, true).rpcUrl)
+    }
+    // console.log("RPC URL",  process.env.TEST_RPC_URL || getConfigByChainId(chainId).rpcUrl)
     // console.log(getConfigByChainId(chainId).rpcUrl)
     const block = await provider.getBlock('latest')
     const baseFee = block?.baseFeePerGas
@@ -237,8 +243,12 @@ export async function executeSwapTransaction(
     const weiBig = BigInt(value || '0')
     const quantity = ethers.toQuantity(weiBig)
     let gasLimit: `0x${string}`
-
-    const estimateGas = gasOptions?.estimateGas !== false // Default to true if not specified or explicitly true
+    
+    let estimateGas = gasOptions?.estimateGas !== false // Default to true if not specified or explicitly true
+    if (isDemo) {
+      estimateGas = false
+      chainId = 1
+    }
     if (estimateGas) {
       // Gas estimation
       const gasEstimate = await provider.estimateGas({
@@ -254,7 +264,7 @@ export async function executeSwapTransaction(
       ) as `0x${string}`
     } else {
       gasLimit =
-        gasOptions?.gasLimit ?? (ethers.toQuantity(650000) as `0x${string}`)
+        gasOptions?.gasLimit ?? (ethers.toQuantity(1000000) as `0x${string}`)
     }
 
     // strip the 0x prefix for to, quantity, and data
@@ -262,6 +272,11 @@ export async function executeSwapTransaction(
     const valueHex = quantity.replace(/^0x/, '')
     const dataHex = (data as string).replace(/^0x/, '')
     const fromAddress = (from as string).replace(/^0x/, '')
+    console.log('fromAddress', fromAddress)
+    console.log('toAddress', toAddress)
+    console.log('dataHex', dataHex)
+    console.log('valueHex', valueHex)
+
     console.log('gasOptions', gasOptions)
     console.log('gasLimit', gasLimit)
     console.log('valueHex', valueHex)

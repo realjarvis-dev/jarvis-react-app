@@ -73,7 +73,7 @@ if (chainId === TenderlyDemoConfig.chainId) {
     } else {
       throw new Error('Invalid unit')
     }
-    console.log(JSON.stringify(data, null, 2))
+
     const maxPriceInMemPool = parseFunc(data.maxPrice.toString())
     const maxPriorityFeePerGas = parseFunc(
       data.blockPrices[0].estimatedPrices[0].maxPriorityFeePerGas.toString()

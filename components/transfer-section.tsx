@@ -5,6 +5,7 @@ import type { ToolInvocation } from 'ai'
 import React from 'react' // Added React import for JSX
 import { CollapsibleMessage } from './collapsible-message' // Assuming this can be reused
 import { Section, ToolArgsSection } from './section' // Assuming this can be reused
+import { useNetwork } from '@/lib/context/network-context'
 // import { MainnetConfig } from '@/lib/config/network'
 interface TransferSectionProps {
   tool: ToolInvocation
@@ -35,6 +36,7 @@ export function TransferSection({
   isOpen,
   onOpenChange
 }: TransferSectionProps) {
+  const { isDemoMode } = useNetwork()
   const args = tool.args as PrivyTransferArgs
 
   const header = (
@@ -51,7 +53,7 @@ export function TransferSection({
       const toolResult = tool.result as PrivyTransferResult
       if (toolResult.status === 'success' || toolResult.hash) {
         const chainId = toolResult.transaction_details?.chainId || 1 // Default to 1 if not provided
-        const scanLink = getConfigByChainId(chainId).scanLink
+        const scanLink = getConfigByChainId(chainId, isDemoMode).scanLink
 
         statusDisplay = (
           <div>
@@ -76,7 +78,7 @@ export function TransferSection({
         statusDisplay = (
           <div>
             <p className="text-red-600">Transfer failed:</p>
-            <pre className="whitespace-pre-wrap">
+            <pre className="whitespace-pre-wrap break-all">
               {typeof toolResult.error_message === 'string'
                 ? toolResult.error_message
                 : JSON.stringify(toolResult.error_message, null, 2)}

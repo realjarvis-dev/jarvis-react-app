@@ -26,7 +26,8 @@ export const privyTransferTool = tool({
     )
     // console.log('Transfer amount: ', amount)
     // console.log('Transfer address: ', address)
-    console.log('networkContext in privy transfer', networkContext)
+    // console.log('networkContext in privy transfer', networkContext)
+    const isDemo = networkContext?.isDemo
 
     if (!evmWallet) {
       return {
@@ -67,7 +68,8 @@ export const privyTransferTool = tool({
           estimateGas: false,
           gasLimit: ethers.toQuantity(21000) as `0x${string}`,
           getGasPriceFunction: getGasPriceByChainId
-        }
+        },
+        isDemo
       )
 
       return {

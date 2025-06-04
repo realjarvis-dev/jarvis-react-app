@@ -1,10 +1,11 @@
 import { tool } from 'ai'
 import { z } from 'zod'
 import { NetworkContext } from '../types/context'
-import { fundUserWallet } from '../tenderly/fund'
 import { getWalletBalances } from '../utils/wallet'
 
-import { REQUESTED_FUNDING_AMOUNT } from '../tenderly/fund'
+import { addBalanceVnet, ethToWei, REQUESTED_FUNDING_AMOUNT, TenderlyRpcResponse } from '../tenderly/fund'
+import { addBalanceAnvilFork } from '../anvil-fork/fund'
+import { TransactionResponse } from 'ethers'
 
 interface ToolContext {
   toolCallId?: string
@@ -157,3 +158,39 @@ export const fundWalletTool = tool({
     }
   }
 })
+
+/**
+ * Tool for the agent to fund a user's wallet with 0.1 ETH
+ * This function only works in Demo VNet environment
+ * 
+ * @param walletAddress - The wallet address to fund
+ * @param isDemo - Whether the current network is in demo mode
+ * @returns Promise with the RPC response or an error
+ */
+export async function fundUserWallet(
+  walletAddress: string,
+  isDemo: boolean
+): Promise<TenderlyRpcResponse | TransactionResponse | { error: string }> {
+  // Check if we're in Demo VNet
+  if (!isDemo) {
+    return { 
+      error: "Funding is only available in Demo environment" 
+    };
+  }
+
+  try {
+    // Convert requested funding amount to wei in hex format
+    const fundAmount = ethToWei(REQUESTED_FUNDING_AMOUNT.toString());
+    
+    if (process.env.NEXT_PUBLIC_TEST_NET_ENV === "development") {
+      return await addBalanceVnet([walletAddress], fundAmount);
+    } else {
+      return await addBalanceAnvilFork(walletAddress, BigInt(fundAmount));
+    }
+  } catch (error) {
+    console.error('Error funding user wallet:', error);
+    return {
+      error: `Failed to fund wallet: ${error instanceof Error ? error.message : String(error)}`
+    };
+  }
+}  

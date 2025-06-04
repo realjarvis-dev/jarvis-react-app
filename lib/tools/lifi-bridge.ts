@@ -54,15 +54,23 @@ const bridgeQuoteTool = tool({
     // enableAutoFuel: z.boolean().describe('Whether to auto fuel the destination chain when the native balance is low, default to true')
   }),
   execute: async (params, context: ToolContext) => {
-    const {fromChain, toChain, fromToken, toToken, amountIn, slippage, recipient } = params
+    let {fromChain, toChain, fromToken, toToken, amountIn, slippage, recipient } = params
     // const fromChain = context?.networkContext?.selectedNetwork || 'ethereum'
     const fromChainInContext = context?.networkContext?.selectedNetwork
-    // if (fromChain.toLowerCase() !== fromChainInContext?.toLowerCase()) {
-    //   return {
-    //     instruction: 'notify user',
-    //     details: "Please use the correct fromChain for the tool, or switch to the correct network"
+    // if (fromChainInContext?.toLowerCase() === 'demo') {
+    //   fromChain = 'Ethereum'
+    //   if (toChain.toLowerCase() === 'demo') {
+    //     toChain = 'Ethereum'
     //   }
     // }
+    const isDemo = context?.networkContext?.isDemo
+    console.log('fromChain', fromChain)
+    console.log('toChain', toChain)
+    console.log('fromToken', fromToken)
+    console.log('toToken', toToken)
+    console.log('amountIn', amountIn)
+    console.log('slippage', slippage)
+    console.log('recipient', recipient)
     const userEvmAddress = await getUserEvmWalletAddress()
     if (!userEvmAddress) {
       return {
@@ -154,7 +162,7 @@ const bridgeExecuteTool = tool({
         details: "User's embedded wallet not found"
       }
     }
-  
+    const isDemo = context?.networkContext?.isDemo
 
     // if (autoFuel) {
     //   return await executeLifiBridgeTransactionWithAutoFuel(
@@ -187,7 +195,8 @@ const bridgeExecuteTool = tool({
       recipient,
       isFromNativeToken,
       fromChainName,
-      toChainName
+      toChainName,
+      isDemo
     )
   }
 })
