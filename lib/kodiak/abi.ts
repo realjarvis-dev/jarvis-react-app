@@ -11,7 +11,8 @@ export const ERC20_ABI = [
   'function allowance(address owner, address spender) external view returns (uint256)',
   'function decimals() view returns (uint8)',
   'function symbol() view returns (string)',
-  'function totalSupply() view returns (uint256)'
+  'function totalSupply() view returns (uint256)',
+  'function balanceOf(address account) external view returns (uint256)'
 ];
 
 // Simple ABI for the Island contract's functions
@@ -52,4 +53,33 @@ export const TOKEN_INFO_ABI = [
 export const ISLAND_INFO_ABI = [
   'function token0() external view returns (address)',
   'function token1() external view returns (address)'
-]; 
+];
+
+// Bault-related ABIs and addresses
+export const BAULT_ABI = [
+  'function bounty() external view returns (uint256)',
+  'function earned() external view returns (uint256)',
+  'function previewClaimBgtWrapper(address wrapper) external view returns (uint256)',
+  'function stakingToken() external view returns (address)',
+  'function claimBgt(address recipient, uint256 minAmountOut) external returns (uint256)',
+  'function claimBgtWrapper(address wrapper, address recipient, uint256 minAmountOut) external returns (uint256)'
+];
+
+export const BOUNTY_HELPER_ABI = [
+  `function claimBgtWrapper(
+    address bault,
+    address bgtWrapper,
+    address swapTarget,
+    bytes calldata swapData,
+    uint256 wrapperAmount,
+    address bountyReceiver
+  ) external`
+];
+
+// BGT Wrapper addresses
+export const IBGT_ADDRESS = '0xac03caba51e17c86c921e1f6cbfbdc91f8bb2e6b';
+export const YBGT_ADDRESS = '0xac03caba51e17c86c921e1f6cbfbdc91f8bb2e6b'; // TODO: Replace with actual YBGT address
+export const LBGT_ADDRESS = '0xac03caba51e17c86c921e1f6cbfbdc91f8bb2e6b'; // TODO: Replace with actual LBGT address
+
+// BountyHelper contract address (replace with actual address)
+export const BOUNTY_HELPER_ADDRESS = '0xd7af1F067d038fB5Aaa58a3F2707A0e95AAb998B'; // BountyHelper contract address 
