@@ -1,10 +1,15 @@
-import { tool } from 'ai'
-import { z } from 'zod'
-import { getKodiakOpportunitiesFromApi } from '../kodiak/api'
-import { depositToKodiakIsland, IslandSingleDepositParams } from '../kodiak/islandRatio'
-import { tickToPrice } from '../kodiak/utils'
-import { FormattedKodiakIsland } from '../types/kodiak'
-import { NetworkContext } from '../utils/tool-registry'
+import { tool } from 'ai';
+import { ethers } from 'ethers';
+import { Address } from 'viem';
+import { z } from 'zod';
+import { BerachainMainnetConfig } from "../config/network";
+import { BAULT_ABI, IBGT_ADDRESS } from '../kodiak/abi';
+import { getIslandDetails, getKodiakOpportunitiesFromApi } from '../kodiak/api';
+import { depositToKodiakIsland, IslandSingleDepositParams } from '../kodiak/islandRatio';
+import { checkBault, checkProfitability } from '../kodiak/kodiak-baults';
+import { tickToPrice } from '../kodiak/utils';
+import { FormattedKodiakIsland } from '../types/kodiak';
+import { NetworkContext } from '../utils/tool-registry';
 
 interface ToolContext {
   toolCallId?: string
@@ -25,6 +30,55 @@ function formatPrice(price: number, tokenSymbol: string): string {
     return `≈0 ${tokenSymbol}`;
   }
   return `${price.toFixed(5)} ${tokenSymbol}`;
+}
+
+/**
+ * Formats a big number amount to a human-readable format
+ * @param amount The amount as a bigint or string
+ * @param decimals The number of decimals (default: 18)
+ * @returns Formatted amount string with up to 6 decimal places
+ */
+function formatAmount(amount: string | bigint, decimals: number = 18): string {
+  try {
+    // Convert to string if it's a bigint
+    const amountStr = amount.toString();
+    
+    // Use ethers to format with proper decimals
+    const formatted = ethers.formatUnits(amountStr, decimals);
+    
+    // Parse to float and format with up to 6 decimal places for display
+    const value = parseFloat(formatted);
+    
+    // For very small values, show scientific notation
+    if (value < 0.000001 && value > 0) {
+      return value.toExponential(4);
+    }
+    
+    // For large values, limit decimal places
+    if (value > 1000) {
+      return value.toLocaleString(undefined, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+      });
+    }
+    
+    // For medium values
+    if (value > 1) {
+      return value.toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 4
+      });
+    }
+    
+    // For smaller values, show more decimals
+    return value.toLocaleString(undefined, {
+      minimumFractionDigits: 4,
+      maximumFractionDigits: 6
+    });
+  } catch (error) {
+    console.error("Error formatting amount:", error);
+    return amount.toString();
+  }
 }
 
 export const kodiakOpportunitiesTool = tool({
@@ -482,6 +536,234 @@ export const kodiakDepositTool = tool({
         _uiDisplayTool: true,
         summary: `Deposit failed: ${error instanceof Error ? error.message : 'Failed to execute Kodiak deposit'}`,
         data: errorData
+      };
+    }
+  }
+})
+
+export const kodiakBaultProfitabilityTool = tool({
+  description: 'Check the profitability of Kodiak Baults for compounding. Returns detailed information about each bault\'s potential profit.',
+  parameters: z.object({
+    bault_addresses: z
+      .array(z.string())
+      .describe('Array of Bault contract addresses to check'),
+    wrapper_address: z
+      .string()
+      .optional()
+      .describe('BGT wrapper token address to use for profitability calculation (defaults to iBGT)'),
+    slippage_bps: z
+      .number()
+      .min(1)
+      .max(1000)
+      .default(100)
+      .describe('Slippage tolerance in basis points (e.g., 100 for 1%). Default is 100 BPS.'),
+    min_profit_percentage: z
+      .number()
+      .optional()
+      .describe('Minimum profit percentage threshold (e.g., 5 for 5%) for a bault to be considered profitable')
+  }),
+  execute: async (params, context: ToolContext) => {
+    const { 
+      bault_addresses,
+      wrapper_address = IBGT_ADDRESS, 
+      slippage_bps = 100,
+      min_profit_percentage
+    } = params;
+    
+    try {
+      // Define proper types for our results
+      type ProfitableBaultResult = {
+        bault_address: string;
+        staking_token: string;
+        staking_pool_name?: string; // Add pool name
+        is_ready: boolean;
+        is_profitable: boolean;
+        bounty: string;
+        formattedBounty: string;
+        wrapper_amount: string;
+        formattedWrapperAmount: string;
+        estimated_output: string;
+        formattedEstimatedOutput: string;
+        profit: string;
+        formattedProfit: string;
+        profit_percentage: string;
+      };
+      
+      type ErrorBaultResult = {
+        bault_address: string;
+        is_profitable: false;
+        error: string;
+        error_type?: string;
+      };
+      
+      type BaultResult = ProfitableBaultResult | ErrorBaultResult;
+      
+      const results: BaultResult[] = [];
+      const profitableBaults: ProfitableBaultResult[] = [];
+      let swapErrorCount = 0;
+      
+      // Check each bault
+      for (const baultAddress of bault_addresses) {
+        try {
+          // First get the bault data
+          const baultData = await checkBault(baultAddress, wrapper_address as Address);
+          
+          if (!baultData) {
+            results.push({
+              bault_address: baultAddress,
+              is_profitable: false,
+              error: "Failed to fetch bault data"
+            });
+            continue;
+          }
+          
+          // Get staking token from the bault
+          const bault = new ethers.Contract(
+            baultAddress,
+            BAULT_ABI,
+            new ethers.JsonRpcProvider(BerachainMainnetConfig.rpcUrl)
+          );
+          
+          const stakingToken = await bault.stakingToken();
+          
+          // Try to get island details for the staking token (which is likely a Kodiak Island LP token)
+          let poolName = "";
+          try {
+            const islandDetails = await getIslandDetails(stakingToken);
+            if (islandDetails) {
+              poolName = `${islandDetails.token0.symbol}-${islandDetails.token1.symbol}`;
+            }
+          } catch (error) {
+            console.error(`Error fetching pool name for ${stakingToken}:`, error);
+            // Continue with empty pool name if we can't fetch it
+          }
+          
+          // Check profitability
+          const profitability = await checkProfitability(
+            baultAddress,
+            stakingToken as Address,
+            wrapper_address as Address
+          );
+          
+          // If we got an error related to swap estimation, increment the counter
+          if (profitability.error && profitability.errorType === 'swap_estimation') {
+            swapErrorCount++;
+          }
+          
+          // Calculate profit percentage relative to bounty
+          const profitPercentage = profitability.bounty > 0 
+            ? Number((profitability.profit * BigInt(10000) / profitability.bounty)) / 100
+            : 0;
+          
+          // Check if it meets minimum profit threshold if specified
+          const meetsMinProfitThreshold = min_profit_percentage === undefined || 
+            (profitability.isReady && profitPercentage >= min_profit_percentage);
+          
+          if (profitability.error) {
+            // Handle error case
+            results.push({
+              bault_address: baultAddress,
+              is_profitable: false,
+              error: profitability.error,
+              error_type: profitability.errorType
+            });
+          } else {
+            // Format all the bigint values to be human-readable
+            const formattedBounty = formatAmount(profitability.bounty);
+            const formattedWrapperAmount = formatAmount(profitability.wrapperAmount);
+            const formattedEstimatedOutput = formatAmount(profitability.estimatedOutput);
+            const formattedProfit = formatAmount(profitability.profit);
+            
+            // Handle success case
+            const baultResult: ProfitableBaultResult = {
+              bault_address: baultAddress,
+              staking_token: stakingToken,
+              staking_pool_name: poolName || undefined,
+              is_ready: profitability.isReady,
+              is_profitable: profitability.isReady && meetsMinProfitThreshold,
+              bounty: profitability.bounty.toString(),
+              formattedBounty,
+              wrapper_amount: profitability.wrapperAmount.toString(),
+              formattedWrapperAmount,
+              estimated_output: profitability.estimatedOutput.toString(),
+              formattedEstimatedOutput,
+              profit: profitability.profit.toString(),
+              formattedProfit,
+              profit_percentage: `${profitPercentage.toFixed(2)}%`
+            };
+            
+            results.push(baultResult);
+            
+            if (baultResult.is_profitable) {
+              profitableBaults.push(baultResult);
+            }
+          }
+        } catch (error) {
+          results.push({
+            bault_address: baultAddress,
+            is_profitable: false,
+            error: error instanceof Error ? error.message : "Unknown error"
+          });
+        }
+      }
+      
+      // Sort results by profit (descending)
+      results.sort((a, b) => {
+        // If either result is an error result, treat its profit as 0
+        const profitA = 'profit' in a ? BigInt(a.profit) : BigInt(0);
+        const profitB = 'profit' in b ? BigInt(b.profit) : BigInt(0);
+        
+        // Sort by profit in descending order (using number comparison for sort)
+        return profitA > profitB ? -1 : profitA < profitB ? 1 : 0;
+      });
+      
+      // Find the most profitable bault
+      const mostProfitable = profitableBaults.length > 0 
+        ? [...profitableBaults].sort((a, b) => {
+            const profitA = BigInt(a.profit);
+            const profitB = BigInt(b.profit);
+            // Return -1, 0, or 1 for sort function (as numbers)
+            return profitA > profitB ? -1 : profitA < profitB ? 1 : 0;
+          })[0]
+        : null;
+      
+      // Create summary message with additional context if there were swap errors
+      let summaryMessage = `Found ${profitableBaults.length} profitable baults out of ${bault_addresses.length} checked.`;
+      
+      if (swapErrorCount > 0) {
+        summaryMessage += ` Note: ${swapErrorCount} baults had swap estimation errors.`;
+      }
+      
+      const profitableSummary = mostProfitable 
+        ? `Most profitable: ${mostProfitable.staking_pool_name || mostProfitable.bault_address} with ${mostProfitable.profit_percentage} profit`
+        : 'No profitable baults found';
+      
+      // Return data with UI rendering information
+      return {
+        _uiDisplayTool: true,
+        _uiComponent: 'KodiakBaultProfitability', // Custom UI component to render
+        summary: `${summaryMessage} ${profitableSummary}`,
+        count: {
+          total: bault_addresses.length,
+          profitable: profitableBaults.length,
+          error_count: swapErrorCount
+        },
+        most_profitable: mostProfitable,
+        data: results
+      };
+    } catch (error) {
+      console.error('Error in Kodiak Bault profitability tool:', error);
+      
+      return {
+        _uiDisplayTool: true,
+        _uiComponent: 'KodiakBaultProfitability', // Still use the UI component for error display
+        summary: 'Error checking Kodiak Bault profitability',
+        count: {
+          total: bault_addresses.length,
+          profitable: 0
+        },
+        data: [],
+        error: error instanceof Error ? error.message : "Unknown error"
       };
     }
   }
