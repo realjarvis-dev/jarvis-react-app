@@ -6,8 +6,9 @@ import { BerachainMainnetConfig } from "../config/network";
 import { BAULT_ABI, IBGT_ADDRESS } from '../kodiak/abi';
 import { getIslandDetails, getKodiakOpportunitiesFromApi } from '../kodiak/api';
 import { depositToKodiakIsland, IslandSingleDepositParams } from '../kodiak/islandRatio';
-import { checkBault, checkProfitability } from '../kodiak/kodiak-baults';
+import { checkBault, checkProfitability, compoundBaultWithHelper } from '../kodiak/kodiak-baults';
 import { tickToPrice } from '../kodiak/utils';
+import { getUserWallet } from '../privy/client';
 import { FormattedKodiakIsland } from '../types/kodiak';
 import { NetworkContext } from '../utils/tool-registry';
 
@@ -764,6 +765,127 @@ export const kodiakBaultProfitabilityTool = tool({
         },
         data: [],
         error: error instanceof Error ? error.message : "Unknown error"
+      };
+    }
+  }
+})
+
+export const kodiakCompoundBaultTool = tool({
+  description: 'Compound a profitable Kodiak Bault using the BountyHelper contract (zero-capital compounding). This executes a transaction to claim BGT rewards.',
+  parameters: z.object({
+    bault_address: z
+      .string()
+      .describe('The address of the Bault to compound'),
+    wrapper_address: z
+      .string()
+      .default(IBGT_ADDRESS)
+      .describe('BGT wrapper token address to use for claiming rewards (defaults to iBGT)'),
+    profit_receiver_address: z
+      .string()
+      .optional()
+      .describe('Address to receive the profit (defaults to user wallet address)')
+  }),
+  execute: async (params, context: ToolContext) => {
+    const { 
+      bault_address,
+      wrapper_address = IBGT_ADDRESS, 
+      profit_receiver_address
+    } = params;
+    
+    try {
+      // Get user wallet
+      const wallet = await getUserWallet('ethereum');
+      if (!wallet || !wallet.address) {
+        throw new Error('User wallet not found');
+      }
+      
+      // Use user's address as profit receiver if not specified
+      const profitReceiver = profit_receiver_address || wallet.address;
+      
+      // First check profitability
+      const stakingToken = await new ethers.Contract(
+        bault_address,
+        BAULT_ABI,
+        new ethers.JsonRpcProvider(BerachainMainnetConfig.rpcUrl)
+      ).stakingToken();
+      
+      const profitability = await checkProfitability(
+        bault_address,
+        stakingToken as Address,
+        wrapper_address as Address
+      );
+      
+      // Proceed only if profitable
+      if (!profitability.isReady) {
+        return {
+          _uiDisplayTool: true,
+          summary: `Cannot compound Bault: not ready for compounding. The profit does not exceed the bounty.`,
+          status: 'fail',
+          error_message: 'Bault is not profitable to compound. The value of iBGT rewards does not exceed the bounty cost.',
+          profitability: {
+            isReady: profitability.isReady,
+            profit: formatAmount(profitability.profit),
+            bounty: formatAmount(profitability.bounty),
+            wrapperAmount: formatAmount(profitability.wrapperAmount),
+            estimatedOutput: formatAmount(profitability.estimatedOutput)
+          }
+        };
+      }
+      
+      // Try to get island details for the staking token (for better UI display)
+      let poolName = "";
+      try {
+        const islandDetails = await getIslandDetails(stakingToken);
+        if (islandDetails) {
+          poolName = `${islandDetails.token0.symbol}-${islandDetails.token1.symbol}`;
+        }
+      } catch (error) {
+        console.error(`Error fetching pool name for ${stakingToken}:`, error);
+        // Continue with empty pool name if we can't fetch it
+      }
+      
+      // Execute the compound transaction
+      const compoundResult = await compoundBaultWithHelper(
+        bault_address as Address,
+        wrapper_address as Address,
+        profitReceiver as Address
+      );
+      
+      if (compoundResult.status === 'success') {
+        return {
+          _uiDisplayTool: true,
+          summary: `Successfully compounded Bault ${poolName || bault_address}`,
+          status: 'success',
+          transaction_hash: compoundResult.hash,
+          bault_address,
+          wrapper_address,
+          profit_receiver: profitReceiver,
+          pool_name: poolName || undefined,
+          profitability: {
+            profit: formatAmount(profitability.profit),
+            bounty: formatAmount(profitability.bounty),
+            wrapperAmount: formatAmount(profitability.wrapperAmount),
+            profit_percentage: `${(Number((profitability.profit * BigInt(10000) / profitability.bounty)) / 100).toFixed(2)}%`
+          }
+        };
+      } else {
+        return {
+          _uiDisplayTool: true,
+          summary: `Failed to compound Bault: ${compoundResult.error_message}`,
+          status: 'fail',
+          error_message: compoundResult.error_message,
+          bault_address,
+          pool_name: poolName || undefined
+        };
+      }
+    } catch (error) {
+      console.error('Error in Kodiak compound Bault tool:', error);
+      
+      return {
+        _uiDisplayTool: true,
+        summary: 'Error compounding Kodiak Bault',
+        status: 'fail',
+        error_message: error instanceof Error ? error.message : "Unknown error"
       };
     }
   }
