@@ -2,6 +2,8 @@
 
 import { ToolInvocation } from 'ai'
 import { GenericSwapCard } from './generic-swap-card'
+import { GetGasPriceSection } from './get-gas-price-section'
+import { KodiakBaultProfitability } from './kodiak-bault-profitability'
 import { KodiakDepositCard } from './kodiak-deposit-card'
 import { KodiakOpportunitiesSection } from './kodiak-opportunities-section'
 import { MarketChartSection } from './market-chart-section'
@@ -9,12 +11,12 @@ import { PendleOpportunitiesSection } from './pendle-opportunities-section'
 import { QuestionConfirmation } from './question-confirmation'
 import RetrieveSection from './retrieve-section'
 import { SearchSection } from './search-section'
-import { GetGasPriceSection } from './get-gas-price-section'
 import { SimpleQuoteDisplay } from './simple-quote-display'
 import { SwapTransactionCard } from './swap-transaction-card'
 import { TransferSection } from './transfer-section'
 import { VideoSearchSection } from './video-search-section'
 import { WalletBalanceSection } from './wallet-balance-section'
+
 interface ToolSectionProps {
   tool: ToolInvocation
   isOpen: boolean
@@ -99,6 +101,14 @@ export function ToolSection({
     case 'kodiak_opportunities':
       return (
         <KodiakOpportunitiesSection
+          tool={tool}
+          isOpen={isOpen}
+          onOpenChange={onOpenChange}
+        />
+      )
+    case 'kodiak_bault_profitability':
+      return (
+        <KodiakBaultProfitability
           tool={tool}
           isOpen={isOpen}
           onOpenChange={onOpenChange}
