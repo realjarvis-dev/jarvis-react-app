@@ -37,8 +37,8 @@ export const baseConfig: NetworkConfig = {
     'https://base-mainnet.g.alchemy.com/v2/yIRJoLX9TId7oSWYdnflKgthIy59m-vr',
   scanLink: 'basescan.org',
   isDemo: false,
-  alchemyNetwork: Network.BASE_MAINNET
-  // icon: '/icons/chains/base.svg', // Add icon if available
+  alchemyNetwork: Network.BASE_MAINNET,
+  icon: "https://raw.githubusercontent.com/Aero25x/Cryptocurrencies-Logo/main/Base.svg"
 }
 
 export const arbitrumConfig: NetworkConfig = {
@@ -49,8 +49,9 @@ export const arbitrumConfig: NetworkConfig = {
     'https://arb-mainnet.g.alchemy.com/v2/yIRJoLX9TId7oSWYdnflKgthIy59m-vr',
   scanLink: 'arbiscan.io',
   isDemo: false,
-  alchemyNetwork: Network.ARB_MAINNET
-  // icon: '/icons/chains/arbitrum.svg', // Add icon if available
+  alchemyNetwork: Network.ARB_MAINNET,
+  icon: 'https://raw.githubusercontent.com/Aero25x/Cryptocurrencies-Logo/main/Arbitrum.svg'
+
 }
 
 export const polygonConfig: NetworkConfig = {
@@ -61,8 +62,8 @@ export const polygonConfig: NetworkConfig = {
     'https://polygon-mainnet.g.alchemy.com/v2/yIRJoLX9TId7oSWYdnflKgthIy59m-vr',
   scanLink: 'polygonscan.com',
   isDemo: false,
-  alchemyNetwork: Network.MATIC_MAINNET
-  // icon: '/icons/chains/polygon.svg', // Add icon if available
+  alchemyNetwork: Network.MATIC_MAINNET,
+  icon: 'https://upload.wikimedia.org/wikipedia/commons/2/21/Polygon_Icon.svg'
 }
 
 export const optimismConfig: NetworkConfig = {
@@ -73,8 +74,8 @@ export const optimismConfig: NetworkConfig = {
     'https://opt-mainnet.g.alchemy.com/v2/yIRJoLX9TId7oSWYdnflKgthIy59m-vr',
   scanLink: 'optimistic.etherscan.io',
   isDemo: false,
-  alchemyNetwork: Network.OPT_MAINNET
-  // icon: '/icons/chains/optimism.svg', // Add icon if available
+  alchemyNetwork: Network.OPT_MAINNET,
+  icon: 'https://raw.githubusercontent.com/Aero25x/Cryptocurrencies-Logo/main/Optimism.svg'
 }
 
 /**

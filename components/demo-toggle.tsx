@@ -1,26 +1,18 @@
 'use client'
 
+import { useNetwork } from '@/lib/network/context'
 import { cn } from '@/lib/utils'
 import { FlaskConical } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Toggle } from './ui/toggle'
 
-interface DemoToggleProps {
-  isDemoMode?: boolean
-  onDemoModeChange?: (enabled: boolean) => void
-}
-
-export function DemoToggle({ isDemoMode, onDemoModeChange }: DemoToggleProps) {
+export function DemoToggle() {
+  const { isDemoMode, setIsDemoMode } = useNetwork()
   const [mounted, setMounted] = useState(false)
-  const [internalDemoMode, setInternalDemoMode] = useState(isDemoMode ?? true)
 
   useEffect(() => {
     setMounted(true)
   }, [])
-
-  useEffect(() => {
-    if (typeof isDemoMode === 'boolean') setInternalDemoMode(isDemoMode)
-  }, [isDemoMode])
 
   if (!mounted) {
     return (
@@ -43,10 +35,9 @@ export function DemoToggle({ isDemoMode, onDemoModeChange }: DemoToggleProps) {
   return (
     <Toggle
       aria-label="Toggle demo mode"
-      pressed={internalDemoMode}
+      pressed={isDemoMode}
       onPressedChange={val => {
-        setInternalDemoMode(val)
-        onDemoModeChange?.(val)
+        setIsDemoMode(val)
       }}
       variant="outline"
       className={cn(

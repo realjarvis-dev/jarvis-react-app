@@ -266,7 +266,6 @@ Network Context:
 - Selected Network: ${networkContext.selectedNetwork} (default fromChain for bridging, default chain for swapping and transfer)
 - Chain ID: ${networkContext.selectedChainId}
 - Demo Mode: ${networkContext.isDemo ? 'ON' : 'OFF'}
-- RPC URL: ${networkContext.rpcUrl}
 `
     }
 

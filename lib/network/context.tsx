@@ -1,5 +1,6 @@
 'use client'
 
+import { getCookie, setCookie } from '@/lib/utils/cookies' // Import from centralized cookie utilities
 import {
   createContext,
   ReactNode,
@@ -11,31 +12,32 @@ import { getActiveNetworkConfig } from './config' // Updated import path
 import { ChainType, NetworkConfig } from './types' // Updated import path
 
 const USER_SELECTED_NETWORK_COOKIE_KEY = 'user_selected_network'
+const USER_DEMO_MODE_COOKIE_KEY = 'user_demo_mode' // New cookie key for demo mode
 
 // Helper function to set a cookie (simplified)
-const setCookie = (name: string, value: string, days: number = 7) => {
-  if (typeof document === 'undefined') return // Guard for SSR or non-browser environments
-  let expires = ''
-  if (days) {
-    const date = new Date()
-    date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000)
-    expires = '; expires=' + date.toUTCString()
-  }
-  document.cookie = name + '=' + (value || '') + expires + '; path=/'
-}
+// const setCookie = (name: string, value: string, days: number = 7) => {
+//   if (typeof document === 'undefined') return // Guard for SSR or non-browser environments
+//   let expires = ''
+//   if (days) {
+//     const date = new Date()
+//     date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000)
+//     expires = '; expires=' + date.toUTCString()
+//   }
+//   document.cookie = name + '=' + (value || '') + expires + '; path=/'
+// }
 
 // Helper function to get a cookie (simplified)
-const getCookie = (name: string): string | null => {
-  if (typeof document === 'undefined') return null // Guard for SSR or non-browser environments
-  const nameEQ = name + '='
-  const ca = document.cookie.split(';')
-  for (let i = 0; i < ca.length; i++) {
-    let c = ca[i]
-    while (c.charAt(0) === ' ') c = c.substring(1, c.length)
-    if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length)
-  }
-  return null
-}
+// const getCookie = (name: string): string | null => {
+//   if (typeof document === 'undefined') return null // Guard for SSR or non-browser environments
+//   const nameEQ = name + '='
+//   const ca = document.cookie.split(';')
+//   for (let i = 0; i < ca.length; i++) {
+//     let c = ca[i]
+//     while (c.charAt(0) === ' ') c = c.substring(1, c.length)
+//     if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length)
+//   }
+//   return null
+// }
 
 interface NetworkContextType {
   selectedChain: ChainType
@@ -49,50 +51,91 @@ const NetworkContext = createContext<NetworkContextType | undefined>(undefined)
 
 interface NetworkProviderProps {
   children: ReactNode
+  // serverInitialSelectedChain?: ChainType // Removed prop
 }
 
 export function NetworkProvider({ children }: NetworkProviderProps) {
-  const [isDemoMode, setIsDemoMode] = useState(true) // Default to true
+  const [mounted, setMounted] = useState(false)
+  // Initialize isDemoMode to a fixed default. Client will update after mount.
+  const [isDemoMode, setIsDemoModeInternal] = useState(false)
+  const [selectedChain, setSelectedChainInternal] =
+    useState<ChainType>('ethereum')
 
-  // Initialize selectedChain from cookie or default to 'ethereum'
-  const [selectedChain, setSelectedChainInternal] = useState<ChainType>(() => {
-    const cookieValue = getCookie(
+  useEffect(() => {
+    setMounted(true)
+  }, []) // Runs once to set mounted to true on the client
+
+  // Effect to initialize states from cookies, AFTER mount
+  useEffect(() => {
+    if (!mounted) return
+
+    // Initialize selectedChain from cookie
+    const networkCookieValue = getCookie(
       USER_SELECTED_NETWORK_COOKIE_KEY
     ) as ChainType | null
-    // Basic validation if the cookieValue is a valid ChainType can be added here by checking against Object.keys(allNetworkConfigs)
-    // For now, we trust it or default. If cookieValue is not a valid ChainType, it will default to 'ethereum'.
-    // A more robust check could involve: `Object.keys(allNetworkConfigs).includes(cookieValue) ? cookieValue : 'ethereum'`
-    return cookieValue || 'ethereum'
-  })
+    let chainToSet = networkCookieValue || 'ethereum'
 
-  // Update cookie when selectedChain changes
+    // Initialize isDemoMode from cookie
+    const demoCookieValue = getCookie(USER_DEMO_MODE_COOKIE_KEY)
+    let demoModeToSet = true // Default if cookie not set or invalid
+    if (demoCookieValue === 'true') {
+      demoModeToSet = true
+    } else if (demoCookieValue === 'false') {
+      demoModeToSet = false
+    }
+    // Only update if the internal state is different from the cookie-derived state
+    if (isDemoMode !== demoModeToSet) {
+      setIsDemoModeInternal(demoModeToSet)
+    }
+
+    // Adjust chainToSet based on the (potentially updated) demoModeToSet
+    if (demoModeToSet && chainToSet !== 'ethereum') {
+      chainToSet = 'ethereum'
+    }
+
+    if (selectedChain !== chainToSet) {
+      setSelectedChainInternal(chainToSet)
+    }
+  }, [mounted]) // Run once after mount to initialize from cookies
+
+  // Effect to update selectedChain cookie when selectedChain changes, AFTER mount
   useEffect(() => {
+    if (!mounted) return
     setCookie(USER_SELECTED_NETWORK_COOKIE_KEY, selectedChain)
-  }, [selectedChain])
+  }, [mounted, selectedChain])
 
-  // When demo mode is enabled, force chain selection to ethereum
-  // This also updates the cookie via the selectedChain useEffect
+  // Effect to update isDemoMode cookie when isDemoMode changes, AFTER mount
   useEffect(() => {
+    if (!mounted) return
+    setCookie(USER_DEMO_MODE_COOKIE_KEY, isDemoMode.toString())
+  }, [mounted, isDemoMode])
+
+  // When isDemoMode is changed by user, adjust selectedChain if necessary
+  useEffect(() => {
+    if (!mounted) return
     if (isDemoMode && selectedChain !== 'ethereum') {
       setSelectedChainInternal('ethereum')
+      // The selectedChain cookie will be updated by its own useEffect
     }
-  }, [isDemoMode, selectedChain])
+  }, [mounted, isDemoMode, selectedChain]) // Add selectedChain here to re-evaluate if it changes
 
   // Calculate active network based on current state
   const activeNetwork = getActiveNetworkConfig(isDemoMode, selectedChain)
 
-  // Wrapper for setSelectedChain to also update the cookie
-  const setSelectedChain = (chain: ChainType) => {
+  const wrappedSetSelectedChain = (chain: ChainType) => {
     setSelectedChainInternal(chain)
-    // No need to call setCookie here, the useEffect [selectedChain] handles it.
+  }
+
+  const wrappedSetIsDemoMode = (enabled: boolean) => {
+    setIsDemoModeInternal(enabled)
   }
 
   const value: NetworkContextType = {
     selectedChain,
     isDemoMode,
     activeNetwork,
-    setSelectedChain, // Use the wrapped function
-    setIsDemoMode
+    setSelectedChain: wrappedSetSelectedChain,
+    setIsDemoMode: wrappedSetIsDemoMode
   }
 
   return (

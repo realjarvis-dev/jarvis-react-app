@@ -2,7 +2,6 @@
 
 import { CHAT_ID } from '@/lib/constants'
 import { useAutoScroll } from '@/lib/hooks/use-auto-scroll'
-import { useNetwork } from '@/lib/network/context'
 import { cn } from '@/lib/utils'
 import { useChat } from '@ai-sdk/react'
 import { getAccessToken, usePrivy } from '@privy-io/react-auth'
@@ -29,7 +28,6 @@ export function Chat({
 }) {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const { user, ready, authenticated } = usePrivy()
-  const { selectedChain, isDemoMode } = useNetwork()
   const [headers, setHeaders] = useState<Record<string, string>>({})
   const [anonId, setAnonId] = useLocalStorage('anonUserId', {
     defaultValue: ''
@@ -42,17 +40,19 @@ export function Chat({
     if (!ready) return
     if (!authenticated) {
       if (!anonId) {
-        // e.g. using crypto API to generate a UUID
-        const anonId = crypto.randomUUID()
-        console.log('anonId', anonId)
-        setAnonId(anonId)
+        const newAnonId = crypto.randomUUID()
+        console.log('anonId', newAnonId)
+        setAnonId(newAnonId)
+        setHeaders({
+          'x-user-id': newAnonId,
+          'allow-web3-tools': 'false'
+        })
+      } else {
+        setHeaders({
+          'x-user-id': anonId,
+          'allow-web3-tools': 'false'
+        })
       }
-      setHeaders({
-        'x-user-id': anonId,
-        'allow-web3-tools': 'false',
-        'x-selected-chain': selectedChain,
-        'x-demo-mode': isDemoMode.toString()
-      })
       return
     } else {
       ;(async () => {
@@ -60,22 +60,18 @@ export function Chat({
           const token = await getAccessToken()
           setHeaders({
             'x-user-id': user!.id,
-            'allow-web3-tools': 'true',
-            'x-selected-chain': selectedChain,
-            'x-demo-mode': isDemoMode.toString()
+            'allow-web3-tools': 'true'
           })
         } catch (error) {
           console.error('Failed to get access token:', error)
           setHeaders({
             'x-user-id': 'anonymous',
-            'allow-web3-tools': 'false',
-            'x-selected-chain': selectedChain,
-            'x-demo-mode': isDemoMode.toString()
+            'allow-web3-tools': 'false'
           })
         }
       })()
     }
-  }, [user?.id, ready, authenticated, selectedChain, isDemoMode])
+  }, [user?.id, ready, authenticated, anonId, setAnonId])
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 

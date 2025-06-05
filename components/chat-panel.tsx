@@ -642,13 +642,13 @@ export function ChatPanel({
                 <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto hide-scrollbar">
                   <SearchModeToggle />
                   <ChainSelector
-                    selectedChain={selectedChain}
-                    onChainChange={setSelectedChain}
-                    isDemoMode={isDemoMode}
+                    // selectedChain={selectedChain}
+                    // onChainChange={setSelectedChain}
+                    // isDemoMode={isDemoMode}
                   />
                   <DemoToggle
-                    isDemoMode={isDemoMode}
-                    onDemoModeChange={setIsDemoMode}
+                    // isDemoMode={isDemoMode}
+                    // onDemoModeChange={setIsDemoMode}
                   />
                 </div>
                 <div className="flex items-center gap-1 sm:gap-2 shrink-0">

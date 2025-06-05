@@ -1,7 +1,8 @@
 'use client'
 
 import { allNetworkConfigs } from '@/lib/network/config'
-import type { ChainType, NetworkConfig } from '@/lib/network/types'
+import { useNetwork } from '@/lib/network/context'
+import type { NetworkConfig } from '@/lib/network/types'
 import { cn } from '@/lib/utils'
 import { ChevronDown } from 'lucide-react'
 import { useState } from 'react'
@@ -13,17 +14,8 @@ import {
   DropdownMenuTrigger
 } from './ui/dropdown-menu'
 
-interface ChainSelectorProps {
-  selectedChain: ChainType
-  onChainChange: (chain: ChainType) => void
-  isDemoMode: boolean
-}
-
-export function ChainSelector({
-  selectedChain,
-  onChainChange,
-  isDemoMode
-}: ChainSelectorProps) {
+export function ChainSelector() {
+  const { selectedChain, setSelectedChain, isDemoMode } = useNetwork()
   const [open, setOpen] = useState(false)
   const [showTooltip, setShowTooltip] = useState(false)
 
@@ -106,7 +98,7 @@ export function ChainSelector({
             key={option.id}
             onClick={() => {
               if (option.disabled) return
-              onChainChange(option.id)
+              setSelectedChain(option.id)
               setOpen(false)
             }}
             className={cn(
