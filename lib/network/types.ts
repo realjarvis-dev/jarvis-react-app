@@ -4,12 +4,27 @@ import type { Network } from 'alchemy-sdk'
 // for values, but not for types.
 import type { allNetworkConfigs } from './config'
 
+export const USER_SELECTED_NETWORK_COOKIE_KEY = 'user_selected_network'
+export const USER_DEMO_MODE_COOKIE_KEY = 'user_demo_mode'
+
 /**
  * Represents the unique identifier for a chain.
  * This type is dynamically generated from the keys of `allNetworkConfigs` in `config.ts`.
  * e.g., 'ethereum' | 'berachain' | 'polygon' ...
  */
 export type ChainType = keyof typeof allNetworkConfigs
+
+/**
+ * Defines the structure for a network's native asset.
+ */
+export interface NativeAsset {
+  /** The common name of the native asset (e.g., "Ether"). */
+  readonly name: string
+  /** The symbol of the native asset (e.g., "ETH"). */
+  readonly symbol: string
+  /** The number of decimals the native asset uses (e.g., 18). */
+  readonly decimals: number
+}
 
 /**
  * Defines the structure for a network's configuration.
@@ -29,6 +44,8 @@ export interface NetworkConfig {
   readonly isDemo: boolean
   /** Optional: The corresponding network enum from alchemy-sdk, if applicable. */
   readonly alchemyNetwork?: Network
+  /** The native asset information for this network. */
+  readonly nativeAsset: NativeAsset
   /** Optional: Icon for the chain */
   readonly icon?: string // Added as per chain-selector.tsx's ChainIcons
   readonly disabled?: boolean // Added optional disabled field

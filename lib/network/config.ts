@@ -14,19 +14,21 @@ export const ethereumConfig: NetworkConfig = {
   scanLink: 'etherscan.io',
   isDemo: false,
   alchemyNetwork: Network.ETH_MAINNET,
-  icon: '/icons/chains/ethereum-eth.svg'
+  icon: '/icons/chains/ethereum-eth.svg',
+  nativeAsset: { name: 'Ether', symbol: 'ETH', decimals: 18 }
 }
 
 export const berachainConfig: NetworkConfig = {
   id: 'berachain' as const,
   displayName: 'Berachain',
-  alchemyNetwork: Network.BERACHAIN_MAINNET, 
+  alchemyNetwork: Network.BERACHAIN_MAINNET,
   chainId: 80094,
   rpcUrl:
     'https://berachain-mainnet.g.alchemy.com/v2/yIRJoLX9TId7oSWYdnflKgthIy59m-vr',
   scanLink: 'berascan.com',
   isDemo: false,
-  icon: '/icons/chains/berachain.svg'
+  icon: '/icons/chains/berachain.svg',
+  nativeAsset: { name: 'BERA Token', symbol: 'BERA', decimals: 18 }
 }
 
 export const baseConfig: NetworkConfig = {
@@ -38,7 +40,8 @@ export const baseConfig: NetworkConfig = {
   scanLink: 'basescan.org',
   isDemo: false,
   alchemyNetwork: Network.BASE_MAINNET,
-  icon: "https://raw.githubusercontent.com/Aero25x/Cryptocurrencies-Logo/main/Base.svg"
+  icon: 'https://raw.githubusercontent.com/Aero25x/Cryptocurrencies-Logo/main/Base.svg',
+  nativeAsset: { name: 'Ether', symbol: 'ETH', decimals: 18 }
 }
 
 export const arbitrumConfig: NetworkConfig = {
@@ -50,8 +53,8 @@ export const arbitrumConfig: NetworkConfig = {
   scanLink: 'arbiscan.io',
   isDemo: false,
   alchemyNetwork: Network.ARB_MAINNET,
-  icon: 'https://raw.githubusercontent.com/Aero25x/Cryptocurrencies-Logo/main/Arbitrum.svg'
-
+  icon: 'https://raw.githubusercontent.com/Aero25x/Cryptocurrencies-Logo/main/Arbitrum.svg',
+  nativeAsset: { name: 'Ether', symbol: 'ETH', decimals: 18 }
 }
 
 export const polygonConfig: NetworkConfig = {
@@ -63,7 +66,8 @@ export const polygonConfig: NetworkConfig = {
   scanLink: 'polygonscan.com',
   isDemo: false,
   alchemyNetwork: Network.MATIC_MAINNET,
-  icon: 'https://upload.wikimedia.org/wikipedia/commons/2/21/Polygon_Icon.svg'
+  icon: 'https://upload.wikimedia.org/wikipedia/commons/2/21/Polygon_Icon.svg',
+  nativeAsset: { name: 'POL', symbol: 'POL', decimals: 18 }
 }
 
 export const optimismConfig: NetworkConfig = {
@@ -75,7 +79,8 @@ export const optimismConfig: NetworkConfig = {
   scanLink: 'optimistic.etherscan.io',
   isDemo: false,
   alchemyNetwork: Network.OPT_MAINNET,
-  icon: 'https://raw.githubusercontent.com/Aero25x/Cryptocurrencies-Logo/main/Optimism.svg'
+  icon: 'https://raw.githubusercontent.com/Aero25x/Cryptocurrencies-Logo/main/Optimism.svg',
+  nativeAsset: { name: 'Ether', symbol: 'ETH', decimals: 18 }
 }
 
 /**
@@ -108,7 +113,8 @@ export const TENDERLY_DEMO_CONFIG: NetworkConfig = {
   scanLink: undefined, // Tenderly vnet explorer might not have a simple base URL like etherscan
   isDemo: true,
   alchemyNetwork: Network.ETH_MAINNET,
-  icon: '/icons/chains/ethereum-eth.svg' // Use Ethereum icon for demo
+  icon: '/icons/chains/ethereum-eth.svg', // Use Ethereum icon for demo
+  nativeAsset: { name: 'Ether', symbol: 'ETH', decimals: 18 }
 }
 
 /**
@@ -154,7 +160,10 @@ export function getAvailableChains(isDemoMode: boolean): ChainType[] {
  * @param chainId - The chain ID to search for.
  * @returns The `NetworkConfig` if found, otherwise `undefined`.
  */
-export function getConfigByChainId(chainId: number, isDemo: boolean): NetworkConfig {
+export function getConfigByChainId(
+  chainId: number,
+  isDemo: boolean
+): NetworkConfig {
   if (isDemo) {
     return TENDERLY_DEMO_CONFIG
   }

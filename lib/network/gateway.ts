@@ -1,20 +1,17 @@
 import type { NextApiRequest } from 'next'
 import { allNetworkConfigs, getActiveNetworkConfig } from './config'
-import { ChainType, NetworkConfig } from './types'
+import { ChainType, NetworkConfig, USER_SELECTED_NETWORK_COOKIE_KEY, USER_DEMO_MODE_COOKIE_KEY } from './types'
 
-const USER_SELECTED_NETWORK_COOKIE_KEY = 'user_selected_network'
+
 
 /**
  * Retrieves the network configurationเหมาะสม on the server-side based on user preference (cookie) and demo mode.
  *
  * @param req - The Next.js API request object, used to access cookies.
- * @param serverSideIsDemoMode - Optional. Explicitly sets the demo mode for server-side logic. Defaults to false.
  * @returns The determined NetworkConfig object.
  */
 export function getServerSideNetworkConfig(
-  req: NextApiRequest,
-  serverSideIsDemoMode: boolean = false
-): NetworkConfig {
+  req: NextApiRequest): NetworkConfig {
   let selectedChain: ChainType = 'ethereum' // Default chain
 
   // Try to get user's selected chain from cookie
@@ -31,6 +28,7 @@ export function getServerSideNetworkConfig(
   // Determine the effective demo mode for this server-side context
   // If selectedChain is forced to 'ethereum' due to serverSideIsDemoMode being true,
   // getActiveNetworkConfig will handle returning the demo config.
+  const serverSideIsDemoMode = cookies[USER_DEMO_MODE_COOKIE_KEY] === 'true'
   const activeConfig = getActiveNetworkConfig(
     serverSideIsDemoMode,
     selectedChain

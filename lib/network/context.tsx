@@ -10,9 +10,9 @@ import {
 } from 'react'
 import { getActiveNetworkConfig } from './config' // Updated import path
 import { ChainType, NetworkConfig } from './types' // Updated import path
-
-const USER_SELECTED_NETWORK_COOKIE_KEY = 'user_selected_network'
-const USER_DEMO_MODE_COOKIE_KEY = 'user_demo_mode' // New cookie key for demo mode
+import { USER_SELECTED_NETWORK_COOKIE_KEY, USER_DEMO_MODE_COOKIE_KEY } from './types'
+// const USER_SELECTED_NETWORK_COOKIE_KEY = 'user_selected_network'
+// const USER_DEMO_MODE_COOKIE_KEY = 'user_demo_mode' // New cookie key for demo mode
 
 // Helper function to set a cookie (simplified)
 // const setCookie = (name: string, value: string, days: number = 7) => {
