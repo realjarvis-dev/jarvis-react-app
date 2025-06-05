@@ -3,7 +3,7 @@ import { NetworkConfig } from '../config/network-selection'
 import { searchSchema } from '../schema/search'
 import { getGasPriceTool } from '../tools/gas-price'
 import { genericSwapTool } from '../tools/generic-swap'
-import { kodiakDepositTool, kodiakOpportunitiesTool } from '../tools/kodiak'
+import { kodiakBaultProfitabilityTool, kodiakDepositTool, kodiakOpportunitiesTool } from '../tools/kodiak'
 import { marketChartTool } from '../tools/market-chart'
 import { pendleOpportunitiesTool, pendleQuoteTool, pendleSwapTool } from '../tools/pendle'
 import { privyTransferTool } from '../tools/privy-transfer'
@@ -336,6 +336,19 @@ export function createToolRegistry(model: string): ToolRegistry {
     description: 'Deposit a single token into a Kodiak Island yield opportunity on Berachain',
     schema: kodiakDepositTool.parameters,
     execute: async (params, context) => kodiakDepositTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3,
+    supportedNetworks: ['berachain']
+  })
+  
+  registry.registerTool({
+    name: 'kodiak_bault_profitability',
+    description: 'Check the profitability of Kodiak Baults for compounding',
+    schema: kodiakBaultProfitabilityTool.parameters,
+    execute: async (params, context) => kodiakBaultProfitabilityTool.execute(params, {
       toolCallId: context?.toolCallId || 'unknown',
       messages: context?.messages || [],
       networkContext: context?.networkContext!
