@@ -110,7 +110,6 @@ async function discoverTokens(walletAddress: string, provider: ethers.JsonRpcPro
 // Main function to get all token balances
 export async function getWalletBalances(
   walletAddressParam?: string,
-  // rpcUrl: string = process.env.ETH_RPC_URL || 'http://127.0.0.1:8545'
 ): Promise<WalletBalanceResult> {
   // Use provided wallet address or environment variable
   const walletAddress = walletAddressParam || await getUserEvmWalletAddress();

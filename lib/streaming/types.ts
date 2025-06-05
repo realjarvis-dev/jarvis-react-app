@@ -1,7 +1,7 @@
 import { WalletWithMetadata } from '@privy-io/server-auth'
 import { Message } from 'ai'
 import { Model } from '../types/models'
-import { NetworkContext } from '../utils/tool-registry'
+import { NetworkContext } from '../types/context'
 
 export interface BaseStreamConfig {
   messages: Message[]

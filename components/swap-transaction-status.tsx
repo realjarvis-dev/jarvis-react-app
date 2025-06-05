@@ -82,7 +82,7 @@ export function SwapTransactionStatus({
       </div>
       
       {/* Show TX hash if available and confirmed */}
-      {txHash && status === 'confirmed' && (
+      {/* {txHash && status === 'confirmed' && (
         <a 
           href={`${etherscanBaseUrl}/tx/${txHash}`} 
           target="_blank" 
@@ -91,7 +91,7 @@ export function SwapTransactionStatus({
         >
           View transaction
         </a>
-      )}
+      )} */}
     </div>
   )
 } 

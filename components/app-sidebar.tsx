@@ -25,16 +25,23 @@ export default async function AppSidebar() {
 
   return (
     <Sidebar side="left" variant="sidebar" collapsible="offcanvas">
-      <SidebarHeader className="flex flex-row justify-between items-center">
-        <div className="flex items-center gap-2 px-2 py-3">
+      <SidebarHeader className="relative">
+        {/* Sidebar Trigger: Fixed to top-left */}
+        <div
+          className="absolute left-4 top-4 z-50"
+          data-sidebar="trigger-wrapper"
+        >
+          <SidebarTrigger />
+        </div>
+        {/* Brand Block: Centered in the header */}
+        <div className="flex items-center justify-center w-full py-3">
           <a href="/" className="size-5">
             <IconLogo className={cn('size-5')} />
           </a>
-          <Link href="/" className="font-semibold text-sm">
+          <Link href="/" className="font-semibold text-sm ml-2">
             Jarvis
           </Link>
         </div>
-        <SidebarTrigger />
       </SidebarHeader>
       <SidebarContent className="flex flex-col px-2 py-4 h-full">
         <SidebarMenu>

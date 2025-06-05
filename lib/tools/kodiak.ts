@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { tool } from 'ai';
 import { ethers } from 'ethers';
 import { Address } from 'viem';
@@ -10,6 +11,23 @@ import { checkBault, checkProfitability } from '../kodiak/kodiak-baults';
 import { tickToPrice } from '../kodiak/utils';
 import { FormattedKodiakIsland } from '../types/kodiak';
 import { NetworkContext } from '../utils/tool-registry';
+||||||| f4305b1
+import { tool } from 'ai'
+import { z } from 'zod'
+import { getKodiakOpportunitiesFromApi } from '../kodiak/api'
+import { depositToKodiakIsland, IslandSingleDepositParams } from '../kodiak/islandRatio'
+import { tickToPrice } from '../kodiak/utils'
+import { FormattedKodiakIsland } from '../types/kodiak'
+import { NetworkContext } from '../utils/tool-registry'
+=======
+import { tool } from 'ai'
+import { z } from 'zod'
+import { getKodiakOpportunitiesFromApi } from '../kodiak/api'
+import { depositToKodiakIsland, IslandSingleDepositParams } from '../kodiak/islandRatio'
+import { tickToPrice } from '../kodiak/utils'
+import { FormattedKodiakIsland } from '../types/kodiak'
+import { NetworkContext } from '../types/context'
+>>>>>>> origin/dev
 
 interface ToolContext {
   toolCallId?: string

@@ -1,4 +1,5 @@
 import { getTenderlyDemoTokenBalance } from '@/lib/alchemy/get-token-balance';
+import { addBalanceAnvilFork } from '@/lib/anvil-fork/fund';
 import { getUserEvmWalletAddress, verifyAccessToken } from '@/lib/privy/client';
 import { ethToWei, setBalanceVnet } from '@/lib/tenderly/fund';
 import { NextRequest, NextResponse } from 'next/server';
@@ -62,10 +63,14 @@ export async function GET(req: NextRequest) {
       
       // Convert funding amount to wei (hex string)
       const fundingAmountInWei = ethToWei(FUNDING_AMOUNT.toString())
-      
+      let result;
       try {
         // Fund the wallet using Tenderly's setBalanceVnet function
-        const result = await setBalanceVnet([walletAddress], fundingAmountInWei)
+        if (process.env.NEXT_PUBLIC_TEST_NET_ENV === "development") {
+          result = await setBalanceVnet([walletAddress], fundingAmountInWei)
+        } else {
+          result = await addBalanceAnvilFork(walletAddress, BigInt(fundingAmountInWei))
+        }
         console.log('Funding successful:', result)
         
         return NextResponse.json({

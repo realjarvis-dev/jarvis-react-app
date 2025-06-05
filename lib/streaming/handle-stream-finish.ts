@@ -46,8 +46,7 @@ export async function handleStreamFinish({
         )
       } catch (err) {
         console.log(
-          'Failed to generate related questions. Using dummy data:',
-          err
+          'Failed to generate related questions. Using dummy data.'
         )
         relatedQuestionsData = {
           object: {

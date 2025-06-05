@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { ensoSwap } from '../enso/swap'; // Import ensoSwap
 import { erc20Approval, executeSwapTransaction } from '../pendle/transactions';
 import { getUserEvmWalletAddress } from '../privy/client';
-import { NetworkContext } from '../utils/tool-registry';
+import { NetworkContext } from '../types/context';
 
 interface ToolContext {
   toolCallId?: string

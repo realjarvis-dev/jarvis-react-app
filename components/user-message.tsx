@@ -80,14 +80,14 @@ export const UserMessage: React.FC<UserMessageProps> = ({
                 'md:group-hover:opacity-100'
               )}
             >
-              <Button
+              {/* <Button
                 variant="ghost"
                 size="icon"
                 className="rounded-full h-7 w-7"
                 onClick={handleEditClick}
               >
                 <Pencil className="size-3.5" />
-              </Button>
+              </Button> */}
             </div>
           </div>
         )}
