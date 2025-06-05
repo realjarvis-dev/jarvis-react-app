@@ -383,7 +383,7 @@ export const executeLifiBridgeTransaction = async (
         amount_in_human: amountIn,
         from_chain_name: fromChainName,
         to_chain_name: toChainName,
-        explorer_link: explorerLinkWithHash,
+        explorer_link: explorerLink ? explorerLinkWithHash : undefined,
         complete_time: new Date().toISOString()
       }
     }
