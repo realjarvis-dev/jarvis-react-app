@@ -51,13 +51,13 @@ export const getAlchemyClient = (
     if (chainId === TENDERLY_DEMO_CONFIG.chainId) {
       return demoAlchemy
     }
-    console.warn(
+    throw new Error(
       `Demo mode requested for chainId ${chainId}, but demo is configured for ${TENDERLY_DEMO_CONFIG.chainId}.`
     )
-    return undefined
   }
   const client = chainIdToAlchemyClient[chainId]
   if (!client) {
+    throw new Error(`No Alchemy client found for chainId ${chainId}`)
   }
   return client
 }

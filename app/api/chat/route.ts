@@ -68,30 +68,7 @@ export async function POST(request: Request) {
     // Extract network context using getServerSideNetworkConfig
     let networkContext
     try {
-      // Assuming 'request' can be cast or adapted to NextApiRequest for cookie access.
-      // This might need adjustment based on how 'request' (Fetch API Request) handles cookies
-      // compared to NextApiRequest. For now, we'll assume direct usage or an adapter.
-      // The 'req.cookies' part of getServerSideNetworkConfig will need careful handling
-      // if 'request' is a standard Fetch API Request object.
-      // For Next.js 13+ App Router, cookies() from 'next/headers' is the way.
-      // We need to pass the raw 'Request' object to getServerSideNetworkConfig
-      // and it should internally use 'next/headers' cookies() if needed, or be adapted.
-      // Let's assume getServerSideNetworkConfig is adapted to work with Request or we pass cookies directly.
-
-      // Modification: getServerSideNetworkConfig expects a NextApiRequest.
-      // We need to adapt or pass the cookie data.
-      // For app router, we use `cookies()` from `next/headers`.
-      // Let's make `getServerSideNetworkConfig` compatible or create a new helper.
-      // For now, we will simulate the NextApiRequest cookies object.
-      const pseudoReq = {
-        cookies: cookieStore.getAll().reduce((acc, cookie) => {
-          acc[cookie.name] = cookie.value
-          return acc
-        }, {} as Record<string, string>)
-      } as any // Cast to any to satisfy NextApiRequest typing for cookies
-
-      const serverDeterminedNetworkConfig =
-        getServerSideNetworkConfig(pseudoReq)
+      const serverDeterminedNetworkConfig = await getServerSideNetworkConfig()
 
       console.log('serverDeterminedNetworkConfig', serverDeterminedNetworkConfig)
 
