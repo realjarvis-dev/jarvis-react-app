@@ -13,8 +13,9 @@ import {
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 // Assuming a similar status component exists or will be created for swaps
-import { getConfigByChainId } from '@/lib/config/network'
+import { getConfigByChainId } from '@/lib/network/config'
 import { SwapTransactionStatus } from './swap-transaction-status' // Re-use or adapt this
+import { useNetwork } from '@/lib/network/context'
 interface GenericSwapCardProps {
   tool: any // The AI tool invocation, specifically genericSwapTool
   isOpen?: boolean
@@ -211,7 +212,8 @@ export function GenericSwapCard({
       ? result.transaction_hash
       : undefined
   const chainId = args?.chainId || result?.swap_details?.chain_id || 1 // Default to Ethereum mainnet
-  const etherscanBaseUrl = `https://${getConfigByChainId(chainId).scanLink}`
+  const { isDemoMode } = useNetwork()
+  const etherscanBaseUrl = `https://${getConfigByChainId(chainId, isDemoMode).scanLink}`
 
   // Pending UI
   if (tool.state === 'call') {

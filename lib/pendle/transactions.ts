@@ -6,7 +6,7 @@ import {
 import axios from 'axios'
 import { ethers, TransactionRequest } from 'ethers'
 import { v4 as uuidv4 } from 'uuid'
-import { getConfigByChainId } from '../config/network'
+import { getConfigByChainId } from '@/lib/network/config'
 
 // Types for transaction responses
 export interface QuoteResponse {
@@ -113,7 +113,7 @@ export async function getERC20Details(
 ): Promise<{ decimals: number; symbol: string; name: string }> {
   try {
     const provider = new ethers.JsonRpcProvider(
-      process.env.TEST_RPC_URL || getConfigByChainId(chainId).rpcUrl
+      process.env.TEST_RPC_URL || getConfigByChainId(chainId, false).rpcUrl
     )
     const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider)
     const [decimals, symbol, name] = await Promise.all([
@@ -133,13 +133,14 @@ export async function erc20Approval(
   spenderAddress: string,
   amount: string,
   userAddress: string,
-  chainId: number = 1
+  chainId: number = 1,
+  isDemo: boolean
 ): Promise<{ status: string; message?: string }> {
   // default to use the TEST_RPC_URL in env
   // on localhost can put 127.0.0.1:8545 for local testing
   // TODO: on deployment have to remove the TEST_RPC_URL for multichain support
   const provider = new ethers.JsonRpcProvider(
-    process.env.TEST_RPC_URL || getConfigByChainId(chainId).rpcUrl
+    process.env.TEST_RPC_URL || getConfigByChainId(chainId, isDemo).rpcUrl
   )
   const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider)
   const allowance = await tokenContract.allowance(userAddress, spenderAddress)
@@ -199,13 +200,9 @@ export async function executeSwapTransaction(
     //   throw new Error('PRIVATE_KEY environment variable is not set.')
     // }
     let provider: ethers.JsonRpcProvider
-    if (!isDemo) {
-      provider = new ethers.JsonRpcProvider(
-      process.env.TEST_RPC_URL || getConfigByChainId(chainId).rpcUrl
-    ) } else {
-      provider = new ethers.JsonRpcProvider(getConfigByChainId(1, true).rpcUrl)
-      console.log('in demo mode, using rpc url', getConfigByChainId(1, true).rpcUrl)
-    }
+    provider = new ethers.JsonRpcProvider(
+      process.env.TEST_RPC_URL || getConfigByChainId(chainId, isDemo).rpcUrl
+    )
     // console.log("RPC URL",  process.env.TEST_RPC_URL || getConfigByChainId(chainId).rpcUrl)
     // console.log(getConfigByChainId(chainId).rpcUrl)
     const block = await provider.getBlock('latest')

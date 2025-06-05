@@ -12,6 +12,7 @@ import { retrieveTool } from '../tools/retrieve'
 import { createSearchTool } from '../tools/search'
 import { createVideoSearchTool } from '../tools/video-search'
 import { fundWalletTool, walletBalanceTool } from '../tools/wallet'
+import { ChainType } from '@/lib/network/types'
 import { NetworkContext, ToolContext } from '../types/context'
 
 
@@ -25,7 +26,7 @@ export interface ToolDefinition<T = any> {
   schema: z.ZodType<T>
   execute: (params: T, context?: ToolContext) => Promise<any> | PromiseLike<any>
   category: ToolCategory
-  supportedNetworks?: ('ethereum' | 'berachain' | 'demo')[]
+  supportedNetworks?: (ChainType | 'demo')[]
 }
 
 /**
@@ -285,7 +286,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'berachain', 'demo']
+    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism']
   })
   
   registry.registerTool({
@@ -298,7 +299,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'berachain', 'demo']
+    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism']
   })
   
   registry.registerTool({
@@ -377,7 +378,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'berachain', 'demo']
+    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism']
   })
 
   registry.registerTool({
@@ -390,7 +391,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'berachain', 'demo']
+    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism']
   })
 
   

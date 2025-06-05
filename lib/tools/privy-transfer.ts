@@ -6,8 +6,7 @@ import { z } from 'zod'
 import { getGasPriceByChainId } from '../blocknative/get-gas-price'
 import { executeSwapTransaction } from '../pendle/transactions'
 import { getUserWallet } from '../privy/client'
-import { getConfigByChainId } from '../config/network'
-
+import { getConfigByChainId } from '@/lib/network/config'
 import { ToolContext } from '../types/context'
 
 export const privyTransferTool = tool({
@@ -20,14 +19,14 @@ export const privyTransferTool = tool({
   }),
   execute: async (params, context: ToolContext) => {
     const { address, amount } = params
-    const networkContext = context?.networkContext
+    const networkContext = context.networkContext!
     const evmWallet: WalletWithMetadata | undefined = await getUserWallet(
       'ethereum'
     )
     // console.log('Transfer amount: ', amount)
     // console.log('Transfer address: ', address)
     // console.log('networkContext in privy transfer', networkContext)
-    const isDemo = networkContext?.isDemo
+    const isDemo = networkContext!.isDemo
 
     if (!evmWallet) {
       return {
@@ -81,9 +80,7 @@ export const privyTransferTool = tool({
           complete_time: new Date().toISOString(),
           chainId: chainId,
           chainExplorerName:
-            networkContext?.selectedNetwork === 'demo'
-              ? 'demo dashboard'
-              : `${getConfigByChainId(chainId).displayName} explorer`
+           `${getConfigByChainId(chainId, isDemo).displayName} explorer`
         },
         error_message: ''
       }

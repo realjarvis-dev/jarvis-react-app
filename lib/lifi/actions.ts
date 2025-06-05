@@ -24,7 +24,7 @@ import {
   noRouteDetails,
   noRouteTitle
 } from './utils'
-import { getConfigByChainId } from '../config/network'
+import { getConfigByChainId } from '@/lib/network/config'
 
 
 const NATIVE_TOKEN_STRING = '0x0000000000000000000000000000000000000000'
@@ -325,7 +325,8 @@ export const executeLifiBridgeTransaction = async (
         protocolAddress,
         inputAmount,
         fromAddress,
-        fromChainId
+        fromChainId,
+        isDemo
       )
       if (status === 'fail') {
         return {
@@ -368,7 +369,7 @@ export const executeLifiBridgeTransaction = async (
         getGasPriceFunction: getGasPriceByChainId
       }, isDemo)
     }
-    const explorerLink = isDemo ? getConfigByChainId(92736).scanLink : getConfigByChainId(fromChainId).scanLink
+    const explorerLink = getConfigByChainId(fromChainId, isDemo).scanLink
     const explorerLinkWithHash = `https://${explorerLink}/tx/${result.hash}`
     
 
@@ -382,7 +383,7 @@ export const executeLifiBridgeTransaction = async (
         amount_in_human: amountIn,
         from_chain_name: fromChainName,
         to_chain_name: toChainName,
-        explorer_link: explorerLinkWithHash,
+        explorer_link: explorerLink ? explorerLinkWithHash : undefined,
         complete_time: new Date().toISOString()
       }
     }

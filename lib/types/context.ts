@@ -1,10 +1,11 @@
-import { NetworkConfig } from "../config/network-selection"
+import { ChainType, NetworkConfig } from "@/lib/network/types"
+
 
 /**
  * Network context passed to tools
  */
 export interface NetworkContext {
-    selectedNetwork: 'ethereum' | 'berachain' | 'demo'
+    selectedNetwork: ChainType
     selectedChainId: number
     isDemo: boolean
     rpcUrl: string

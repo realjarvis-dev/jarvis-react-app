@@ -1,5 +1,5 @@
 import { parseEther, parseGwei, parseUnits } from 'viem'
-import { TenderlyDemoConfig } from '../config/network'
+import { TENDERLY_DEMO_CONFIG } from '@/lib/network/config'
 // {
 //     "system": "base",
 //     "network": "mainnet",
@@ -48,9 +48,6 @@ import { TenderlyDemoConfig } from '../config/network'
 //     ]
 // }
 export const getGasPriceByChainId = async (chainId: number) => {
-if (chainId === TenderlyDemoConfig.chainId) {
-    chainId = 1
-  }
   const url = new URL('https://api.blocknative.com/gasprices/blockprices')
   url.searchParams.append('chainid', chainId.toString())
   console.log(url.toString())

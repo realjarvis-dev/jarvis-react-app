@@ -2,7 +2,7 @@ import { tool } from 'ai';
 import { ethers } from 'ethers';
 import { Address } from 'viem';
 import { z } from 'zod';
-import { BerachainMainnetConfig } from "../config/network";
+import { berachainConfig } from "../network/config";
 import { BAULT_ABI, IBGT_ADDRESS } from '../kodiak/abi';
 import { getIslandDetails, getKodiakOpportunitiesFromApi } from '../kodiak/api';
 import { depositToKodiakIsland, IslandSingleDepositParams } from '../kodiak/islandRatio';
@@ -622,7 +622,7 @@ export const kodiakBaultProfitabilityTool = tool({
           const bault = new ethers.Contract(
             baultAddress,
             BAULT_ABI,
-            new ethers.JsonRpcProvider(BerachainMainnetConfig.rpcUrl)
+            new ethers.JsonRpcProvider(berachainConfig.rpcUrl)
           );
           
           const stakingToken = await bault.stakingToken();
@@ -806,7 +806,7 @@ export const kodiakCompoundBaultTool = tool({
       const stakingToken = await new ethers.Contract(
         bault_address,
         BAULT_ABI,
-        new ethers.JsonRpcProvider(BerachainMainnetConfig.rpcUrl)
+        new ethers.JsonRpcProvider(berachainConfig.rpcUrl)
       ).stakingToken();
       
       const profitability = await checkProfitability(

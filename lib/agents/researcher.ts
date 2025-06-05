@@ -223,8 +223,8 @@ export function researcher({
   allowWeb3Tools: string
   networkContext?: NetworkContext
 }): ResearcherReturn {
-  console.log('searchMode', searchMode)
-  console.log('networkContext', networkContext)
+  // console.log('searchMode', searchMode)
+  // console.log('networkContext', networkContext)
   try {
     const currentDate = new Date().toLocaleString()
 
@@ -276,7 +276,6 @@ Network Context:
 - Selected Network: ${networkContext.selectedNetwork} (default fromChain for bridging, default chain for swapping and transfer)
 - Chain ID: ${networkContext.selectedChainId}
 - Demo Mode: ${networkContext.isDemo ? 'ON' : 'OFF'}
-- RPC URL: ${networkContext.rpcUrl}
 `
     }
 

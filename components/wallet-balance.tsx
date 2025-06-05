@@ -10,7 +10,8 @@ import {
 } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { TokenData } from '@/lib/alchemy/types'
-import { useNetwork } from '@/lib/context/network-context'
+import { allNetworkConfigs } from '@/lib/network/config'
+import { useNetwork } from '@/lib/network/context'
 
 const TokenRow = ({ token }: { token: TokenData }) => {
   // Format balance to a nice readable format (e.g., 9979.99 ETH)
@@ -38,7 +39,10 @@ const TokenRow = ({ token }: { token: TokenData }) => {
   )
 }
 
-const NetworkSection = ({ network, tokens }: { 
+const NetworkSection = ({
+  network,
+  tokens
+}: {
   network: string
   tokens: TokenData[]
 }) => {
@@ -54,10 +58,7 @@ const NetworkSection = ({ network, tokens }: {
       </div>
       <div className="space-y-2 pl-2 border-l-2 border-gray-200 dark:border-gray-700">
         {tokens.map(token => (
-          <TokenRow
-            key={`${token.address}-${token.network}`}
-            token={token}
-          />
+          <TokenRow key={`${token.address}-${token.network}`} token={token} />
         ))}
       </div>
     </div>
@@ -87,29 +88,27 @@ export function WalletBalance({
 
   // Helper function to determine if a token belongs to the selected network
   const matchesSelectedNetwork = (tokenNetwork: string) => {
-    // Normalize the token network name for comparison
-    const normalizedTokenNetwork = tokenNetwork.toLowerCase()
-    
-    // Handle demo mode specially - only show Tenderly tokens in demo mode
+    // tokenNetwork is assumed to be the alchemyNetwork string, e.g., 'eth-mainnet'
     if (isDemoMode) {
-      return normalizedTokenNetwork.includes('tenderly') || 
-             normalizedTokenNetwork.includes('demo')
+      // In demo mode, TENDERLY_DEMO_CONFIG defines the active network.
+      // Its alchemyNetwork might be, for example, Network.ETH_MAINNET ('eth-mainnet')
+      return tokenNetwork === 'Ethereum (Demo)'
     }
-    
-    // For non-demo mode, match based on the selected chain
-    switch (selectedChain) {
-      case 'ethereum':
-        return normalizedTokenNetwork.includes('eth-mainnet')
-      case 'berachain':
-        return normalizedTokenNetwork.includes('berachain-mainnet')
-      default:
-        return false
+
+    // For non-demo mode, match based on the selected chain's alchemyNetwork
+    // selectedChain is a ChainType, e.g., 'ethereum'
+    const currentNetworkConfig = allNetworkConfigs[selectedChain]
+    if (currentNetworkConfig) {
+      return tokenNetwork === currentNetworkConfig.displayName
     }
+    return false // Should not happen if selectedChain is a valid ChainType
   }
 
   // Filter tokens based on the selected network using our improved matching
-  const filteredTokens = tokensList.filter(token => matchesSelectedNetwork(token.network))
-  
+  const filteredTokens = tokensList.filter(token =>
+    matchesSelectedNetwork(token.network)
+  )
+
   // Group tokens by network (we'll only have one network after filtering)
   const tokensByNetwork = filteredTokens.reduce((acc, token) => {
     if (!acc[token.network]) {
@@ -121,14 +120,25 @@ export function WalletBalance({
 
   // Sort networks to show mainnet first, then others alphabetically
   const sortedNetworks = Object.keys(tokensByNetwork).sort((a, b) => {
-    if (a.toLowerCase().includes('mainnet') && !b.toLowerCase().includes('mainnet')) return -1
-    if (!a.toLowerCase().includes('mainnet') && b.toLowerCase().includes('mainnet')) return 1
+    if (
+      a.toLowerCase().includes('mainnet') &&
+      !b.toLowerCase().includes('mainnet')
+    )
+      return -1
+    if (
+      !a.toLowerCase().includes('mainnet') &&
+      b.toLowerCase().includes('mainnet')
+    )
+      return 1
     return a.localeCompare(b)
   })
 
   const totalTokenCount = filteredTokens.length
   const hasMultipleNetworks = sortedNetworks.length > 1
-
+  console.log('sortedNetworks', sortedNetworks)
+  console.log('tokensByNetwork', tokensByNetwork)
+  console.log('filteredTokens', filteredTokens)
+  console.log('tokensList', tokensList)
   return (
     <Card className={`w-full max-w-2xl mx-auto ${className} shadow-md`}>
       <CardHeader className="pb-4">
@@ -137,7 +147,8 @@ export function WalletBalance({
           <div className="flex gap-2">
             {hasMultipleNetworks && (
               <Badge variant="outline" className="text-sm font-normal">
-                {sortedNetworks.length} {sortedNetworks.length === 1 ? 'Network' : 'Networks'}
+                {sortedNetworks.length}{' '}
+                {sortedNetworks.length === 1 ? 'Network' : 'Networks'}
               </Badge>
             )}
             <Badge variant="outline" className="text-sm font-normal">
@@ -199,11 +210,11 @@ export function WalletBalance({
 
         {!isLoading && !error && sortedNetworks.length > 0 && (
           <div>
-            {sortedNetworks.map(network => (
+            {sortedNetworks.map(networkAlchemyName => (
               <NetworkSection
-                key={network}
-                network={network}
-                tokens={tokensByNetwork[network]}
+                key={networkAlchemyName}
+                network={activeNetwork.displayName}
+                tokens={tokensByNetwork[networkAlchemyName]}
               />
             ))}
           </div>

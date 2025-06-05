@@ -19,7 +19,7 @@ import { MarketPulse } from './market-pulse'
 import { SearchModeToggle } from './search-mode-toggle'
 import { ChainSelector } from './chain-selector'
 import { DemoToggle } from './demo-toggle'
-import { useNetwork } from '../lib/context/network-context'
+import { useNetwork } from '@/lib/network/context'
 import { Button } from './ui/button'
 import { IconLogo } from './ui/icons'
 import { VideoBackground } from './ui/video-background'
@@ -439,15 +439,10 @@ export function ChatPanel({
               >
                 <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto hide-scrollbar">
                   <SearchModeToggle />
+                  <DemoToggle />
                   <ChainSelector
-                    selectedChain={selectedChain}
-                    onChainChange={setSelectedChain}
-                    isDemoMode={isDemoMode}
                   />
-                  <DemoToggle
-                    isDemoMode={isDemoMode}
-                    onDemoModeChange={setIsDemoMode}
-                  />
+                  
                 </div>
                 <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                   {messages.length > 0 && (

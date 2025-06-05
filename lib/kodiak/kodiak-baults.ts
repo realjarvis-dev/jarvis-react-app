@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 import { v4 as uuidv4 } from 'uuid';
 import { Address, createPublicClient, Hex, http } from "viem";
-import { BerachainMainnetConfig } from "../config/network";
+import { berachainConfig } from "../network/config";
 import { getUserWallet, privy } from '../privy/client';
 import {
     BAULT_ABI,
@@ -13,7 +13,7 @@ import {
 
 // Helper function to create Berachain chain config for viem
 const getBerachainConfig = () => ({
-  id: BerachainMainnetConfig.chainId,
+  id: berachainConfig.chainId,
   name: 'Berachain Mainnet',
   network: 'berachain',
   nativeCurrency: {
@@ -23,18 +23,18 @@ const getBerachainConfig = () => ({
   },
   rpcUrls: {
     default: {
-      http: [BerachainMainnetConfig.rpcUrl]
+      http: [berachainConfig.rpcUrl]
     },
     public: {
-      http: [BerachainMainnetConfig.rpcUrl]
+      http: [berachainConfig.rpcUrl]
     }
   }
 });
 
-// Create public client using BerachainMainnetConfig
+// Create public client using berachainConfig
 const publicClient = createPublicClient({
   chain: getBerachainConfig(),
-  transport: http(BerachainMainnetConfig.rpcUrl)
+  transport: http(berachainConfig.rpcUrl)
 });
 
 /**
@@ -49,7 +49,7 @@ export async function checkBault(
 ) {
   try {
     // Create provider using ethers instead of viem
-    const provider = new ethers.JsonRpcProvider(BerachainMainnetConfig.rpcUrl);
+    const provider = new ethers.JsonRpcProvider(berachainConfig.rpcUrl);
     
     // Get Bault contract using ethers
     const bault = new ethers.Contract(
@@ -154,7 +154,7 @@ export async function getSwapQuote(
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        chainId: BerachainMainnetConfig.chainId,
+        chainId: berachainConfig.chainId,
         fromAddress: userAddress,
         routingStrategy: "router",
         receiver: userAddress,
@@ -177,7 +177,7 @@ export async function getSwapQuote(
       
       // Log the detailed error information
       console.error(`Enso API error (${response.status} ${response.statusText}): ${errorBody}`);
-      console.error(`Request details: fromToken=${fromToken}, toToken=${toToken}, amount=${amount}, chainId=${BerachainMainnetConfig.chainId}`);
+      console.error(`Request details: fromToken=${fromToken}, toToken=${toToken}, amount=${amount}, chainId=${berachainConfig.chainId}`);
       
       // Throw error with more information
       throw new Error(`Enso API error: ${response.status} ${response.statusText} - ${errorBody}`);
@@ -364,7 +364,7 @@ export async function compoundBaultDirect(
     const userAddress = wallet.address;
     
     // Create provider
-    const provider = new ethers.JsonRpcProvider(BerachainMainnetConfig.rpcUrl);
+    const provider = new ethers.JsonRpcProvider(berachainConfig.rpcUrl);
     
     // Get Bault contract
     const bault = new ethers.Contract(
@@ -430,7 +430,7 @@ export async function compoundBaultDirect(
         transaction: {
           to: stakingTokenAddress as `0x${string}`,
           data: approvalData as `0x${string}`,
-          chainId: BerachainMainnetConfig.chainId,
+          chainId: berachainConfig.chainId,
           gasLimit: ethers.toQuantity(gasLimit) as `0x${string}`,
           maxFeePerGas: ethers.toQuantity(maxFee + priority) as `0x${string}`,
           maxPriorityFeePerGas: ethers.toQuantity(priority) as `0x${string}`,
@@ -502,7 +502,7 @@ export async function compoundBaultDirect(
       transaction: {
         to: baultAddress as `0x${string}`,
         data: txData as `0x${string}`,
-        chainId: BerachainMainnetConfig.chainId,
+        chainId: berachainConfig.chainId,
         gasLimit: ethers.toQuantity(claimGasLimit) as `0x${string}`,
         maxFeePerGas: ethers.toQuantity(claimMaxFee + claimPriority) as `0x${string}`,
         maxPriorityFeePerGas: ethers.toQuantity(claimPriority) as `0x${string}`,
@@ -557,7 +557,7 @@ export async function compoundBaultWithHelper(
     const userAddress = wallet.address;
     
     // Create provider
-    const provider = new ethers.JsonRpcProvider(BerachainMainnetConfig.rpcUrl);
+    const provider = new ethers.JsonRpcProvider(berachainConfig.rpcUrl);
     
     // Get Bault contract
     const bault = new ethers.Contract(
@@ -642,7 +642,7 @@ export async function compoundBaultWithHelper(
       transaction: {
         to: BOUNTY_HELPER_ADDRESS as `0x${string}`,
         data: txData as `0x${string}`,
-        chainId: BerachainMainnetConfig.chainId,
+        chainId: berachainConfig.chainId,
         gasLimit: ethers.toQuantity(gasLimit) as `0x${string}`,
         maxFeePerGas: ethers.toQuantity(maxFee + priority) as `0x${string}`,
         maxPriorityFeePerGas: ethers.toQuantity(priority) as `0x${string}`,

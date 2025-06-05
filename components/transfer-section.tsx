@@ -1,11 +1,11 @@
 'use client'
 
-import { getConfigByChainId } from '@/lib/config/network' // Import getConfigByChainId
+import { getConfigByChainId } from '@/lib/network/config' // Import getConfigByChainId
 import type { ToolInvocation } from 'ai'
 import React from 'react' // Added React import for JSX
 import { CollapsibleMessage } from './collapsible-message' // Assuming this can be reused
 import { Section, ToolArgsSection } from './section' // Assuming this can be reused
-import { useNetwork } from '@/lib/context/network-context'
+import { useNetwork } from '@/lib/network/context'
 // import { MainnetConfig } from '@/lib/config/network'
 interface TransferSectionProps {
   tool: ToolInvocation
