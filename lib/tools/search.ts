@@ -9,7 +9,7 @@ import {
 import { sanitizeUrl } from '@/lib/utils'
 import { tool } from 'ai'
 import Exa from 'exa-js'
-import { NetworkContext } from '../utils/tool-registry'
+import { NetworkContext } from '../types/context'
 
 interface ToolContext {
   toolCallId?: string

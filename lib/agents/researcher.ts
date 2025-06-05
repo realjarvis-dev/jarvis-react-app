@@ -1,7 +1,8 @@
 import { WalletWithMetadata } from '@privy-io/server-auth'
 import { CoreMessage, smoothStream, streamText } from 'ai'
+import { NetworkContext } from '../types/context'
 import { getModel } from '../utils/registry'
-import { getToolRegistry, NetworkContext, ToolCategory } from '../utils/tool-registry'
+import { getToolRegistry, ToolCategory } from '../utils/tool-registry'
 
 const get_system_prompt = (searchMode: boolean, supportedTools: string[], registry: any, networkContext?: NetworkContext) => {
   // Generate dynamic tool descriptions based on actually supported tools
@@ -20,7 +21,8 @@ const get_system_prompt = (searchMode: boolean, supportedTools: string[], regist
       videoSearch: `- video search: Use when looking for video content.`,
       ask_question: `- ask_question: Use to clarify ambiguous or incomplete user queries.`,
       privy_transfer: `- privy_transfer: Use when the user wants to transfer ETH to a specified address.`,
-      generic_swap: `- generic_swap: Use when user wants to swap between two arbitrary tokens.`,
+      lifi_bridge_quote: `- lifi_bridge_quote: Use when user wants to swap between two arbitrary tokens to first quote a price.`,
+      lifi_bridge_execute: `- lifi_bridge_execute: Use when user wants to swap between two arbitrary tokens to execute the transaction.`,
       kodiak_opportunities: `- kodiak_opportunities: Use when the user asks about Kodiak Island yield opportunities on Berachain. This tool returns a list of current Kodiak opportunities with APY and liquidity information.`,
       kodiak_deposit: `- kodiak_deposit: Use when the user wants to deposit tokens into a Kodiak Island yield opportunity on Berachain.`,
       kodiak_bault_profitability: `- kodiak_bault_profitability: Use when the user wants to check the profitability of Kodiak Baults for compounding on Berachain. This tool analyzes profitability metrics for specified Baults.`,
@@ -64,10 +66,13 @@ const get_system_prompt = (searchMode: boolean, supportedTools: string[], regist
     - Acknowledge: "Checked Bault profitability. Would you like to compound any profitable Baults?"`,
       market_chart: `  • market_chart  
     - Call it and let the UI show the chart.  
-    - Acknowledge: "Here's the market chart. Need data for a different timeframe or coin?"`
+    - Acknowledge: "Here's the market chart. Need data for a different timeframe or coin?"`,
+      lifi_bridge_quote: `  • lifi_bridge_quote
+    - If nothing goes wrong, just acknowledge: “Here’s your quote—anything else?”`,
+
     }
 
-    const readOnlyTools = ['pendle_opportunities', 'pendle_quote', 'wallet_balance', 'kodiak_opportunities', 'kodiak_bault_profitability', 'market_chart']
+    const readOnlyTools = ['pendle_opportunities', 'pendle_quote', 'wallet_balance', 'kodiak_opportunities', 'kodiak_bault_profitability', 'market_chart', 'lifi_bridge_quote']
       .filter(tool => supportedTools.includes(tool))
       .map(tool => readOnlyToolsDescriptions[tool])
       .filter(Boolean)
@@ -88,14 +93,11 @@ const get_system_prompt = (searchMode: boolean, supportedTools: string[], regist
     - First check bault profitability with kodiak_bault_profitability.
     - Only compound baults that show as profitable.
     - Confirm transaction details before execution.`,
-      generic_swap: `  • generic_swap  
-    - Confirm swap details before execution.`,
-      fund_wallet: `  • fund_wallet  
-    - Only available in Demo environment.
-    - Funds the user's wallet with ETH.`
+    //   generic_swap: `  • generic_swap  
+    // - Confirm swap details before execution.`
     }
 
-    const writeTools = ['pendle_swap', 'privy_transfer', 'kodiak_deposit', 'kodiak_compound_bault', 'generic_swap', 'fund_wallet']
+    const writeTools = ['pendle_swap', 'privy_transfer', 'kodiak_deposit', 'generic_swap', 'lifi_bridge_execute', 'kodiak_compound_bault', 'fund_wallet']
       .filter(tool => supportedTools.includes(tool))
       .map(tool => writeToolsDescriptions[tool])
       .filter(Boolean)
@@ -271,7 +273,7 @@ You can only execute on behalf of the user if they have wallets and have delegat
     if (networkContext) {
       networkInfo = `
 Network Context:
-- Selected Network: ${networkContext.selectedNetwork}
+- Selected Network: ${networkContext.selectedNetwork} (default fromChain for bridging, default chain for swapping and transfer)
 - Chain ID: ${networkContext.selectedChainId}
 - Demo Mode: ${networkContext.isDemo ? 'ON' : 'OFF'}
 - RPC URL: ${networkContext.rpcUrl}

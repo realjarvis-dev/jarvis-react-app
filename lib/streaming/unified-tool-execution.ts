@@ -8,8 +8,10 @@ import {
 import { ExtendedCoreMessage } from '../types'
 import { ErrorType, createErrorResponse, executeWithRetry } from '../utils/error-handling'
 import { getModel, isToolCallSupported } from '../utils/registry'
-import { NetworkContext, ToolRegistry, getToolRegistry } from '../utils/tool-registry'
+import { ToolRegistry, getToolRegistry } from '../utils/tool-registry'
+
 import { parseToolCallXml } from './parse-tool-call'
+import { NetworkContext } from '../types/context'
 
 /**
  * Result of a tool execution

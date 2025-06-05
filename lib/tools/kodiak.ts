@@ -9,8 +9,8 @@ import { depositToKodiakIsland, IslandSingleDepositParams } from '../kodiak/isla
 import { checkBault, checkProfitability, compoundBaultWithHelper } from '../kodiak/kodiak-baults';
 import { tickToPrice } from '../kodiak/utils';
 import { getUserWallet } from '../privy/client';
+import { NetworkContext } from '../types/context';
 import { FormattedKodiakIsland } from '../types/kodiak';
-import { NetworkContext } from '../utils/tool-registry';
 
 interface ToolContext {
   toolCallId?: string

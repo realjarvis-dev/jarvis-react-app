@@ -76,10 +76,10 @@ export const BOUNTY_HELPER_ABI = [
   ) external`
 ];
 
-// BGT Wrapper addresses (replace with actual addresses)
+// BGT Wrapper addresses
 export const IBGT_ADDRESS = '0xac03caba51e17c86c921e1f6cbfbdc91f8bb2e6b';
-export const YBGT_ADDRESS = '0x...'; // Add YBGT address
-export const LBGT_ADDRESS = '0x...'; // Add LBGT address
+export const YBGT_ADDRESS = '0xac03caba51e17c86c921e1f6cbfbdc91f8bb2e6b'; // TODO: Replace with actual YBGT address
+export const LBGT_ADDRESS = '0xac03caba51e17c86c921e1f6cbfbdc91f8bb2e6b'; // TODO: Replace with actual LBGT address
 
 // BountyHelper contract address (replace with actual address)
 export const BOUNTY_HELPER_ADDRESS = '0xd7af1F067d038fB5Aaa58a3F2707A0e95AAb998B'; // BountyHelper contract address 

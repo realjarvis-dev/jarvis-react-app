@@ -16,7 +16,8 @@ import { SwapTransactionCard } from './swap-transaction-card'
 import { TransferSection } from './transfer-section'
 import { VideoSearchSection } from './video-search-section'
 import { WalletBalanceSection } from './wallet-balance-section'
-
+import { LifiSwapQuoteSection } from './lifi-swap-quote-section'
+import { LifiSwapExecuteSection } from './lifi-swap-execute-section'
 interface ToolSectionProps {
   tool: ToolInvocation
   isOpen: boolean
@@ -188,6 +189,14 @@ export function ToolSection({
           isOpen={isOpen}
           onOpenChange={onOpenChange}
         />
+      )
+    case 'lifi_bridge_quote':
+      return (
+        <LifiSwapQuoteSection tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
+      )
+    case 'lifi_bridge_execute':
+      return (
+        <LifiSwapExecuteSection tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
       )
     case 'get_gas_price':
       return (

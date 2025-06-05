@@ -9,7 +9,7 @@ export interface NetworkConfig {
   chainId: number
   name: string
   rpcUrl: string
-  scanLink: string
+  scanLink?: string
   isDemo: boolean
 }
 
@@ -34,7 +34,7 @@ export const NETWORK_CONFIGS: Record<ChainType, NetworkConfig> = {
 // Demo network configuration (Tenderly vnet)
 export const DEMO_NETWORK_CONFIG: NetworkConfig = {
   chainId: TenderlyDemoConfig.chainId,
-  name: 'Ethereum Mainnet (Demo)',
+  name: 'Ethereum (Demo)',
   rpcUrl: TenderlyDemoConfig.rpcUrl,
   scanLink: TenderlyDemoConfig.scanLink,
   isDemo: true

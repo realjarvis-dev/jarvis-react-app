@@ -1,10 +1,12 @@
 'use client'
 
+import { getConfigByChainId } from '@/lib/config/network' // Import getConfigByChainId
 import type { ToolInvocation } from 'ai'
 import React from 'react' // Added React import for JSX
 import { CollapsibleMessage } from './collapsible-message' // Assuming this can be reused
 import { Section, ToolArgsSection } from './section' // Assuming this can be reused
-import { NetworkConfig } from '@/lib/config/network'
+import { useNetwork } from '@/lib/context/network-context'
+// import { MainnetConfig } from '@/lib/config/network'
 interface TransferSectionProps {
   tool: ToolInvocation
   isOpen: boolean
@@ -20,6 +22,13 @@ interface PrivyTransferResult {
   status: 'success' | 'fail'
   hash?: string
   error_message?: any
+  transaction_details?: {
+    to: string
+    amount: number
+    complete_time: string
+    chainId?: number
+    chainExplorerName?: string
+  }
 }
 
 export function TransferSection({
@@ -27,6 +36,7 @@ export function TransferSection({
   isOpen,
   onOpenChange
 }: TransferSectionProps) {
+  const { isDemoMode } = useNetwork()
   const args = tool.args as PrivyTransferArgs
 
   const header = (
@@ -42,19 +52,22 @@ export function TransferSection({
     case 'result':
       const toolResult = tool.result as PrivyTransferResult
       if (toolResult.status === 'success' || toolResult.hash) {
+        const chainId = toolResult.transaction_details?.chainId || 1 // Default to 1 if not provided
+        const scanLink = getConfigByChainId(chainId, isDemoMode).scanLink
+
         statusDisplay = (
           <div>
             <p className="text-black-600">Transaction completed!</p>
-            {toolResult.hash && (
+            {toolResult.hash && scanLink && (
               <p>
-                View on {' '}
+                View on{' '}
                 <a
-                  href={`https://${NetworkConfig.scanLink}/tx/${toolResult.hash}`}
+                  href={`https://${scanLink}/tx/${toolResult.hash}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-500 hover:underline"
                 >
-                  EtherScan
+                  {toolResult.transaction_details?.chainExplorerName}
                 </a>
               </p>
             )}
@@ -65,7 +78,7 @@ export function TransferSection({
         statusDisplay = (
           <div>
             <p className="text-red-600">Transfer failed:</p>
-            <pre className="whitespace-pre-wrap">
+            <pre className="whitespace-pre-wrap break-all">
               {typeof toolResult.error_message === 'string'
                 ? toolResult.error_message
                 : JSON.stringify(toolResult.error_message, null, 2)}

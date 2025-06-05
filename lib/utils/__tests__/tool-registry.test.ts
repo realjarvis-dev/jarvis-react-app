@@ -112,6 +112,6 @@ describe('createToolRegistry', () => {
     expect(toolNames).toContain('pendle_opportunities')
     expect(toolNames).toContain('wallet_balance')
     expect(toolNames).toContain('kodiak_opportunities')
-    expect(toolNames).toContain('generic_swap')
+    // expect(toolNames).toContain('generic_swap')
   })
 })

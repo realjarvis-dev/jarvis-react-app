@@ -1,7 +1,7 @@
 import { tool } from 'ai'
 import { z } from 'zod'
 import { fetchMarketChart, processMarketChartData } from '../coingecko/market-chart'
-import { NetworkContext } from '../utils/tool-registry'
+import { NetworkContext } from '../types/context'
 
 interface ToolContext {
   toolCallId?: string
