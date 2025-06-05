@@ -213,8 +213,8 @@ export function researcher({
   allowWeb3Tools: string
   networkContext?: NetworkContext
 }): ResearcherReturn {
-  console.log('searchMode', searchMode)
-  console.log('networkContext', networkContext)
+  // console.log('searchMode', searchMode)
+  // console.log('networkContext', networkContext)
   try {
     const currentDate = new Date().toLocaleString()
 

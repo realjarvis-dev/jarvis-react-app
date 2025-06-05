@@ -93,6 +93,8 @@ export async function POST(request: Request) {
       const serverDeterminedNetworkConfig =
         getServerSideNetworkConfig(pseudoReq)
 
+      console.log('serverDeterminedNetworkConfig', serverDeterminedNetworkConfig)
+
       networkContext = createNetworkContext(
         serverDeterminedNetworkConfig.id, // Use chainId from the config
         serverDeterminedNetworkConfig.isDemo, // Use isDemo from the config

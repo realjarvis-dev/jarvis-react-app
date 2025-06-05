@@ -1,4 +1,5 @@
-import { getTenderlyDemoTokenBalance } from '@/lib/alchemy/get-token-balance';
+import { getTokenBalances } from '@/lib/alchemy/get-token-balance';
+import { TokenData } from '@/lib/alchemy/types';
 import { addBalanceAnvilFork } from '@/lib/anvil-fork/fund';
 import { getUserEvmWalletAddress, verifyAccessToken } from '@/lib/privy/client';
 import { ethToWei, setBalanceVnet } from '@/lib/tenderly/fund';
@@ -40,11 +41,11 @@ export async function GET(req: NextRequest) {
     
     // Get wallet balance on Tenderly Demo Network
     console.log('Fetching token balances from Tenderly Demo Network')
-    const tokenBalances = await getTenderlyDemoTokenBalance(walletAddress)
+    const tokenBalances = await getTokenBalances(walletAddress, 1, true)
     console.log(`Found ${tokenBalances.length} tokens in wallet`)
     
     // Find ETH balance
-    const ethToken = tokenBalances.find(token => token.symbol === 'ETH')
+    const ethToken = tokenBalances.find((token: TokenData) => token.symbol === 'ETH')
     
     if (!ethToken) {
       console.error('ETH token not found in balance response')
