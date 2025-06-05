@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 import { TokenData } from "./types";
-import { DEMO_NETWORK_CONFIG } from "../config/network-selection";
+import { TENDERLY_DEMO_CONFIG } from "@/lib/network/config";
 
 const commonlyUsedTokens = {
     ETH: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
@@ -58,7 +58,7 @@ const ERC20_ABI = [
           symbol,
           name,
           balance: formattedBalance,
-          network: DEMO_NETWORK_CONFIG.name
+          network: TENDERLY_DEMO_CONFIG.displayName
         };
       }
       return null;

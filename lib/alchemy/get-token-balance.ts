@@ -1,7 +1,7 @@
 import { Alchemy, TokenBalance } from 'alchemy-sdk'
 import { ethers, id } from 'ethers'
-import { TenderlyDemoConfig } from '../config/network'
-import { DEMO_NETWORK_CONFIG } from '../config/network-selection'
+// import { TENDERLY_DEMO_CONFIG } from '../config/network'
+import { TENDERLY_DEMO_CONFIG } from '../network/config'
 import {
   berachainMainnetAlchemy,
   berachainBepoliaAlchemy,
@@ -48,7 +48,7 @@ export async function getTenderlyDemoTokenBalance(
 ): Promise<TokenData[]> {
   try {
     const allTokenData: TokenData[] = []
-    const provider = new ethers.JsonRpcProvider(TenderlyDemoConfig.rpcUrl);
+    const provider = new ethers.JsonRpcProvider(TENDERLY_DEMO_CONFIG.rpcUrl);
     for (const tokenAddress of commonlyUsedPTTokensArray) {
       const tokenData = await getDemoTokenData(tokenAddress, address, provider)
       if (tokenData) allTokenData.push(tokenData)
@@ -58,7 +58,7 @@ export async function getTenderlyDemoTokenBalance(
       if (tokenData) allTokenData.push(tokenData)
     }
 
-  //   const provider = new ethers.JsonRpcProvider(TenderlyDemoConfig.rpcUrl);
+  //   const provider = new ethers.JsonRpcProvider(TENDERLY_DEMO_CONFIG.rpcUrl);
     
       // Get native ETH balance
       const nativeBalance = await provider.getBalance(address);
@@ -68,7 +68,7 @@ export async function getTenderlyDemoTokenBalance(
         name: 'Ether',
         symbol: 'ETH',
         balance: ethers.formatEther(nativeBalance),
-        network: DEMO_NETWORK_CONFIG.name
+        network: TENDERLY_DEMO_CONFIG.displayName
       };
       allTokenData.push(ethToken)
 
@@ -112,7 +112,7 @@ export async function getTokenBalance(
           name: meta.name ?? 'Unknown',
           symbol: meta.symbol ?? 'UNK',
           balance: ethers.formatUnits(rawBig, meta.decimals ?? 18),
-          network: isDemo ? DEMO_NETWORK_CONFIG.name : alchemy.config.network
+          network: isDemo ? TENDERLY_DEMO_CONFIG.displayName : alchemy.config.network
         }
       })
     } catch (err) {
@@ -128,7 +128,7 @@ export async function getTokenBalance(
       name: nativeAssets[alchemy.config.network].name,
       symbol: nativeAssets[alchemy.config.network].symbol,
       balance: ethers.formatEther(nativeWei.toString()),
-      network: isDemo ? DEMO_NETWORK_CONFIG.name : alchemy.config.network
+      network: isDemo ? TENDERLY_DEMO_CONFIG.displayName : alchemy.config.network
     }
 
     /* ── 6. Combine and return ──────────────────────────────────────── */

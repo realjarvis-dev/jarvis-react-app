@@ -22,7 +22,7 @@ import { CopyableWalletAddressSkeleton } from './copyable-wallet-address-skeleto
 
 import { MarketPulse } from './market-pulse'
 
-import { useNetwork } from '../lib/context/network-context'
+import { useNetwork } from '@/lib/network/context'
 import { ChainSelector } from './chain-selector'
 import { DemoToggle } from './demo-toggle'
 import { SearchModeToggle } from './search-mode-toggle'

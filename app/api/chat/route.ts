@@ -1,4 +1,4 @@
-import { getActiveNetworkConfig } from '@/lib/config/network-selection'
+import { getActiveNetworkConfig } from '@/lib/network/config'
 import { getUser, getUserWallet } from '@/lib/privy/client'
 import { createManualToolStreamResponse } from '@/lib/streaming/create-manual-tool-stream'
 import { createToolCallingStreamResponse } from '@/lib/streaming/create-tool-calling-stream'

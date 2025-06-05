@@ -1,15 +1,16 @@
-import { useNetwork } from '../context/network-context'
-import { NetworkContext } from '../types/context'
+import { useNetwork } from '@/lib/network/context'
+import { ChainType } from '@/lib/network/types'
+import { NetworkContext } from '@/lib/types/context'
 
 /**
  * Convert network context from React context to tool registry format
  */
 export function createNetworkContext(
-  selectedChain: 'ethereum' | 'berachain',
+  selectedChain: ChainType,
   isDemoMode: boolean,
   activeNetwork: any
 ): NetworkContext {
-  const selectedNetwork = isDemoMode ? 'demo' : selectedChain
+  const selectedNetwork = selectedChain
   
   return {
     selectedNetwork,

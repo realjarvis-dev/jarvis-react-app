@@ -153,7 +153,10 @@ export function getAvailableChains(isDemoMode: boolean): ChainType[] {
  * @param chainId - The chain ID to search for.
  * @returns The `NetworkConfig` if found, otherwise `undefined`.
  */
-export function getConfigByChainId(chainId: number): NetworkConfig | undefined {
+export function getConfigByChainId(chainId: number, isDemo: boolean): NetworkConfig {
+  if (isDemo) {
+    return TENDERLY_DEMO_CONFIG
+  }
   for (const key in allNetworkConfigs) {
     const network = allNetworkConfigs[key as ChainType]
     if (network.chainId === chainId) {
@@ -165,5 +168,5 @@ export function getConfigByChainId(chainId: number): NetworkConfig | undefined {
   // if (TENDERLY_DEMO_CONFIG.chainId === chainId) {
   //   return TENDERLY_DEMO_CONFIG;
   // }
-  return undefined
+  throw new Error(`No network config found for chainId: ${chainId}`)
 }

@@ -2,7 +2,8 @@
 
 import { cn } from '@/lib/utils'
 import { CheckCircle, Clock, XCircle } from 'lucide-react'
-import { getConfigByChainId } from '@/lib/config/network'
+import { getConfigByChainId } from '@/lib/network/config'
+import { useNetwork } from '@/lib/network/context'
 
 
 interface SwapTransactionStatusProps {
@@ -18,7 +19,8 @@ export function SwapTransactionStatus({
   tokenName,
   chainId=1
 }: SwapTransactionStatusProps) {
-  const etherscanBaseUrl = `https://${getConfigByChainId(chainId).scanLink}`
+  const { isDemoMode } = useNetwork()
+  const etherscanBaseUrl = `https://${getConfigByChainId(chainId, isDemoMode).scanLink}`
 
   
   // Get appropriate color based on status

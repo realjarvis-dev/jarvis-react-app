@@ -224,6 +224,7 @@ export const pendleSwapTool = tool({
       output_token_name_display
     } = params;
     const networkContext = context?.networkContext;
+    const isDemo = networkContext?.isDemo
     
     try {
       const evmWalletAddress = await getUserEvmWalletAddress()
@@ -234,7 +235,7 @@ export const pendleSwapTool = tool({
       }
 
       const chainId = networkContext?.selectedChainId // Assuming Ethereum mainnet for Pendle
-      const isDemo = networkContext?.isDemo
+      const isDemo = networkContext!.isDemo
 
       let actualTokenInAddress = input_token_address.toLowerCase().trim()
       let actualTokenOutAddress = output_token_address.toLowerCase().trim()
@@ -317,7 +318,8 @@ export const pendleSwapTool = tool({
           spenderAddress,
           amountInBaseUnits,
           evmWalletAddress,
-          chainId
+          chainId,
+          isDemo
         )
         if (approvalResult.status === 'fail') {
           throw new Error(

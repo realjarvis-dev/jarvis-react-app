@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { TokenData } from '@/lib/alchemy/types'
-import { useNetwork } from '@/lib/context/network-context'
+import { useNetwork } from '@/lib/network/context'
 
 const TokenRow = ({ token }: { token: TokenData }) => {
   // Format balance to a nice readable format (e.g., 9979.99 ETH)

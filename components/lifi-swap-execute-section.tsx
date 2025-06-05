@@ -2,7 +2,7 @@
 
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { getConfigByChainId } from '@/lib/config/network'
+import { getConfigByChainId } from '@/lib/network/config'
 import { cn } from '@/lib/utils'
 import {
   AlertCircle,
@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { SwapTransactionStatus } from './swap-transaction-status'
-import { useNetwork } from '@/lib/context/network-context'
+import { useNetwork } from '@/lib/network/context'
 
 interface LifiSwapExecuteSectionProps {
   tool: any // AI tool invocation, specifically bridgeExecuteTool
@@ -212,7 +212,7 @@ export function LifiSwapExecuteSection({
   
   const toChainId = args?.toChainId
   const toEtherscanBaseUrl = toChainId
-    ? getConfigByChainId(toChainId).scanLink
+    ? getConfigByChainId(toChainId, isDemoMode).scanLink
     : ''
 
   const bridgeText = isBridge ? 'bridge' : 'swap'

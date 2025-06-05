@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { NetworkConfig } from '../config/network-selection'
 import { searchSchema } from '../schema/search'
 import { getGasPriceTool } from '../tools/gas-price'
 import { genericSwapTool } from '../tools/generic-swap'
@@ -14,7 +13,7 @@ import { createVideoSearchTool } from '../tools/video-search'
 import { bridgeExecuteTool, bridgeQuoteTool } from '../tools/lifi-bridge'
 import { ToolContext, NetworkContext } from '../types/context'
 import { fundWalletTool, walletBalanceTool } from '../tools/wallet'
-
+import { ChainType } from '@/lib/network/types'
 
 
 /**
@@ -26,7 +25,7 @@ export interface ToolDefinition<T = any> {
   schema: z.ZodType<T>
   execute: (params: T, context?: ToolContext) => Promise<any> | PromiseLike<any>
   category: ToolCategory
-  supportedNetworks?: ('ethereum' | 'berachain' | 'demo')[]
+  supportedNetworks?: (ChainType | 'demo')[]
 }
 
 /**
@@ -286,7 +285,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'berachain', 'demo']
+    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism']
   })
   
   registry.registerTool({
@@ -299,7 +298,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'berachain', 'demo']
+    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism']
   })
   
   registry.registerTool({
@@ -339,7 +338,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'berachain', 'demo']
+    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism']
   })
 
   registry.registerTool({
@@ -352,7 +351,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'berachain', 'demo']
+    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism']
   })
 
   

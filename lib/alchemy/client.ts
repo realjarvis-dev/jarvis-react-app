@@ -1,5 +1,5 @@
 import { Alchemy, AlchemySettings, Network } from 'alchemy-sdk'
-import { TenderlyDemoConfig } from '../config/network'
+import { TENDERLY_DEMO_CONFIG } from '@/lib/network/config'
 // 1. Define your shared defaults
 const API_KEY = process.env.ALCHEMY_API_KEY!
 const DEFAULT_OVERRIDES: Partial<AlchemySettings> = {
@@ -23,7 +23,7 @@ function makeAlchemyClient(
 export const demoAlchemy = makeAlchemyClient(Network.ETH_MAINNET, {
   connectionInfoOverrides: {
     skipFetchSetup: true,
-    url: TenderlyDemoConfig.rpcUrl
+    url: TENDERLY_DEMO_CONFIG.rpcUrl
   }
 })
 
