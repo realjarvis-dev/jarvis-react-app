@@ -330,7 +330,6 @@ export function createToolRegistry(model: string): ToolRegistry {
   
 
   registry.registerTool({
-<<<<<<< HEAD
     name: 'kodiak_bault_profitability',
     description: 'Check the profitability of Kodiak Baults for compounding',
     schema: kodiakBaultProfitabilityTool.parameters,
@@ -344,24 +343,11 @@ export function createToolRegistry(model: string): ToolRegistry {
   })
   
   registry.registerTool({
-    name: 'generic_swap',
-    description: 'Execute a swap transaction between two arbitrary tokens',
-    schema: genericSwapTool.parameters,
-    execute: async (params, context) => genericSwapTool.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-||||||| f4305b1
-    name: 'generic_swap',
-    description: 'Execute a swap transaction between two arbitrary tokens',
-    schema: genericSwapTool.parameters,
-    execute: async (params, context) => genericSwapTool.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-=======
     name: 'lifi_bridge_quote',
     description: bridgeQuoteTool.description || '',
     schema: bridgeQuoteTool.parameters,
     execute: async (params, context) => bridgeQuoteTool.execute(params, { 
-      toolCallId: context?.toolCallId || 'unknown', 
->>>>>>> origin/dev
+      toolCallId: context?.toolCallId || 'unknown',
       messages: context?.messages || [],
       networkContext: context?.networkContext!
     } as any),

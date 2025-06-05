@@ -25,16 +25,9 @@ const get_system_prompt = (searchMode: boolean, supportedTools: string[], regist
       lifi_bridge_execute: `- lifi_bridge_execute: Use when user wants to swap between two arbitrary tokens to execute the transaction.`,
       kodiak_opportunities: `- kodiak_opportunities: Use when the user asks about Kodiak Island yield opportunities on Berachain. This tool returns a list of current Kodiak opportunities with APY and liquidity information.`,
       kodiak_deposit: `- kodiak_deposit: Use when the user wants to deposit tokens into a Kodiak Island yield opportunity on Berachain.`,
-<<<<<<< HEAD
       kodiak_bault_profitability: `- kodiak_bault_profitability: Use when the user wants to check the profitability of Kodiak Baults for compounding on Berachain. This tool analyzes profitability metrics for specified Baults.`,
       get_gas_price: `- get_gas_price: Use when the user asks about current gas prices for transactions.`,
       fund_wallet: `- fund_wallet: Use when the user requests their wallet to be funded with ETH in demo mode. Only works in the Demo environment.`
-||||||| f4305b1
-      get_gas_price: `- get_gas_price: Use when the user asks about current gas prices for transactions.`,
-      fund_wallet: `- fund_wallet: Use when the user requests their wallet to be funded with ETH in demo mode. Only works in the Demo environment.`
-=======
-      get_gas_price: `- get_gas_price: Use when the user asks about current gas prices for transactions.`
->>>>>>> origin/dev
     }
     
     // Only include descriptions for supported tools
@@ -78,13 +71,7 @@ const get_system_prompt = (searchMode: boolean, supportedTools: string[], regist
 
     }
 
-<<<<<<< HEAD
-    const readOnlyTools = ['pendle_opportunities', 'pendle_quote', 'wallet_balance', 'kodiak_opportunities', 'kodiak_bault_profitability', 'market_chart']
-||||||| f4305b1
-    const readOnlyTools = ['pendle_opportunities', 'pendle_quote', 'wallet_balance', 'kodiak_opportunities', 'market_chart']
-=======
-    const readOnlyTools = ['pendle_opportunities', 'pendle_quote', 'wallet_balance', 'kodiak_opportunities', 'market_chart', 'lifi_bridge_quote']
->>>>>>> origin/dev
+    const readOnlyTools = ['pendle_opportunities', 'pendle_quote', 'wallet_balance', 'kodiak_opportunities', 'kodiak_bault_profitability', 'market_chart', 'lifi_bridge_quote']
       .filter(tool => supportedTools.includes(tool))
       .map(tool => readOnlyToolsDescriptions[tool])
       .filter(Boolean)

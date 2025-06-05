@@ -16,13 +16,8 @@ import { SwapTransactionCard } from './swap-transaction-card'
 import { TransferSection } from './transfer-section'
 import { VideoSearchSection } from './video-search-section'
 import { WalletBalanceSection } from './wallet-balance-section'
-<<<<<<< HEAD
-
-||||||| f4305b1
-=======
 import { LifiSwapQuoteSection } from './lifi-swap-quote-section'
 import { LifiSwapExecuteSection } from './lifi-swap-execute-section'
->>>>>>> origin/dev
 interface ToolSectionProps {
   tool: ToolInvocation
   isOpen: boolean
