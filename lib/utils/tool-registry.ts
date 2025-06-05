@@ -1,9 +1,9 @@
 import { z } from 'zod'
-import { NetworkConfig } from '../config/network-selection'
 import { searchSchema } from '../schema/search'
 import { getGasPriceTool } from '../tools/gas-price'
 import { genericSwapTool } from '../tools/generic-swap'
-import { kodiakDepositTool, kodiakOpportunitiesTool } from '../tools/kodiak'
+import { kodiakBaultProfitabilityTool, kodiakCompoundBaultTool, kodiakDepositTool, kodiakOpportunitiesTool } from '../tools/kodiak'
+import { bridgeExecuteTool, bridgeQuoteTool } from '../tools/lifi-bridge'
 import { marketChartTool } from '../tools/market-chart'
 import { pendleOpportunitiesTool, pendleQuoteTool, pendleSwapTool } from '../tools/pendle'
 import { privyTransferTool } from '../tools/privy-transfer'
@@ -11,9 +11,8 @@ import { createQuestionTool } from '../tools/question'
 import { retrieveTool } from '../tools/retrieve'
 import { createSearchTool } from '../tools/search'
 import { createVideoSearchTool } from '../tools/video-search'
-import { bridgeExecuteTool, bridgeQuoteTool } from '../tools/lifi-bridge'
-import { ToolContext, NetworkContext } from '../types/context'
 import { fundWalletTool, walletBalanceTool } from '../tools/wallet'
+import { NetworkContext, ToolContext } from '../types/context'
 
 
 
@@ -330,11 +329,50 @@ export function createToolRegistry(model: string): ToolRegistry {
   
 
   registry.registerTool({
+    name: 'kodiak_bault_profitability',
+    description: 'Check the profitability of Kodiak Baults for compounding',
+    schema: kodiakBaultProfitabilityTool.parameters,
+    execute: async (params, context) => kodiakBaultProfitabilityTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3,
+    supportedNetworks: ['berachain']
+  })
+  
+  registry.registerTool({
+    name: 'kodiak_compound_bault',
+    description: 'Compound a profitable Kodiak Bault using the BountyHelper contract',
+    schema: kodiakCompoundBaultTool.parameters,
+    execute: async (params, context) => kodiakCompoundBaultTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3,
+    supportedNetworks: ['berachain']
+  })
+  
+  registry.registerTool({
+    name: 'generic_swap',
+    description: 'Execute a swap transaction between two arbitrary tokens',
+    schema: genericSwapTool.parameters,
+    execute: async (params, context) => genericSwapTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3,
+    supportedNetworks: ['ethereum', 'berachain', 'demo']
+  })
+
+  registry.registerTool({
     name: 'lifi_bridge_quote',
     description: bridgeQuoteTool.description || '',
     schema: bridgeQuoteTool.parameters,
     execute: async (params, context) => bridgeQuoteTool.execute(params, { 
-      toolCallId: context?.toolCallId || 'unknown', 
+      toolCallId: context?.toolCallId || 'unknown',
       messages: context?.messages || [],
       networkContext: context?.networkContext!
     } as any),
