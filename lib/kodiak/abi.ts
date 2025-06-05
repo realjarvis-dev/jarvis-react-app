@@ -82,4 +82,4 @@ export const YBGT_ADDRESS = '0x...'; // Add YBGT address
 export const LBGT_ADDRESS = '0x...'; // Add LBGT address
 
 // BountyHelper contract address (replace with actual address)
-export const BOUNTY_HELPER_ADDRESS = '0x...'; // Add BountyHelper address 
+export const BOUNTY_HELPER_ADDRESS = '0xd7af1F067d038fB5Aaa58a3F2707A0e95AAb998B'; // BountyHelper contract address 
