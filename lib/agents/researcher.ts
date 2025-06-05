@@ -24,6 +24,7 @@ const get_system_prompt = (searchMode: boolean, supportedTools: string[], regist
       kodiak_opportunities: `- kodiak_opportunities: Use when the user asks about Kodiak Island yield opportunities on Berachain. This tool returns a list of current Kodiak opportunities with APY and liquidity information.`,
       kodiak_deposit: `- kodiak_deposit: Use when the user wants to deposit tokens into a Kodiak Island yield opportunity on Berachain.`,
       kodiak_bault_profitability: `- kodiak_bault_profitability: Use when the user wants to check the profitability of Kodiak Baults for compounding on Berachain. This tool analyzes profitability metrics for specified Baults.`,
+      kodiak_compound_bault: `- kodiak_compound_bault: Use when the user wants to compound a profitable Kodiak Bault. This tool executes a transaction to claim BGT rewards using the BountyHelper contract (zero-capital compounding).`,
       get_gas_price: `- get_gas_price: Use when the user asks about current gas prices for transactions.`,
       fund_wallet: `- fund_wallet: Use when the user requests their wallet to be funded with ETH in demo mode. Only works in the Demo environment.`
     }
@@ -83,6 +84,10 @@ const get_system_prompt = (searchMode: boolean, supportedTools: string[], regist
     - Only accept ETH amounts; afterward ask "What's next?"`,
       kodiak_deposit: `  • kodiak_deposit  
     - Remind to check opportunities if skipped.`,
+      kodiak_compound_bault: `  • kodiak_compound_bault  
+    - First check bault profitability with kodiak_bault_profitability.
+    - Only compound baults that show as profitable.
+    - Confirm transaction details before execution.`,
       generic_swap: `  • generic_swap  
     - Confirm swap details before execution.`,
       fund_wallet: `  • fund_wallet  
@@ -90,7 +95,7 @@ const get_system_prompt = (searchMode: boolean, supportedTools: string[], regist
     - Funds the user's wallet with ETH.`
     }
 
-    const writeTools = ['pendle_swap', 'privy_transfer', 'kodiak_deposit', 'generic_swap', 'fund_wallet']
+    const writeTools = ['pendle_swap', 'privy_transfer', 'kodiak_deposit', 'kodiak_compound_bault', 'generic_swap', 'fund_wallet']
       .filter(tool => supportedTools.includes(tool))
       .map(tool => writeToolsDescriptions[tool])
       .filter(Boolean)
