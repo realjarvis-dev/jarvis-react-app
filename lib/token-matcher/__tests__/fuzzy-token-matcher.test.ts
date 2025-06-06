@@ -46,7 +46,7 @@ describe('TokenMatcher', () => {
     it('should load tokens for the given chainId', () => {
       const matcher = new TokenMatcher(testChainIdWithTokens)
       // Accessing private list for testing purposes, alternative is to infer from match results
-      expect(matcher['list'].length).toEqual(
+      expect(matcher['tokenList'].length).toEqual(
         tokensByChain[
           String(testChainIdWithTokens) as keyof typeof tokensByChain
         ]?.length || 0
@@ -55,7 +55,7 @@ describe('TokenMatcher', () => {
 
     it('should handle a chainId with no tokens gracefully', () => {
       const matcher = new TokenMatcher(testChainIdWithoutTokens)
-      expect(matcher['list']).toEqual([])
+      expect(matcher['tokenList']).toEqual([])
       const results = matcher.match('ANY')
       expect(results).toEqual([])
     })

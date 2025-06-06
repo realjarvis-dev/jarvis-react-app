@@ -291,7 +291,7 @@ export function createToolRegistry(model: string): ToolRegistry {
   
   registry.registerTool({
     name: 'privy_transfer',
-    description: 'Transfer ETH to a specified address',
+    description: privyTransferTool.description || '',
     schema: privyTransferTool.parameters,
     execute: async (params, context) => privyTransferTool.execute(params, {
       toolCallId: context?.toolCallId || 'unknown',

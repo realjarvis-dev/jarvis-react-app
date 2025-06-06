@@ -16,15 +16,15 @@ type ChainIdKey = keyof typeof tokensByChain
 export class TokenMatcher {
   private fuse: Fuse<Token>
   private chainId: string
-  private list: Token[]
+  private tokenList: Token[]
   /**
    * @param {number|string} chainId
    */
-  constructor(chainId: number, threshold = 0.3) {
+  constructor(chainId: number, threshold = 0.3, tokenList: Token[] = []) {
     this.chainId = String(chainId)
-    this.list = tokensByChain[this.chainId as ChainIdKey] || []
+    this.tokenList = tokenList || tokensByChain[this.chainId as ChainIdKey] || []
 
-    this.fuse = new Fuse(this.list, {
+    this.fuse = new Fuse(this.tokenList, {
       keys: [
         { name: 'symbol', weight: 0.7 },
         { name: 'name', weight: 0.3 }

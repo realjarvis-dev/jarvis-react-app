@@ -72,6 +72,7 @@ export async function getTokenBalances(
         name: nativeDetails.name,
         symbol: nativeDetails.symbol,
         balance: ethers.formatUnits(nativeBalance, nativeDetails.decimals),
+        decimals: Number(nativeDetails.decimals),
         network: networkConfig.displayName
       })
       return allTokenData
@@ -99,7 +100,8 @@ export async function getTokenBalances(
                 nativeBalance,
                 nativeDetails.decimals
               ),
-              network: networkConfig.displayName
+              network: networkConfig.displayName,
+              decimals: Number(nativeDetails.decimals)
             }
           ]
         } catch (rpcError) {
@@ -139,7 +141,8 @@ export async function getTokenBalances(
           name: meta.name ?? 'Unknown',
           symbol: meta.symbol ?? 'UNK',
           balance: ethers.formatUnits(rawBig, meta.decimals ?? 18),
-          network: networkConfig.displayName
+          network: networkConfig.displayName,
+          decimals: meta.decimals ?? 18
         }
       })
     } catch (err) {
@@ -157,7 +160,8 @@ export async function getTokenBalances(
       name: nativeDetails.name,
       symbol: nativeDetails.symbol,
       balance: ethers.formatUnits(nativeWei.toString(), nativeDetails.decimals),
-      network: networkConfig.displayName
+      network: networkConfig.displayName,
+      decimals: Number(nativeDetails.decimals)
     }
 
     return [nativeTokenData, ...erc20Tokens]

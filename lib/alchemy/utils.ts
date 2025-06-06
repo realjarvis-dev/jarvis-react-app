@@ -52,12 +52,15 @@ const ERC20_ABI = [
       // Only return tokens with positive balance
       if (balance > 0) {
         const formattedBalance = ethers.formatUnits(balance, decimals);
+        console.log(decimals)
+        console.log(Number(decimals))
         return {
           address: tokenAddress,
           symbol,
           name,
           balance: formattedBalance,
-          network: TENDERLY_DEMO_CONFIG.displayName
+          network: TENDERLY_DEMO_CONFIG.displayName,
+          decimals: Number(decimals)
         };
       }
       return null;

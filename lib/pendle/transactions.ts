@@ -1,3 +1,4 @@
+import { getConfigByChainId } from '@/lib/network/config'
 import {
   getUserEvmWalletAddress,
   getUserWallet,
@@ -6,7 +7,21 @@ import {
 import axios from 'axios'
 import { ethers, TransactionRequest } from 'ethers'
 import { v4 as uuidv4 } from 'uuid'
-import { getConfigByChainId } from '@/lib/network/config'
+import { getGasPriceByChainId } from '../alchemy/get-gas-price'
+
+// Custom error for transaction failures
+export class TransactionError extends Error {
+  hash?: string
+
+  constructor(message: string, hash?: string) {
+    super(message)
+    this.name = 'TransactionError'
+    this.hash = hash
+
+    // This is necessary for correctly setting the prototype in environments like Node.js
+    Object.setPrototypeOf(this, TransactionError.prototype)
+  }
+}
 
 // Types for transaction responses
 export interface QuoteResponse {
@@ -104,7 +119,8 @@ const ERC20_ABI = [
   'function allowance(address owner, address spender) external view returns (uint256)',
   'function decimals() view returns (uint8)',
   'function symbol() view returns (string)',
-  'function name() view returns (string)'
+  'function name() view returns (string)',
+  'function transfer(address to, uint256 amount) returns (bool)'
 ]
 
 export async function getERC20Details(
@@ -128,6 +144,73 @@ export async function getERC20Details(
   }
 }
 
+/**
+ * Transfer ERC20 token
+ * @param tokenAddress Address of the token to transfer
+ * @param toAddress Address of the recipient
+ * @param amount Amount of token to transfer in wei
+ * @param userAddress Address of the user
+ * @param chainId Chain ID
+ * @param isDemo If the transaction is for demo
+ * @returns Promise with transaction hash
+ */
+export async function erc20Transfer(
+  tokenAddress: string,
+  toAddress: string,
+  amount: string,
+  userAddress: string,
+  chainId: number = 1,
+  isDemo: boolean = false
+): Promise<{ status: string; hash?: string; message?: string }> {
+  const provider = new ethers.JsonRpcProvider(
+    process.env.TEST_RPC_URL || getConfigByChainId(chainId, isDemo).rpcUrl
+  )
+  const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider)
+  const transferData = tokenContract.interface.encodeFunctionData('transfer', [
+    toAddress,
+    amount
+  ])
+  let txData;
+  try {
+    if (!isDemo) {
+    txData = await executeSwapTransaction(
+      {
+        to: tokenAddress,
+        from: userAddress,
+        data: transferData,
+        value: BigInt(0)
+      },
+      chainId, {
+        estimateGas: true
+      },
+      isDemo
+      )
+    } else {
+      txData = await executeSwapTransaction(
+        {
+          to: tokenAddress,
+          from: userAddress,
+          data: transferData,
+          value: BigInt(0)
+        },
+        chainId,
+        {
+          estimateGas: false,
+          gasLimit: ethers.toQuantity(1000000) as `0x${string}`
+        },
+        isDemo
+      )
+    }
+
+    return { status: 'success', hash: txData.hash }
+  } catch (error: any) {
+    if (error instanceof TransactionError) {
+      return { status: 'fail', message: error.message, hash: error.hash }
+    }
+    return { status: 'fail', message: (error as Error).message }
+  }
+}
+
 export async function erc20Approval(
   tokenAddress: string,
   spenderAddress: string,
@@ -135,7 +218,7 @@ export async function erc20Approval(
   userAddress: string,
   chainId: number = 1,
   isDemo: boolean
-): Promise<{ status: string; message?: string }> {
+): Promise<{ status: string; hash?: string; message?: string }> {
   // default to use the TEST_RPC_URL in env
   // on localhost can put 127.0.0.1:8545 for local testing
   // TODO: on deployment have to remove the TEST_RPC_URL for multichain support
@@ -166,9 +249,12 @@ export async function erc20Approval(
       },
       chainId
     )
-    return { status: 'success', message: txData.hash }
+    return { status: 'success', hash: txData.hash }
   } catch (error: any) {
-    return { status: 'fail', message: error.message }
+    if (error instanceof TransactionError) {
+      return { status: 'fail', message: error.message, hash: error.hash }
+    }
+    return { status: 'fail', message: (error as Error).message }
   }
 }
 
@@ -188,12 +274,17 @@ export async function executeSwapTransaction(
   chainId: number = 1,
   gasOptions?: {
     gasLimit?: `0x${string}`
-    estimateGas: boolean,
-    gasPrice?: `0x${string}`,
-    getGasPriceFunction?: (chainId: number) => Promise<{ maxPriceInMemPool: bigint, maxPriorityFeePerGas: bigint, maxFeePerGas: bigint }>
+    estimateGas: boolean
+    gasPrice?: `0x${string}`
+    getGasPriceFunction?: (chainId: number) => Promise<{
+      maxPriceInMemPool: bigint
+      maxPriorityFeePerGas: bigint
+      maxFeePerGas: bigint
+    }>
   },
   isDemo: boolean = false
 ): Promise<{ hash: string }> {
+  let hash: string | null = null
   try {
     // // Verify environment variables are set
     // if (!process.env.PRIVATE_KEY) {
@@ -240,7 +331,7 @@ export async function executeSwapTransaction(
     const weiBig = BigInt(value || '0')
     const quantity = ethers.toQuantity(weiBig)
     let gasLimit: `0x${string}`
-    
+
     let estimateGas = gasOptions?.estimateGas !== false // Default to true if not specified or explicitly true
     if (isDemo) {
       estimateGas = false
@@ -295,13 +386,16 @@ export async function executeSwapTransaction(
           gasLimit: gasLimit,
           // gasPrice: gasOptions?.gasPrice ?? undefined,
           maxFeePerGas: ethers.toQuantity(maxFeePerGas) as `0x${string}`,
-          maxPriorityFeePerGas: ethers.toQuantity(maxPriorityFeePerGas) as `0x${string}`,
+          maxPriorityFeePerGas: ethers.toQuantity(
+            maxPriorityFeePerGas
+          ) as `0x${string}`,
           nonce: correctNonce
         },
         idempotencyKey: uuidv4() // unique key for this transaction
       })
 
     const txResponse = await provider.broadcastTransaction(signedTransaction)
+    hash = txResponse.hash
     // 4. Inspect the response
     console.log('Transaction hash:', txResponse.hash)
     // You can then wait for confirmation:
@@ -315,7 +409,16 @@ export async function executeSwapTransaction(
     }
   } catch (error: any) {
     console.error('Error executing transaction:', error.message)
-    throw new Error(`Failed to execute transaction: ${error.message}`)
+    if (hash) {
+      throw new TransactionError(
+        `Failed to execute transaction (hash: ${hash}): ${error.message}`,
+        hash
+      )
+    } else {
+      throw new TransactionError(
+        `Failed to execute transaction: ${error.message}`
+      )
+    }
   }
 }
 
