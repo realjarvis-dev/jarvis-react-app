@@ -304,7 +304,7 @@ export function ChatPanel({
       {showVideoBg && (
   <div
     className="fixed inset-0 z-0 bg-cover bg-center"
-    style={{ backgroundImage: "url(/images/background.png)" }}
+    style={{ backgroundImage: "url(/images/background.avif)" }}
   />
 )}
       {/* <VideoBackground
