@@ -1,7 +1,6 @@
 'use client'
 
 import { Avatar } from '@/components/ui/avatar'
-import { cn } from '@/lib/utils'
 import { Message } from 'ai'
 import { UserIcon } from 'lucide-react'
 import Markdown from 'react-markdown'
@@ -41,7 +40,7 @@ export function ReadOnlyMessage({ message }: ReadOnlyMessageProps) {
         </svg>
       </Avatar>
       <div className="flex-1 space-y-2 overflow-hidden px-1">
-        <div className={cn("prose prose-neutral dark:prose-invert")}>
+        <div className="prose prose-neutral dark:prose-invert">
           <Markdown
             remarkPlugins={[remarkGfm]}
             rehypePlugins={[rehypeRaw]}
