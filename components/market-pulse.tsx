@@ -110,7 +110,14 @@ export function MarketPulse() {
   return (
     <div
       ref={scrollRef}
-      className="flex overflow-x-auto gap-4 py-1 px-2 hide-scrollbar text-xs sm:text-sm text-white/90 bg-gradient-to-r from-yellow-400/20 via-yellow-300/30 to-yellow-400/20 rounded-full shadow-glow backdrop-blur-sm"
+      className="
+        flex overflow-x-auto gap-4 py-1 px-2 hide-scrollbar text-xs sm:text-sm text-white/90
+        bg-gradient-to-r from-[#bfc7ce]/30 via-[#e6e8ea]/40 to-[#bfc7ce]/30
+        rounded-full
+        shadow-[0_0_24px_4px_rgba(200,200,220,0.45),0_0_4px_1px_rgba(255,255,255,0.18)]
+        backdrop-blur-sm
+        border border-white/20
+      "
     >
       {coins.map((coin, index) => (
         <div 
