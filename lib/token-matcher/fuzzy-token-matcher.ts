@@ -27,7 +27,8 @@ export class TokenMatcher {
     this.fuse = new Fuse(this.tokenList, {
       keys: [
         { name: 'symbol', weight: 0.7 },
-        { name: 'name', weight: 0.3 }
+        { name: 'name', weight: 0.3 },
+        { name: 'address', weight: 0.3 }
       ],
       threshold,
       ignoreLocation: true,

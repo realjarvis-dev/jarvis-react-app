@@ -15,20 +15,18 @@ export const privyTransferTool = tool({
   description: 'Transfer native token or erc20 token to a specified address',
   parameters: z.object({
     address: z.string().describe('The address to transfer funds to'),
-    symbol: z.string().describe('The symbol of the token to transfer'),
+    identifier: z.string().describe('The symbol or name or address of the token to transfer'),
     amount: z
       .number()
       .describe('The amount of token to transfer, in human readable format')
   }),
   execute: async (params, context: ToolContext) => {
-    const { address, amount, symbol } = params
+    const { address, amount, identifier } = params
     const networkContext = context.networkContext!
     const evmWallet: WalletWithMetadata | undefined = await getUserWallet(
       'ethereum'
     )
-    // console.log('Transfer amount: ', amount)
-    // console.log('Transfer address: ', address)
-    // console.log('networkContext in privy transfer', networkContext)
+
     const isDemo = networkContext!.isDemo
 
     if (!evmWallet) {
@@ -47,9 +45,11 @@ export const privyTransferTool = tool({
     }
     // determine if the token is native or erc20
     try {
-    console.log('EVM wallet', evmWallet)
+
     const nativeTokenSymbol = networkContext.config.nativeAsset.symbol
-    const isNativeToken = symbol === nativeTokenSymbol
+    const nativeTokenName = networkContext.config.nativeAsset.name
+    const nativeTokenAddress = "0x0000000000000000000000000000000000000000"
+    const isNativeToken = (identifier === nativeTokenSymbol) || (identifier === nativeTokenName) || (identifier === nativeTokenAddress)
     if (isNativeToken) {
       
         const nativeTokenDecimal = networkContext.config.nativeAsset.decimals
@@ -100,7 +100,7 @@ export const privyTransferTool = tool({
         decimals: token.decimals
       }))
       const tokenMatcher = new TokenMatcher(networkContext.selectedChainId, 0.3, tokenForMatcher)
-      const tokenMatches = tokenMatcher.match(symbol)
+      const tokenMatches = tokenMatcher.match(identifier)
       if (tokenMatches.length === 0) {
         return {
           status: 'fail',
@@ -108,17 +108,18 @@ export const privyTransferTool = tool({
           hash: null
         }
       }
-      // TODO: implement case with several match and test for exact match
+      // test for exact match
       const token = tokenMatches[0]
+      if (tokenMatches.length > 1 && !(token.symbol === identifier || token.address === identifier || token.name === identifier)) {
+        const possibleTokens = tokenMatches.map(token => token.name)
+        return {
+          status: 'fail',
+          error_message: `Found multiple matches in wallet, possible matches: ${possibleTokens}`,
+          hash: null
+        }
+      }
       const amountInWei = parseUnits(amount.toString(), token.decimals).toString()
-      // const {status: approvalStatus, hash: approvalHash, message: approvalMessage} = await erc20Approval(token.address, address, amountInWei, evmWallet.address, networkContext.selectedChainId, isDemo)
-      // if (approvalStatus === 'fail') {
-      //   return {
-      //     status: 'fail',
-      //     error_message: approvalMessage,
-      //     hash: approvalHash
-      //   }
-      // }
+
       const {status, hash, message} = await erc20Transfer(token.address, address, amountInWei, evmWallet.address, networkContext.selectedChainId, isDemo)
       const explorerLink = getConfigByChainId(networkContext.selectedChainId, isDemo).scanLink
       const explorerLinkWithHash = `https://${explorerLink}/tx/${hash}`

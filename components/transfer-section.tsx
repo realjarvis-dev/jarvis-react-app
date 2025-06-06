@@ -16,7 +16,7 @@ interface TransferSectionProps {
 interface PrivyTransferArgs {
   address: string
   amount: number
-  symbol: string
+  identifier: string
 }
 
 interface PrivyTransferResult {
@@ -42,7 +42,7 @@ export function TransferSection({
   const args = tool.args as PrivyTransferArgs
 
   const header = (
-    <ToolArgsSection tool="transfer">{`Transfer to ${args.address} for ${args.amount} ${args.symbol}`}</ToolArgsSection>
+    <ToolArgsSection tool="transfer">{`Transfer to ${args.address} for ${args.amount} ${args.identifier}`}</ToolArgsSection>
   )
 
   let statusDisplay: React.ReactNode = null // Changed to React.ReactNode
