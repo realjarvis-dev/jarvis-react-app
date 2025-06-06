@@ -1,4 +1,4 @@
-import { ReadOnlyChat } from '@/components/read-only-chat'
+import { Chat } from '@/components/chat'
 import { getSharedChat } from '@/lib/actions/chat'
 import { convertToUIMessages } from '@/lib/utils'
 import { notFound } from 'next/navigation'
@@ -29,9 +29,9 @@ export default async function SharePage(props: {
   }
 
   return (
-    <ReadOnlyChat
+    <Chat
       id={chat.id}
-      messages={convertToUIMessages(chat.messages)}
+      savedMessages={convertToUIMessages(chat.messages)}
     />
   )
 }
