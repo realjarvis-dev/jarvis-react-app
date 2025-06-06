@@ -465,11 +465,12 @@ export function ChatPanel({
 
                       {/* Share button */}
                       {process.env.NEXT_PUBLIC_ENABLE_SHARE === 'true' && chatId && (
-                        <div className={cn(
-                          showVideoBg && 'text-white border-white/30'
-                        )}>
-                          <ChatShare chatId={chatId} />
-                        </div>
+                        <ChatShare 
+                          chatId={chatId} 
+                          className={cn(
+                            showVideoBg && 'text-white border-white/30 hover:bg-white/10'
+                          )}
+                        />
                       )}
                     </>
                   )}

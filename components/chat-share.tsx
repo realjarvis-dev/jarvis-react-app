@@ -68,12 +68,12 @@ export function ChatShare({ chatId, className }: ChatShareProps) {
       >
         <DialogTrigger asChild>
           <Button
-            className={cn('rounded-full')}
+            className={cn('rounded-full group')}
             size="icon"
-            variant={'ghost'}
+            variant={'outline'}
             onClick={() => setOpen(true)}
           >
-            <Share size={14} />
+            <Share size={14} className="size-3.5 sm:size-4 group-hover:rotate-12 transition-all" />
           </Button>
         </DialogTrigger>
         <DialogContent>
