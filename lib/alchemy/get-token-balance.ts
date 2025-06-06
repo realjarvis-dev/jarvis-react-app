@@ -157,7 +157,9 @@ export async function getTokenBalances(
       network: networkConfig.displayName,
       decimals: Number(nativeDetails.decimals)
     }
-    erc20Tokens = erc20Tokens.filter(token => {token.decimals !== 0 && token.symbol && token.name})
+    console.log("erc20 before filtering", erc20Tokens)
+    erc20Tokens = erc20Tokens.filter(token => {return (token.decimals !== 0) && (token.symbol !== '') && (token.name !== '')})
+    console.log("erc20 after filtering", erc20Tokens)
     return [nativeTokenData, ...erc20Tokens]
   } catch (error) {
     console.error(`Error in getTokenBalances for chainId ${chainId}:`, error)
