@@ -17,6 +17,7 @@ export type AnswerSectionProps = {
     messageId: string,
     options?: ChatRequestOptions
   ) => Promise<string | null | undefined>
+  readOnly?: boolean
 }
 
 export function AnswerSection({
@@ -26,7 +27,8 @@ export function AnswerSection({
   chatId,
   showActions = true, // Default to true for backward compatibility
   messageId,
-  reload
+  reload,
+  readOnly = false
 }: AnswerSectionProps) {
   const handleReload = () => {
     if (reload) {
@@ -38,7 +40,7 @@ export function AnswerSection({
   const message = content ? (
     <div className="flex flex-col gap-1">
       <BotMessage message={content} />
-      {showActions && (
+      {showActions && !readOnly && reload && (
         <MessageActions
           message={content} // Keep original message content for copy
           messageId={messageId}

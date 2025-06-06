@@ -11,12 +11,14 @@ type UserMessageProps = {
   message: string
   messageId?: string
   onUpdateMessage?: (messageId: string, newContent: string) => Promise<void>
+  readOnly?: boolean
 }
 
 export const UserMessage: React.FC<UserMessageProps> = ({
   message,
   messageId,
-  onUpdateMessage
+  onUpdateMessage,
+  readOnly = false
 }) => {
   const [isEditing, setIsEditing] = useState(false)
   const [editedContent, setEditedContent] = useState(message)
@@ -49,7 +51,7 @@ export const UserMessage: React.FC<UserMessageProps> = ({
         className="flex-1 break-words w-full group outline-none relative"
         tabIndex={0}
       >
-        {isEditing ? (
+        {isEditing && !readOnly ? (
           <div className="flex flex-col gap-2">
             <TextareaAutosize
               value={editedContent}
@@ -71,24 +73,26 @@ export const UserMessage: React.FC<UserMessageProps> = ({
         ) : (
           <div className="flex justify-between items-start">
             <div className="flex-1">{message}</div>
-            <div
-              className={cn(
-                'absolute top-1 right-1 transition-opacity ml-2',
-                'opacity-0',
-                'group-focus-within:opacity-100',
-                'md:opacity-0',
-                'md:group-hover:opacity-100'
-              )}
-            >
-              {/* <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-full h-7 w-7"
-                onClick={handleEditClick}
+            {!readOnly && onUpdateMessage && messageId && (
+              <div
+                className={cn(
+                  'absolute top-1 right-1 transition-opacity ml-2',
+                  'opacity-0',
+                  'group-focus-within:opacity-100',
+                  'md:opacity-0',
+                  'md:group-hover:opacity-100'
+                )}
               >
-                <Pencil className="size-3.5" />
-              </Button> */}
-            </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full h-7 w-7"
+                  onClick={handleEditClick}
+                >
+                  <Pencil className="size-3.5" />
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </div>

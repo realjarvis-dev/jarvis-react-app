@@ -12,7 +12,7 @@ import { Skeleton } from './ui/skeleton'
 
 export interface RelatedQuestionsProps {
   annotations: JSONValue[]
-  onQuerySelect: (query: string) => void
+  onQuerySelect?: (query: string) => void
   isOpen: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -91,7 +91,7 @@ export const RelatedQuestions: React.FC<RelatedQuestionsProps> = ({
                     type="submit"
                     name={'related_query'}
                     value={item?.query}
-                    onClick={() => onQuerySelect(item?.query)}
+                    onClick={() => onQuerySelect?.(item?.query)}
                   >
                     {item?.query}
                   </Button>
