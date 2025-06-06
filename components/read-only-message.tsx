@@ -3,9 +3,6 @@
 import { Avatar } from '@/components/ui/avatar'
 import { Message } from 'ai'
 import { UserIcon } from 'lucide-react'
-import Markdown from 'react-markdown'
-import rehypeRaw from 'rehype-raw'
-import remarkGfm from 'remark-gfm'
 
 interface ReadOnlyMessageProps {
   message: Message
@@ -40,18 +37,8 @@ export function ReadOnlyMessage({ message }: ReadOnlyMessageProps) {
         </svg>
       </Avatar>
       <div className="flex-1 space-y-2 overflow-hidden px-1">
-        <div className="prose prose-neutral dark:prose-invert">
-          <Markdown
-            remarkPlugins={[remarkGfm]}
-            rehypePlugins={[rehypeRaw]}
-            components={{
-              a: ({ node, ...props }) => (
-                <a target="_blank" rel="noopener noreferrer" {...props} />
-              )
-            }}
-          >
-            {message.content}
-          </Markdown>
+        <div className="prose prose-neutral dark:prose-invert whitespace-pre-wrap">
+          {message.content}
         </div>
       </div>
     </div>
