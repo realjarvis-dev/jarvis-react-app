@@ -264,18 +264,17 @@ export async function erc20Approval(
  * @param txData Transaction data to execute
  * @param chainId Chain ID
  * @param gasOptions Gas options
- * @param gasLimit Gas limit
- * @param estimateGas If or not to estimate gas in this function
- * @param getGasPriceFunction Function to get gas price by chain Id
+ * @param gasLimit Hardcoded gas limit, please set estimateGas to false if use the provided gasLimit
+ * @param estimateGas If or not to estimate gas in executeSwapTransaction function using ether's estimateGas
+ * @param getGasPriceFunction Function to get estimated gas price by chain Id
  * @returns Promise with transaction hash
  */
 export async function executeSwapTransaction(
   txData: TransactionRequest,
   chainId: number = 1,
   gasOptions?: {
-    gasLimit?: `0x${string}`
     estimateGas: boolean
-    gasPrice?: `0x${string}`
+    gasLimit?: `0x${string}`
     getGasPriceFunction?: (chainId: number) => Promise<{
       maxPriceInMemPool: bigint
       maxPriorityFeePerGas: bigint
