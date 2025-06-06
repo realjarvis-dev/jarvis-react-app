@@ -19,6 +19,8 @@ interface RenderMessageProps {
     messageId: string,
     options?: ChatRequestOptions
   ) => Promise<string | null | undefined>
+  // Flag to indicate if component is being rendered in read-only mode
+  readOnly?: boolean
 }
 
 export function RenderMessage({
@@ -30,7 +32,8 @@ export function RenderMessage({
   chatId,
   addToolResult,
   onUpdateMessage,
-  reload
+  reload,
+  readOnly = false
 }: RenderMessageProps) {
   const relatedQuestions = useMemo(
     () =>
@@ -102,7 +105,7 @@ export function RenderMessage({
       <UserMessage
         message={message.content}
         messageId={messageId}
-        onUpdateMessage={onUpdateMessage}
+        onUpdateMessage={readOnly ? undefined : onUpdateMessage}
       />
     )
   }
@@ -116,7 +119,7 @@ export function RenderMessage({
           tool={tool}
           isOpen={getIsOpen(tool.toolCallId)}
           onOpenChange={open => onOpenChange(tool.toolCallId, open)}
-          addToolResult={addToolResult}
+          addToolResult={readOnly ? undefined : addToolResult}
         />
       ))}
       {message.parts?.map((part, index) => {
@@ -133,11 +136,12 @@ export function RenderMessage({
                 onOpenChange={open =>
                   onOpenChange(part.toolInvocation.toolCallId, open)
                 }
-                addToolResult={addToolResult}
+                addToolResult={readOnly ? undefined : addToolResult}
               />
             )
           case 'text':
             // Only show actions if this is the last part and it's a text part
+            // And not in read-only mode
             return (
               <AnswerSection
                 key={`${messageId}-text-${index}`}
@@ -145,9 +149,9 @@ export function RenderMessage({
                 isOpen={getIsOpen(messageId)}
                 onOpenChange={open => onOpenChange(messageId, open)}
                 chatId={chatId}
-                showActions={isLastPart}
+                showActions={isLastPart && !readOnly}
                 messageId={messageId}
-                reload={reload}
+                reload={readOnly ? undefined : reload}
               />
             )
           case 'reasoning':
@@ -167,7 +171,7 @@ export function RenderMessage({
             return null
         }
       })}
-      {relatedQuestions && relatedQuestions.length > 0 && (
+      {relatedQuestions && relatedQuestions.length > 0 && !readOnly && (
         <RelatedQuestions
           annotations={relatedQuestions as JSONValue[]}
           onQuerySelect={onQuerySelect}
