@@ -37,33 +37,27 @@ export async function getTokenBalances(
       networkConfig.id === TENDERLY_DEMO_CONFIG.id &&
       networkConfig.rpcUrl === TENDERLY_DEMO_CONFIG.rpcUrl
     ) {
-      const allTokenData: TokenData[] = []
       const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl)
+      const allTokenAddresses = [
+        ...commonlyUsedPTTokensArray,
+        ...commonlyUsedTokensArray
+      ]
 
-      for (const tokenAddress of commonlyUsedPTTokensArray) {
-        const tokenData = await getDemoTokenData(
-          tokenAddress,
-          walletAddress,
-          provider
+      const tokenDataPromises = allTokenAddresses.map(tokenAddress =>
+        getDemoTokenData(tokenAddress, walletAddress, provider)
+      )
+
+      const resolvedTokenData = await Promise.all(tokenDataPromises)
+
+      const allTokenData: TokenData[] = resolvedTokenData
+        .filter(
+          (tokenData): tokenData is NonNullable<typeof tokenData> =>
+            (tokenData !== null) && (tokenData.decimals !== 0) && (tokenData.symbol !== '') && (tokenData.name !== '')
         )
-        if (tokenData)
-          allTokenData.push({
-            ...tokenData,
-            network: networkConfig.displayName
-          })
-      }
-      for (const tokenAddress of commonlyUsedTokensArray) {
-        const tokenData = await getDemoTokenData(
-          tokenAddress,
-          walletAddress,
-          provider
-        )
-        if (tokenData)
-          allTokenData.push({
-            ...tokenData,
-            network: networkConfig.displayName
-          })
-      }
+        .map(tokenData => ({
+          ...tokenData,
+          network: networkConfig.displayName
+        }))
 
       const nativeBalance = await provider.getBalance(walletAddress)
       const nativeDetails = networkConfig.nativeAsset
@@ -163,7 +157,7 @@ export async function getTokenBalances(
       network: networkConfig.displayName,
       decimals: Number(nativeDetails.decimals)
     }
-
+    erc20Tokens = erc20Tokens.filter(token => {token.decimals !== 0 && token.symbol && token.name})
     return [nativeTokenData, ...erc20Tokens]
   } catch (error) {
     console.error(`Error in getTokenBalances for chainId ${chainId}:`, error)
