@@ -20,7 +20,7 @@ export class TokenMatcher {
   /**
    * @param {number|string} chainId
    */
-  constructor(chainId: number, threshold = 0.3, tokenList: Token[] = []) {
+  constructor(chainId: number, threshold = 0.3, tokenList?: Token[]) {
     this.chainId = String(chainId)
     this.tokenList = tokenList || tokensByChain[this.chainId as ChainIdKey] || []
 

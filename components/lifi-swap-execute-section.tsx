@@ -410,7 +410,7 @@ export function LifiSwapExecuteSection({
                         ' -> ' + `${result.swap_details?.intermediate_token_symbol} on ${result.swap_details?.to_chain_name}`) : "")}
                     </div>
                     <a
-                      href={`https://${etherscanBaseUrl}/tx/${result.transaction_hash}`}
+                      href={`${result.swap_details?.explorer_link}`}
                       target="_blank"
                       rel="noreferrer"
                       className="text-xs font-medium text-blue-600 dark:text-blue-400 flex items-center hover:underline"
@@ -422,7 +422,7 @@ export function LifiSwapExecuteSection({
                   </div>
                 </div>
               )}
-              {result.swap_transaction_hash && toEtherscanBaseUrl && (
+              {/* {result.swap_transaction_hash && toEtherscanBaseUrl && (
                 <div className="pt-2 mt-2 border-t border-gray-100 dark:border-gray-800">
                   <div className="flex justify-between items-center">
                     <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -442,7 +442,7 @@ export function LifiSwapExecuteSection({
                     </a>
                   </div>
                 </div>
-              )}
+              )} */}
             </div>
           </div>
           {result.swap_details?.complete_time && (

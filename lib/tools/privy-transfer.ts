@@ -71,7 +71,8 @@ export const privyTransferTool = tool({
           },
           isDemo
         )
-  
+        const explorerLink = getConfigByChainId(chainId, isDemo).scanLink
+        const explorerLinkWithHash = `https://${explorerLink}/tx/${tx.hash}`
         return {
           status: 'success',
           hash: tx.hash,
@@ -79,9 +80,10 @@ export const privyTransferTool = tool({
             to: address,
             amount: amount,
             complete_time: new Date().toISOString(),
-            chainId: chainId,
-            chainExplorerName:
-             `${getConfigByChainId(chainId, isDemo).displayName} explorer`
+            chain_id: chainId,
+            chain_explorer_name:
+             `${getConfigByChainId(chainId, isDemo).displayName} explorer`,
+            explorer_link: explorerLink ? explorerLinkWithHash : undefined
           },
           error_message: ''
         }
@@ -118,6 +120,9 @@ export const privyTransferTool = tool({
       //   }
       // }
       const {status, hash, message} = await erc20Transfer(token.address, address, amountInWei, evmWallet.address, networkContext.selectedChainId, isDemo)
+      const explorerLink = getConfigByChainId(networkContext.selectedChainId, isDemo).scanLink
+      const explorerLinkWithHash = `https://${explorerLink}/tx/${hash}`
+     
       if (status === 'success') {
         return {
           status: 'success',
@@ -126,9 +131,10 @@ export const privyTransferTool = tool({
             to: address,
             amount: amount,
             complete_time: new Date().toISOString(),
-            chainId: networkContext.selectedChainId,
-            chainExplorerName:
-              `${getConfigByChainId(networkContext.selectedChainId, isDemo).displayName} explorer`
+            chain_id: networkContext.selectedChainId,
+            chain_explorer_name:
+              `${getConfigByChainId(networkContext.selectedChainId, isDemo).displayName} explorer`,
+            explorer_link: explorerLink ? explorerLinkWithHash : undefined
           },
           error_message: ''
         }
