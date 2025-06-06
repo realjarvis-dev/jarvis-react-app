@@ -110,7 +110,9 @@ export const TENDERLY_DEMO_CONFIG: NetworkConfig = {
     process.env.NEXT_PUBLIC_TEST_NET_ENV === 'development'
       ? 'https://virtual.mainnet.rpc.tenderly.co/ce583582-c194-4405-bfc5-6ee33e99fa8b'
       : 'http://anvil-fork:8545',
-  scanLink: undefined, // Tenderly vnet explorer might not have a simple base URL like etherscan
+  scanLink: process.env.NEXT_PUBLIC_TEST_NET_ENV === 'development' ? 
+  'dashboard.tenderly.co/explorer/vnet/ce583582-c194-4405-bfc5-6ee33e99fa8b' 
+  : undefined, // Tenderly vnet explorer might not have a simple base URL like etherscan
   isDemo: true,
   alchemyNetwork: Network.ETH_MAINNET,
   icon: '/icons/chains/ethereum-eth.svg', // Use Ethereum icon for demo

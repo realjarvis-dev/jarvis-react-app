@@ -55,10 +55,12 @@ export const getGasPriceByChainId = async (chainId: number) => {
     const response = await fetch(url.toString(), {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': process.env.BLOCKNATIVE_API_KEY ? `Bearer ${process.env.BLOCKNATIVE_API_KEY}` : ''
       }
     })
     const data = await response.json()
+    
     const unit = data.unit
     let parseFunc
     if (unit === 'gwei') {
@@ -70,7 +72,7 @@ export const getGasPriceByChainId = async (chainId: number) => {
     } else {
       throw new Error('Invalid unit')
     }
-
+    const baseFeePerGas = parseFunc(data.blockPrices[0].baseFeePerGas.toString())
     const maxPriceInMemPool = parseFunc(data.maxPrice.toString())
     const maxPriorityFeePerGas = parseFunc(
       data.blockPrices[0].estimatedPrices[0].maxPriorityFeePerGas.toString()
@@ -80,6 +82,7 @@ export const getGasPriceByChainId = async (chainId: number) => {
     )
 
     return {
+      baseFeePerGas,
       maxPriceInMemPool,
       maxPriorityFeePerGas,
       maxFeePerGas

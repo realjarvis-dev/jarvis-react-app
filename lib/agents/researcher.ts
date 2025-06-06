@@ -20,7 +20,7 @@ const get_system_prompt = (searchMode: boolean, supportedTools: string[], regist
       retrieve: `- retrieve: Use to get detailed content from specific URLs.`,
       videoSearch: `- video search: Use when looking for video content.`,
       ask_question: `- ask_question: Use to clarify ambiguous or incomplete user queries.`,
-      privy_transfer: `- privy_transfer: Use when the user wants to transfer ETH to a specified address.`,
+      privy_transfer: `- privy_transfer: Use when the user wants to transfer tokens to a specified address.`,
       lifi_bridge_quote: `- lifi_bridge_quote: Use when user wants to swap between two arbitrary tokens to first quote a price.`,
       lifi_bridge_execute: `- lifi_bridge_execute: Use when user wants to swap between two arbitrary tokens to execute the transaction.`,
       kodiak_opportunities: `- kodiak_opportunities: Use when the user asks about Kodiak Island yield opportunities on Berachain. This tool returns a list of current Kodiak opportunities with APY and liquidity information.`,

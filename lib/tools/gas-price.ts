@@ -1,7 +1,8 @@
 import { tool } from 'ai'
 import { z } from 'zod'
-import { getProposedGasPrice } from '../etherscan/gas-price'
+import { getGasPriceByChainId } from '../blocknative/get-gas-price'
 import { NetworkContext } from '../types/context'
+import { formatUnits } from 'viem'
 
 interface ToolContext {
   toolCallId?: string
@@ -10,17 +11,20 @@ interface ToolContext {
 }
 
 export const getGasPriceTool = tool({
-  description: 'Get the proposed gas price',
+  description: 'Get the base gas price and max fee per gas for a given chain',
   parameters: z.object({}),
   execute: async (params, context: ToolContext) => {
-    const networkContext = context?.networkContext;
+    const chainId = context?.networkContext?.selectedChainId;
+    const nativeTokenSymbol = context?.networkContext?.config?.nativeAsset.symbol;
     
-    // Note: For now, this tool only supports Ethereum mainnet gas prices
-    // In the future, we could extend this to support other networks
-    const gasPrice = await getProposedGasPrice()
-
+    let {baseFeePerGas, maxPriceInMemPool, maxPriorityFeePerGas, maxFeePerGas} = await getGasPriceByChainId(chainId || 1)
+    const baseFeePerGasGwei = formatUnits(baseFeePerGas, 9)
+    const maxPriceInMemPoolGwei = formatUnits(maxPriceInMemPool, 9)
+    const maxPriorityFeePerGasGwei = formatUnits(maxPriorityFeePerGas, 9)
+    const maxFeePerGasGwei = formatUnits(maxFeePerGas, 9)
     return {
-        gas_price: `${gasPrice} gwei`,
+        base_fee_per_gas: `${baseFeePerGasGwei} gwei ${nativeTokenSymbol}`,
+        max_fee_per_gas: `${maxFeePerGasGwei} gwei ${nativeTokenSymbol}`,
         complete_time: new Date().toISOString()
     }
   }
