@@ -1,5 +1,5 @@
-import { ChainWithScore } from '../token-matcher/fuzzy-chain-matcher'
-import { TokenWithScore } from '../token-matcher/fuzzy-token-matcher'
+import { type Chain } from '../token-matcher/fuzzy-chain-matcher'
+import { type Token } from '../token-matcher/fuzzy-token-matcher'
 
 export const noRouteDetails = 'Reasons for that could be: low liquidity, amount selected is too low, gas costs are too high or there are no routes for the selected combination.'
 export const noRouteTitle = 'No routes available for the selected combination'
@@ -9,10 +9,10 @@ export const autoFuelFailTitle = 'Failed to auto-fuel destination chain with inp
 
 
 export const getClarifyInputAndOutputDetail = (
-  fromChain: ChainWithScore,
-  toChain: ChainWithScore,
-  fromTokenList: TokenWithScore[],
-  toTokenList: TokenWithScore[]
+  fromChain: Chain,
+  toChain: Chain,
+  fromTokenList: Token[],
+  toTokenList: Token[]
 ) => {
   const possibleInputTokens = fromTokenList
     .map(token => token.symbol)
@@ -22,8 +22,8 @@ export const getClarifyInputAndOutputDetail = (
 }
 
 export const getClarifyInputDetail = (
-  fromChain: ChainWithScore,
-  fromTokenList: TokenWithScore[]
+  fromChain: Chain,
+  fromTokenList: Token[]
 ) => {
   const possibleInputTokens = fromTokenList
     .map(token => token.symbol)
@@ -32,8 +32,8 @@ export const getClarifyInputDetail = (
 }
 
 export const getClarifyOutputDetail = (
-  toChain: ChainWithScore,
-  toTokenList: TokenWithScore[]
+  toChain: Chain,
+  toTokenList: Token[]
 ) => {
   const possibleOutputTokens = toTokenList.map(token => token.symbol).join(', ')
   return `Multiple output tokens found, please choose the token you want to bridge to. Possible output tokens on ${toChain.name} chain: ${possibleOutputTokens}`

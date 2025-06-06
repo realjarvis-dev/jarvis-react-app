@@ -167,19 +167,5 @@ describe('TokenMatcher', () => {
       expect(resultsLowerName.length).toBeGreaterThan(0)
       expect(resultsLowerName[0].name).toBe(knownTokenOnTestChain.name)
     })
-
-    it('should provide a score for each match', () => {
-      if (!knownTokenOnTestChain) return
-      const results = tokenMatcher.match(knownTokenOnTestChain.symbol)
-      expect(results.length).toBeGreaterThan(0)
-      results.forEach(result => {
-        expect(result.score).toBeDefined()
-        expect(typeof result.score).toBe('number')
-        expect(result.score).toBeGreaterThanOrEqual(0)
-        // Fuse.js score: 0 = perfect match, 1 = complete mismatch
-        // tokenMatcher uses the default threshold of 0.3
-        expect(result.score).toBeLessThanOrEqual(0.3)
-      })
-    })
   })
 })
