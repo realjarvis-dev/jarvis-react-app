@@ -2,24 +2,24 @@
 
 import { cn } from '@/lib/utils'
 import {
-  usePrivy
+    usePrivy
 } from '@privy-io/react-auth'
 import { Message } from 'ai'
 import { ArrowUp, ChevronDown, MessageCirclePlus, Square } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { RefObject, useEffect, useRef, useState } from 'react'
 import Textarea from 'react-textarea-autosize'
-import { toast } from 'sonner'
 import { useArtifact } from './artifact/artifact-context'
 import { SuggestionPills } from './chat-panel/suggestion-pills'
 import { LazyWallet } from './wallet'
 
 import { MarketPulse } from './market-pulse'
 
-import { SearchModeToggle } from './search-mode-toggle'
-import { ChainSelector } from './chain-selector'
-import { DemoToggle } from './demo-toggle'
 import { useNetwork } from '@/lib/network/context'
+import { ChainSelector } from './chain-selector'
+import { ChatShare } from './chat-share'
+import { DemoToggle } from './demo-toggle'
+import { SearchModeToggle } from './search-mode-toggle'
 import { Button } from './ui/button'
 import { IconLogo } from './ui/icons'
 import { VideoBackground } from './ui/video-background'
@@ -183,6 +183,7 @@ interface ChatPanelProps {
   append: (message: any) => void // Consider a more specific type if possible
   isAutoScroll: boolean
   onVideoBgChange?: (isVideoActive: boolean) => void // Kept for potential Header integration via RootLayout
+  chatId?: string // Chat ID for sharing functionality
 }
 
 export function ChatPanel({
@@ -196,7 +197,8 @@ export function ChatPanel({
   stop,
   append,
   isAutoScroll,
-  onVideoBgChange // Destructure this prop
+  onVideoBgChange, // Destructure this prop
+  chatId
 }: ChatPanelProps) {
 
 
@@ -446,19 +448,30 @@ export function ChatPanel({
                 </div>
                 <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                   {messages.length > 0 && (
-                    <Button
-                      variant="outline" // Your existing props
-                      size="icon" // Your existing props
-                      onClick={handleNewChat} // Your existing props
-                      className={cn(
-                        'shrink-0 rounded-full group size-7 sm:size-8',
-                        showVideoBg && 'text-white border-white/30 hover:bg-white/10'
+                    <>
+                      <Button
+                        variant="outline" // Your existing props
+                        size="icon" // Your existing props
+                        onClick={handleNewChat} // Your existing props
+                        className={cn(
+                          'shrink-0 rounded-full group size-7 sm:size-8',
+                          showVideoBg && 'text-white border-white/30 hover:bg-white/10'
+                        )}
+                        type="button" // Your existing props
+                        disabled={isLoading || isToolInvocationInProgress()} // Your existing props
+                      >
+                        <MessageCirclePlus className="size-3.5 sm:size-4 group-hover:rotate-12 transition-all" />
+                      </Button>
+
+                      {/* Share button */}
+                      {process.env.NEXT_PUBLIC_ENABLE_SHARE === 'true' && chatId && (
+                        <div className={cn(
+                          showVideoBg && 'text-white border-white/30'
+                        )}>
+                          <ChatShare chatId={chatId} />
+                        </div>
                       )}
-                      type="button" // Your existing props
-                      disabled={isLoading || isToolInvocationInProgress()} // Your existing props
-                    >
-                      <MessageCirclePlus className="size-3.5 sm:size-4 group-hover:rotate-12 transition-all" />
-                    </Button>
+                    </>
                   )}
                   <Button
                     type={isLoading ? 'button' : 'submit'} // Your existing props

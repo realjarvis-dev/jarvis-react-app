@@ -279,6 +279,7 @@ export function Chat({
         query={query}
         append={append}
         isAutoScroll={isAutoScroll}
+        chatId={id}
       />
     </div>
   )

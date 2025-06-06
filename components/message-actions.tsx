@@ -5,7 +5,6 @@ import { cn } from '@/lib/utils'
 import { useChat } from '@ai-sdk/react'
 import { Copy } from 'lucide-react'
 import { toast } from 'sonner'
-import { ChatShare } from './chat-share'
 import { RetryButton } from './retry-button'
 import { Button } from './ui/button'
 
@@ -14,7 +13,6 @@ interface MessageActionsProps {
   messageId: string
   reload?: () => Promise<string | null | undefined>
   chatId?: string
-  enableShare?: boolean
   className?: string
 }
 
@@ -23,7 +21,6 @@ export function MessageActions({
   messageId,
   reload,
   chatId,
-  enableShare,
   className
 }: MessageActionsProps) {
   const { status } = useChat({
@@ -53,7 +50,6 @@ export function MessageActions({
       >
         <Copy size={14} />
       </Button>
-      {enableShare && chatId && <ChatShare chatId={chatId} />}
     </div>
   )
 }

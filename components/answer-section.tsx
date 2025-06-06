@@ -28,8 +28,6 @@ export function AnswerSection({
   messageId,
   reload
 }: AnswerSectionProps) {
-  const enableShare = process.env.NEXT_PUBLIC_ENABLE_SHARE === 'true'
-
   const handleReload = () => {
     if (reload) {
       return reload(messageId)
@@ -45,7 +43,6 @@ export function AnswerSection({
           message={content} // Keep original message content for copy
           messageId={messageId}
           chatId={chatId}
-          enableShare={enableShare}
           reload={handleReload}
         />
       )}
