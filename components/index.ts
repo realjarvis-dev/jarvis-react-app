@@ -10,3 +10,8 @@ export { KodiakDepositStatus } from './kodiak-deposit-status'
 // Export market-related components
 export { MarketChart } from './market-chart'
 
+// Export read-only chat components
+export { ReadOnlyChat } from './read-only-chat'
+export { ReadOnlyMessage } from './read-only-message'
+export { ReadOnlyMessages } from './read-only-messages'
+
