@@ -4,10 +4,10 @@ import { z } from 'zod'
 import { getPendleMarkets } from '../pendle/api'
 import { getQuote } from '../pendle/quotes'
 import {
-  erc20Approval,
-  executeSwapTransaction,
-  getERC20Details,
-  getSwapTransactionFromPendle
+    erc20Approval,
+    executeSwapTransaction,
+    getERC20Details,
+    getSwapTransactionFromPendle
 } from '../pendle/transactions'
 import { getUserEvmWalletAddress } from '../privy/client'
 import { NetworkContext } from '../types/context'
@@ -101,12 +101,12 @@ export const pendleOpportunitiesTool = tool({
 
 export const pendleQuoteTool = tool({
   description:
-    'Get a quote for swapping ETH to a Pendle market token. This tool automatically renders UI.',
+    'Get a quote for swapping between ETH and a Pendle market token. This tool automatically renders UI.',
   parameters: z.object({
     market_address: z.string().describe('The address of the Pendle market'),
-    token_out_address: z
+    token_address: z
       .string()
-      .describe('The address of the token to receive (PT or YT)'),
+      .describe('The address of the PT or YT token'),
     market_name: z
       .string()
       .describe('The name of the market (required, e.g. "rswETH")'),
@@ -115,14 +115,19 @@ export const pendleQuoteTool = tool({
       .default('pt')
       .describe(
         'The token type - "pt" for Principal Token or "yt" for Yield Token. Default to pt as only pt trading is available now.'
-      )
+      ),
+    direction: z
+      .enum(['ethToToken', 'tokenToEth'])
+      .default('ethToToken')
+      .describe('Direction of the swap - from ETH to token or from token to ETH')
   }),
   execute: async (params, context: ToolContext) => {
     const {
       market_address,
-      token_out_address,
+      token_address,
       market_name,
-      token_type
+      token_type,
+      direction
     } = params;
     const networkContext = context?.networkContext;
     
@@ -130,27 +135,31 @@ export const pendleQuoteTool = tool({
       // Format full token name with PT/YT prefix
       const fullTokenName = `${token_type.toUpperCase()} ${market_name}`
 
-      // Call the getQuote function with fixed parameters for simplicity
+      // Call the getQuote function with the direction parameter
       const quote = await getQuote(
         market_address.toLowerCase().trim(),
-        token_out_address.toLowerCase().trim(),
-        fullTokenName, // Pass the properly formatted token name
-        '1', // Fixed amount of 1 ETH
+        token_address.toLowerCase().trim(),
+        fullTokenName,
+        '1', // Fixed amount of 1 ETH or token
+        direction, // Direction of the swap
         1 // Fixed chain ID (Ethereum)
       )
 
       // Return a clean response object with minimal streaming data
+      // Use the new response format from our updated getQuote function
       const quoteData = {
         market: fullTokenName,
+        inputToken: quote.inputToken,
+        outputToken: quote.outputToken,
         rate: quote.rate,
-        inverse_rate: quote.inverse,
-        output_amount: quote.outputAmount,
+        inverse: quote.inverse,
+        outputAmount: quote.outputAmount,
         complete_time: new Date().toISOString()
       }
       
       return {
         _uiDisplayTool: true,
-        summary: `Quote for ${fullTokenName}: ${quote.rate}`,
+        summary: `Quote for ${quote.rate}`,
         data: quoteData
       }
     } catch (error: any) {
@@ -158,7 +167,7 @@ export const pendleQuoteTool = tool({
       const errorData = {
         error: error.message || 'Failed to get quote',
         market_address,
-        token_out_address
+        token_address
       }
       
       return {
