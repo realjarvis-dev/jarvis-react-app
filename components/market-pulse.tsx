@@ -41,58 +41,63 @@ export function MarketPulse() {
 
   useEffect(() => {
     if (!mounted) return
-    const url = '/api/market-pulse'
-    const options = {
-      method: 'GET',
-      headers: {
-        accept: 'application/json',
-      },
-    }
+    
+    const timeoutId = setTimeout(() => {
+      const url = '/api/market-pulse'
+      const options = {
+        method: 'GET',
+        headers: {
+          accept: 'application/json',
+        },
+      }
 
-    async function fetchTrendingCoins() {
-      try {
-        setIsLoading(true)
-        const response = await fetch(url, options)
-        const json = await response.json()
+      async function fetchTrendingCoins() {
+        try {
+          setIsLoading(true)
+          const response = await fetch(url, options)
+          const json = await response.json()
 
-        if (json.error || !json.coins || !Array.isArray(json.coins)) {
-          console.error('Error fetching trending coins:', json.error || 'Invalid response format')
+          if (json.error || !json.coins || !Array.isArray(json.coins)) {
+            console.error('Error fetching trending coins:', json.error || 'Invalid response format')
+            setCoins([]) // Clear coins on error
+            setIsLoading(false) // Stop loading on error
+            return
+          }
+
+          // The API now returns processed data directly
+          setCoins(json.coins)
+          setIsLoading(false)
+        } catch (err) {
+          console.error('Error fetching trending coins:', err)
           setCoins([]) // Clear coins on error
           setIsLoading(false) // Stop loading on error
-          return
         }
-
-        // The API now returns processed data directly
-        setCoins(json.coins)
-        setIsLoading(false)
-      } catch (err) {
-        console.error('Error fetching trending coins:', err)
-        setCoins([]) // Clear coins on error
-        setIsLoading(false) // Stop loading on error
       }
-    }
 
-    fetchTrendingCoins()
-    
-    const interval = setInterval(() => {
-      if (!document.hidden) {
-        fetchTrendingCoins()
+      fetchTrendingCoins()
+      
+      const interval = setInterval(() => {
+        if (!document.hidden) {
+          fetchTrendingCoins()
+        }
+      }, 10 * 60000) // fetch every 10 minutes
+
+      const handleVisibilityChange = () => {
+        if (!document.hidden && coins.length === 0) {
+          fetchTrendingCoins()
+        }
       }
-    }, 10 * 60000) // fetch every 10 minutes
+      
+      document.addEventListener('visibilitychange', handleVisibilityChange)
 
-    const handleVisibilityChange = () => {
-      if (!document.hidden && coins.length === 0) {
-        fetchTrendingCoins()
+      return () => {
+        clearInterval(interval)
+        document.removeEventListener('visibilitychange', handleVisibilityChange)
       }
-    }
-    
-    document.addEventListener('visibilitychange', handleVisibilityChange)
+    }, 100) // Defer by 100ms to allow critical render path to complete
 
-    return () => {
-      clearInterval(interval)
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-    }
-  }, [coins.length])
+    return () => clearTimeout(timeoutId)
+  }, [mounted])
 
   useEffect(() => {
     const scrollContainer = scrollRef.current
@@ -125,6 +130,16 @@ export function MarketPulse() {
     
     // Navigate to new chat with pre-filled query
     router.push(`/search?q=${encodeURIComponent(query)}`)
+  }
+
+  if (isLoading && coins.length === 0) {
+    return (
+      <div className="flex overflow-x-auto gap-4 py-1 px-2 hide-scrollbar text-xs sm:text-sm text-white/90 bg-gradient-to-r from-[#bfc7ce]/30 via-[#e6e8ea]/40 to-[#bfc7ce]/30 rounded-full shadow-[0_0_24px_4px_rgba(200,200,220,0.45),0_0_4px_1px_rgba(255,255,255,0.18)] backdrop-blur-sm border border-white/20 animate-pulse">
+        <div className="flex items-center gap-1 whitespace-nowrap px-2 py-1">
+          <span className="font-semibold">Loading market data...</span>
+        </div>
+      </div>
+    )
   }
 
   if (!coins || coins.length === 0) {
