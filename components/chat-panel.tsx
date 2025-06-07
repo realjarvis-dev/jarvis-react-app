@@ -20,7 +20,7 @@ import { SuggestionPills } from './chat-panel/suggestion-pills'
 import { CopyableWalletAddress } from './copyable-wallet-address'
 import { CopyableWalletAddressSkeleton } from './copyable-wallet-address-skeleton'
 
-import { MarketPulse } from './market-pulse'
+import { LazyMarketPulse } from './lazy-market-pulse'
 
 import { useNetwork } from '@/lib/network/context'
 import { ChainSelector } from './chain-selector'
@@ -445,7 +445,7 @@ export function ChatPanel({
               )}
             >
               <div className="mb-6 w-full flex justify-center"> {/* <-- Added spacing here */}
-                <MarketPulse />
+                <LazyMarketPulse />
               </div>
 
               <IconLogo

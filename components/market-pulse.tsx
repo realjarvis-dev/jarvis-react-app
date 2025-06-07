@@ -30,11 +30,17 @@ function formatTrendingPrice(price: number): string {
 export function MarketPulse() {
   const [coins, setCoins] = useState<TrendingCoinData[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [mounted, setMounted] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const animationRef = useRef<number>()
   const router = useRouter()
 
   useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
     const url = '/api/market-pulse'
     const options = {
       method: 'GET',

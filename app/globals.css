@@ -164,5 +164,12 @@ html, body, #__next {
     contain: layout style;
     transform: translateZ(0);
   }
+  
+  .performance-optimized {
+    will-change: transform;
+    contain: layout style paint;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
 }
 

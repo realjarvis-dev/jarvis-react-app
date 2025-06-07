@@ -38,39 +38,44 @@ export function Chat({
 
   useEffect(() => {
     if (!ready) return
-    if (!authenticated) {
-      if (!anonId) {
-        const newAnonId = crypto.randomUUID()
-        console.log('anonId', newAnonId)
-        setAnonId(newAnonId)
-        setHeaders({
-          'x-user-id': newAnonId,
-          'allow-web3-tools': 'false'
-        })
-      } else {
-        setHeaders({
-          'x-user-id': anonId,
-          'allow-web3-tools': 'false'
-        })
-      }
-      return
-    } else {
-      ;(async () => {
-        try {
-          const token = await getAccessToken()
+    
+    const timeoutId = setTimeout(() => {
+      if (!authenticated) {
+        if (!anonId) {
+          const newAnonId = crypto.randomUUID()
+          console.log('anonId', newAnonId)
+          setAnonId(newAnonId)
           setHeaders({
-            'x-user-id': user!.id,
-            'allow-web3-tools': 'true'
+            'x-user-id': newAnonId,
+            'allow-web3-tools': 'false'
           })
-        } catch (error) {
-          console.error('Failed to get access token:', error)
+        } else {
           setHeaders({
-            'x-user-id': 'anonymous',
+            'x-user-id': anonId,
             'allow-web3-tools': 'false'
           })
         }
-      })()
-    }
+        return
+      } else {
+        ;(async () => {
+          try {
+            const token = await getAccessToken()
+            setHeaders({
+              'x-user-id': user!.id,
+              'allow-web3-tools': 'true'
+            })
+          } catch (error) {
+            console.error('Failed to get access token:', error)
+            setHeaders({
+              'x-user-id': 'anonymous',
+              'allow-web3-tools': 'false'
+            })
+          }
+        })()
+      }
+    }, 0)
+    
+    return () => clearTimeout(timeoutId)
   }, [user?.id, ready, authenticated, anonId, setAnonId])
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
