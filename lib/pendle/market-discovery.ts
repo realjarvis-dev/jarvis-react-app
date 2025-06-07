@@ -4,7 +4,10 @@ import { getConfigByChainId } from '../network/config'
 // PendleData ABI (minimal interface for market discovery)
 const PENDLE_DATA_ABI = [
   'function getAllMarkets(address underlying) external view returns (address[] memory)',
-  'function marketOfMarketFactory(address underlying, address yieldToken) external view returns (address)'
+  'function marketOfMarketFactory(address underlying, address yieldToken) external view returns (address)',
+  'function getMarketFromAsset(address asset) external view returns (address)',
+  'function getMarketsForAsset(address asset) external view returns (address[] memory)',
+  'function getMarketByAsset(address asset) external view returns (address)'
 ]
 
 // Pendle Market ABI (minimal interface for market details)
@@ -26,8 +29,8 @@ const ERC20_ABI = [
 
 // Mapping of chainId to PendleData contract address
 const PENDLE_DATA_ADDRESSES: Record<number, string> = {
-  1: '0x0Db5233f79A4F5038E1a0F1D4038f8E45f7a4Bad', // Ethereum Mainnet
-  42161: '0x0Db5233f79A4F5038E1a0F1D4038f8E45f7a4Bad', // Arbitrum
+  1: '0x81577b3ff8ce756e565d1dfd1d716cc1cc9037f5', // Ethereum Mainnet
+  42161: '0x81577b3ff8ce756e565d1dfd1d716cc1cc9037f5', // Arbitrum
   43114: '0x0Db5233f79A4F5038E1a0F1D4038f8E45f7a4Bad', // Avalanche
   // Add more chains as needed
 }
@@ -63,16 +66,51 @@ export async function findPendleMarketAddress(
       provider
     )
 
-    // Call getAllMarkets to get an array of market addresses
-    const markets = await pendleDataContract.getAllMarkets(tokenAddress.toLowerCase())
-
-    // If no markets found, return null
-    if (!markets || markets.length === 0) {
-      return null
+    // Try different methods to find the market address
+    let market: string | null = null
+    
+    // Method 1: Try getAllMarkets
+    try {
+      const markets = await pendleDataContract.getAllMarkets(tokenAddress.toLowerCase())
+      if (markets && markets.length > 0) {
+        return markets[0]
+      }
+    } catch (error) {
+      console.log('getAllMarkets method failed, trying alternatives:', error)
+    }
+    
+    // Method 2: Try getMarketFromAsset
+    try {
+      market = await pendleDataContract.getMarketFromAsset(tokenAddress.toLowerCase())
+      if (market && market !== ethers.ZeroAddress) {
+        return market
+      }
+    } catch (error) {
+      console.log('getMarketFromAsset method failed, trying alternatives:', error)
+    }
+    
+    // Method 3: Try getMarketsForAsset
+    try {
+      const markets = await pendleDataContract.getMarketsForAsset(tokenAddress.toLowerCase())
+      if (markets && markets.length > 0) {
+        return markets[0]
+      }
+    } catch (error) {
+      console.log('getMarketsForAsset method failed, trying alternatives:', error)
+    }
+    
+    // Method 4: Try getMarketByAsset
+    try {
+      market = await pendleDataContract.getMarketByAsset(tokenAddress.toLowerCase())
+      if (market && market !== ethers.ZeroAddress) {
+        return market
+      }
+    } catch (error) {
+      console.log('getMarketByAsset method failed, trying alternatives:', error)
     }
 
-    // Return the first market found (could be enhanced to select based on TVL, etc.)
-    return markets[0]
+    // No market found through any method
+    return null
   } catch (error) {
     console.error('Error finding Pendle market address:', error)
     return null

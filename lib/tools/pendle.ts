@@ -122,8 +122,8 @@ export const pendleQuoteTool = tool({
       ),
     direction: z
       .enum(['ethToToken', 'tokenToEth'])
-      .default('ethToToken')
-      .describe('Direction of the swap - from ETH to token or from token to ETH')
+      .default('tokenToEth')
+      .describe('Direction of the swap - from ETH to token or from token to ETH. Default is tokenToEth since most wallet tokens are PT or YT.')
   }),
   execute: async (params, context: ToolContext) => {
     const {
@@ -141,10 +141,13 @@ export const pendleQuoteTool = tool({
       // Format full token name with PT/YT prefix if provided
       const fullTokenName = market_name ? `${token_type.toUpperCase()} ${market_name}` : undefined;
 
+      // Clean the token address
+      const cleanedTokenAddress = token_address.toLowerCase().trim();
+      
       // Call the enhanced getQuote function
       const quote = await getQuote(
-        market_address ? market_address.toLowerCase().trim() : token_address.toLowerCase().trim(),
-        market_address ? token_address.toLowerCase().trim() : undefined,
+        market_address ? market_address.toLowerCase().trim() : cleanedTokenAddress,
+        market_address ? cleanedTokenAddress : undefined,
         fullTokenName,
         '1', // Fixed amount of 1 ETH or token
         direction, // Direction of the swap
@@ -171,6 +174,47 @@ export const pendleQuoteTool = tool({
         data: quoteData
       }
     } catch (error: any) {
+      // If the error mentions "No Pendle market found", it's possible we need to try the opposite direction
+      // This is a common scenario for PT tokens which should be swapped TO ETH
+      if (
+        error.message?.includes('No Pendle market found') && 
+        direction === 'ethToToken'
+      ) {
+        try {
+          // Try with tokenToEth direction instead
+          const quote = await getQuote(
+            token_address.toLowerCase().trim(),
+            undefined,
+            market_name ? `${token_type.toUpperCase()} ${market_name}` : undefined,
+            '1',
+            'tokenToEth',
+            chainId,
+            isDemo
+          )
+          
+          const quoteData = {
+            market: quote.inputToken.startsWith('PT') || quote.inputToken.startsWith('YT') 
+              ? quote.inputToken 
+              : quote.outputToken,
+            inputToken: quote.inputToken,
+            outputToken: quote.outputToken,
+            rate: quote.rate,
+            inverse: quote.inverse,
+            outputAmount: quote.outputAmount,
+            complete_time: new Date().toISOString()
+          }
+          
+          return {
+            _uiDisplayTool: true,
+            summary: `Quote for ${quote.rate} (auto-corrected direction)`,
+            data: quoteData
+          }
+        } catch (retryError) {
+          // If the retry also fails, return the original error
+          console.error('Retry with tokenToEth also failed:', retryError)
+        }
+      }
+      
       // Return a simple error object
       const errorData = {
         error: error.message || 'Failed to get quote',
