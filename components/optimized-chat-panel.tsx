@@ -21,7 +21,7 @@ import { DemoToggle } from './demo-toggle'
 import { SearchModeToggle } from './search-mode-toggle'
 import { Button } from './ui/button'
 import { IconLogo } from './ui/icons'
-import { LazyWelcomeMessage } from './lazy-welcome-message'
+import { WelcomeMessage } from './welcome-messages'
 
 
 function useKeyboardAvoidance({
@@ -350,15 +350,13 @@ export function ChatPanel({
               {/* Use LazyWallet component instead of directly embedding wallet details */}
               <LazyWallet showVideoBg={showVideoBg} />
               
-              {mounted && (
-                <LazyWelcomeMessage
-                  seed={welcomeSeed}
-                  className={cn(
-                    'welcome-message-optimized',
-                    showVideoBg ? 'text-gray-100 drop-shadow-md' : ''
-                  )}
-                />
-              )}
+              <WelcomeMessage
+                seed={welcomeSeed}
+                className={cn(
+                  'welcome-message-optimized',
+                  showVideoBg ? 'text-gray-100 drop-shadow-md' : ''
+                )}
+              />
             </div>
           )}
           <form onSubmit={handleSubmit} className={cn('w-full relative')}>
