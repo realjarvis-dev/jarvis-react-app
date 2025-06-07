@@ -51,7 +51,8 @@ export function MarketPulse() {
 
         if (json.error || !json.coins || !Array.isArray(json.coins)) {
           console.error('Error fetching trending coins:', json.error || 'Invalid response format')
-          setIsLoading(true) // Keep loading state active when there's an error
+          setCoins([]) // Clear coins on error
+          setIsLoading(false) // Stop loading on error
           return
         }
 
@@ -60,15 +61,32 @@ export function MarketPulse() {
         setIsLoading(false)
       } catch (err) {
         console.error('Error fetching trending coins:', err)
-        setIsLoading(true) // Keep loading state active when there's an error
+        setCoins([]) // Clear coins on error
+        setIsLoading(false) // Stop loading on error
       }
     }
 
     fetchTrendingCoins()
-    const interval = setInterval(fetchTrendingCoins, 10 * 60000) // fetch every 10 minutes
+    
+    const interval = setInterval(() => {
+      if (!document.hidden) {
+        fetchTrendingCoins()
+      }
+    }, 10 * 60000) // fetch every 10 minutes
 
-    return () => clearInterval(interval)
-  }, [])
+    const handleVisibilityChange = () => {
+      if (!document.hidden && coins.length === 0) {
+        fetchTrendingCoins()
+      }
+    }
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [coins.length])
 
   useEffect(() => {
     const scrollContainer = scrollRef.current
