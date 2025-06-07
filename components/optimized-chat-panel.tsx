@@ -9,20 +9,18 @@ import { ArrowUp, ChevronDown, MessageCirclePlus, Square } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { RefObject, useEffect, useRef, useState } from 'react'
 import Textarea from 'react-textarea-autosize'
-import { toast } from 'sonner'
 import { useArtifact } from './artifact/artifact-context'
 import { SuggestionPills } from './chat-panel/suggestion-pills'
 import { LazyWallet } from './wallet'
 
 import { MarketPulse } from './market-pulse'
 
-import { SearchModeToggle } from './search-mode-toggle'
+import { useNetwork } from '@/lib/network/context'
 import { ChainSelector } from './chain-selector'
 import { DemoToggle } from './demo-toggle'
-import { useNetwork } from '../lib/context/network-context'
+import { SearchModeToggle } from './search-mode-toggle'
 import { Button } from './ui/button'
 import { IconLogo } from './ui/icons'
-import { VideoBackground } from './ui/video-background'
 import { WelcomeMessage } from './welcome-messages'
 
 
@@ -303,12 +301,18 @@ export function ChatPanel({
   
   return (
     <> {/* Use a fragment if VideoBackground is fixed and outside the main div's flow */}
-      <VideoBackground
-        src="/videos/background.mp4" // Ensure this path is correct
-        poster="/videos/background_poster.jpg" // Optional: path to a poster image
+      {showVideoBg && (
+  <div
+    className="fixed inset-0 z-0 bg-cover bg-center"
+    style={{ backgroundImage: "url(/images/background.avif)" }}
+  />
+)}
+      {/* <VideoBackground
+        src="/videos/background.mp4"
+        poster="/videos/background_poster.jpg"
         isActive={showVideoBg}
-        playbackRate={0.15} // Adjust playback speed as desired
-      />
+        playbackRate={0.15}
+      /> */}
       <div
         className={cn(
           'w-full group/form-container shrink-0 flex justify-center',
@@ -439,15 +443,10 @@ export function ChatPanel({
               >
                 <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto hide-scrollbar">
                   <SearchModeToggle />
+                  <DemoToggle />
                   <ChainSelector
-                    selectedChain={selectedChain}
-                    onChainChange={setSelectedChain}
-                    isDemoMode={isDemoMode}
                   />
-                  <DemoToggle
-                    isDemoMode={isDemoMode}
-                    onDemoModeChange={setIsDemoMode}
-                  />
+                  
                 </div>
                 <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                   {messages.length > 0 && (

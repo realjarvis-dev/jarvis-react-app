@@ -6,6 +6,8 @@ import { cn } from '@/lib/utils'
 import { AlertCircle, CheckCircle, Clock, Link, Loader2, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { SwapTransactionStatus } from './swap-transaction-status'
+import { getConfigByChainId } from '@/lib/network/config'
+import { useNetwork } from '@/lib/network/context'
 
 interface SwapTransactionCardProps {
   tool: any
@@ -22,6 +24,7 @@ export function SwapTransactionCard({
 }: SwapTransactionCardProps) {
   const [status, setStatus] = useState<TransactionStatus>('preparing')
   const [tokenName, setTokenName] = useState<string>('PT/YT Token')
+  const { isDemoMode } = useNetwork()
   
   // Parse the result
   const toolResult = tool.result
@@ -373,7 +376,7 @@ export function SwapTransactionCard({
                 <div className="flex justify-between items-center">
                   <div className="text-xs text-gray-500 dark:text-gray-400">Transaction:</div>
                   <a 
-                    href={`https://etherscan.io/tx/${result.transaction_hash}`} 
+                    href={`https://${getConfigByChainId(result.swap_details.chainId, isDemoMode).scanLink}/tx/${result.transaction_hash}`} 
                     target="_blank" 
                     rel="noreferrer"
                     className="text-xs font-medium text-blue-600 dark:text-blue-400 flex items-center hover:underline"

@@ -45,11 +45,11 @@ class ToolResultCache {
   private cache = new Map<string, CacheEntry>()
   private ttlMap: Record<string, number> = {
     search: 5 * 60 * 1000, // 5 minutes
-    gas_price: 1 * 60 * 1000, // 1 minutes
-    wallet_balance: 30 * 1000, // 30 seconds
-    pendle_opportunities: 60 * 1000, // 1 minute
+    gas_price: 3 * 60 * 1000, // 3 minutes (was 1 minute)
+    wallet_balance: 2 * 60 * 1000, // 2 minutes (was 30 seconds)
+    pendle_opportunities: 5 * 60 * 1000, // 5 minutes (was 1 minute)
     pendle_quote: 30 * 1000, // 30 seconds
-    kodiak_opportunities: 60 * 1000, // 1 minute
+    kodiak_opportunities: 5 * 60 * 1000, // 5 minutes (was 1 minute)
     generic_swap: 0, // No caching for swap transactions
     retrieve: 10 * 60 * 1000, // 10 minutes
     videoSearch: 10 * 60 * 1000 // 10 minutes

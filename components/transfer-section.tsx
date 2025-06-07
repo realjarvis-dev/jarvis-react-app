@@ -1,10 +1,11 @@
 'use client'
 
-import { getConfigByChainId } from '@/lib/config/network' // Import getConfigByChainId
+import { getConfigByChainId } from '@/lib/network/config' // Import getConfigByChainId
 import type { ToolInvocation } from 'ai'
 import React from 'react' // Added React import for JSX
 import { CollapsibleMessage } from './collapsible-message' // Assuming this can be reused
 import { Section, ToolArgsSection } from './section' // Assuming this can be reused
+import { useNetwork } from '@/lib/network/context'
 // import { MainnetConfig } from '@/lib/config/network'
 interface TransferSectionProps {
   tool: ToolInvocation
@@ -15,6 +16,7 @@ interface TransferSectionProps {
 interface PrivyTransferArgs {
   address: string
   amount: number
+  identifier: string
 }
 
 interface PrivyTransferResult {
@@ -25,8 +27,9 @@ interface PrivyTransferResult {
     to: string
     amount: number
     complete_time: string
-    chainId?: number
-    chainExplorerName?: string
+    chain_id?: number
+    chain_explorer_name?: string
+    explorer_link?: string
   }
 }
 
@@ -35,10 +38,11 @@ export function TransferSection({
   isOpen,
   onOpenChange
 }: TransferSectionProps) {
+  const { isDemoMode } = useNetwork()
   const args = tool.args as PrivyTransferArgs
 
   const header = (
-    <ToolArgsSection tool="transfer">{`Transfer to ${args.address} for ${args.amount} ETH`}</ToolArgsSection>
+    <ToolArgsSection tool="transfer">{`Transfer to ${args.address} for ${args.amount} ${args.identifier}`}</ToolArgsSection>
   )
 
   let statusDisplay: React.ReactNode = null // Changed to React.ReactNode
@@ -50,22 +54,22 @@ export function TransferSection({
     case 'result':
       const toolResult = tool.result as PrivyTransferResult
       if (toolResult.status === 'success' || toolResult.hash) {
-        const chainId = toolResult.transaction_details?.chainId || 1 // Default to 1 if not provided
-        const scanLink = getConfigByChainId(chainId).scanLink
-
+        // const chainId = toolResult.transaction_details?.chain_id || 1 // Default to 1 if not provided
+        // const scanLink = getConfigByChainId(chainId, isDemoMode).scanLink
+        console.log('toolResult.transaction_details', toolResult.transaction_details)
         statusDisplay = (
           <div>
             <p className="text-black-600">Transaction completed!</p>
-            {toolResult.hash && scanLink && (
+            {toolResult.hash && toolResult.transaction_details?.explorer_link && (
               <p>
                 View on{' '}
                 <a
-                  href={`https://${scanLink}/tx/${toolResult.hash}`}
+                  href={`${toolResult.transaction_details?.explorer_link}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-500 hover:underline"
                 >
-                  {toolResult.transaction_details?.chainExplorerName}
+                  {toolResult.transaction_details?.chain_explorer_name}
                 </a>
               </p>
             )}
@@ -76,7 +80,7 @@ export function TransferSection({
         statusDisplay = (
           <div>
             <p className="text-red-600">Transfer failed:</p>
-            <pre className="whitespace-pre-wrap">
+            <pre className="whitespace-pre-wrap break-all">
               {typeof toolResult.error_message === 'string'
                 ? toolResult.error_message
                 : JSON.stringify(toolResult.error_message, null, 2)}

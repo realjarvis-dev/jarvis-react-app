@@ -2,7 +2,7 @@
 import Fuse from 'fuse.js'
 import { tokensByChain } from './config/lifi/tokens'
 
-type Token = {
+export type Token = {
   chainId: number
   address: string
   symbol: string
@@ -10,26 +10,25 @@ type Token = {
   decimals: number
 }
 
-export type TokenWithScore = Token & { score: number }
-
 // Define a type for the keys of tokensByChain
 type ChainIdKey = keyof typeof tokensByChain
 
 export class TokenMatcher {
   private fuse: Fuse<Token>
   private chainId: string
-  private list: Token[]
+  private tokenList: Token[]
   /**
    * @param {number|string} chainId
    */
-  constructor(chainId: number, threshold = 0.3) {
+  constructor(chainId: number, threshold = 0.3, tokenList?: Token[]) {
     this.chainId = String(chainId)
-    this.list = tokensByChain[this.chainId as ChainIdKey] || []
+    this.tokenList = tokenList || tokensByChain[this.chainId as ChainIdKey] || []
 
-    this.fuse = new Fuse(this.list, {
+    this.fuse = new Fuse(this.tokenList, {
       keys: [
         { name: 'symbol', weight: 0.7 },
-        { name: 'name', weight: 0.3 }
+        { name: 'name', weight: 0.3 },
+        { name: 'address', weight: 0.3 }
       ],
       threshold,
       ignoreLocation: true,
@@ -41,9 +40,8 @@ export class TokenMatcher {
    * @param {string} query — symbol or name to search
    * @returns {{...Token, score: number}[]}
    */
-  match(query: string, limit = 5): TokenWithScore[] {
+  match(query: string, limit = 5): Token[] {
     return this.fuse
-      .search(query, { limit })
-      .map(({ item, score }) => ({ ...item, score: score ?? 0 }))
+      .search(query, { limit }).map(({ item }) => item)
   }
 }

@@ -3,8 +3,8 @@ import {
   MissingChainError,
   MissingTokenError
 } from '../cross-chain-matcher'
-import { ChainMatcher, ChainWithScore } from '../fuzzy-chain-matcher'
-import { TokenMatcher, TokenWithScore } from '../fuzzy-token-matcher'
+import { ChainMatcher, type Chain } from '../fuzzy-chain-matcher'
+import { TokenMatcher, type Token } from '../fuzzy-token-matcher'
 
 // Mock the dependent matcher classes
 jest.mock('../fuzzy-chain-matcher')
@@ -79,56 +79,49 @@ describe('CrossChainMatcher Singleton', () => {
     const fromTokenStr = 'eth'
     const toTokenStr = 'matic'
 
-    const mockFromChain: ChainWithScore = {
+    const mockFromChain: Chain = {
       id: 1,
       name: 'Ethereum',
-      coin: 'ETH',
-      score: 0.1
+      coin: 'ETH'
     }
-    const mockToChain: ChainWithScore = {
+    const mockToChain: Chain = {
       id: 137,
       name: 'Polygon',
-      coin: 'POL',
-      score: 0.1
+      coin: 'POL'
     } // Corrected coin
 
-    const mockFromTokenExact: TokenWithScore = {
+    const mockFromTokenExact: Token = {
       chainId: 1,
       address: '0xfrom',
       symbol: 'ETH',
       name: 'Ether',
-      decimals: 18,
-      score: 0
+      decimals: 18
     }
-    const mockFromTokenFuzzyList: TokenWithScore[] = [
+    const mockFromTokenFuzzyList: Token[] = [
       mockFromTokenExact,
       {
         chainId: 1,
         address: '0xfrom_fuzzy',
         symbol: 'WETH',
         name: 'Wrapped Ether',
-        decimals: 18,
-        score: 0.2
+        decimals: 18
       }
     ]
-    const mockToTokenExact: TokenWithScore = {
+    const mockToTokenExact: Token = {
       chainId: 137,
       address: '0xto',
       symbol: 'MATIC',
       name: 'Matic Token',
-      decimals: 18,
-      score: 0
+      decimals: 18
     }
-    const mockToTokenFuzzyList: TokenWithScore[] = [
+    const mockToTokenFuzzyList: Token[] = [
       mockToTokenExact,
       {
         chainId: 137,
         address: '0xto_fuzzy',
         symbol: 'WMATIC',
         name: 'Wrapped Matic',
-        decimals: 18,
-        score: 0.2
-      }
+        decimals: 18      }
     ]
 
     it('should correctly detect chains and tokens with exact matches', async () => {

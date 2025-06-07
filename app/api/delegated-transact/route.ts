@@ -1,5 +1,5 @@
 export const runtime = 'nodejs'
-import { TenderlyDemoConfig } from '@/lib/config/network'
+import { TENDERLY_DEMO_CONFIG } from '@/lib/network/config'
 import { getUserWallet, privy } from '@/lib/privy/client'
 import { StaticJsonRpcProvider } from '@ethersproject/providers'
 import {
@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
   try {
     // 1. Create data payload for transaction
     const recipientAddress = '0xa9516C8AA7425D6190345a038eB8C4799C786Bb8'
-    const chainId = TenderlyDemoConfig.chainId // Tenderly demo network
+    const chainId = TENDERLY_DEMO_CONFIG.chainId // Tenderly demo network
     const weiBig = BigInt('1000000000000000') // 0.001 ETH in wei
 
     // Create base transaction request
@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
     console.log('Transaction request created:', txRequest)
 
     // 2. Set up provider and populate transaction request
-    const rpcUrl = TenderlyDemoConfig.rpcUrl
+    const rpcUrl = TENDERLY_DEMO_CONFIG.rpcUrl
     const provider = new StaticJsonRpcProvider(rpcUrl, {
       name: 'tenderly-demo',
       chainId: chainId

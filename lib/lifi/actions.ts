@@ -11,7 +11,7 @@ import {
 import { chainsById } from '../token-matcher/fuzzy-chain-matcher'
 import {
   TokenMatcher,
-  TokenWithScore
+  type Token
 } from '../token-matcher/fuzzy-token-matcher'
 import { LifiQuoteResponse } from '../types/lifi'
 import { getLifiQuote } from './api'
@@ -24,6 +24,7 @@ import {
   noRouteDetails,
   noRouteTitle
 } from './utils'
+import { getConfigByChainId } from '@/lib/network/config'
 
 
 const NATIVE_TOKEN_STRING = '0x0000000000000000000000000000000000000000'
@@ -39,7 +40,7 @@ export const generateLifiBridgeQuote = async (
   recipient?: string,
   autoFuelDestChain?: boolean
 ) => {
-  // const userEvmAddress = await getUserEvmWalletAddress()
+  // const fromAddress = await getUserEvmWalletAddress()
   // if (autoFuelDestChain === undefined) {
   //   autoFuelDestChain = true
   // }
@@ -49,6 +50,13 @@ export const generateLifiBridgeQuote = async (
     recipient = fromAddress
   }
   try {
+    console.log('fromChain', fromChain)
+    console.log('toChain', toChain)
+    console.log('fromToken', fromToken)
+    console.log('toToken', toToken)
+    console.log('fromAddress', fromAddress)
+    console.log('amountIn', amountIn)
+    console.log('slippage', slippage)
     const {
       fromChain: fromChainMatch,
       toChain: toChainMatch,
@@ -60,8 +68,8 @@ export const generateLifiBridgeQuote = async (
       fromToken,
       toToken
     )
-    let fromTokenSingle: TokenWithScore
-    let toTokenSingle: TokenWithScore
+    let fromTokenSingle: Token
+    let toTokenSingle: Token
     let requireClarifyInput = false
     let requireClarifyOutput = false
     if (fromTokenList.length === 1) {
@@ -100,70 +108,6 @@ export const generateLifiBridgeQuote = async (
       }
     }
 
-//     if (fromChainMatch.id !== toChainMatch.id) {
-//       // check user's balance on dest chain
-//       const balanceDestChain = await getNativeBalanceByChainId(
-//         recipient,
-//         toChainMatch.id
-//       )
-//       const nativeCoinSymbol = toChainMatch.coin
-//       const tokenMatcher = new TokenMatcher(toChainMatch.id)
-//       const nativeCoin = tokenMatcher.match(nativeCoinSymbol)
-//       const nativeCoinDecimals = nativeCoin[0].decimals
-//       const blockNativeGasPriceResponse = await getGasPriceByChainId(toChainMatch.id)
-//       const blockNativeGasPrice = blockNativeGasPriceResponse.maxPriorityFeePerGas + blockNativeGasPriceResponse.maxFeePerGas
-//       console.log("balanceDestChain", balanceDestChain)
-//       console.log("blockNativeGasPrice", blockNativeGasPrice)
-//       console.log("GAS_LIMIT", blockNativeGasPrice * BigInt(LOWER_BOUND_GAS_LIMIT))
-//       if (autoFuelDestChain &&
-//         balanceDestChain <= blockNativeGasPrice * BigInt(LOWER_BOUND_GAS_LIMIT) &&
-//         toTokenSingle.symbol !== toChainMatch.coin
-//       ) {
-//         try {
-//           const {
-//             status,
-//             message,
-//             nativeTokenQuote,
-//             swapQuote,
-//             readableQuote
-//           } = await _generateMultiStepQuote(
-//             fromChainMatch.id,
-//             fromTokenSingle.symbol,
-//             fromTokenSingle.decimals,
-//             fromAddress,
-//             toChainMatch.id,
-//             toChainMatch.coin,
-//             toTokenSingle.symbol,
-//             toTokenSingle.decimals,
-//             amountIn,
-//             slippage,
-//             recipient
-//           )
-//           if (status === 'fail') {
-//             return {
-//               instruction:
-//                 'notify user and ask if they want to turn off auto fuel',
-//               title: autoFuelFailTitle,
-//               details: autoFuelFailDetails,
-//               more_details: message
-//             }
-//           }
-//           return {
-//             instruction: `Don't repeat the quote to user, simply ask user if they want to proceed with the transaction. Explain to user that they are low on native token on the destination chain, so we automatically fueled the token for future transactions. 
-// If user wants to proceed, use lifi_bridge_execute tool to execute the transaction.`,
-//             details: { ...readableQuote, auto_fuel_decision: true }
-//           }
-//         } catch (error) {
-//           return {
-//             instruction: 'notify user',
-//             title: noRouteTitle,
-//             details: noRouteDetails,
-//             more_details:
-//               error instanceof Error ? error.message : 'Unknown error'
-//           }
-//         }
-//       }
-//     }
 
     const inputDecimals = fromTokenSingle.decimals
     const outputDecimals = toTokenSingle.decimals
@@ -276,17 +220,20 @@ export const executeLifiBridgeTransaction = async (
   recipient: string | undefined,
   isFromNativeToken: boolean,
   fromChainName: string,
-  toChainName: string
+  toChainName: string,
+  isDemo: boolean = false
 ) => {
-  const userEvmAddress = await getUserEvmWalletAddress()
-  if (!userEvmAddress) {
-    return {
-      instruction: 'notify user',
-      details: "User's embedded wallet not found"
-    }
-  }
+  let result: { hash: string }
+  result = { hash: '' }
+  // const userEvmAddress = await getUserEvmWalletAddress()
+  // if (!userEvmAddress) {
+  //   return {
+  //     instruction: 'notify user',
+  //     details: "User's embedded wallet not found"
+  //   }
+  // }
   if (!recipient) {
-    recipient = userEvmAddress
+    recipient = fromAddress
   }
   const inputAmount = parseUnits(amountIn, fromTokenDecimals).toString()
   const quote: LifiQuoteResponse = await getLifiQuote(
@@ -295,7 +242,7 @@ export const executeLifiBridgeTransaction = async (
     fromToken,
     toToken,
     inputAmount,
-    userEvmAddress,
+    fromAddress,
     recipient,
     slippage
   )
@@ -313,8 +260,9 @@ export const executeLifiBridgeTransaction = async (
         fromTokenAddress,
         protocolAddress,
         inputAmount,
-        userEvmAddress,
-        fromChainId
+        fromAddress,
+        fromChainId,
+        isDemo
       )
       if (status === 'fail') {
         return {
@@ -344,10 +292,22 @@ export const executeLifiBridgeTransaction = async (
 
     // // convert back to a hex string (Ethereum‐style)
     // const gasPriceHex = "0x" + newGas.toString(16) as `0x${string}`
-    const result = await executeSwapTransaction(txData, fromChainId, {
-      estimateGas: true,
-      getGasPriceFunction: getGasPriceByChainId
-    })
+    
+    if (!isDemo) {
+    result = await executeSwapTransaction(txData, fromChainId, {
+        estimateGas: true,
+        getGasPriceFunction: getGasPriceByChainId
+      }, isDemo)
+    } else {
+      result = await executeSwapTransaction(txData, 1, {
+        estimateGas: false,
+        gasLimit: gasLimit ? toHex(gasLimit) : undefined,
+        getGasPriceFunction: getGasPriceByChainId
+      }, isDemo)
+    }
+    const explorerLink = getConfigByChainId(fromChainId, isDemo).scanLink
+    const explorerLinkWithHash = `https://${explorerLink}/tx/${result.hash}`
+    
 
     return {
       success: true,
@@ -359,6 +319,7 @@ export const executeLifiBridgeTransaction = async (
         amount_in_human: amountIn,
         from_chain_name: fromChainName,
         to_chain_name: toChainName,
+        explorer_link: explorerLink ? explorerLinkWithHash : undefined,
         complete_time: new Date().toISOString()
       }
     }
@@ -368,6 +329,7 @@ export const executeLifiBridgeTransaction = async (
     return {
       success: false,
       error: errorMessage,
+      hash: result?.hash || '',
       swap_details: {
         from_token_symbol: fromToken,
         from_token_address: fromTokenAddress,
@@ -380,5 +342,3 @@ export const executeLifiBridgeTransaction = async (
     }
   }
 }
-
-

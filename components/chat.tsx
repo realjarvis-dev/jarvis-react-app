@@ -1,7 +1,6 @@
 'use client'
 
 import { CHAT_ID } from '@/lib/constants'
-import { useNetwork } from '@/lib/context/network-context'
 import { useAutoScroll } from '@/lib/hooks/use-auto-scroll'
 import { cn } from '@/lib/utils'
 import { useChat } from '@ai-sdk/react'
@@ -29,26 +28,31 @@ export function Chat({
 }) {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const { user, ready, authenticated } = usePrivy()
-  const { selectedChain, isDemoMode } = useNetwork()
   const [headers, setHeaders] = useState<Record<string, string>>({})
-  const [anonId, setAnonId] = useLocalStorage('anonUserId', { defaultValue: '' });
-  const [anonTrial, setAnonTrial] = useLocalStorage('anonTrial', { defaultValue: MAX_TRIALS });
+  const [anonId, setAnonId] = useLocalStorage('anonUserId', {
+    defaultValue: ''
+  })
+  const [anonTrial, setAnonTrial] = useLocalStorage('anonTrial', {
+    defaultValue: MAX_TRIALS
+  })
 
   useEffect(() => {
     if (!ready) return
     if (!authenticated) {
       if (!anonId) {
-        // e.g. using crypto API to generate a UUID
-        const anonId = crypto.randomUUID();
-        console.log('anonId', anonId);
-        setAnonId(anonId);
+        const newAnonId = crypto.randomUUID()
+        console.log('anonId', newAnonId)
+        setAnonId(newAnonId)
+        setHeaders({
+          'x-user-id': newAnonId,
+          'allow-web3-tools': 'false'
+        })
+      } else {
+        setHeaders({
+          'x-user-id': anonId,
+          'allow-web3-tools': 'false'
+        })
       }
-      setHeaders({
-        'x-user-id': anonId,
-        'allow-web3-tools': 'false',
-        'x-selected-chain': selectedChain,
-        'x-demo-mode': isDemoMode.toString()
-      })
       return
     } else {
       ;(async () => {
@@ -56,22 +60,18 @@ export function Chat({
           const token = await getAccessToken()
           setHeaders({
             'x-user-id': user!.id,
-            'allow-web3-tools': 'true',
-            'x-selected-chain': selectedChain,
-            'x-demo-mode': isDemoMode.toString()
+            'allow-web3-tools': 'true'
           })
         } catch (error) {
           console.error('Failed to get access token:', error)
           setHeaders({
             'x-user-id': 'anonymous',
-            'allow-web3-tools': 'false',
-            'x-selected-chain': selectedChain,
-            'x-demo-mode': isDemoMode.toString()
+            'allow-web3-tools': 'false'
           })
         }
       })()
     }
-  }, [user?.id, ready, authenticated, selectedChain, isDemoMode])
+  }, [user?.id, ready, authenticated, anonId, setAnonId])
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
@@ -122,13 +122,16 @@ export function Chat({
     setMessages(savedMessages)
   }, [id])
 
-  const checkTrialLimit = (limitReachCallback: () => void, limitNotReachedCallback: () => void) => {
+  const checkTrialLimit = (
+    limitReachCallback: () => void,
+    limitNotReachedCallback: () => void
+  ) => {
     if (!ready) {
       toast.error('Still initializing, please wait…')
       return
     }
     if (authenticated) {
-      return 
+      return
     }
     if (anonTrial <= 0) {
       console.log('anonTrial', anonTrial)
@@ -153,11 +156,14 @@ export function Chat({
     }
     if (!authenticated) {
       // check trial limit, execute callback if limit reached
-      checkTrialLimit(() => {
-        toast.error('No trials left – please log in!')
-      }, () => {
-        sendMessage()
-      })
+      checkTrialLimit(
+        () => {
+          toast.error('No trials left – please log in!')
+        },
+        () => {
+          sendMessage()
+        }
+      )
       return
     }
     sendMessage()
@@ -225,13 +231,16 @@ export function Chat({
     }
     if (!authenticated) {
       // check trial limit, execute callback if limit reached
-      checkTrialLimit(() => {
-        toast.error('No trials left – please log in!')
-        e.preventDefault()
-        setData(undefined)
-      }, () => {
-        sendMessage()
-      })
+      checkTrialLimit(
+        () => {
+          toast.error('No trials left – please log in!')
+          e.preventDefault()
+          setData(undefined)
+        },
+        () => {
+          sendMessage()
+        }
+      )
       return
     }
 

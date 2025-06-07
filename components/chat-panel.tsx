@@ -22,7 +22,7 @@ import { CopyableWalletAddressSkeleton } from './copyable-wallet-address-skeleto
 
 import { MarketPulse } from './market-pulse'
 
-import { useNetwork } from '../lib/context/network-context'
+import { useNetwork } from '@/lib/network/context'
 import { ChainSelector } from './chain-selector'
 import { DemoToggle } from './demo-toggle'
 import { SearchModeToggle } from './search-mode-toggle'
@@ -642,13 +642,13 @@ export function ChatPanel({
                 <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto hide-scrollbar">
                   <SearchModeToggle />
                   <ChainSelector
-                    selectedChain={selectedChain}
-                    onChainChange={setSelectedChain}
-                    isDemoMode={isDemoMode}
+                    // selectedChain={selectedChain}
+                    // onChainChange={setSelectedChain}
+                    // isDemoMode={isDemoMode}
                   />
                   <DemoToggle
-                    isDemoMode={isDemoMode}
-                    onDemoModeChange={setIsDemoMode}
+                    // isDemoMode={isDemoMode}
+                    // onDemoModeChange={setIsDemoMode}
                   />
                 </div>
                 <div className="flex items-center gap-1 sm:gap-2 shrink-0">

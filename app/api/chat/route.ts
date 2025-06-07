@@ -1,4 +1,4 @@
-import { getActiveNetworkConfig } from '@/lib/config/network-selection'
+import { getServerSideNetworkConfig } from '@/lib/network/gateway'
 import { getUser, getUserWallet } from '@/lib/privy/client'
 import { createManualToolStreamResponse } from '@/lib/streaming/create-manual-tool-stream'
 import { createToolCallingStreamResponse } from '@/lib/streaming/create-tool-calling-stream'
@@ -65,25 +65,21 @@ export async function POST(request: Request) {
       userSolWallet = await getUserWallet('solana')
     }
 
-    // Extract network context from request headers
-    const selectedChainHeader = request.headers.get('x-selected-chain') as 'ethereum' | 'berachain' | null
-    const isDemoModeHeader = request.headers.get('x-demo-mode') === 'true'
-    
-    // Create network context if chain information is provided
+    // Extract network context using getServerSideNetworkConfig
     let networkContext
-    if (selectedChainHeader) {
-      try {
-        const activeNetwork = getActiveNetworkConfig(isDemoModeHeader, selectedChainHeader)
-        
-        networkContext = createNetworkContext(
-          selectedChainHeader,
-          isDemoModeHeader,
-          activeNetwork
-        )
-      } catch (error) {
-        console.error('Error creating network context:', error)
-        // Continue without network context
-      }
+    try {
+      const serverDeterminedNetworkConfig = await getServerSideNetworkConfig()
+
+      console.log('serverDeterminedNetworkConfig', serverDeterminedNetworkConfig)
+
+      networkContext = createNetworkContext(
+        serverDeterminedNetworkConfig.id, // Use chainId from the config
+        serverDeterminedNetworkConfig.isDemo, // Use isDemo from the config
+        serverDeterminedNetworkConfig // Pass the full config as activeNetwork
+      )
+    } catch (error) {
+      console.error('Error creating network context:', error)
+      // Continue without network context
     }
 
     const supportsToolCalling = selectedModel.toolCallType === 'native'

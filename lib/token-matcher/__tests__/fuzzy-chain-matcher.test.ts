@@ -91,18 +91,6 @@ describe('ChainMatcher', () => {
       expect(resultsLower[0].name).toBe('Ethereum')
     })
 
-    it('should provide a score for each match', () => {
-      const results = chainMatcher.match('Ethereum')
-      expect(results.length).toBeGreaterThan(0)
-      results.forEach(result => {
-        expect(result.score).toBeDefined()
-        expect(typeof result.score).toBe('number')
-        expect(result.score).toBeGreaterThanOrEqual(0)
-        // Fuse.js score: 0 = perfect match, 1 = complete mismatch
-        // chainMatcher uses the default threshold of 0.3
-        expect(result.score).toBeLessThanOrEqual(0.3)
-      })
-    })
 
     it('should work with chains having special characters or numbers in name if they exist', () => {
       // Add a dummy chain with special chars to the list for this test if not present

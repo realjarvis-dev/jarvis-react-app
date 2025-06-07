@@ -1,3 +1,4 @@
+import { TENDERLY_DEMO_CONFIG, allNetworkConfigs } from '@/lib/network/config'
 import { Alchemy, AlchemySettings, Network } from 'alchemy-sdk'
 
 // 1. Define your shared defaults
@@ -20,27 +21,43 @@ function makeAlchemyClient(
   })
 }
 
-// 3. Instantiate all your clients in one place
-export const mainnetAlchemy = makeAlchemyClient(Network.ETH_MAINNET)
-export const sepoliaAlchemy = makeAlchemyClient(Network.ETH_SEPOLIA)
-export const polygonAlchemy = makeAlchemyClient(Network.MATIC_MAINNET)
-export const baseAlchemy = makeAlchemyClient(Network.BASE_MAINNET)
-export const arbitrumAlchemy = makeAlchemyClient(Network.ARB_MAINNET)
-export const berachainMainnetAlchemy = makeAlchemyClient(
-  Network.BERACHAIN_MAINNET
+// Demo client configured for Tenderly
+export const demoAlchemy = makeAlchemyClient(
+  TENDERLY_DEMO_CONFIG.alchemyNetwork || Network.ETH_MAINNET,
+  {
+    connectionInfoOverrides: {
+      skipFetchSetup: true,
+      url: TENDERLY_DEMO_CONFIG.rpcUrl
+    }
+  }
 )
-export const berachainBepoliaAlchemy = makeAlchemyClient(
-  Network.BERACHAIN_BEPOLIA
-)
-export const optimismAlchemy = makeAlchemyClient(Network.OPT_MAINNET)
 
-export const chainIdToAlchemyClient: Record<number, Alchemy> = {
-  1: mainnetAlchemy,
-  11155111: sepoliaAlchemy,
-  80094: berachainMainnetAlchemy,
-  80069: berachainBepoliaAlchemy,
-  137: polygonAlchemy,
-  8453: baseAlchemy,
-  42161: arbitrumAlchemy,
-  10: optimismAlchemy
+// 3. Instantiate clients dynamically from allNetworkConfigs
+export const chainIdToAlchemyClient: Record<number, Alchemy> = {}
+
+Object.values(allNetworkConfigs).forEach(config => {
+  if (config.alchemyNetwork) {
+    chainIdToAlchemyClient[config.chainId] = makeAlchemyClient(
+      config.alchemyNetwork
+    )
+  }
+})
+
+export const getAlchemyClient = (
+  chainId: number,
+  isDemo = false
+): Alchemy | undefined => {
+  if (isDemo) {
+    if (chainId === TENDERLY_DEMO_CONFIG.chainId) {
+      return demoAlchemy
+    }
+    throw new Error(
+      `Demo mode requested for chainId ${chainId}, but demo is configured for ${TENDERLY_DEMO_CONFIG.chainId}.`
+    )
+  }
+  const client = chainIdToAlchemyClient[chainId]
+  if (!client) {
+    throw new Error(`No Alchemy client found for chainId ${chainId}`)
+  }
+  return client
 }

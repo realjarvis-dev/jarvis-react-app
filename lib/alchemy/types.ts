@@ -4,4 +4,5 @@ export interface TokenData {
     symbol:  string;
     balance: string;      // human-readable
     network: string;
+    decimals: number;
   }

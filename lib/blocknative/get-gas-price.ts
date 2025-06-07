@@ -1,5 +1,5 @@
 import { parseEther, parseGwei, parseUnits } from 'viem'
-import { TenderlyDemoConfig } from '../config/network'
+import { TENDERLY_DEMO_CONFIG } from '@/lib/network/config'
 // {
 //     "system": "base",
 //     "network": "mainnet",
@@ -48,9 +48,6 @@ import { TenderlyDemoConfig } from '../config/network'
 //     ]
 // }
 export const getGasPriceByChainId = async (chainId: number) => {
-if (chainId === TenderlyDemoConfig.chainId) {
-    chainId = 1
-  }
   const url = new URL('https://api.blocknative.com/gasprices/blockprices')
   url.searchParams.append('chainid', chainId.toString())
   console.log(url.toString())
@@ -58,10 +55,12 @@ if (chainId === TenderlyDemoConfig.chainId) {
     const response = await fetch(url.toString(), {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': process.env.BLOCKNATIVE_API_KEY ? `Bearer ${process.env.BLOCKNATIVE_API_KEY}` : ''
       }
     })
     const data = await response.json()
+    
     const unit = data.unit
     let parseFunc
     if (unit === 'gwei') {
@@ -73,7 +72,7 @@ if (chainId === TenderlyDemoConfig.chainId) {
     } else {
       throw new Error('Invalid unit')
     }
-    console.log(JSON.stringify(data, null, 2))
+    const baseFeePerGas = parseFunc(data.blockPrices[0].baseFeePerGas.toString())
     const maxPriceInMemPool = parseFunc(data.maxPrice.toString())
     const maxPriorityFeePerGas = parseFunc(
       data.blockPrices[0].estimatedPrices[0].maxPriorityFeePerGas.toString()
@@ -83,6 +82,7 @@ if (chainId === TenderlyDemoConfig.chainId) {
     )
 
     return {
+      baseFeePerGas,
       maxPriceInMemPool,
       maxPriorityFeePerGas,
       maxFeePerGas

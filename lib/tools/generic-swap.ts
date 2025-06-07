@@ -96,7 +96,7 @@ export const genericSwapTool = tool({
     const networkContext = context?.networkContext;
     // Use chainId from networkContext if available, otherwise use the parameter
     const effectiveChainId = networkContext?.selectedChainId || chainId;
-    
+    const isDemo = networkContext!.isDemo
     const tokenOutAddress = tokenAddressMap[tokenOutSymbol].toLowerCase()
     const tokenInAddress = tokenAddressMap[tokenInSymbol].toLowerCase()
     const tokenInDecimals = tokenDecimalMap[tokenInSymbol]
@@ -186,7 +186,7 @@ export const genericSwapTool = tool({
 
       if (erc20Input) {
         const approvalResult = await erc20Approval(tokenInAddress, txData.to,
-            amountInBaseUnits, evmWalletAddress, effectiveChainId)
+            amountInBaseUnits, evmWalletAddress, effectiveChainId, isDemo)
         if (approvalResult.status === 'fail') {
           throw new Error(approvalResult.message)
         }
