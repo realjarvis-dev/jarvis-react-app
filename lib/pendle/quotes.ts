@@ -2,6 +2,7 @@ import axios from 'axios'
 import { ethers } from 'ethers'
 import { getUserEvmWalletAddress } from '../privy/client'
 import { SimplifiedPendleMarket } from '../types/pendle'
+import { getPendleMarketInfo } from './market-discovery'
 
 // Define the quote response type from the API
 export interface SwapQuoteResponse {
@@ -29,29 +30,54 @@ const BASE_URL = 'https://api-v2.pendle.finance/core/v1'
 
 /**
  * Get a quote for swapping between ETH and PT/YT tokens
- * @param market The Pendle market or market address
- * @param token The PT/YT token address
+ * This enhanced version can work directly with token addresses by discovering the market on-the-fly
+ * @param marketOrToken The Pendle market or market address or token address
+ * @param tokenAddress Optional token address when marketOrToken is a market
  * @param marketName Optional market name for display purposes
  * @param amountIn Amount to swap (in ETH or token units)
  * @param direction 'ethToToken' or 'tokenToEth' to specify swap direction
  * @param chainId Chain ID (default: 1 for Ethereum Mainnet)
+ * @param isDemo Whether this is running in demo mode
  * @returns Promise with the formatted quote
  * @throws Error if API call fails or returns invalid data
  */
 export async function getQuote(
-  market: SimplifiedPendleMarket | string,
-  token: string,
+  marketOrToken: SimplifiedPendleMarket | string,
+  tokenAddress?: string,
   marketName?: string,
   amountIn: string = "1",
   direction: 'ethToToken' | 'tokenToEth' = 'ethToToken',
-  chainId: number = 1
+  chainId: number = 1,
+  isDemo: boolean = false
 ): Promise<FormattedQuote> {
   try {
-    // Handle both market object and market address string
-    const marketAddress = typeof market === 'string' ? market : market.address;
+    let marketAddress: string;
+    let token: string;
+    let displayName = marketName || 'Unknown Market';
     
-    // Use the provided market name directly - this should already include PT/YT prefix
-    const displayName = marketName || 'Unknown Market';
+    // Determine if we're given a market or a token
+    if (typeof marketOrToken === 'string' && (!tokenAddress || tokenAddress === '')) {
+      // If only a string is provided without a token address, assume it's a token
+      // and try to discover its market
+      const marketInfo = await getPendleMarketInfo(marketOrToken, chainId, isDemo);
+      if (!marketInfo) {
+        throw new Error(`No Pendle market found for token: ${marketOrToken}`);
+      }
+      
+      // Use discovered market info
+      marketAddress = marketInfo.marketAddress;
+      token = direction === 'ethToToken' ? marketInfo.ptAddress : marketInfo.ytAddress; // Default to PT
+      displayName = marketInfo.name;
+    } else {
+      // Handle the case when market/market address is explicitly provided
+      marketAddress = typeof marketOrToken === 'string' ? marketOrToken : marketOrToken.address;
+      
+      // Ensure token address is provided
+      if (!tokenAddress) {
+        throw new Error('Token address is required when providing a market address');
+      }
+      token = tokenAddress;
+    }
     
     // Convert amount to wei/token units (assuming 18 decimals for both)
     let amountInWei;
