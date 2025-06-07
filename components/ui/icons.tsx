@@ -20,7 +20,7 @@
 import * as React from "react";
 
 export function IconLogo(
-  { className, ...props }: React.ComponentProps<"svg">
+  { className, priority = false, ...props }: React.ComponentProps<"svg"> & { priority?: boolean }
 ) {
   return (
     <svg

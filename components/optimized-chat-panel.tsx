@@ -21,7 +21,7 @@ import { DemoToggle } from './demo-toggle'
 import { SearchModeToggle } from './search-mode-toggle'
 import { Button } from './ui/button'
 import { IconLogo } from './ui/icons'
-import { WelcomeMessage } from './welcome-messages'
+import { LazyWelcomeMessage } from './lazy-welcome-message'
 
 
 function useKeyboardAvoidance({
@@ -340,6 +340,7 @@ export function ChatPanel({
               </div>
 
               <IconLogo
+                priority={true}
                 className={cn(
                   'size-6 sm:size-8 md:size-12',
                   showVideoBg ? 'text-white/90 drop-shadow-md' : 'text-muted-foreground'
@@ -350,7 +351,7 @@ export function ChatPanel({
               <LazyWallet showVideoBg={showVideoBg} />
               
               {mounted && (
-                <WelcomeMessage
+                <LazyWelcomeMessage
                   seed={welcomeSeed}
                   className={cn(
                     'welcome-message-optimized',

@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 31536000,
     remotePatterns: [
       {
         protocol: 'https',
@@ -12,19 +14,21 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'lh3.googleusercontent.com',
         port: '',
-        pathname: '/a/**' // Google user content often follows this pattern
+        pathname: '/a/**'
       },
       {
         protocol: 'https',
         hostname: 'encrypted-tbn0.gstatic.com',
         port: '',
-        pathname: '/**' // Allow any path from this hostname
+        pathname: '/**'
       }
     ]
   },
+  compress: true,
   experimental: {
     optimizeCss: true,
-    optimizePackageImports: ['@ai-sdk/react', '@privy-io/react-auth', 'ethers', 'axios']
+    scrollRestoration: true,
+    optimizePackageImports: ['@ai-sdk/react', '@privy-io/react-auth', 'ethers', 'axios', 'recharts', 'lodash']
   },
   webpack: (config, { dev, isServer }) => {
     if (!dev && !isServer) {

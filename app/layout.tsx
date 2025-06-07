@@ -2,6 +2,7 @@ import AppSidebar from '@/components/app-sidebar'
 import { ArtifactProvider } from '@/components/artifact/artifact-context'
 import ArtifactRoot from '@/components/artifact/artifact-root'
 import Header from '@/components/header'
+import { PerformanceMonitor } from '@/components/performance-monitor'
 import WrappedPrivyProvider from '@/components/privy-provider'
 import { ThemeProvider } from '@/components/theme-provider'
 import { SidebarProvider } from '@/components/ui/sidebar'
@@ -89,6 +90,7 @@ export default async function RootLayout({
           </NetworkProvider>
           <Toaster />
           <Analytics />
+          <PerformanceMonitor />
         </ThemeProvider>
       </body>
     </html>
