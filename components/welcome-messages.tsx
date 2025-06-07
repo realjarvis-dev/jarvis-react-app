@@ -1,3 +1,7 @@
+'use client'
+
+import React, { useMemo } from 'react'
+
 // Array of welcome messages to display
 const welcomeMessages = [
   'Maximize your yield potential!',
@@ -34,21 +38,27 @@ interface WelcomeMessageProps {
   messageIndex?: number
 }
 
-export function WelcomeMessage({
+export const WelcomeMessage = React.memo(function WelcomeMessage({
   className,
   seed,
   messageIndex
 }: WelcomeMessageProps) {
-  // If messageIndex is provided, use it directly
-  // Otherwise use the seed if provided
   const index = messageIndex !== undefined ? messageIndex : seed
   const message = getWelcomeMessage(index)
 
+  const memoizedClassName = useMemo(() => {
+    return `text-center text-base sm:text-lg md:text-2xl lg:text-3xl font-semibold w-full ${className || ''} max-w-full px-0 sm:px-1 md:px-2 lg:px-4 min-h-[30px] sm:min-h-[40px] break-words`
+  }, [className])
+
   return (
     <p
-      className={`text-center text-base sm:text-lg md:text-2xl lg:text-3xl font-semibold w-full ${className} max-w-full px-0 sm:px-1 md:px-2 lg:px-4 min-h-[30px] sm:min-h-[40px] break-words`}
+      className={memoizedClassName}
+      style={{
+        willChange: 'transform',
+        contain: 'layout style'
+      }}
     >
       {message}
     </p>
   )
-}
+})

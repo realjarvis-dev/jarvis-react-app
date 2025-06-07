@@ -544,6 +544,7 @@ export function ChatPanel({
                 <WelcomeMessage
                   seed={welcomeSeed}
                   className={cn(
+                    'welcome-message-optimized',
                     showVideoBg ? 'text-gray-100 drop-shadow-md' : ''
                   )}
                 />

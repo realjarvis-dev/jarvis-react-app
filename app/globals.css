@@ -158,5 +158,11 @@ html, body, #__next {
   .shadow-glow {
     box-shadow: 0 0 10px rgba(250, 204, 21, 0.6), 0 0 20px rgba(250, 204, 21, 0.4);
   }
+  
+  .welcome-message-optimized {
+    will-change: transform;
+    contain: layout style;
+    transform: translateZ(0);
+  }
 }
 

@@ -51,6 +51,25 @@
     updatePerformanceDisplay();
   };
 
+  // Function to mark when welcome message is rendered
+  window.markWelcomeMessageRendered = function() {
+    window.welcomeMessageRenderTime = performance.now();
+    console.log('Welcome message rendered at:', window.welcomeMessageRenderTime);
+    
+    // Update the display
+    updatePerformanceDisplay();
+  };
+
+  // Function to check if welcome message is rendered
+  function checkWelcomeMessageRendered() {
+    const welcomeMessage = document.querySelector('p[class*="text-center text-base"]');
+    if (welcomeMessage) {
+      window.markWelcomeMessageRendered();
+    } else {
+      setTimeout(checkWelcomeMessageRendered, 50);
+    }
+  }
+
   // Function to check if Privy is ready
   function checkPrivyReady() {
     const isReady = document.querySelector('[data-privy-ready="true"]');
@@ -63,6 +82,9 @@
 
   // Start checking if Privy is ready
   setTimeout(checkPrivyReady, 500);
+  
+  // Start checking if welcome message is rendered
+  setTimeout(checkWelcomeMessageRendered, 1000);
 
   // Function to update the performance display
   function updatePerformanceDisplay() {
@@ -104,6 +126,11 @@
     if (window.chatPanelMountTime && window.privyInitStart) {
       const totalTime = window.chatPanelMountTime - window.privyInitStart;
       content += `Initial Load: ${totalTime.toFixed(2)} ms<br>`;
+    }
+    
+    if (window.welcomeMessageRenderTime && window.privyInitStart) {
+      const welcomeTime = window.welcomeMessageRenderTime - window.privyInitStart;
+      content += `Welcome Msg: ${welcomeTime.toFixed(2)} ms<br>`;
     }
     
     performanceDisplay.innerHTML = content;
