@@ -10,12 +10,12 @@ import { useRouter } from 'next/navigation'
 import { RefObject, useEffect, useMemo, useRef, useState } from 'react'
 import Textarea from 'react-textarea-autosize'
 import { useArtifact } from './artifact/artifact-context'
-import { SuggestionPills } from './chat-panel/suggestion-pills'
+import { LightweightSuggestionPills } from './chat-panel/lightweight-suggestion-pills'
 import { LazyWallet } from './wallet'
 
 import { LazyMarketPulse } from './lazy-market-pulse'
 
-import { useNetwork } from '@/lib/network/context'
+import { useNetwork } from '@/components/lightweight-network-provider'
 import { ChainSelector } from './chain-selector'
 import { DemoToggle } from './demo-toggle'
 import { SearchModeToggle } from './search-mode-toggle'
@@ -502,7 +502,7 @@ export function ChatPanel({
 
             {showEmptyScreenContent && mounted && (
               <div className="mt-2 overflow-hidden">
-                <SuggestionPills
+                <LightweightSuggestionPills
                   onSelectSuggestion={suggestion => {
                     handleInputChange({
                       target: { value: suggestion }

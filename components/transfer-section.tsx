@@ -5,7 +5,7 @@ import type { ToolInvocation } from 'ai'
 import React from 'react' // Added React import for JSX
 import { CollapsibleMessage } from './collapsible-message' // Assuming this can be reused
 import { Section, ToolArgsSection } from './section' // Assuming this can be reused
-import { useNetwork } from '@/lib/network/context'
+import { useNetwork } from '@/components/lightweight-network-provider'
 // import { MainnetConfig } from '@/lib/config/network'
 interface TransferSectionProps {
   tool: ToolInvocation

@@ -7,7 +7,7 @@ import { FallbackPrivyProvider as DeferredPrivyProvider } from '@/components/fal
 import { ThemeProvider } from '@/components/theme-provider'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { Toaster } from '@/components/ui/sonner'
-import { NetworkProvider } from '@/lib/network/context'
+import { LightweightNetworkProvider } from '@/components/lightweight-network-provider'
 import { cn } from '@/lib/utils'
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
@@ -74,7 +74,7 @@ export default async function RootLayout({
           enableSystem={false}
           disableTransitionOnChange
         >
-          <NetworkProvider>
+          <LightweightNetworkProvider>
             <DeferredPrivyProvider>
               <SidebarProvider defaultOpen={false}>
                 {/* Wrap the main content (that eventually renders ChatPanel)
@@ -95,7 +95,7 @@ export default async function RootLayout({
                 </ArtifactProvider>
               </SidebarProvider>
             </DeferredPrivyProvider>
-          </NetworkProvider>
+          </LightweightNetworkProvider>
           <Toaster />
           <Analytics />
           <PerformanceMonitor />

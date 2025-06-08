@@ -1,7 +1,7 @@
 'use client'
 
 import { allNetworkConfigs } from '@/lib/network/config'
-import { useNetwork } from '@/lib/network/context'
+import { useNetwork } from '@/components/lightweight-network-provider'
 import type { NetworkConfig } from '@/lib/network/types'
 import { cn } from '@/lib/utils'
 import { ChevronDown } from 'lucide-react'
