@@ -78,7 +78,6 @@ export default async function RootLayout({
           fontSans.variable
         )}
         suppressHydrationWarning
-        style={{ fontDisplay: 'swap' }}
       >
         <ThemeProvider
           attribute="class"
