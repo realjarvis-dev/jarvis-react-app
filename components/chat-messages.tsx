@@ -1,5 +1,14 @@
 import { cn } from '@/lib/utils'
-import { ChatRequestOptions, JSONValue, Message } from 'ai'
+// Temporarily avoid AI imports
+// import { ChatRequestOptions, JSONValue, Message } from 'ai'
+type ChatRequestOptions = any
+type JSONValue = any
+type Message = {
+  id: string
+  role: 'user' | 'assistant' | 'system'
+  content: string
+  parts?: any[]
+}
 import { useEffect, useMemo, useState } from 'react'
 import { RenderMessage } from './render-message'
 import { ToolSection } from './tool-section'

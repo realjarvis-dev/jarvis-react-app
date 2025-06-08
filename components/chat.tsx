@@ -1,17 +1,42 @@
 'use client'
 
-import { CHAT_ID } from '@/lib/constants'
-import { useAutoScroll } from '@/lib/hooks/use-auto-scroll'
-import { cn } from '@/lib/utils'
-import { useChat } from '@ai-sdk/react'
-import { ChatRequestOptions } from 'ai'
-import { Message } from 'ai/react'
-import { useRouter } from 'next/navigation'
-import { useEffect, useRef, useState, useTransition } from 'react'
-import { toast } from 'sonner'
-import { ChatMessages } from './chat-messages'
-import { ChatPanel } from './optimized-chat-panel'
-import { useAuthHeaders, useTrialLimits } from '@/hooks/use-auth-headers'
+// Temporarily disable constants import
+// import { CHAT_ID } from '@/lib/constants'
+const CHAT_ID = 'search'
+// Temporarily disable auto-scroll to test for blocking
+// import { useAutoScroll } from '@/lib/hooks/use-auto-scroll'
+// Temporarily disable utils import
+// import { cn } from '@/lib/utils'
+const cn = (...classes: any[]) => classes.filter(Boolean).join(' ')
+// Temporarily remove AI SDK import to test for blocking
+// import { useChat } from '@ai-sdk/react'
+// Temporarily remove all AI package imports
+// import { ChatRequestOptions } from 'ai'
+// import { Message } from 'ai/react'
+
+// Simple type definitions to avoid AI imports
+type ChatRequestOptions = any
+type Message = {
+  id: string
+  role: 'user' | 'assistant' | 'system'
+  content: string
+  parts?: any[]
+}
+// Temporarily disable Next.js imports
+// import { useRouter } from 'next/navigation'
+// Minimize React imports too
+import { useRef } from 'react'
+// Temporarily remove toast to test for blocking
+// import { toast } from 'sonner'
+const toast = { error: () => {}, success: () => {} }
+// Test with ultra-minimal messages
+// import { ChatMessages } from './chat-messages'
+import { UltraMinimalChatMessages } from './ultra-minimal-chat-messages'
+// Test with ultra-minimal panel
+// import { ChatPanel } from './optimized-chat-panel'
+import { UltraMinimalChatPanel } from './ultra-minimal-chat-panel'
+// Temporarily disable auth hooks to test for blocking
+// import { useAuthHeaders, useTrialLimits } from '@/hooks/use-auth-headers'
 
 export function Chat({
   id,
@@ -24,16 +49,29 @@ export function Chat({
 }) {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   
-  // Use custom hooks for cleaner code and better performance
-  const { headers, ready, authenticated } = useAuthHeaders()
-  const { checkTrialLimit } = useTrialLimits()
-  const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  // Temporarily disable auth hooks to test for blocking
+  // const { headers, ready, authenticated } = useAuthHeaders()
+  // const { checkTrialLimit } = useTrialLimits()
+  const headers = {}
+  const ready = true
+  const authenticated = false
+  const checkTrialLimit = (limitReachedCallback: () => void, limitNotReachedCallback: () => void) => {
+    limitNotReachedCallback()
+  }
+  // Temporarily disable router and transitions to test for blocking
+  // const router = useRouter()
+  // const [isPending, startTransition] = useTransition()
+  const router = { push: () => {} }
+  const isPending = false
+  const startTransition = (fn: () => void) => fn()
 
-  // Temporarily simplified for LCP testing
-  const [messages, setMessages] = useState(savedMessages)
-  const [input, setInput] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+  // Temporarily simplified for LCP testing - remove state
+  const messages = savedMessages || []
+  const input = ''
+  const isLoading = false
+  const setMessages = () => {}
+  const setInput = () => {}
+  const setIsLoading = () => {}
   
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value)
@@ -54,17 +92,14 @@ export function Chat({
   const reload = async () => null
   const status = 'awaiting_message'
 
-  const { anchorRef, isAutoScroll } = useAutoScroll({
-    isLoading,
-    dependency: messages.length,
-    isStreaming: () => false, // Simplified for LCP testing
-    scrollContainer: scrollContainerRef,
-    threshold: 50
-  })
+  // Temporarily disable auto-scroll to test for blocking
+  const anchorRef = useRef<HTMLDivElement>(null)
+  const isAutoScroll = true
 
-  useEffect(() => {
-    setMessages(savedMessages)
-  }, [id])
+  // Temporarily remove useEffect
+  // useEffect(() => {
+  //   setMessages(savedMessages)
+  // }, [id])
 
 
   const onQuerySelect = (query: string) => {
@@ -175,30 +210,8 @@ export function Chat({
       )}
       data-testid="full-chat"
     >
-      <ChatMessages
-        messages={messages}
-        data={data}
-        onQuerySelect={onQuerySelect}
-        isLoading={isLoading}
-        chatId={id}
-        addToolResult={addToolResult}
-        anchorRef={anchorRef}
-        scrollContainerRef={scrollContainerRef}
-        onUpdateMessage={handleUpdateAndReloadMessage}
-        reload={handleReloadFrom}
-      />
-      <ChatPanel
-        input={input}
-        handleInputChange={handleInputChange}
-        handleSubmit={onSubmit}
-        isLoading={isLoading}
-        messages={messages}
-        setMessages={setMessages}
-        stop={stop}
-        query={query}
-        append={append}
-        isAutoScroll={isAutoScroll}
-      />
+      <UltraMinimalChatMessages />
+      <UltraMinimalChatPanel />
     </div>
   )
 }

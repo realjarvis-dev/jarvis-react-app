@@ -1,14 +1,21 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import {
-  usePrivy
-} from '@privy-io/react-auth'
-import { Message } from 'ai'
+// Removed Privy import to eliminate render blocking
+// Temporarily avoid AI import
+// import { Message } from 'ai'
+type Message = {
+  id: string
+  role: 'user' | 'assistant' | 'system'
+  content: string
+  parts?: any[]
+}
 import { ArrowUp, ChevronDown, MessageCirclePlus, Square } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+// Temporarily disable router import
+// import { useRouter } from 'next/navigation'
 import { RefObject, useEffect, useMemo, useRef, useState } from 'react'
-import Textarea from 'react-textarea-autosize'
+// Temporarily using regular textarea for LCP testing
+// import Textarea from 'react-textarea-autosize'
 import { useArtifact } from './artifact/artifact-context'
 import { LightweightSuggestionPills } from './chat-panel/lightweight-suggestion-pills'
 import { LazyWallet } from './wallet'
@@ -200,19 +207,25 @@ export function ChatPanel({
 
   const [mounted, setMounted] = useState(false)
   const [isFirstRender, setIsFirstRender] = useState(true)
-  const router = useRouter()
+  // Temporarily disable router
+  // const router = useRouter()
+  const router = { push: () => {} }
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const [isComposing, setIsComposing] = useState(false)
   const [enterDisabled, setEnterDisabled] = useState(false)
   
-  const { ready, authenticated, user } = usePrivy()
+  // Simplified for LCP testing - no Privy dependencies
+  const ready = true
+  const authenticated = false
+  const user = null
   
   const { close: closeArtifact } = useArtifact()
   const welcomeSeed = useMemo(() => new Date().getDate(), [])
   
   const { selectedChain, setSelectedChain, isDemoMode, setIsDemoMode } = useNetwork()
 
-  useKeyboardAvoidance({ ref: inputRef })
+  // Temporarily disable keyboard avoidance for LCP testing
+  // useKeyboardAvoidance({ ref: inputRef })
 
   function handleCompositionStart() {
     return setIsComposing(true)
@@ -247,32 +260,33 @@ export function ChatPanel({
     )
   }
 
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search)
-    const urlQuery = urlParams.get('q')
+  // Temporarily disable auto-submit for LCP testing
+  // useEffect(() => {
+  //   const urlParams = new URLSearchParams(window.location.search)
+  //   const urlQuery = urlParams.get('q')
     
-    const queryToSubmit = urlQuery || query
+  //   const queryToSubmit = urlQuery || query
     
-    if (isFirstRender && queryToSubmit && queryToSubmit.trim().length > 0) {
-      handleInputChange({
-        target: { value: queryToSubmit }
-      } as React.ChangeEvent<HTMLTextAreaElement>)
+  //   if (isFirstRender && queryToSubmit && queryToSubmit.trim().length > 0) {
+  //     handleInputChange({
+  //       target: { value: queryToSubmit }
+  //     } as React.ChangeEvent<HTMLTextAreaElement>)
       
-      setTimeout(() => {
-        const form = document.querySelector('form') as HTMLFormElement
-        if (form) {
-          form.requestSubmit()
-        }
-      }, 100)
+  //     setTimeout(() => {
+  //       const form = document.querySelector('form') as HTMLFormElement
+  //       if (form) {
+  //         form.requestSubmit()
+  //       }
+  //     }, 100)
       
-      setIsFirstRender(false)
+  //     setIsFirstRender(false)
       
-      if (urlQuery) {
-        const newUrl = window.location.pathname
-        window.history.replaceState({}, '', newUrl)
-      }
-    }
-  }, [query, handleInputChange, isFirstRender])
+  //     if (urlQuery) {
+  //       const newUrl = window.location.pathname
+  //       window.history.replaceState({}, '', newUrl)
+  //     }
+  //   }
+  // }, [query, handleInputChange, isFirstRender])
 
   useEffect(() => {
     setMounted(true)
@@ -361,10 +375,10 @@ export function ChatPanel({
                 )}
               />
 
-              {/* Market pulse loads after LCP */}
-              <div className="mb-6 w-full flex justify-center">
+              {/* Market pulse temporarily disabled for LCP testing */}
+              {/* <div className="mb-6 w-full flex justify-center">
                 <LazyMarketPulse />
-              </div>
+              </div> */}
 
               {/* Wallet temporarily disabled for debugging */}
               {/* <LazyWallet showVideoBg={showVideoBg} /> */}
@@ -392,11 +406,10 @@ export function ChatPanel({
                   : 'bg-muted border-input'
               )}
             >
-              <Textarea
+              <textarea
                 ref={inputRef}
                 name="input"
                 rows={1}
-                maxRows={5}
                 tabIndex={0}
                 onCompositionStart={handleCompositionStart}
                 onCompositionEnd={handleCompositionEnd}
@@ -410,6 +423,7 @@ export function ChatPanel({
                     ? 'text-white placeholder:text-gray-300'
                     : 'text-current placeholder:text-muted-foreground'
                 )}
+                style={{ maxHeight: '120px', overflowY: 'auto' }}
                 onChange={e => {
                   handleInputChange(e)
                 }}
@@ -453,10 +467,11 @@ export function ChatPanel({
                 )}
               >
                 <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto hide-scrollbar">
-                  <SearchModeToggle />
+                  {/* Temporarily disabled for LCP testing */}
+                  {/* <SearchModeToggle />
                   <DemoToggle />
                   <ChainSelector
-                  />
+                  /> */}
                   
                 </div>
                 <div className="flex items-center gap-1 sm:gap-2 shrink-0">
@@ -500,7 +515,8 @@ export function ChatPanel({
               </div>
             </div>
 
-            {showEmptyScreenContent && mounted && (
+            {/* Suggestion pills temporarily disabled for LCP testing */}
+            {/* {showEmptyScreenContent && mounted && (
               <div className="mt-2 overflow-hidden">
                 <LightweightSuggestionPills
                   onSelectSuggestion={suggestion => {
@@ -510,7 +526,7 @@ export function ChatPanel({
                   }}
                 />
               </div>
-            )}
+            )} */}
           </form>
         </div>
       </div>

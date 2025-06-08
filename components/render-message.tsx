@@ -1,4 +1,14 @@
-import { ChatRequestOptions, JSONValue, Message, ToolInvocation } from 'ai'
+// Temporarily avoid AI imports
+// import { ChatRequestOptions, JSONValue, Message, ToolInvocation } from 'ai'
+type ChatRequestOptions = any
+type JSONValue = any
+type Message = {
+  id: string
+  role: 'user' | 'assistant' | 'system'
+  content: string
+  parts?: any[]
+}
+type ToolInvocation = any
 import { useMemo } from 'react'
 import { AnswerSection } from './answer-section'
 import { ReasoningSection } from './reasoning-section'
