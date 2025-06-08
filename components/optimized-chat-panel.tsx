@@ -366,8 +366,8 @@ export function ChatPanel({
                 <LazyMarketPulse />
               </div>
 
-              {/* Wallet loads after LCP */}
-              <LazyWallet showVideoBg={showVideoBg} />
+              {/* Wallet temporarily disabled for debugging */}
+              {/* <LazyWallet showVideoBg={showVideoBg} /> */}
             </div>
           )}
           <form onSubmit={handleSubmit} className={cn('w-full relative')}>

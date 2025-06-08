@@ -55,9 +55,10 @@ export default async function AppSidebar() {
           </SidebarMenuItem>
         </SidebarMenu>
         <div className="flex-1 overflow-y-auto">
-          <Suspense fallback={<ChatHistorySkeleton />}>
+          {/* Temporarily disabled for debugging */}
+          {/* <Suspense fallback={<ChatHistorySkeleton />}>
             <ChatHistorySection />
-          </Suspense>
+          </Suspense> */}
         </div>
       </SidebarContent>
       <SidebarRail />

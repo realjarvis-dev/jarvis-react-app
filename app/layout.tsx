@@ -95,7 +95,7 @@ export default async function RootLayout({
                     with ArtifactProvider */}
                 <ArtifactProvider>
                   <AppSidebar />
-                  <Header />
+                  {/* <Header /> */}
                   <div
                     className="flex flex-col flex-1 overflow-hidden pt-[56px] px-4 sm:px-6"
                     style={{
