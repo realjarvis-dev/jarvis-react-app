@@ -15,7 +15,7 @@ import { useEffect, useState } from 'react'
 // Assuming a similar status component exists or will be created for swaps
 import { getConfigByChainId } from '@/lib/network/config'
 import { SwapTransactionStatus } from './swap-transaction-status' // Re-use or adapt this
-import { useNetwork } from '@/lib/network/context'
+import { useNetwork } from '@/components/lightweight-network-provider'
 interface GenericSwapCardProps {
   tool: any // The AI tool invocation, specifically genericSwapTool
   isOpen?: boolean

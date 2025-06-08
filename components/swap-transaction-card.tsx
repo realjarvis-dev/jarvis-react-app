@@ -7,7 +7,7 @@ import { AlertCircle, CheckCircle, Clock, Link, Loader2, XCircle } from 'lucide-
 import { useEffect, useState } from 'react'
 import { SwapTransactionStatus } from './swap-transaction-status'
 import { getConfigByChainId } from '@/lib/network/config'
-import { useNetwork } from '@/lib/network/context'
+import { useNetwork } from '@/components/lightweight-network-provider'
 
 interface SwapTransactionCardProps {
   tool: any

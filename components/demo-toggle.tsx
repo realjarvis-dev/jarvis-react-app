@@ -1,6 +1,6 @@
 'use client'
 
-import { useNetwork } from '@/lib/network/context'
+import { useNetwork } from '@/components/lightweight-network-provider'
 import { cn } from '@/lib/utils'
 import { FlaskConical } from 'lucide-react'
 import { useEffect, useState } from 'react'

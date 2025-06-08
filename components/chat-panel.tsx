@@ -22,7 +22,7 @@ import { CopyableWalletAddressSkeleton } from './copyable-wallet-address-skeleto
 
 import { LazyMarketPulse } from './lazy-market-pulse'
 
-import { useNetwork } from '@/lib/network/context'
+import { useNetwork } from '@/components/lightweight-network-provider'
 import { ChainSelector } from './chain-selector'
 import { DemoToggle } from './demo-toggle'
 import { SearchModeToggle } from './search-mode-toggle'

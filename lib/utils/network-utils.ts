@@ -1,4 +1,4 @@
-import { useNetwork } from '@/lib/network/context'
+import { useNetwork } from '@/components/lightweight-network-provider'
 import { ChainType } from '@/lib/network/types'
 import { NetworkContext } from '@/lib/types/context'
 

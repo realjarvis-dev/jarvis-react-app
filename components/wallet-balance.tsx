@@ -11,7 +11,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { TokenData } from '@/lib/alchemy/types'
 import { allNetworkConfigs } from '@/lib/network/config'
-import { useNetwork } from '@/lib/network/context'
+import { useNetwork } from '@/components/lightweight-network-provider'
 
 const TokenRow = ({ token }: { token: TokenData }) => {
   // Format balance to a nice readable format (e.g., 9979.99 ETH)

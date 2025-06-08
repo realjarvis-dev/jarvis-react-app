@@ -3,7 +3,7 @@
 import { cn } from '@/lib/utils'
 import { CheckCircle, Clock, XCircle } from 'lucide-react'
 import { getConfigByChainId } from '@/lib/network/config'
-import { useNetwork } from '@/lib/network/context'
+import { useNetwork } from '@/components/lightweight-network-provider'
 
 
 interface SwapTransactionStatusProps {
