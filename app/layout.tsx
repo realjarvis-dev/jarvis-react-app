@@ -59,21 +59,7 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Preload critical fonts for better LCP */}
-        <link
-          rel="preload"
-          href="/_next/static/media/inter-latin-ext-400-normal.woff2"
-          as="font"
-          type="font/woff2"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="preload"
-          href="/_next/static/media/inter-latin-ext-600-normal.woff2"
-          as="font"
-          type="font/woff2"
-          crossOrigin="anonymous"
-        />
+        {/* Remove incorrect font preloads that may be causing issues */}
       </head>
       <body
         className={cn(

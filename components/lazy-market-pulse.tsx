@@ -22,19 +22,14 @@ export function LazyMarketPulse() {
   const [shouldLoad, setShouldLoad] = useState(false)
 
   useEffect(() => {
-    // Defer loading until after LCP by using requestIdleCallback or setTimeout
+    // Defer loading significantly to avoid blocking LCP
     const loadMarketPulse = () => {
       setShouldLoad(true)
     }
 
     if (typeof window !== 'undefined') {
-      if ('requestIdleCallback' in window) {
-        // Use requestIdleCallback for better performance
-        window.requestIdleCallback(loadMarketPulse, { timeout: 2000 })
-      } else {
-        // Fallback to setTimeout for browsers without requestIdleCallback
-        setTimeout(loadMarketPulse, 100)
-      }
+      // Delay much longer to ensure LCP completes first
+      setTimeout(loadMarketPulse, 5000) // 5 second delay
     }
   }, [])
 

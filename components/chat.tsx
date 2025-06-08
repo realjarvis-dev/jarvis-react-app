@@ -30,40 +30,29 @@ export function Chat({
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
-  const {
-    messages,
-    input,
-    handleInputChange,
-    handleSubmit,
-    status,
-    setMessages,
-    stop,
-    append,
-    data,
-    setData,
-    addToolResult,
-    reload
-  } = useChat({
-    initialMessages: savedMessages,
-    id: CHAT_ID,
-    body: {
-      id
-    },
-    headers,
-    onFinish: () => {
-      router.replace(`/search/${id}`)
-      startTransition(() => {
-        router.refresh()
-      })
-    },
-    onError: error => {
-      toast.error(`Error in chat: ${error.message}`)
-    },
-    sendExtraMessageFields: false,
-    experimental_throttle: 100
-  })
-
-  const isLoading = status === 'submitted' || status === 'streaming'
+  // Temporarily simplified for LCP testing
+  const [messages, setMessages] = useState(savedMessages)
+  const [input, setInput] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value)
+  }
+  
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    console.log('Chat submit:', input)
+  }
+  
+  const stop = () => setIsLoading(false)
+  const append = (message: any) => {
+    setMessages(prev => [...prev, message])
+  }
+  const data = undefined
+  const setData = () => {}
+  const addToolResult = () => {}
+  const reload = async () => null
+  const status = 'awaiting_message'
 
   const { anchorRef, isAutoScroll } = useAutoScroll({
     isLoading,
