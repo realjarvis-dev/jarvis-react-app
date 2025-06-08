@@ -1,12 +1,10 @@
-// Export swap-related components
+// Ultra-minimal component exports
+export { UltraMinimalChat } from './ultra-minimal-chat'
+
+// Export only existing components
 export { SwapTransactionCard } from './swap-transaction-card'
 export { SwapTransactionStatus } from './swap-transaction-status'
-
-// Export Kodiak-related components
-export { KodiakBaultProfitability } from './kodiak-bault-profitability'
 export { KodiakDepositCard } from './kodiak-deposit-card'
 export { KodiakDepositStatus } from './kodiak-deposit-status'
-
-// Export market-related components
 export { MarketChart } from './market-chart'
 
