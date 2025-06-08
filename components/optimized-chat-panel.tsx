@@ -199,9 +199,9 @@ export function ChatPanel({
 
 
   const [mounted, setMounted] = useState(false)
+  const [isFirstRender, setIsFirstRender] = useState(true)
   const router = useRouter()
   const inputRef = useRef<HTMLTextAreaElement>(null)
-  const isFirstRender = useRef(true)
   const [isComposing, setIsComposing] = useState(false)
   const [enterDisabled, setEnterDisabled] = useState(false)
   
@@ -253,7 +253,7 @@ export function ChatPanel({
     
     const queryToSubmit = urlQuery || query
     
-    if (isFirstRender.current && queryToSubmit && queryToSubmit.trim().length > 0) {
+    if (isFirstRender && queryToSubmit && queryToSubmit.trim().length > 0) {
       handleInputChange({
         target: { value: queryToSubmit }
       } as React.ChangeEvent<HTMLTextAreaElement>)
@@ -265,14 +265,14 @@ export function ChatPanel({
         }
       }, 100)
       
-      isFirstRender.current = false
+      setIsFirstRender(false)
       
       if (urlQuery) {
         const newUrl = window.location.pathname
         window.history.replaceState({}, '', newUrl)
       }
     }
-  }, [query, handleInputChange])
+  }, [query, handleInputChange, isFirstRender])
 
   useEffect(() => {
     setMounted(true)

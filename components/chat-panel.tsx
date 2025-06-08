@@ -11,7 +11,7 @@ import {
 import { Message } from 'ai'
 import { ArrowUp, ChevronDown, MessageCirclePlus, Square } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { RefObject, useEffect, useRef, useState } from 'react'
+import { RefObject, useEffect, useMemo, useRef, useState } from 'react'
 import Textarea from 'react-textarea-autosize'
 import { toast } from 'sonner'
 import { useWalletAddresses } from '../lib/hooks/use-evm-and-sol-addresses'
@@ -225,7 +225,7 @@ export function ChatPanel({
   const [mounted, setMounted] = useState(false)
   const router = useRouter() // Your existing state
   const inputRef = useRef<HTMLTextAreaElement>(null) // Your existing state
-  const isFirstRender = useRef(true) // Your existing state
+  const [isFirstRender, setIsFirstRender] = useState(true) // Your existing state
   const [isComposing, setIsComposing] = useState(false) // Your existing state
   const [enterDisabled, setEnterDisabled] = useState(false) // Your existing state
   const { ready, authenticated, user } = usePrivy() // Your existing state
@@ -240,7 +240,7 @@ export function ChatPanel({
   // const [walletAddress, setWalletAddress] = useState('') // Your existing state
   const { close: closeArtifact } = useArtifact() // Your existing state
   const { delegateWallet } = useHeadlessDelegatedActions() // Your existing state
-  const welcomeSeed = useRef(new Date().getDate()).current // Your existing state
+  const welcomeSeed = useMemo(() => new Date().getDate(), []) // Your existing state
 
   // Network selection state
   const { selectedChain, setSelectedChain, isDemoMode, setIsDemoMode } = useNetwork()
@@ -290,7 +290,7 @@ export function ChatPanel({
     // Use URL query if available, otherwise use the passed query prop
     const queryToSubmit = urlQuery || query
     
-    if (isFirstRender.current && queryToSubmit && queryToSubmit.trim().length > 0) {
+    if (isFirstRender && queryToSubmit && queryToSubmit.trim().length > 0) {
       // Instead of using append, set the input value and submit the form
       // This ensures the onFinish callback is triggered
       handleInputChange({
@@ -305,7 +305,7 @@ export function ChatPanel({
         }
       }, 100)
       
-      isFirstRender.current = false
+      setIsFirstRender(false)
       
       // Clear the URL query parameter after using it
       if (urlQuery) {
@@ -314,7 +314,7 @@ export function ChatPanel({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, handleInputChange])
+  }, [query, handleInputChange, isFirstRender])
 
   useEffect(() => {
     if (!ready) {
