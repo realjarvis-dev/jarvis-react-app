@@ -1,43 +1,34 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
+  // Early return for static assets to reduce processing overhead
+  const pathname = request.nextUrl.pathname
+  if (pathname.startsWith('/_next/') || pathname.startsWith('/api/')) {
+    return NextResponse.next()
+  }
+
   const code = request.nextUrl.searchParams.get('privy_oauth_code')
   if (code) {
-    console.log('Middleware saw OAuth code:', code)
-    // Create a new response with the modified headers
+    // Only process OAuth when code is present
     const response = NextResponse.next()
     response.headers.set('x-privy-oauth-code', code)
     return response
   }
-  // Create a response
+
+  // Simplified header processing for better performance
   const response = NextResponse.next()
-
-  // Get the protocol from X-Forwarded-Proto header or request protocol
-  const protocol =
-    request.headers.get('x-forwarded-proto') || request.nextUrl.protocol
-
-  // Get the host from X-Forwarded-Host header or request host
-  const host =
-    request.headers.get('x-forwarded-host') || request.headers.get('host') || ''
-
-  // Construct the base URL - ensure protocol has :// format
+  
+  // Only add essential headers to reduce overhead
+  const protocol = request.headers.get('x-forwarded-proto') || request.nextUrl.protocol
+  const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || ''
   const baseUrl = `${protocol}${protocol.endsWith(':') ? '//' : '://'}${host}`
-
-  // Add request information to response headers
-  response.headers.set('x-url', request.url)
-  response.headers.set('x-host', host)
-  response.headers.set('x-protocol', protocol)
+  
   response.headers.set('x-base-url', baseUrl)
 
-  // Debug cookie and header conversion
+  // Only process auth token when present to reduce overhead
   const privyToken = request.cookies.get('privy-token')?.value
-  console.log('Middleware - url:', request.url)
-  console.log('Middleware - Cookie present:', !!privyToken)
   if (privyToken) {
-    console.log('Middleware - Setting Authorization header')
     response.headers.set('authorization', `Bearer ${privyToken}`)
-  } else {
-    console.log('Middleware - No privy-token cookie found')
   }
 
   return response

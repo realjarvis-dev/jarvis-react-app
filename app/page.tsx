@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic'
+// Remove force-dynamic to enable static optimization
 
 import { Chat } from '@/components/chat'
 import { generateId } from 'ai'

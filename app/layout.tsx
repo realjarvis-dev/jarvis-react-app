@@ -48,8 +48,8 @@ export const viewport: Viewport = {
   viewportFit: 'cover'
 }
 
-// Disable static generation temporarily to fix SSR issues
-export const dynamic = 'force-dynamic'
+// Enable static optimization for better LCP
+// export const dynamic = 'force-dynamic' // Removed to improve performance
 
 export default async function RootLayout({
   children

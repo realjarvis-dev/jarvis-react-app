@@ -46,13 +46,13 @@ const nextConfig = {
             web3: {
               test: /[\\/]node_modules[\\/](ethers|@privy-io|@alchemy)[\\/]/,
               name: 'web3',
-              chunks: 'all',
+              chunks: 'async', // Load asynchronously to reduce initial bundle
               priority: 20
             },
             ai: {
               test: /[\\/]node_modules[\\/](@ai-sdk|openai)[\\/]/,
-              name: 'ai',
-              chunks: 'all',
+              name: 'ai', 
+              chunks: 'async', // Load asynchronously to reduce initial bundle
               priority: 20
             }
           }
