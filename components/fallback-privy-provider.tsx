@@ -14,26 +14,9 @@ interface FallbackPrivyProviderProps {
 }
 
 export function FallbackPrivyProvider({ children }: FallbackPrivyProviderProps) {
-  const [isMounted, setIsMounted] = useState(false)
   const contextValue = { isPrivyReady: false }
 
-  useEffect(() => {
-    // Delay mounting to avoid any initialization issues
-    const timer = setTimeout(() => {
-      setIsMounted(true)
-    }, 2000) // 2 second delay
-    
-    return () => clearTimeout(timer)
-  }, [])
-
-  if (!isMounted) {
-    return (
-      <FallbackPrivyContext.Provider value={contextValue}>
-        {children}
-      </FallbackPrivyContext.Provider>
-    )
-  }
-
+  // Remove artificial delay that was blocking LCP for 2+ seconds
   return (
     <FallbackPrivyContext.Provider value={contextValue}>
       {children}

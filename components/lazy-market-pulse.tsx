@@ -22,14 +22,9 @@ export function LazyMarketPulse() {
   const [shouldLoad, setShouldLoad] = useState(false)
 
   useEffect(() => {
-    // Defer loading significantly to avoid blocking LCP
-    const loadMarketPulse = () => {
-      setShouldLoad(true)
-    }
-
+    // Load immediately to avoid blocking LCP with artificial delays
     if (typeof window !== 'undefined') {
-      // Delay much longer to ensure LCP completes first
-      setTimeout(loadMarketPulse, 5000) // 5 second delay
+      setShouldLoad(true)
     }
   }, [])
 
