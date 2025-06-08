@@ -1,20 +1,12 @@
-import { Chat } from '@/components/chat'
-import { getSharedChat } from '@/lib/actions/chat'
-import { convertToUIMessages } from '@/lib/utils'
-import { notFound } from 'next/navigation'
+import { UltraMinimalChat } from '@/components/ultra-minimal-chat'
 
 export async function generateMetadata(props: {
   params: Promise<{ id: string }>
 }) {
   const { id } = await props.params
-  const chat = await getSharedChat(id)
-
-  if (!chat || !chat.sharePath) {
-    return notFound()
-  }
 
   return {
-    title: chat?.title.toString().slice(0, 50) || 'Search'
+    title: `Shared Chat ${id.slice(0, 50)}`
   }
 }
 
@@ -22,16 +14,7 @@ export default async function SharePage(props: {
   params: Promise<{ id: string }>
 }) {
   const { id } = await props.params
-  const chat = await getSharedChat(id)
 
-  if (!chat || !chat.sharePath) {
-    return notFound()
-  }
-
-  return (
-    <Chat
-      id={chat.id}
-      savedMessages={convertToUIMessages(chat.messages)}
-    />
-  )
+  // Ultra-minimal version to avoid all dependencies
+  return <UltraMinimalChat id={id} />
 }
