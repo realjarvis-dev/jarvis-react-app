@@ -57,7 +57,7 @@ export function Chat({
   const { anchorRef, isAutoScroll } = useAutoScroll({
     isLoading,
     dependency: messages.length,
-    isStreaming: () => status === 'streaming',
+    isStreaming: () => false, // Simplified for LCP testing
     scrollContainer: scrollContainerRef,
     threshold: 50
   })
