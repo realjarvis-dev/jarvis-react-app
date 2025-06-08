@@ -37,19 +37,9 @@ const nextConfig = {
       '/api/**/*': ['./lib/**/*']
     }
   },
-  // Optimize for slow networks
-  output: 'standalone',
+  // Optimize for slow networks (removed standalone output for compatibility)
   async headers() {
     return [
-      {
-        source: '/(.*)',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable'
-          }
-        ]
-      },
       {
         source: '/_next/static/(.*)',
         headers: [
@@ -63,48 +53,29 @@ const nextConfig = {
   },
   webpack: (config, { dev, isServer }) => {
     if (!dev && !isServer) {
-      // Aggressive tree shaking for smaller bundles
+      // Simplified optimization to avoid build issues
       config.optimization = {
         ...config.optimization,
-        usedExports: true,
-        sideEffects: false,
         splitChunks: {
           chunks: 'all',
-          minSize: 20000,
-          maxSize: 200000, // Limit chunk size for faster loading on slow networks
           cacheGroups: {
-            default: {
-              minChunks: 2,
-              priority: -20,
-              reuseExistingChunk: true
-            },
             vendor: {
               test: /[\\/]node_modules[\\/]/,
               name: 'vendors',
-              chunks: 'async', // Make vendor chunk async too
-              priority: 10,
-              maxSize: 150000 // Smaller vendor chunks
+              chunks: 'async',
+              priority: 10
             },
             web3: {
               test: /[\\/]node_modules[\\/](ethers|@privy-io|@alchemy)[\\/]/,
               name: 'web3',
               chunks: 'async',
-              priority: 30,
-              maxSize: 100000
+              priority: 20
             },
             ai: {
               test: /[\\/]node_modules[\\/](@ai-sdk|openai)[\\/]/,
               name: 'ai', 
               chunks: 'async',
-              priority: 30,
-              maxSize: 100000
-            },
-            ui: {
-              test: /[\\/]node_modules[\\/](@radix-ui|lucide-react|recharts)[\\/]/,
-              name: 'ui',
-              chunks: 'async',
-              priority: 25,
-              maxSize: 80000
+              priority: 20
             }
           }
         }
