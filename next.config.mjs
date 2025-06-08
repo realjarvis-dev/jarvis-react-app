@@ -30,7 +30,7 @@ const nextConfig = {
   experimental: {
     optimizeCss: true,
     scrollRestoration: true,
-    optimizePackageImports: ['@ai-sdk/react', '@privy-io/react-auth', 'ethers', 'axios', 'recharts', 'lodash'],
+    optimizePackageImports: ['@ai-sdk/react', '@privy-io/react-auth', 'axios', 'recharts', 'lodash'],
     serverComponentsExternalPackages: ['@ai-sdk/anthropic', 'ethers', 'alchemy-sdk'],
     // Reduce server bundle size for faster cold starts
     outputFileTracingIncludes: {
