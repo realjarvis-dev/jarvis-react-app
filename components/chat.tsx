@@ -113,12 +113,7 @@ export function Chat({
 
       setData()
 
-      await reload({
-        body: {
-          chatId: id,
-          regenerate: true
-        }
-      })
+      await reload()
     } catch (error) {
       console.error('Failed to reload after message update:', error)
       toast.error(`Failed to reload conversation: ${(error as Error).message}`)
@@ -137,10 +132,10 @@ export function Chat({
       if (userMessageIndex !== -1) {
         const trimmedMessages = messages.slice(0, userMessageIndex + 1)
         setMessages(trimmedMessages)
-        return await reload(options)
+        return await reload()
       }
     }
-    return await reload(options)
+    return await reload()
   }
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
