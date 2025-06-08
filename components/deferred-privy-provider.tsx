@@ -53,7 +53,7 @@ export function DeferredPrivyProvider({ children }: DeferredPrivyProviderProps) 
   // Provide loading context to children
   const contextValue = { isPrivyReady }
 
-  if (!shouldLoadPrivy) {
+  if (!shouldLoadPrivy || !isMounted) {
     // Render children without Privy provider initially for faster LCP
     return (
       <DeferredLoadingContext.Provider value={contextValue}>
@@ -62,11 +62,21 @@ export function DeferredPrivyProvider({ children }: DeferredPrivyProviderProps) 
     )
   }
 
-  return (
-    <DeferredLoadingContext.Provider value={contextValue}>
-      <PrivyProvider>{children}</PrivyProvider>
-    </DeferredLoadingContext.Provider>
-  )
+  // Wrap in error boundary for safety
+  try {
+    return (
+      <DeferredLoadingContext.Provider value={contextValue}>
+        <PrivyProvider>{children}</PrivyProvider>
+      </DeferredLoadingContext.Provider>
+    )
+  } catch (error) {
+    console.error('Error loading PrivyProvider:', error)
+    return (
+      <DeferredLoadingContext.Provider value={contextValue}>
+        {children}
+      </DeferredLoadingContext.Provider>
+    )
+  }
 }
 
 // Hook for components to check if Privy is ready

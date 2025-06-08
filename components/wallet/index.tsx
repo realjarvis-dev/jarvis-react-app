@@ -13,10 +13,5 @@ interface LazyWalletProps {
  */
 export function LazyWallet({ showVideoBg }: LazyWalletProps) {
   const { authenticated } = usePrivy()
-
-  if (authenticated) {
-    return <WalletComponent showVideoBg={showVideoBg} />
-  }
-
   return <WalletComponent showVideoBg={showVideoBg} />
 }

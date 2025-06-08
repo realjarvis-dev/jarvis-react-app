@@ -2,7 +2,7 @@
 
 import { useWalletAddresses } from '@/lib/hooks/use-evm-and-sol-addresses'
 import { useHeadlessDelegatedActions, usePrivy, useSolanaWallets, useWallets } from '@privy-io/react-auth'
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { CopyableWalletAddress } from '../copyable-wallet-address'
 
 // Function to check and fund user wallet if needed
@@ -54,21 +54,30 @@ interface WalletComponentProps {
 export function WalletComponent({ showVideoBg }: WalletComponentProps) {
   const { ready, authenticated, user, login } = usePrivy()
   
-  // These hooks are now only loaded when the wallet component is rendered
-  const { wallets } = useWallets()
-  const { wallets: solWallets } = useSolanaWallets()
-  const { delegateWallet } = useHeadlessDelegatedActions()
+  // Add safety checks for undefined refs and hooks
+  const walletsResult = useWallets()
+  const solWalletsResult = useSolanaWallets()
+  const delegateWalletResult = useHeadlessDelegatedActions()
+  
+  const wallets = useMemo(() => walletsResult?.wallets || [], [walletsResult?.wallets])
+  const solWallets = useMemo(() => solWalletsResult?.wallets || [], [solWalletsResult?.wallets])
+  const delegateWallet = delegateWalletResult?.delegateWallet
+  
   const { evmAddress, solAddress } = useWalletAddresses(ready, authenticated, user)
 
   // Handle wallet delegation on first login and fund wallet
   useEffect(() => {
-    if (ready && authenticated && wallets.length > 0) {
+    if (ready && authenticated && wallets.length > 0 && delegateWallet) {
       // If the wallet is not delegated yet, delegate actions to the first wallet
       if (!user?.linkedAccounts?.find(
         account => account.type === 'wallet' && account.delegated
       )) {
         // Delegate actions to the first wallet
-        delegateWallet({ address: wallets[0].address, chainType: 'ethereum' })
+        try {
+          delegateWallet({ address: wallets[0].address, chainType: 'ethereum' })
+        } catch (error) {
+          console.error('Error delegating wallet:', error)
+        }
       }
       
       // Check and fund wallet once wallets are ready
