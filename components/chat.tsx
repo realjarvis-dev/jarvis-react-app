@@ -111,7 +111,7 @@ export function Chat({
 
       setMessages(messagesUpToEdited)
 
-      setData(undefined)
+      setData()
 
       await reload({
         body: {
@@ -146,7 +146,7 @@ export function Chat({
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     const sendMessage = () => {
       e.preventDefault()
-      setData(undefined)
+      setData()
       handleSubmit(e)
     }
     if (!ready) {
@@ -159,7 +159,7 @@ export function Chat({
         () => {
           toast.error('No trials left – please log in!')
           e.preventDefault()
-          setData(undefined)
+          setData()
         },
         () => {
           sendMessage()
