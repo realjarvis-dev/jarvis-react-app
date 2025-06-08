@@ -24,7 +24,7 @@ export function LightweightNetworkProvider({ children }: LightweightNetworkProvi
   const [isDemoMode] = useState(true)
   
   // Use memoized config to avoid recalculation
-  const activeNetwork = getActiveNetworkConfig(selectedChain, isDemoMode)
+  const activeNetwork = getActiveNetworkConfig(isDemoMode, selectedChain)
   
   // Placeholder functions for LCP testing
   const setSelectedChain = () => {}
