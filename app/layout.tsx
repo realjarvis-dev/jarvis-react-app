@@ -59,7 +59,20 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Remove incorrect font preloads that may be causing issues */}
+        {/* Critical resource hints for Slow 4G optimization */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+        
+        {/* Critical CSS inline to avoid network request */}
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            body { font-family: system-ui, -apple-system, sans-serif; }
+            .hide-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+            .hide-scrollbar::-webkit-scrollbar { display: none; }
+          `
+        }} />
       </head>
       <body
         className={cn(

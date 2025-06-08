@@ -1,12 +1,22 @@
 // Remove force-dynamic to enable static optimization
 
-import { Chat } from '@/components/chat'
-import { generateId } from 'ai'
-import { cookies } from 'next/headers'
+import { CriticalWelcomeScreen } from '@/components/critical-welcome-screen'
+import { Suspense } from 'react'
+import dynamic from 'next/dynamic'
 
-export default async function Page() {
-  const id = generateId()
-  const cookiesList = await cookies()
+// Lazy load heavy chat component after LCP
+const Chat = dynamic(() => import('@/components/chat').then(mod => ({ default: mod.Chat })), {
+  ssr: false,
+  loading: () => <CriticalWelcomeScreen />
+})
 
-  return <Chat id={id} />
+export default function Page() {
+  // Generate static ID to avoid server-side dependencies
+  const id = 'main-chat'
+
+  return (
+    <Suspense fallback={<CriticalWelcomeScreen />}>
+      <Chat id={id} />
+    </Suspense>
+  )
 }
