@@ -19,12 +19,14 @@ function useScrollingAnimation(containerRef: RefObject<HTMLDivElement>, isGlobal
   const scrollPositionRef = useRef(0);
 
   const animate = useCallback(() => {
-    if (!containerRef.current || isGloballyPaused) {
+    if (!containerRef?.current || isGloballyPaused) {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
       return;
     }
     
-    const container = containerRef.current;
+    const container = containerRef?.current;
+    if (!container) return;
+    
     const scrollWidth = container.scrollWidth;
     const clientWidth = container.clientWidth;
     

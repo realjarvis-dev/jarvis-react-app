@@ -69,7 +69,7 @@ function useKeyboardAvoidance({
         // Wait for the layout to stabilize before scrolling
         setTimeout(() => {
           const scrollContainer = document.getElementById('scroll-container')
-          if (scrollContainer && ref.current) {
+          if (scrollContainer && ref?.current) {
             scrollContainer.scrollTo({
               top: scrollContainer.scrollHeight,
               behavior: 'smooth'
@@ -100,7 +100,7 @@ function useKeyboardAvoidance({
           // Wait before scrolling to ensure layout is updated
           setTimeout(() => {
             const scrollContainer = document.getElementById('scroll-container')
-            if (scrollContainer && ref.current) {
+            if (scrollContainer && ref?.current) {
               scrollContainer.scrollTo({
                 top: scrollContainer.scrollHeight,
                 behavior: 'smooth'
