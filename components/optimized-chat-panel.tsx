@@ -7,7 +7,7 @@ import {
 import { Message } from 'ai'
 import { ArrowUp, ChevronDown, MessageCirclePlus, Square } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { RefObject, useEffect, useRef, useState } from 'react'
+import { RefObject, useEffect, useMemo, useRef, useState } from 'react'
 import Textarea from 'react-textarea-autosize'
 import { useArtifact } from './artifact/artifact-context'
 import { SuggestionPills } from './chat-panel/suggestion-pills'
@@ -208,7 +208,7 @@ export function ChatPanel({
   const { ready, authenticated, user } = usePrivy()
   
   const { close: closeArtifact } = useArtifact()
-  const welcomeSeed = useRef(new Date().getDate()).current
+  const welcomeSeed = useMemo(() => new Date().getDate(), [])
   
   const { selectedChain, setSelectedChain, isDemoMode, setIsDemoMode } = useNetwork()
 

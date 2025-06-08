@@ -23,8 +23,15 @@ interface DeferredPrivyProviderProps {
 export function DeferredPrivyProvider({ children }: DeferredPrivyProviderProps) {
   const [shouldLoadPrivy, setShouldLoadPrivy] = useState(false)
   const [isPrivyReady, setIsPrivyReady] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!isMounted) return
+    
     // Defer Privy loading until after LCP
     const loadPrivy = () => {
       setShouldLoadPrivy(true)
@@ -41,7 +48,7 @@ export function DeferredPrivyProvider({ children }: DeferredPrivyProviderProps) 
         setTimeout(loadPrivy, 50)
       }
     }
-  }, [])
+  }, [isMounted])
 
   // Provide loading context to children
   const contextValue = { isPrivyReady }
