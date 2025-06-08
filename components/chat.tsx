@@ -4,18 +4,14 @@ import { CHAT_ID } from '@/lib/constants'
 import { useAutoScroll } from '@/lib/hooks/use-auto-scroll'
 import { cn } from '@/lib/utils'
 import { useChat } from '@ai-sdk/react'
-import { getAccessToken, usePrivy } from '@privy-io/react-auth'
 import { ChatRequestOptions } from 'ai'
 import { Message } from 'ai/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { toast } from 'sonner'
-import useLocalStorage from 'use-local-storage-state'
 import { ChatMessages } from './chat-messages'
 import { ChatPanel } from './optimized-chat-panel'
-
-const TRIAL_KEY = 'anon_trials'
-const MAX_TRIALS = 2
+import { useAuthHeaders, useTrialLimits } from '@/hooks/use-auth-headers'
 
 export function Chat({
   id,
@@ -27,56 +23,10 @@ export function Chat({
   query?: string
 }) {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const { user, ready, authenticated } = usePrivy()
-  const [headers, setHeaders] = useState<Record<string, string>>({})
-  const [anonId, setAnonId] = useLocalStorage('anonUserId', {
-    defaultValue: ''
-  })
-  const [anonTrial, setAnonTrial] = useLocalStorage('anonTrial', {
-    defaultValue: MAX_TRIALS
-  })
-
-  useEffect(() => {
-    if (!ready) return
-    
-    const timeoutId = setTimeout(() => {
-      if (!authenticated) {
-        if (!anonId) {
-          const newAnonId = crypto.randomUUID()
-          console.log('anonId', newAnonId)
-          setAnonId(newAnonId)
-          setHeaders({
-            'x-user-id': newAnonId,
-            'allow-web3-tools': 'false'
-          })
-        } else {
-          setHeaders({
-            'x-user-id': anonId,
-            'allow-web3-tools': 'false'
-          })
-        }
-        return
-      } else {
-        ;(async () => {
-          try {
-            const token = await getAccessToken()
-            setHeaders({
-              'x-user-id': user!.id,
-              'allow-web3-tools': 'true'
-            })
-          } catch (error) {
-            console.error('Failed to get access token:', error)
-            setHeaders({
-              'x-user-id': 'anonymous',
-              'allow-web3-tools': 'false'
-            })
-          }
-        })()
-      }
-    }, 0)
-    
-    return () => clearTimeout(timeoutId)
-  }, [user?.id, ready, authenticated, anonId, setAnonId])
+  
+  // Use custom hooks for cleaner code and better performance
+  const { headers, ready, authenticated } = useAuthHeaders()
+  const { checkTrialLimit } = useTrialLimits()
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
@@ -127,26 +77,6 @@ export function Chat({
     setMessages(savedMessages)
   }, [id])
 
-  const checkTrialLimit = (
-    limitReachCallback: () => void,
-    limitNotReachedCallback: () => void
-  ) => {
-    if (!ready) {
-      toast.error('Still initializing, please wait…')
-      return
-    }
-    if (authenticated) {
-      return
-    }
-    if (anonTrial <= 0) {
-      console.log('anonTrial', anonTrial)
-      limitReachCallback()
-      return
-    }
-
-    setAnonTrial(anonTrial - 1)
-    limitNotReachedCallback()
-  }
 
   const onQuerySelect = (query: string) => {
     const sendMessage = () => {

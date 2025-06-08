@@ -3,7 +3,7 @@ import { ArtifactProvider } from '@/components/artifact/artifact-context'
 import ArtifactRoot from '@/components/artifact/artifact-root'
 import Header from '@/components/header'
 import { PerformanceMonitor } from '@/components/performance-monitor'
-import WrappedPrivyProvider from '@/components/privy-provider'
+import { DeferredPrivyProvider } from '@/components/deferred-privy-provider'
 import { ThemeProvider } from '@/components/theme-provider'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { Toaster } from '@/components/ui/sonner'
@@ -15,7 +15,9 @@ import { Inter as FontSans } from 'next/font/google'
 import './globals.css'
 const fontSans = FontSans({
   subsets: ['latin'],
-  variable: '--font-sans'
+  variable: '--font-sans',
+  display: 'swap', // Use font-display: swap for better LCP
+  preload: true // Preload the font for faster loading
 })
 
 const title = 'Jarvis'
@@ -53,12 +55,30 @@ export default async function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Preload critical fonts for better LCP */}
+        <link
+          rel="preload"
+          href="/_next/static/media/inter-latin-ext-400-normal.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preload"
+          href="/_next/static/media/inter-latin-ext-600-normal.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body
         className={cn(
           'min-h-screen flex flex-col font-sans antialiased',
           fontSans.variable
         )}
         suppressHydrationWarning
+        style={{ fontDisplay: 'swap' }}
       >
         <ThemeProvider
           attribute="class"
@@ -67,7 +87,7 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           <NetworkProvider>
-            <WrappedPrivyProvider>
+            <DeferredPrivyProvider>
               <SidebarProvider defaultOpen={false}>
                 {/* Wrap the main content (that eventually renders ChatPanel)
                     with ArtifactProvider */}
@@ -86,7 +106,7 @@ export default async function RootLayout({
                   </div>
                 </ArtifactProvider>
               </SidebarProvider>
-            </WrappedPrivyProvider>
+            </DeferredPrivyProvider>
           </NetworkProvider>
           <Toaster />
           <Analytics />

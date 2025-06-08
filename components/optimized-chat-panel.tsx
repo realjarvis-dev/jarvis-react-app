@@ -334,22 +334,25 @@ export function ChatPanel({
                 'mb-2 sm:mb-4 flex flex-col items-center gap-1 sm:gap-2 w-full min-h-[120px] sm:min-h-[180px] pt-4 sm:pt-8',
                 'bg-transparent'
               )}
+              style={{
+                contain: 'layout style', // Optimize for LCP
+                willChange: 'transform'
+              }}
             >
-              <div className="mb-6 w-full flex justify-center"> {/* <-- Added spacing here */}
-                <LazyMarketPulse />
-              </div>
-
+              {/* Logo renders immediately for LCP */}
               <IconLogo
                 priority={true}
                 className={cn(
                   'size-6 sm:size-8 md:size-12',
                   showVideoBg ? 'text-white/90 drop-shadow-md' : 'text-muted-foreground'
                 )}
+                style={{
+                  contain: 'layout style',
+                  willChange: 'auto'
+                }}
               />
 
-              {/* Use LazyWallet component instead of directly embedding wallet details */}
-              <LazyWallet showVideoBg={showVideoBg} />
-              
+              {/* Welcome message renders immediately for LCP */}
               <WelcomeMessage
                 seed={welcomeSeed}
                 className={cn(
@@ -357,6 +360,14 @@ export function ChatPanel({
                   showVideoBg ? 'text-gray-100 drop-shadow-md' : ''
                 )}
               />
+
+              {/* Market pulse loads after LCP */}
+              <div className="mb-6 w-full flex justify-center">
+                <LazyMarketPulse />
+              </div>
+
+              {/* Wallet loads after LCP */}
+              <LazyWallet showVideoBg={showVideoBg} />
             </div>
           )}
           <form onSubmit={handleSubmit} className={cn('w-full relative')}>
