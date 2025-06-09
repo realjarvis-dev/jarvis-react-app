@@ -8,13 +8,13 @@ import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { Button } from './ui/button'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger
 } from './ui/dialog'
 import { Spinner } from './ui/spinner'
 
@@ -68,12 +68,12 @@ export function ChatShare({ chatId, className }: ChatShareProps) {
       >
         <DialogTrigger asChild>
           <Button
-            className={cn('rounded-full group')}
+            className={cn('rounded-full')}
             size="icon"
             variant={'outline'}
             onClick={() => setOpen(true)}
           >
-            <Share size={14} className="size-3.5 sm:size-4 group-hover:rotate-12 transition-all" />
+            <Share size={14} className="size-3.5 sm:size-4" />
           </Button>
         </DialogTrigger>
         <DialogContent>
