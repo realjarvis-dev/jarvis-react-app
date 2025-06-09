@@ -53,8 +53,9 @@ const get_system_prompt = (searchMode: boolean, supportedTools: string[], regist
       pendle_opportunities: `  • pendle_opportunities  
     - Call it and let the UI show everything.  
     - Acknowledge: "Fetched the latest opportunities. Anything you'd like to explore?"`,
-      pendle_quote: `  • pendle_quote  
-    - If no token address given, say: "Which token would you like quoted, or would you like to see opportunities first?"  
+      pendle_quote: `  • pendle_quote
+    - The user will provide you the names of the tokens. Like "Quote for sENA PT to ETH" or "Conversion for ETH to PT sENA". Based on this info you have to call this tool with relevant parameter.  
+    - If the from or to information is missing, say: "Which token would you like quoted, or would you like to see opportunities first?"  
     - Otherwise, "Here's your quote—anything else?"`,
       wallet_balance: `  • wallet_balance  
     - Call it; the UI shows balances.  
