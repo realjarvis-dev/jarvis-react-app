@@ -1,10 +1,9 @@
-// Ultra-minimal version to eliminate all render blocking
+// Performance-optimized approach: fast LCP + progressive enhancement
 
-import { UltraMinimalChat } from '@/components/ultra-minimal-chat'
+import { PerformanceOptimizedChat } from '@/components/performance-optimized-chat'
 
 export default function Page() {
-  // Ultra-minimal page with zero third-party dependencies
   const id = 'main-chat'
 
-  return <UltraMinimalChat id={id} />
+  return <PerformanceOptimizedChat id={id} />
 }
