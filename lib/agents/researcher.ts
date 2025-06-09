@@ -12,7 +12,7 @@ const get_system_prompt = (searchMode: boolean, supportedTools: string[], regist
     // Define tool descriptions with network context
     const toolDescMap: Record<string, string> = {
       pendle_opportunities: `- pendle_opportunities: Use when the user asks about Pendle yield opportunities, DeFi yields, or APY/yield farming on Ethereum. This tool returns a list of current Pendle opportunities with APY and liquidity information.`,
-      pendle_quote: `- pendle_quote: Use when the user wants to know the conversion rate between ETH and a specific Pendle market token (PT or YT) in either direction. This tool can quote both ETH-to-token and token-to-ETH rates.`,
+      pendle_quote: `- pendle_quote: Use when the user wants to know the conversion rate between ETH and a specific Pendle market token (PT or YT) in either direction. Can accept either a market address or a token address to generate the quote. This tool can quote both ETH-to-token and token-to-ETH rates.`,
       pendle_swap: `- pendle_swap: Use when the user wants to execute a swap transaction from ETH to a Pendle token (PT or YT). This requires market address, token out address, and ETH amount parameters.`,
       wallet_balance: `- wallet_balance: Use when the user asks about their wallet balance, token holdings, or specific token balance. This tool returns the user's cryptocurrency balances.`,
       market_chart: `- market_chart: Use when the user asks about cryptocurrency price charts, market data, price history, or wants to see price trends for any cryptocurrency. This tool fetches and displays interactive market charts with price, volume, and market cap data.`,
@@ -54,7 +54,7 @@ const get_system_prompt = (searchMode: boolean, supportedTools: string[], regist
     - Call it and let the UI show everything.  
     - Acknowledge: "Fetched the latest opportunities. Anything you'd like to explore?"`,
       pendle_quote: `  • pendle_quote  
-    - If no market given, say: "Which market would you like quoted, or would you like to see opportunities first?"  
+    - If no market or token address given, say: "Which market or token would you like quoted, or would you like to see opportunities first?"  
     - Otherwise, "Here's your quote—anything else?"`,
       wallet_balance: `  • wallet_balance  
     - Call it; the UI shows balances.  
