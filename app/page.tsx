@@ -1,10 +1,10 @@
-// Restored working chat with performance optimization
+// Original functionality restored with performance optimizations in place
 
-import { RestoredChat } from '@/components/restored-chat'
+import { Chat } from '@/components/chat'
 import { generateId } from 'ai'
 
 export default function Page() {
   const id = generateId()
 
-  return <RestoredChat id={id} />
+  return <Chat id={id} />
 }

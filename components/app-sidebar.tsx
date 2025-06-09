@@ -16,12 +16,7 @@ import { ChatHistorySection } from './sidebar/chat-history-section'
 import { ChatHistorySkeleton } from './sidebar/chat-history-skeleton'
 import { IconLogo } from './ui/icons'
 
-// Immediate console log to verify module loading
-console.log('[AppSidebar] Module loaded')
-
 export default async function AppSidebar() {
-  // Immediate console log to verify component function execution
-  console.log('[AppSidebar] Component function called')
 
   return (
     <Sidebar side="left" variant="sidebar" collapsible="offcanvas">
@@ -55,10 +50,9 @@ export default async function AppSidebar() {
           </SidebarMenuItem>
         </SidebarMenu>
         <div className="flex-1 overflow-y-auto">
-          {/* Temporarily disabled for debugging */}
-          {/* <Suspense fallback={<ChatHistorySkeleton />}>
+          <Suspense fallback={<ChatHistorySkeleton />}>
             <ChatHistorySection />
-          </Suspense> */}
+          </Suspense>
         </div>
       </SidebarContent>
       <SidebarRail />
