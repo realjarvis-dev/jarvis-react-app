@@ -1,4 +1,4 @@
-import { UltraMinimalChat } from '@/components/ultra-minimal-chat'
+import { PerformanceOptimizedChat } from '@/components/performance-optimized-chat'
 import { redirect } from 'next/navigation'
 
 export default async function SearchPage(props: {
@@ -10,5 +10,5 @@ export default async function SearchPage(props: {
   }
 
   const id = 'search-chat'
-  return <UltraMinimalChat id={id} />
+  return <PerformanceOptimizedChat id={id} query={q} />
 }

@@ -25,24 +25,80 @@ export function FullChat({ id, savedMessages = [], query }: FullChatProps) {
     setIsLoading(true)
 
     try {
-      // Simple mock response for now - replace with actual AI API call
-      setTimeout(() => {
-        const assistantMessage = {
-          role: 'assistant',
-          content: `I received your message: "${input}". This is a simplified response while we restore full functionality.`,
-          id: (Date.now() + 1).toString()
+      // Real API call to your chat endpoint
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: [...messages, userMessage],
+          id: id
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to send message')
+      }
+
+      const reader = response.body?.getReader()
+      const decoder = new TextDecoder()
+      let assistantMessage = ''
+
+      if (reader) {
+        // Create assistant message immediately
+        const assistantId = (Date.now() + 1).toString()
+        setMessages(prev => [...prev, { role: 'assistant', content: '', id: assistantId }])
+
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          const chunk = decoder.decode(value)
+          const lines = chunk.split('\n')
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6))
+                if (data.content) {
+                  assistantMessage += data.content
+                  setMessages(prev => prev.map(msg => 
+                    msg.id === assistantId 
+                      ? { ...msg, content: assistantMessage }
+                      : msg
+                  ))
+                }
+              } catch (e) {
+                // Skip invalid JSON
+              }
+            }
+          }
         }
-        setMessages(prev => [...prev, assistantMessage])
-        setIsLoading(false)
-      }, 1000)
+      }
+
+      setIsLoading(false)
     } catch (error) {
       console.error('Chat error:', error)
+      const errorMessage = {
+        role: 'assistant',
+        content: 'Sorry, I encountered an error. Please try again.',
+        id: (Date.now() + 1).toString()
+      }
+      setMessages(prev => [...prev, errorMessage])
       setIsLoading(false)
     }
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSubmit(e as any)
+    }
   }
 
   return (
@@ -123,12 +179,13 @@ export function FullChat({ id, savedMessages = [], query }: FullChatProps) {
           maxWidth: '48rem',
           margin: '0 auto'
         }}>
-          <input
-            type="text"
+          <textarea
             value={input}
             onChange={handleInputChange}
-            placeholder="Ask me about investing, DeFi, portfolio management, or market analysis..."
+            onKeyDown={handleKeyDown}
+            placeholder="Ask me about investing, DeFi, portfolio management, or market analysis... (Enter to send, Shift+Enter for new line)"
             disabled={isLoading}
+            rows={1}
             style={{
               flex: 1,
               padding: '0.75rem',
@@ -138,7 +195,11 @@ export function FullChat({ id, savedMessages = [], query }: FullChatProps) {
               borderRadius: '0.5rem',
               color: 'white',
               outline: 'none',
-              opacity: isLoading ? 0.7 : 1
+              opacity: isLoading ? 0.7 : 1,
+              resize: 'none',
+              minHeight: '2.5rem',
+              maxHeight: '8rem',
+              fontFamily: 'inherit'
             }}
           />
           <button

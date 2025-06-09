@@ -1,4 +1,4 @@
-import { UltraMinimalChat } from '@/components/ultra-minimal-chat'
+import { PerformanceOptimizedChat } from '@/components/performance-optimized-chat'
 
 export async function generateMetadata(props: {
   params: Promise<{ id: string }>
@@ -18,6 +18,6 @@ export default async function SearchPage(props: {
   const params = await props.params
   const { id } = params
 
-  // Ultra-minimal version to avoid all dependencies
-  return <UltraMinimalChat id={id} />
+  // Enhanced version with progressive loading
+  return <PerformanceOptimizedChat id={id} />
 }
