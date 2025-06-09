@@ -7,7 +7,7 @@ import { SiDiscord, SiGithub, SiX } from 'react-icons/si'
 const externalLinks = [
   {
     name: 'X',
-    href: 'https://x.com/Jarvis787808',
+    href: 'https://x.com/JarvisCryptoAI',
     icon: <SiX className="mr-2 h-4 w-4" />
   }
 ]
