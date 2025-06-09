@@ -4,10 +4,10 @@ import { z } from 'zod'
 import { getPendleMarkets } from '../pendle/api'
 import { getQuote } from '../pendle/quotes'
 import {
-    erc20Approval,
-    executeSwapTransaction,
-    getERC20Details,
-    getSwapTransactionFromPendle
+  erc20Approval,
+  executeSwapTransaction,
+  getERC20Details,
+  getSwapTransactionFromPendle
 } from '../pendle/transactions'
 import { getUserEvmWalletAddress } from '../privy/client'
 import { NetworkContext } from '../types/context'
@@ -103,10 +103,8 @@ export const pendleQuoteTool = tool({
   description:
     'Get a quote for swapping between ETH and a Pendle market token. This tool automatically renders UI.',
   parameters: z.object({
-    market_address: z.string().describe('The address of the Pendle market'),
-    token_address: z
-      .string()
-      .describe('The address of the PT or YT token'),
+    market_address: z.string().describe('The address of the Pendle market').optional(),
+    token_address: z.string().describe('The address of the PT or YT token. Can be used instead of market_address to automatically find the market.').optional(),
     market_name: z
       .string()
       .describe('The name of the market (required, e.g. "rswETH")'),
@@ -132,13 +130,51 @@ export const pendleQuoteTool = tool({
     const networkContext = context?.networkContext;
     
     try {
+      // Check if we need to find the market address using the token address
+      let finalMarketAddress = market_address;
+      let finalTokenAddress = token_address;
+      
+      // If market address is not provided but token address is, find the market
+      if (!finalMarketAddress && finalTokenAddress) {
+        const markets = await getPendleMarkets();
+        
+        // Find market that contains the token
+        const foundMarket = markets.find(market => {
+          const addressToCheck = token_type === 'pt' ? market.pt : market.yt;
+          return addressToCheck.toLowerCase() === finalTokenAddress?.toLowerCase();
+        });
+        
+        if (!foundMarket) {
+          throw new Error(`Could not find a Pendle market with ${token_type.toUpperCase()} token address ${finalTokenAddress}`);
+        }
+        
+        finalMarketAddress = foundMarket.address;
+        // We already have the token address, so we don't need to update it
+      } else if (!finalMarketAddress && !finalTokenAddress) {
+        throw new Error('Either market_address or token_address must be provided');
+      }
+      
+      // If we have a market address but no token address, get the token address from the market
+      if (finalMarketAddress && !finalTokenAddress) {
+        const markets = await getPendleMarkets();
+        const foundMarket = markets.find(market => 
+          market.address.toLowerCase() === finalMarketAddress?.toLowerCase()
+        );
+        
+        if (!foundMarket) {
+          throw new Error(`Could not find Pendle market with address ${finalMarketAddress}`);
+        }
+        
+        finalTokenAddress = token_type === 'pt' ? foundMarket.pt : foundMarket.yt;
+      }
+
       // Format full token name with PT/YT prefix
       const fullTokenName = `${token_type.toUpperCase()} ${market_name}`
-
+      
       // Call the getQuote function with the direction parameter
       const quote = await getQuote(
-        market_address.toLowerCase().trim(),
-        token_address.toLowerCase().trim(),
+        finalMarketAddress!.toLowerCase().trim(),
+        finalTokenAddress!.toLowerCase().trim(),
         fullTokenName,
         '1', // Fixed amount of 1 ETH or token
         direction, // Direction of the swap
