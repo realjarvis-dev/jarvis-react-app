@@ -21,7 +21,6 @@ import { DemoToggle } from './demo-toggle'
 import { SearchModeToggle } from './search-mode-toggle'
 import { Button } from './ui/button'
 import { IconLogo } from './ui/icons'
-import { VideoBackground } from './ui/video-background'
 import { WelcomeMessage } from './welcome-messages'
 
 
@@ -304,12 +303,18 @@ export function ChatPanel({
   
   return (
     <> {/* Use a fragment if VideoBackground is fixed and outside the main div's flow */}
-      <VideoBackground
-        src="/videos/background.mp4" // Ensure this path is correct
-        poster="/videos/background_poster.jpg" // Optional: path to a poster image
+      {showVideoBg && (
+  <div
+    className="fixed inset-0 z-0 bg-cover bg-center"
+    style={{ backgroundImage: "url(/images/background.avif)" }}
+  />
+)}
+      {/* <VideoBackground
+        src="/videos/background.mp4"
+        poster="/videos/background_poster.jpg"
         isActive={showVideoBg}
-        playbackRate={0.15} // Adjust playback speed as desired
-      />
+        playbackRate={0.15}
+      /> */}
       <div
         className={cn(
           'w-full group/form-container shrink-0 flex justify-center',

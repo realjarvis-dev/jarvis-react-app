@@ -18,14 +18,14 @@ import useIsMobile from '@/lib/hooks/use-is-mobile';
 
 const desktopEvmText = 'Delegate EVM wallet'
 const desktopSolText = 'Delegate Sol wallet'
-const desktopRevokeText = 'Revoke all delegations'
+const desktopRevokeText = 'Revoke delegation'
 const desktopEvmAlreadyDelegatedText = 'EVM wallet already delegated'
 const desktopSolAlreadyDelegatedText = 'Sol wallet already delegated'
 const desktopNoDelegationsText = 'No delegations to revoke'
 
 const mobileEvmText = 'Delegate EVM wallet'
 const mobileSolText = 'Delegate Sol wallet'
-const mobileRevokeText = 'Revoke all'
+const mobileRevokeText = 'Revoke'
 const mobileEvmAlreadyDelegatedText = 'EVM delegated'
 const mobileSolAlreadyDelegatedText = 'Sol delegated'
 const mobileNoDelegationsText = 'No delegations'
@@ -109,10 +109,10 @@ export function WalletMenuItems() {
         <ArrowRightCircle className="mr-2 h-4 w-4" />
         <span>{(isMobile ? (evmWalletAlreadyDelegated ? mobileEvmAlreadyDelegatedText : mobileEvmText) : (evmWalletAlreadyDelegated ? desktopEvmAlreadyDelegatedText : desktopEvmText))}</span>
       </DropdownMenuItem>
-      <DropdownMenuItem onClick={handleDelegateSolWallet} disabled={solanaWalletAlreadyDelegated || !solanaReady || !userReady}>
+      {/* <DropdownMenuItem onClick={handleDelegateSolWallet} disabled={solanaWalletAlreadyDelegated || !solanaReady || !userReady}>
         <ArrowRightCircle className="mr-2 h-4 w-4" />
         <span>{(isMobile ? (solanaWalletAlreadyDelegated ? mobileSolAlreadyDelegatedText : mobileSolText) : (solanaWalletAlreadyDelegated ? desktopSolAlreadyDelegatedText : desktopSolText))}</span>
-      </DropdownMenuItem>
+      </DropdownMenuItem> */}
       <DropdownMenuItem onClick={handleRevokeAllDelegations} disabled={!(solanaWalletAlreadyDelegated || evmWalletAlreadyDelegated) || !solanaReady || !userReady}>
         <Unlink2 className="mr-2 h-4 w-4" />
         <span>{(isMobile ? (solanaWalletAlreadyDelegated || evmWalletAlreadyDelegated ? mobileRevokeText : mobileNoDelegationsText) : (solanaWalletAlreadyDelegated || evmWalletAlreadyDelegated ? desktopRevokeText : desktopNoDelegationsText))}</span>

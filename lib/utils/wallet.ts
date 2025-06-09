@@ -53,7 +53,8 @@ async function getTokenData(
         symbol,
         name,
         balance: formattedBalance,
-        network: 'Unknown Network'
+        network: 'Unknown Network',
+        decimals
       }
     }
     return null
@@ -148,9 +149,11 @@ export async function getWalletBalances(
     const allTokenDataArrays = await Promise.all(tokenDataPromises)
 
     // Flatten the results as each call to getTokenBalances returns TokenData[]
-    const tokenData = allTokenDataArrays.flat()
-    console.log(tokenData)
-
+    let tokenData = allTokenDataArrays.flat()
+    // console.log(tokenData)
+    // filter out decimal = 0
+    tokenData = tokenData.filter(token => token.decimals !== 0)
+    // console.log(tokenData)
     // Create the final result object
     return {
       tokens: tokenData

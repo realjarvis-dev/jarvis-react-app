@@ -135,10 +135,6 @@ export function WalletBalance({
 
   const totalTokenCount = filteredTokens.length
   const hasMultipleNetworks = sortedNetworks.length > 1
-  console.log('sortedNetworks', sortedNetworks)
-  console.log('tokensByNetwork', tokensByNetwork)
-  console.log('filteredTokens', filteredTokens)
-  console.log('tokensList', tokensList)
   return (
     <Card className={`w-full max-w-2xl mx-auto ${className} shadow-md`}>
       <CardHeader className="pb-4">

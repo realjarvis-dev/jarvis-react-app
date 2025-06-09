@@ -176,7 +176,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'berachain', 'demo']
+    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism']
   })
   
   registry.registerTool({
@@ -291,7 +291,7 @@ export function createToolRegistry(model: string): ToolRegistry {
   
   registry.registerTool({
     name: 'privy_transfer',
-    description: 'Transfer ETH to a specified address',
+    description: privyTransferTool.description || '',
     schema: privyTransferTool.parameters,
     execute: async (params, context) => privyTransferTool.execute(params, {
       toolCallId: context?.toolCallId || 'unknown',
@@ -354,19 +354,21 @@ export function createToolRegistry(model: string): ToolRegistry {
     category: ToolCategory.WEB3,
     supportedNetworks: ['berachain']
   })
-  
-  registry.registerTool({
-    name: 'generic_swap',
-    description: 'Execute a swap transaction between two arbitrary tokens',
-    schema: genericSwapTool.parameters,
-    execute: async (params, context) => genericSwapTool.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!
-    } as any),
-    category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'berachain', 'demo']
-  })
+
+  // Disabled enso swap as lifi bridge is used instead, it covers both cross-chain bridging and non cross-chain swap
+
+  // registry.registerTool({
+  //   name: 'generic_swap',
+  //   description: 'Execute a swap transaction between two arbitrary tokens',
+  //   schema: genericSwapTool.parameters,
+  //   execute: async (params, context) => genericSwapTool.execute(params, {
+  //     toolCallId: context?.toolCallId || 'unknown',
+  //     messages: context?.messages || [],
+  //     networkContext: context?.networkContext!
+  //   } as any),
+  //   category: ToolCategory.WEB3,
+  //   supportedNetworks: ['ethereum', 'berachain', 'demo']
+  // })
 
   registry.registerTool({
     name: 'lifi_bridge_quote',
@@ -407,21 +409,6 @@ export function createToolRegistry(model: string): ToolRegistry {
     category: ToolCategory.WEB3,
     supportedNetworks: ['demo']
   })
-
-  // Disabled enso swap as lifi bridge is used instead, it covers both cross-chain bridging and non cross-chain swap
-
-  // registry.registerTool({
-  //   name: 'generic_swap',
-  //   description: 'Execute a swap transaction between two arbitrary tokens',
-  //   schema: genericSwapTool.parameters,
-  //   execute: async (params, context) => genericSwapTool.execute(params, { 
-  //     toolCallId: context?.toolCallId || 'unknown', 
-  //     messages: context?.messages || [],
-  //     networkContext: context?.networkContext!
-  //   } as any),
-  //   category: ToolCategory.WEB3,
-  //   supportedNetworks: ['ethereum', 'berachain', 'demo']
-  // })
 
 
   

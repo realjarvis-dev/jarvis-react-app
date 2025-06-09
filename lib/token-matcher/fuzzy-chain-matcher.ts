@@ -2,13 +2,12 @@ import Fuse from 'fuse.js'
 import { chains } from './config/lifi/chains'
 
 
-type Chain = {
+export type Chain = {
   id: number
   name: string
   coin: string
 }
 
-export type ChainWithScore = Chain & { score: number }
 
 export class ChainMatcher {
   private fuse: Fuse<Chain>
@@ -28,16 +27,11 @@ export class ChainMatcher {
   /**
    * @param {string} query — chain name, key, or symbol
    * @param {number} [limit=3] — max results
-   * @returns {ChainWithScore[]}
+   * @returns {Chain[]}
    */
-  match(query: string, limit = 3): ChainWithScore[] {
+  match(query: string, limit = 3): Chain[] {
     const results = this.fuse.search(query, { limit })
-    return results.map(({ item, score }) => ({
-      id: item.id,
-      name: item.name,
-      coin: item.coin,
-      score: score ?? 0,
-    }))
+    return results.map(({ item }) => item)
   }
 }
 

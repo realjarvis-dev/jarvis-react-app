@@ -6,12 +6,14 @@ import { NetworkContext } from '@/lib/types/context'
  * Convert network context from React context to tool registry format
  */
 export function createNetworkContext(
-  selectedChain: ChainType,
+  selectedChain: ChainType | 'demo',
   isDemoMode: boolean,
   activeNetwork: any
 ): NetworkContext {
-  const selectedNetwork = selectedChain
-  
+  let selectedNetwork = selectedChain
+  if (isDemoMode) {
+    selectedNetwork = 'demo'
+  }
   return {
     selectedNetwork,
     selectedChainId: activeNetwork.chainId,
