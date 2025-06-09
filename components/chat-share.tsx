@@ -2,7 +2,6 @@
 
 import { shareChat } from '@/lib/actions/chat'
 import { useCopyToClipboard } from '@/lib/hooks/use-copy-to-clipboard'
-import { cn } from '@/lib/utils'
 import { Share } from 'lucide-react'
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
@@ -68,12 +67,12 @@ export function ChatShare({ chatId, className }: ChatShareProps) {
       >
         <DialogTrigger asChild>
           <Button
-            className={cn('rounded-full')}
+            className="rounded-full"
             size="icon"
-            variant={'outline'}
+            variant="ghost"
             onClick={() => setOpen(true)}
           >
-            <Share size={14} className="size-3.5 sm:size-4" />
+            <Share size={14} />
           </Button>
         </DialogTrigger>
         <DialogContent>
