@@ -101,12 +101,9 @@ export const pendleOpportunitiesTool = tool({
 
 export const pendleQuoteTool = tool({
   description:
-    'Get a quote for swapping ETH to a Pendle market token. This tool automatically renders UI.',
+    'Get a quote for swapping between ETH and a Pendle market token. This tool automatically renders UI.',
   parameters: z.object({
-    market_address: z.string().describe('The address of the Pendle market'),
-    token_out_address: z
-      .string()
-      .describe('The address of the token to receive (PT or YT)'),
+    token_address: z.string().describe('The address of the PT or YT token. The market will be automatically determined from this token.'),
     market_name: z
       .string()
       .describe('The name of the market (required, e.g. "rswETH")'),
@@ -115,50 +112,96 @@ export const pendleQuoteTool = tool({
       .default('pt')
       .describe(
         'The token type - "pt" for Principal Token or "yt" for Yield Token. Default to pt as only pt trading is available now.'
-      )
+      ),
+    direction: z
+      .enum(['ethToToken', 'tokenToEth'])
+      .default('ethToToken')
+      .describe('Direction of the swap - from ETH to token or from token to ETH')
   }),
   execute: async (params, context: ToolContext) => {
     const {
-      market_address,
-      token_out_address,
+      token_address,
       market_name,
-      token_type
+      token_type,
+      direction
     } = params;
     const networkContext = context?.networkContext;
     
     try {
+      console.log('===== PENDLE QUOTE TOOL DEBUG =====');
+      console.log('Input parameters:', {
+        token_address,
+        market_name,
+        token_type,
+        direction
+      });
+      
+      if (!token_address) {
+        throw new Error('Token address must be provided');
+      }
+      
+      // Always get market address from token address
+      console.log('Searching for market using token address:', token_address);
+      const markets = await getPendleMarkets();
+      console.log('Available markets count:', markets.length);
+      
+      // Find market that contains the token
+      const foundMarket = markets.find(market => {
+        const addressToCheck = token_type === 'pt' ? market.pt : market.yt;
+        const matches = addressToCheck.toLowerCase() === token_address.toLowerCase();
+        if (matches) {
+          console.log('Found matching market:', {
+            name: market.name,
+            address: market.address,
+            pt: market.pt,
+            yt: market.yt
+          });
+        }
+        return matches;
+      });
+      
+      if (!foundMarket) {
+        throw new Error(`Could not find a Pendle market with ${token_type.toUpperCase()} token address ${token_address}`);
+      }
+      
+      const finalMarketAddress = foundMarket.address;
+      const finalTokenAddress = token_address;
+
       // Format full token name with PT/YT prefix
       const fullTokenName = `${token_type.toUpperCase()} ${market_name}`
-
-      // Call the getQuote function with fixed parameters for simplicity
+      
+      // Call the getQuote function with the direction parameter
       const quote = await getQuote(
-        market_address.toLowerCase().trim(),
-        token_out_address.toLowerCase().trim(),
-        fullTokenName, // Pass the properly formatted token name
-        '1', // Fixed amount of 1 ETH
+        finalMarketAddress.toLowerCase().trim(),
+        finalTokenAddress.toLowerCase().trim(),
+        fullTokenName,
+        '1', // Fixed amount of 1 ETH or token
+        direction, // Direction of the swap
         1 // Fixed chain ID (Ethereum)
       )
 
       // Return a clean response object with minimal streaming data
+      // Use the new response format from our updated getQuote function
       const quoteData = {
         market: fullTokenName,
+        inputToken: quote.inputToken,
+        outputToken: quote.outputToken,
         rate: quote.rate,
-        inverse_rate: quote.inverse,
-        output_amount: quote.outputAmount,
+        inverse: quote.inverse,
+        outputAmount: quote.outputAmount,
         complete_time: new Date().toISOString()
       }
       
       return {
         _uiDisplayTool: true,
-        summary: `Quote for ${fullTokenName}: ${quote.rate}`,
+        summary: `Quote for ${quote.rate}`,
         data: quoteData
       }
     } catch (error: any) {
       // Return a simple error object
       const errorData = {
         error: error.message || 'Failed to get quote',
-        market_address,
-        token_out_address
+        token_address
       }
       
       return {

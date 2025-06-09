@@ -37,6 +37,10 @@ export function SimpleQuoteDisplay({
     )
   }
 
+  // Extract input and output tokens from result
+  const inputToken = result.inputToken || 'ETH'
+  const outputToken = result.outputToken || result.market || 'Unknown Token'
+  
   // Display the quote result with an improved UI
   return (
     <Card className="overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/50 dark:to-indigo-950/50 border border-blue-100 dark:border-blue-900">
@@ -48,34 +52,36 @@ export function SimpleQuoteDisplay({
               Market
             </div>
             <div className="text-sm font-bold text-blue-800 dark:text-blue-300">
-              {result.market || 'Unknown Market'}
+              {result.market || outputToken}
             </div>
           </div>
           
           {/* Main Rate Card */}
           <div className="bg-white dark:bg-gray-900 rounded-lg p-4 shadow-sm">
-            <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">Exchange Rate</div>
+            <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">EXCHANGE RATE</div>
             <div className="text-2xl font-bold text-blue-700 dark:text-blue-400">
-              {result.rate || 'N/A'}
+              {result.rate || `1 ${inputToken} = ? ${outputToken}`}
             </div>
-            <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">Inverse: {result.inverse_rate || 'N/A'}</div>
+            <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+              Inverse: {result.inverse || `1 ${outputToken} = ? ${inputToken}`}
+            </div>
           </div>
           
           {/* Output Amount */}
           <div className="bg-blue-50 dark:bg-blue-950/40 rounded-lg p-4">
             <div className="flex justify-between">
               <div className="text-sm font-medium text-blue-700 dark:text-blue-400">
-                For 1 ETH you receive:
+                For 1 {inputToken} you receive:
               </div>
               <div className="text-sm font-bold text-blue-800 dark:text-blue-300">
-                {result.output_amount || 'N/A'} {result.market}
+                {result.outputAmount || result.output_amount || '?'} {outputToken}
               </div>
             </div>
           </div>
           
           {/* Small timestamp note */}
           <div className="text-xs text-center text-gray-400 dark:text-gray-500 mt-1">
-            Quote valid as of {new Date(result.complete_time).toLocaleTimeString()}
+            Quote valid as of {new Date(result.complete_time || Date.now()).toLocaleTimeString()}
           </div>
         </div>
       </CardContent>
