@@ -17,7 +17,7 @@ export function GetGasPriceSection({ tool }: GetGasPriceSectionProps) {
         return (
             <ToolArgsSection tool="get_gas_price">
                 <div>
-                    <p>Fetching latest gas price from Etherscan...</p>
+                    <p>Fetching latest gas price from Blocknative...</p>
                 </div>
             </ToolArgsSection>
         )
@@ -34,7 +34,7 @@ export function GetGasPriceSection({ tool }: GetGasPriceSectionProps) {
         <ToolArgsSection tool="get_gas_price">
     <div>
       <p>
-        Fetched gas price from Etherscan at {new Date(result.complete_time).toLocaleString()}
+        Fetched gas price from Blocknative at {new Date(result.complete_time).toLocaleString()}
       </p>
     </div>
   </ToolArgsSection>

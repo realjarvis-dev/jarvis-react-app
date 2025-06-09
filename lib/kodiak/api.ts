@@ -186,28 +186,35 @@ export async function fetchKodiakIslands(): Promise<KodiakIslandResponse> {
     const islands: KodiakIsland[] = [];
     const tokenPairs = new Set();
 
-    // Loop through each deployer and get their islands
-    for (const deployer of deployers) {
+    const deployerPromises = deployers.map(async (deployer: string) => {
       try {
         const deployerIslands = await factory.getIslands(deployer);
         console.log(`Deployer ${deployer} has ${deployerIslands.length} islands`);
 
-        // Process each island from this deployer
-        for (const islandAddress of deployerIslands) {
+        const islandPromises = deployerIslands.map(async (islandAddress: string) => {
           try {
-            const islandData = await getIslandDetails(islandAddress);
-
-            if (islandData) {
-              islands.push(islandData);
-              tokenPairs.add(`${islandData.token0.symbol}-${islandData.token1.symbol}`);
-            }
+            return await getIslandDetails(islandAddress);
           } catch (error) {
             console.error(`Error fetching island ${islandAddress}: ${error}`);
+            return null;
           }
-        }
+        });
+
+        const islandResults = await Promise.all(islandPromises);
+        return islandResults.filter(island => island !== null);
       } catch (error) {
         console.error(`Error fetching islands for deployer ${deployer}: ${error}`);
+        return [];
       }
+    });
+
+    const deployerResults = await Promise.all(deployerPromises);
+    const allIslandData = deployerResults.flat();
+
+    // Add islands and token pairs
+    for (const islandData of allIslandData) {
+      islands.push(islandData);
+      tokenPairs.add(`${islandData.token0.symbol}-${islandData.token1.symbol}`);
     }
 
     return {

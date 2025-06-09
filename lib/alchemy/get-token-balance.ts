@@ -37,33 +37,27 @@ export async function getTokenBalances(
       networkConfig.id === TENDERLY_DEMO_CONFIG.id &&
       networkConfig.rpcUrl === TENDERLY_DEMO_CONFIG.rpcUrl
     ) {
-      const allTokenData: TokenData[] = []
       const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl)
+      const allTokenAddresses = [
+        ...commonlyUsedPTTokensArray,
+        ...commonlyUsedTokensArray
+      ]
 
-      for (const tokenAddress of commonlyUsedPTTokensArray) {
-        const tokenData = await getDemoTokenData(
-          tokenAddress,
-          walletAddress,
-          provider
+      const tokenDataPromises = allTokenAddresses.map(tokenAddress =>
+        getDemoTokenData(tokenAddress, walletAddress, provider)
+      )
+
+      const resolvedTokenData = await Promise.all(tokenDataPromises)
+
+      const allTokenData: TokenData[] = resolvedTokenData
+        .filter(
+          (tokenData): tokenData is NonNullable<typeof tokenData> =>
+            (tokenData !== null) && (tokenData.decimals !== 0) && (tokenData.symbol !== '') && (tokenData.name !== '')
         )
-        if (tokenData)
-          allTokenData.push({
-            ...tokenData,
-            network: networkConfig.displayName
-          })
-      }
-      for (const tokenAddress of commonlyUsedTokensArray) {
-        const tokenData = await getDemoTokenData(
-          tokenAddress,
-          walletAddress,
-          provider
-        )
-        if (tokenData)
-          allTokenData.push({
-            ...tokenData,
-            network: networkConfig.displayName
-          })
-      }
+        .map(tokenData => ({
+          ...tokenData,
+          network: networkConfig.displayName
+        }))
 
       const nativeBalance = await provider.getBalance(walletAddress)
       const nativeDetails = networkConfig.nativeAsset
@@ -72,6 +66,7 @@ export async function getTokenBalances(
         name: nativeDetails.name,
         symbol: nativeDetails.symbol,
         balance: ethers.formatUnits(nativeBalance, nativeDetails.decimals),
+        decimals: Number(nativeDetails.decimals),
         network: networkConfig.displayName
       })
       return allTokenData
@@ -99,7 +94,8 @@ export async function getTokenBalances(
                 nativeBalance,
                 nativeDetails.decimals
               ),
-              network: networkConfig.displayName
+              network: networkConfig.displayName,
+              decimals: Number(nativeDetails.decimals)
             }
           ]
         } catch (rpcError) {
@@ -139,7 +135,8 @@ export async function getTokenBalances(
           name: meta.name ?? 'Unknown',
           symbol: meta.symbol ?? 'UNK',
           balance: ethers.formatUnits(rawBig, meta.decimals ?? 18),
-          network: networkConfig.displayName
+          network: networkConfig.displayName,
+          decimals: meta.decimals ?? 18
         }
       })
     } catch (err) {
@@ -157,9 +154,12 @@ export async function getTokenBalances(
       name: nativeDetails.name,
       symbol: nativeDetails.symbol,
       balance: ethers.formatUnits(nativeWei.toString(), nativeDetails.decimals),
-      network: networkConfig.displayName
+      network: networkConfig.displayName,
+      decimals: Number(nativeDetails.decimals)
     }
-
+    console.log("erc20 before filtering", erc20Tokens)
+    erc20Tokens = erc20Tokens.filter(token => {return (token.decimals !== 0) && (token.symbol !== '') && (token.name !== '')})
+    console.log("erc20 after filtering", erc20Tokens)
     return [nativeTokenData, ...erc20Tokens]
   } catch (error) {
     console.error(`Error in getTokenBalances for chainId ${chainId}:`, error)

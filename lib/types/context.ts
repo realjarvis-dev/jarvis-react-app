@@ -5,7 +5,7 @@ import { ChainType, NetworkConfig } from "@/lib/network/types"
  * Network context passed to tools
  */
 export interface NetworkContext {
-    selectedNetwork: ChainType
+    selectedNetwork: ChainType | 'demo'
     selectedChainId: number
     isDemo: boolean
     rpcUrl: string

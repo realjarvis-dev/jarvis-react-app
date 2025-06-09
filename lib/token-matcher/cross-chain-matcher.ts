@@ -1,6 +1,6 @@
 import { Cacheable } from '@type-cacheable/core'
-import { ChainMatcher, ChainWithScore } from './fuzzy-chain-matcher'
-import { TokenMatcher, TokenWithScore } from './fuzzy-token-matcher'
+import { ChainMatcher, type Chain } from './fuzzy-chain-matcher'
+import { TokenMatcher, type Token } from './fuzzy-token-matcher'
 
 export class MissingChainError extends Error {
   constructor(message: string) {
@@ -46,15 +46,15 @@ class CrossChainMatcher {
     fromToken: string,
     toToken: string
   ): Promise<{
-    fromChain: ChainWithScore
-    toChain: ChainWithScore
-    fromTokenList: TokenWithScore[]
-    toTokenList: TokenWithScore[]
+    fromChain: Chain
+    toChain: Chain
+    fromTokenList: Token[]
+    toTokenList: Token[]
   }> {
     // match the chains and tokens
-    const fromChainMatches: ChainWithScore[] =
+    const fromChainMatches: Chain[] =
       this.matcher.match(fromChainString)
-    const toChainMatches: ChainWithScore[] = this.matcher.match(toChainString)
+    const toChainMatches: Chain[] = this.matcher.match(toChainString)
 
     if (fromChainMatches.length === 0) {
       throw new MissingChainError(
