@@ -1,4 +1,5 @@
-import { PerformanceOptimizedChat } from '@/components/performance-optimized-chat'
+import { RestoredChat } from '@/components/restored-chat'
+import { generateId } from 'ai'
 import { redirect } from 'next/navigation'
 
 export default async function SearchPage(props: {
@@ -9,6 +10,6 @@ export default async function SearchPage(props: {
     redirect('/')
   }
 
-  const id = 'search-chat'
-  return <PerformanceOptimizedChat id={id} query={q} />
+  const id = generateId()
+  return <RestoredChat id={id} query={q} />
 }

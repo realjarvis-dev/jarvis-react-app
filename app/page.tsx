@@ -1,9 +1,10 @@
-// Performance-optimized approach: fast LCP + progressive enhancement
+// Restored working chat with performance optimization
 
-import { PerformanceOptimizedChat } from '@/components/performance-optimized-chat'
+import { RestoredChat } from '@/components/restored-chat'
+import { generateId } from 'ai'
 
 export default function Page() {
-  const id = 'main-chat'
+  const id = generateId()
 
-  return <PerformanceOptimizedChat id={id} />
+  return <RestoredChat id={id} />
 }
