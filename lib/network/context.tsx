@@ -8,7 +8,7 @@ import {
   useEffect,
   useState
 } from 'react'
-import { getActiveNetworkConfig } from './config' // Updated import path
+import { allNetworkConfigs, getActiveNetworkConfig } from './config' // Updated import path
 import { ChainType, NetworkConfig } from './types' // Updated import path
 import { USER_SELECTED_NETWORK_COOKIE_KEY, USER_DEMO_MODE_COOKIE_KEY } from './types'
 // const USER_SELECTED_NETWORK_COOKIE_KEY = 'user_selected_network'
@@ -42,6 +42,7 @@ import { USER_SELECTED_NETWORK_COOKIE_KEY, USER_DEMO_MODE_COOKIE_KEY } from './t
 interface NetworkContextType {
   selectedChain: ChainType
   isDemoMode: boolean
+  allChainTypes: ChainType[]
   activeNetwork: NetworkConfig
   setSelectedChain: (chain: ChainType) => void
   setIsDemoMode: (enabled: boolean) => void
@@ -60,6 +61,8 @@ export function NetworkProvider({ children }: NetworkProviderProps) {
   const [isDemoMode, setIsDemoModeInternal] = useState(false)
   const [selectedChain, setSelectedChainInternal] =
     useState<ChainType>('ethereum')
+
+  const allChainTypes = Object.keys(allNetworkConfigs) as ChainType[]
 
   useEffect(() => {
     setMounted(true)
@@ -134,6 +137,7 @@ export function NetworkProvider({ children }: NetworkProviderProps) {
     selectedChain,
     isDemoMode,
     activeNetwork,
+    allChainTypes,
     setSelectedChain: wrappedSetSelectedChain,
     setIsDemoMode: wrappedSetIsDemoMode
   }

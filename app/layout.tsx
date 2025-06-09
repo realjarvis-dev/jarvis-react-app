@@ -3,6 +3,7 @@ import { ArtifactProvider } from '@/components/artifact/artifact-context'
 import ArtifactRoot from '@/components/artifact/artifact-root'
 import Header from '@/components/header'
 import WrappedPrivyProvider from '@/components/privy-provider'
+import { QueryProvider } from '@/components/query-provider'
 import { ThemeProvider } from '@/components/theme-provider'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { Toaster } from '@/components/ui/sonner'
@@ -67,24 +68,26 @@ export default async function RootLayout({
         >
           <NetworkProvider>
             <WrappedPrivyProvider>
-              <SidebarProvider defaultOpen={false}>
-                {/* Wrap the main content (that eventually renders ChatPanel)
+              <QueryProvider>
+                <SidebarProvider defaultOpen={false}>
+                  {/* Wrap the main content (that eventually renders ChatPanel)
                     with ArtifactProvider */}
-                <ArtifactProvider>
-                  <AppSidebar />
-                  <Header />
-                  <div
-                    className="flex flex-col flex-1 overflow-hidden pt-[56px] px-4 sm:px-6"
-                    style={{
-                      paddingTop: `calc(56px + env(safe-area-inset-top))`
-                    }}
-                  >
-                    <main className="flex-1 w-full overflow-auto">
-                      <ArtifactRoot>{children}</ArtifactRoot>
-                    </main>
-                  </div>
-                </ArtifactProvider>
-              </SidebarProvider>
+                  <ArtifactProvider>
+                    <AppSidebar />
+                    <Header />
+                    <div
+                      className="flex flex-col flex-1 overflow-hidden pt-[56px] px-4 sm:px-6"
+                      style={{
+                        paddingTop: `calc(56px + env(safe-area-inset-top))`
+                      }}
+                    >
+                      <main className="flex-1 w-full overflow-auto">
+                        <ArtifactRoot>{children}</ArtifactRoot>
+                      </main>
+                    </div>
+                  </ArtifactProvider>
+                </SidebarProvider>
+              </QueryProvider>
             </WrappedPrivyProvider>
           </NetworkProvider>
           <Toaster />
