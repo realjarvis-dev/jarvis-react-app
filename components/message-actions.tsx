@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 import { useChat } from '@ai-sdk/react'
 import { Copy } from 'lucide-react'
 import { toast } from 'sonner'
+import { ChatShare } from './chat-share'
 import { RetryButton } from './retry-button'
 import { Button } from './ui/button'
 
@@ -42,6 +43,9 @@ export function MessageActions({
       )}
     >
       {reload && <RetryButton reload={reload} messageId={messageId} />}
+      {process.env.NEXT_PUBLIC_ENABLE_SHARE === 'true' && chatId && (
+        <ChatShare chatId={chatId} />
+      )}
       <Button
         variant="ghost"
         size="icon"

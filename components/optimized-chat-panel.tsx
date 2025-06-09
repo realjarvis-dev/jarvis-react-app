@@ -2,7 +2,7 @@
 
 import { cn } from '@/lib/utils'
 import {
-    usePrivy
+  usePrivy
 } from '@privy-io/react-auth'
 import { Message } from 'ai'
 import { ArrowUp, ChevronDown, MessageCirclePlus, Square } from 'lucide-react'
@@ -17,7 +17,6 @@ import { MarketPulse } from './market-pulse'
 
 import { useNetwork } from '@/lib/network/context'
 import { ChainSelector } from './chain-selector'
-import { ChatShare } from './chat-share'
 import { DemoToggle } from './demo-toggle'
 import { SearchModeToggle } from './search-mode-toggle'
 import { Button } from './ui/button'
@@ -448,31 +447,19 @@ export function ChatPanel({
                 </div>
                 <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                   {messages.length > 0 && (
-                    <>
-                      <Button
-                        variant="outline" // Your existing props
-                        size="icon" // Your existing props
-                        onClick={handleNewChat} // Your existing props
-                        className={cn(
-                          'shrink-0 rounded-full group size-7 sm:size-8',
-                          showVideoBg && 'text-white border-white/30 hover:bg-white/10'
-                        )}
-                        type="button" // Your existing props
-                        disabled={isLoading || isToolInvocationInProgress()} // Your existing props
-                      >
-                        <MessageCirclePlus className="size-3.5 sm:size-4 group-hover:rotate-12 transition-all" />
-                      </Button>
-
-                      {/* Share button */}
-                      {process.env.NEXT_PUBLIC_ENABLE_SHARE === 'true' && chatId && (
-                        <ChatShare 
-                          chatId={chatId} 
-                          className={cn(
-                            showVideoBg && 'text-white border-white/30 hover:bg-white/10'
-                          )}
-                        />
+                    <Button
+                      variant="outline" // Your existing props
+                      size="icon" // Your existing props
+                      onClick={handleNewChat} // Your existing props
+                      className={cn(
+                        'shrink-0 rounded-full group size-7 sm:size-8',
+                        showVideoBg && 'text-white border-white/30 hover:bg-white/10'
                       )}
-                    </>
+                      type="button" // Your existing props
+                      disabled={isLoading || isToolInvocationInProgress()} // Your existing props
+                    >
+                      <MessageCirclePlus className="size-3.5 sm:size-4 group-hover:rotate-12 transition-all" />
+                    </Button>
                   )}
                   <Button
                     type={isLoading ? 'button' : 'submit'} // Your existing props
