@@ -5,8 +5,12 @@ export async function computeUserUsdBalance(walletAddress: string, chainId: numb
     const tokenBalances = await getTokenBalances(walletAddress, chainId, isDemo)
     const tokenAddresses = tokenBalances.map(token => token.address)
     const tokenPrices = await getTokenUsdPriceBatch(tokenAddresses, chainId)
-    const tokenUsdPrices = tokenPrices.reduce((acc, price) => {
-        acc[price.address.toLowerCase()] = price.price
+    console.log('tokenPrices', tokenPrices)
+    const tokenUsdPrices = tokenPrices.reduce((acc, singleTokenPrice) => {
+        // filter out null values since there are scam tokens without prices
+        if (singleTokenPrice) {
+            acc[singleTokenPrice.address.toLowerCase()] = singleTokenPrice.price
+        }
         return acc
     }, {} as Record<string, number>)
     const usdBalance = tokenBalances.reduce((acc, token) => {
