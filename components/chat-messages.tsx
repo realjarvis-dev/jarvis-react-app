@@ -8,7 +8,7 @@ import { AgentThinkingSpinner } from './ui/agent-thinking-spinner'
 interface ChatMessagesProps {
   messages: Message[]
   data: JSONValue[] | undefined
-  onQuerySelect: (query: string) => void
+  onQuerySelect?: (query: string) => void
   isLoading: boolean
   chatId?: string
   addToolResult?: (params: { toolCallId: string; result: any }) => void

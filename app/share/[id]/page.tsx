@@ -14,7 +14,7 @@ export async function generateMetadata(props: {
   }
 
   return {
-    title: chat?.title.toString().slice(0, 50) || 'Search'
+    title: chat?.title.toString().slice(0, 50) || 'Shared Chat'
   }
 }
 
@@ -32,6 +32,7 @@ export default async function SharePage(props: {
     <Chat
       id={chat.id}
       savedMessages={convertToUIMessages(chat.messages)}
+      isReadOnly={true}
     />
   )
 }

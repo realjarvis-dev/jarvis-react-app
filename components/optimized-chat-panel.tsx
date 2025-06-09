@@ -181,6 +181,7 @@ interface ChatPanelProps {
   append: (message: any) => void // Consider a more specific type if possible
   isAutoScroll: boolean
   onVideoBgChange?: (isVideoActive: boolean) => void // Kept for potential Header integration via RootLayout
+  chatId?: string // Chat ID for sharing functionality
 }
 
 export function ChatPanel({
@@ -194,7 +195,8 @@ export function ChatPanel({
   stop,
   append,
   isAutoScroll,
-  onVideoBgChange // Destructure this prop
+  onVideoBgChange, // Destructure this prop
+  chatId
 }: ChatPanelProps) {
 
 
