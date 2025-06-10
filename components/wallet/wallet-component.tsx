@@ -62,15 +62,7 @@ export function WalletComponent({ showVideoBg }: WalletComponentProps) {
 
   // Handle wallet delegation on first login and fund wallet
   useEffect(() => {
-    if (ready && authenticated && wallets.length > 0) {
-      // If the wallet is not delegated yet, delegate actions to the first wallet
-      // if (!user?.linkedAccounts?.find(
-      //   account => account.type === 'wallet' && account.delegated
-      // )) {
-      //   // Delegate actions to the first wallet
-      //   delegateWallet({ address: wallets[0].address, chainType: 'ethereum' })
-      // }
-      
+    if (ready && authenticated && wallets.length > 0) { 
       // Check and fund wallet once wallets are ready
       checkAndFundUserWallet()
     }
