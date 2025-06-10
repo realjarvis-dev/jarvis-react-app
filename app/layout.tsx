@@ -69,24 +69,16 @@ export default async function RootLayout({
           <NetworkProvider>
             <WrappedPrivyProvider>
               <QueryProvider>
-                <SidebarProvider defaultOpen={false}>
-                  {/* Wrap the main content (that eventually renders ChatPanel)
-                    with ArtifactProvider */}
-                  <ArtifactProvider>
-                    <AppSidebar />
-                    <Header />
-                    <div
-                      className="flex flex-col flex-1 overflow-hidden pt-[56px] px-4 sm:px-6"
-                      style={{
-                        paddingTop: `calc(56px + env(safe-area-inset-top))`
-                      }}
-                    >
-                      <main className="flex-1 w-full overflow-auto">
-                        <ArtifactRoot>{children}</ArtifactRoot>
-                      </main>
-                    </div>
-                  </ArtifactProvider>
-                </SidebarProvider>
+              <SidebarProvider defaultOpen>
+            <AppSidebar />
+            <div className="flex flex-col flex-1 min-w-0">
+              <Header />
+              <main className="flex flex-1 min-h-0">
+                <ArtifactRoot>{children}</ArtifactRoot>
+              </main>
+
+            </div>
+          </SidebarProvider>
               </QueryProvider>
             </WrappedPrivyProvider>
           </NetworkProvider>
