@@ -1,6 +1,6 @@
+import { berachainConfig, kodiakNodeConfig } from '@/lib/network/config';
 import axios from 'axios';
 import { ethers } from 'ethers';
-import { berachainConfig } from '@/lib/network/config';
 import { getUserEvmWalletAddress, getUserWallet } from '../privy/client';
 import { DepositResult, IslandSingleDepositParams, IslandState, SwapCalculationResult, Token } from '../types/kodiak';
 import { ISLAND_ABI, ISLAND_INFO_ABI, KODIAK_ROUTER_ADDRESS, TOKEN_INFO_ABI } from './abi';
@@ -285,7 +285,7 @@ async function depositToKodiakIsland(params: IslandSingleDepositParams): Promise
     }
     
     // Set up provider for calculations
-    const provider = new ethers.JsonRpcProvider(berachainConfig.rpcUrl);
+    const provider = new ethers.JsonRpcProvider(kodiakNodeConfig.rpcUrl);
     
     // Get token info from the Island contract
     const islandContract = new ethers.Contract(

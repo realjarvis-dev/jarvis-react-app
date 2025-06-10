@@ -1,7 +1,7 @@
+import { kodiakNodeConfig } from '@/lib/network/config';
 import { ethers } from 'ethers';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
-import { berachainConfig } from '@/lib/network/config';
 import { getUserWallet, privy } from '../privy/client';
 import { DepositResult, IslandSingleDepositParams, KodiakQuoteResult, SwapCalculationResult } from '../types/kodiak';
 import { ERC20_ABI, KODIAK_ROUTER_ADDRESS, KODIAK_ROUTER_FULL_ABI } from './abi';
@@ -18,7 +18,7 @@ export async function approveToken(
 ): Promise<DepositResult> {
   try {
     // Get current allowance
-    const provider = new ethers.JsonRpcProvider(berachainConfig.rpcUrl);
+    const provider = new ethers.JsonRpcProvider(kodiakNodeConfig.rpcUrl);
     const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
     const allowance = await tokenContract.allowance(userAddress, spenderAddress);
     
@@ -69,7 +69,7 @@ export async function approveToken(
         transaction: {
           to: tokenAddress as `0x${string}`,
           data: approvalData as `0x${string}`,
-          chainId: berachainConfig.chainId,
+          chainId: kodiakNodeConfig.chainId,
           gasLimit: ethers.toQuantity(gasLimit) as `0x${string}`,
           maxFeePerGas: ethers.toQuantity(maxFee + priority) as `0x${string}`,
           maxPriorityFeePerGas: ethers.toQuantity(priority) as `0x${string}`,
@@ -86,7 +86,7 @@ export async function approveToken(
           txDetails: {
             to: tokenAddress,
             data: approvalData,
-            chainId: berachainConfig.chainId,
+            chainId: kodiakNodeConfig.chainId,
             gasLimit: ethers.toQuantity(gasLimit),
             maxFeePerGas: ethers.toQuantity(maxFee + priority),
             maxPriorityFeePerGas: ethers.toQuantity(priority),
@@ -136,7 +136,7 @@ export async function executeDeposit(
       slippageBPS: params.slippageBPS,
       minSharesReceived: params.minSharesReceived
     });
-    const provider = new ethers.JsonRpcProvider(berachainConfig.rpcUrl);
+    const provider = new ethers.JsonRpcProvider(kodiakNodeConfig.rpcUrl);
     // Create RouterSwapParams object
     console.log("quoteResult", quoteResult)
 
@@ -204,7 +204,7 @@ export async function executeDeposit(
         transaction: {
           to: KODIAK_ROUTER_ADDRESS as `0x${string}`,
           data: depositData as `0x${string}`,
-          chainId: berachainConfig.chainId,
+          chainId: kodiakNodeConfig.chainId,
           from: userAddress as `0x${string}`,
           gasLimit: 650000,
           maxFeePerGas: ethers.toQuantity(maxFee + priority) as `0x${string}`,

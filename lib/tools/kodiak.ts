@@ -2,12 +2,12 @@ import { tool } from 'ai';
 import { ethers } from 'ethers';
 import { Address } from 'viem';
 import { z } from 'zod';
-import { berachainConfig } from "../network/config";
 import { BAULT_ABI, IBGT_ADDRESS } from '../kodiak/abi';
 import { getIslandDetails, getKodiakOpportunitiesFromApi } from '../kodiak/api';
 import { depositToKodiakIsland, IslandSingleDepositParams } from '../kodiak/islandRatio';
 import { checkBault, checkProfitability, compoundBaultWithHelper } from '../kodiak/kodiak-baults';
 import { tickToPrice } from '../kodiak/utils';
+import { kodiakNodeConfig } from "../network/config";
 import { getUserWallet } from '../privy/client';
 import { NetworkContext } from '../types/context';
 import { FormattedKodiakIsland } from '../types/kodiak';
@@ -622,7 +622,7 @@ export const kodiakBaultProfitabilityTool = tool({
           const bault = new ethers.Contract(
             baultAddress,
             BAULT_ABI,
-            new ethers.JsonRpcProvider(berachainConfig.rpcUrl)
+            new ethers.JsonRpcProvider(kodiakNodeConfig.rpcUrl)
           );
           
           const stakingToken = await bault.stakingToken();
@@ -803,11 +803,13 @@ export const kodiakCompoundBaultTool = tool({
       const profitReceiver = profit_receiver_address || wallet.address;
       
       // First check profitability
-      const stakingToken = await new ethers.Contract(
+      const bault = new ethers.Contract(
         bault_address,
         BAULT_ABI,
-        new ethers.JsonRpcProvider(berachainConfig.rpcUrl)
-      ).stakingToken();
+        new ethers.JsonRpcProvider(kodiakNodeConfig.rpcUrl)
+      );
+      
+      const stakingToken = await bault.stakingToken();
       
       const profitability = await checkProfitability(
         bault_address,

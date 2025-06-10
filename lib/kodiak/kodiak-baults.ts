@@ -1,19 +1,20 @@
 import { ethers } from 'ethers';
 import { v4 as uuidv4 } from 'uuid';
 import { Address, createPublicClient, Hex, http } from "viem";
-import { berachainConfig } from "../network/config";
+import { kodiakNodeConfig } from "../network/config";
 import { getUserWallet, privy } from '../privy/client';
 import {
-    BAULT_ABI,
-    BOUNTY_HELPER_ABI,
-    BOUNTY_HELPER_ADDRESS,
-    ERC20_ABI,
-    IBGT_ADDRESS
+  BAULT_ABI,
+  BOUNTY_HELPER_ABI,
+  BOUNTY_HELPER_ADDRESS,
+  ERC20_ABI,
+  IBGT_ADDRESS
 } from "./abi";
 
 // Helper function to create Berachain chain config for viem
+// Use Kodiak node for better arbitrage performance
 const getBerachainConfig = () => ({
-  id: berachainConfig.chainId,
+  id: kodiakNodeConfig.chainId,
   name: 'Berachain Mainnet',
   network: 'berachain',
   nativeCurrency: {
@@ -23,18 +24,18 @@ const getBerachainConfig = () => ({
   },
   rpcUrls: {
     default: {
-      http: [berachainConfig.rpcUrl]
+      http: [kodiakNodeConfig.rpcUrl]
     },
     public: {
-      http: [berachainConfig.rpcUrl]
+      http: [kodiakNodeConfig.rpcUrl]
     }
   }
 });
 
-// Create public client using berachainConfig
+// Create public client using kodiakNodeConfig for high-performance arbitrage
 const publicClient = createPublicClient({
   chain: getBerachainConfig(),
-  transport: http(berachainConfig.rpcUrl)
+  transport: http(kodiakNodeConfig.rpcUrl)
 });
 
 /**
@@ -49,7 +50,7 @@ export async function checkBault(
 ) {
   try {
     // Create provider using ethers instead of viem
-    const provider = new ethers.JsonRpcProvider(berachainConfig.rpcUrl);
+    const provider = new ethers.JsonRpcProvider(kodiakNodeConfig.rpcUrl);
     
     // Get Bault contract using ethers
     const bault = new ethers.Contract(
@@ -154,7 +155,7 @@ export async function getSwapQuote(
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        chainId: berachainConfig.chainId,
+        chainId: kodiakNodeConfig.chainId,
         fromAddress: userAddress,
         routingStrategy: "router",
         receiver: userAddress,
@@ -177,7 +178,7 @@ export async function getSwapQuote(
       
       // Log the detailed error information
       console.error(`Enso API error (${response.status} ${response.statusText}): ${errorBody}`);
-      console.error(`Request details: fromToken=${fromToken}, toToken=${toToken}, amount=${amount}, chainId=${berachainConfig.chainId}`);
+      console.error(`Request details: fromToken=${fromToken}, toToken=${toToken}, amount=${amount}, chainId=${kodiakNodeConfig.chainId}`);
       
       // Throw error with more information
       throw new Error(`Enso API error: ${response.status} ${response.statusText} - ${errorBody}`);
@@ -364,7 +365,7 @@ export async function compoundBaultDirect(
     const userAddress = wallet.address;
     
     // Create provider
-    const provider = new ethers.JsonRpcProvider(berachainConfig.rpcUrl);
+    const provider = new ethers.JsonRpcProvider(kodiakNodeConfig.rpcUrl);
     
     // Get Bault contract
     const bault = new ethers.Contract(
@@ -430,7 +431,7 @@ export async function compoundBaultDirect(
         transaction: {
           to: stakingTokenAddress as `0x${string}`,
           data: approvalData as `0x${string}`,
-          chainId: berachainConfig.chainId,
+          chainId: kodiakNodeConfig.chainId,
           gasLimit: ethers.toQuantity(gasLimit) as `0x${string}`,
           maxFeePerGas: ethers.toQuantity(maxFee + priority) as `0x${string}`,
           maxPriorityFeePerGas: ethers.toQuantity(priority) as `0x${string}`,
@@ -502,7 +503,7 @@ export async function compoundBaultDirect(
       transaction: {
         to: baultAddress as `0x${string}`,
         data: txData as `0x${string}`,
-        chainId: berachainConfig.chainId,
+        chainId: kodiakNodeConfig.chainId,
         gasLimit: ethers.toQuantity(claimGasLimit) as `0x${string}`,
         maxFeePerGas: ethers.toQuantity(claimMaxFee + claimPriority) as `0x${string}`,
         maxPriorityFeePerGas: ethers.toQuantity(claimPriority) as `0x${string}`,
@@ -557,7 +558,7 @@ export async function compoundBaultWithHelper(
     const userAddress = wallet.address;
     
     // Create provider
-    const provider = new ethers.JsonRpcProvider(berachainConfig.rpcUrl);
+    const provider = new ethers.JsonRpcProvider(kodiakNodeConfig.rpcUrl);
     
     // Get Bault contract
     const bault = new ethers.Contract(
@@ -642,7 +643,7 @@ export async function compoundBaultWithHelper(
       transaction: {
         to: BOUNTY_HELPER_ADDRESS as `0x${string}`,
         data: txData as `0x${string}`,
-        chainId: berachainConfig.chainId,
+        chainId: kodiakNodeConfig.chainId,
         gasLimit: ethers.toQuantity(gasLimit) as `0x${string}`,
         maxFeePerGas: ethers.toQuantity(maxFee + priority) as `0x${string}`,
         maxPriorityFeePerGas: ethers.toQuantity(priority) as `0x${string}`,

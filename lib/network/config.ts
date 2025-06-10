@@ -31,6 +31,19 @@ export const berachainConfig: NetworkConfig = {
   nativeAsset: { name: 'BERA Token', symbol: 'BERA', decimals: 18 }
 }
 
+// Kodiak's high-performance node for arbitrage operations
+export const kodiakNodeConfig: NetworkConfig = {
+  id: 'berachain' as const, // Still identifies as Berachain
+  displayName: 'Berachain (Kodiak Node)',
+  alchemyNetwork: Network.BERACHAIN_MAINNET,
+  chainId: 80094,
+  rpcUrl: 'https://rpc.kodiak.finance', // Kodiak's node URL
+  scanLink: 'berascan.com',
+  isDemo: false,
+  icon: '/icons/chains/berachain.svg',
+  nativeAsset: { name: 'BERA Token', symbol: 'BERA', decimals: 18 }
+}
+
 export const baseConfig: NetworkConfig = {
   id: 'base' as const,
   displayName: 'Base',

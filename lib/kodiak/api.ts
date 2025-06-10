@@ -1,12 +1,12 @@
+import { kodiakNodeConfig } from '@/lib/network/config';
 import axios from 'axios';
 import { ethers } from 'ethers';
-import { berachainConfig } from '@/lib/network/config';
 import {
-  buildKodiakIslandObject,
-  KodiakApiResponse,
-  KodiakApiVault,
-  KodiakIsland,
-  KodiakIslandResponse
+    buildKodiakIslandObject,
+    KodiakApiResponse,
+    KodiakApiVault,
+    KodiakIsland,
+    KodiakIslandResponse
 } from '../types/kodiak';
 import { FACTORY_ABI, ISLAND_ABI, POOL_ABI, TOKEN_INFO_ABI } from './abi';
 import { fetchVaultByAddress, fetchVaultsFromSubgraph, mapSubgraphDataToIslands } from './subgraph';
@@ -50,7 +50,7 @@ export async function getIslandDetails(address: string): Promise<KodiakIsland | 
     console.log(`Subgraph data not available for ${address}, falling back to on-chain data...`);
 
     // Fall back to on-chain data if subgraph fails
-    const provider = new ethers.JsonRpcProvider(berachainConfig.rpcUrl);
+    const provider = new ethers.JsonRpcProvider(kodiakNodeConfig.rpcUrl);
 
     // Create Island contract instance
     const island = new ethers.Contract(address, ISLAND_ABI, provider);
@@ -170,7 +170,7 @@ export async function fetchKodiakIslands(): Promise<KodiakIslandResponse> {
     console.log('Falling back to on-chain data...');
 
     // Fall back to on-chain data if subgraph fails
-    const provider = new ethers.JsonRpcProvider(berachainConfig.rpcUrl);
+    const provider = new ethers.JsonRpcProvider(kodiakNodeConfig.rpcUrl);
 
     // Create factory contract instance
     const factory = new ethers.Contract(FACTORY_ADDRESS, FACTORY_ABI, provider);
