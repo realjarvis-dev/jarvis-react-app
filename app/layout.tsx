@@ -75,17 +75,17 @@ export default async function RootLayout({
                   <ArtifactProvider>
                     <AppSidebar />
                     <div className="flex flex-col flex-1 min-w-0">
-                    <Header />
-                    <div
-                      className="flex flex-col flex-1 overflow-hidden pt-[56px] px-4 sm:px-6"
-                      style={{
-                        paddingTop: `calc(56px + env(safe-area-inset-top))`
-                      }}
-                    >
-                      <main className="flex-1 w-full min-w-0 overflow-y-auto overflow-x-hidden">
-                        <ArtifactRoot>{children}</ArtifactRoot>
-                      </main>
-                    </div>
+                      <Header />
+                      <div
+                        className="flex flex-col flex-1 overflow-hidden bg-transparent pt-[56px] px-4 sm:px-6"
+                        style={{
+                          paddingTop: `calc(56px + env(safe-area-inset-top))`
+                        }}
+                      >
+                        <main className="flex-1 w-full min-w-0 overflow-y-auto overflow-x-hidden">
+                          <ArtifactRoot>{children}</ArtifactRoot>
+                        </main>
+                      </div>
                     </div>
                   </ArtifactProvider>
                 </SidebarProvider>
