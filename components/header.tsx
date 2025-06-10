@@ -3,8 +3,10 @@
 import { useSidebar } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
 import {
+  useHeadlessDelegatedActions,
   useLogin,
   usePrivy,
+  WalletWithMetadata,
   type LinkedAccountWithMetadata,
   type User
 } from '@privy-io/react-auth'
@@ -23,6 +25,7 @@ export const Header: React.FC = () => {
     setShowWelcomePopup(false)
     router.push('/')
   }
+  const { delegateWallet } = useHeadlessDelegatedActions()
   const { login } = useLogin({
     onError: async error => {
       console.error('Error during login:', error)
@@ -37,11 +40,18 @@ export const Header: React.FC = () => {
       try {
         const { user, isNewUser, wasAlreadyAuthenticated } = params
         console.log('Login complete in Header:', params)
-
         if (isNewUser) {
           setShowWelcomePopup(true)
+          // delegate the evm wallet here
+          const evmWallet = user.linkedAccounts.find((account) => account.type === 'wallet' && account.chainType === 'ethereum') as WalletWithMetadata
+          if (evmWallet) {
+            console.log('Delegating evm wallet in Header:', evmWallet)
+            delegateWallet({ address: evmWallet.address, chainType: 'ethereum' })
+          }
         } else if (!wasAlreadyAuthenticated) {
           router.push("/")
+          router.refresh()
+        } else {
           router.refresh()
         }
         // always show welcome popup, for demo purposes

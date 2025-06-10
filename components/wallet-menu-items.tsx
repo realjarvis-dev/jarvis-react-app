@@ -54,16 +54,16 @@ export function WalletMenuItems() {
 
   useEffect(() => {
     if (evmReady) {
-      console.log('isMobile', isMobile)
+      // console.log('isMobile', isMobile)
       const evmWalletToDelegate = evmWallets.find((wallet) => wallet.walletClientType === 'privy');
-      console.log('evmWalletToDelegate', evmWalletToDelegate)
+      // console.log('evmWalletToDelegate', evmWalletToDelegate)
       setEvmWalletToDelegate(evmWalletToDelegate);
     }
   }, [evmReady])
 
   useEffect(() => {
     if (!userReady) return;
-    console.log('user in wallet menu items', user)
+    // console.log('user in wallet menu items', user)
     if (user) { 
       const isAlreadyDelegated = !!user.linkedAccounts.find(
           (account): account is WalletWithMetadata => account.type === 'wallet' && account.delegated && account.chainType === 'solana',
@@ -95,7 +95,8 @@ export function WalletMenuItems() {
 
   const handleRevokeAllDelegations = async () => {
     console.log('Revoke all delegations')
-    if (!solanaWalletAlreadyDelegated || !solanaReady || !userReady) return;
+    if (!userReady) return;
+    console.log('Revoking all delegations')
     await revokeWallets();
   }
 
