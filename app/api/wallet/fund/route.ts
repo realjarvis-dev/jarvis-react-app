@@ -3,6 +3,7 @@ import { TokenData } from '@/lib/alchemy/types';
 import { addBalanceAnvilFork } from '@/lib/anvil-fork/fund';
 import { getUserEvmWalletAddress, verifyAccessToken } from '@/lib/privy/client';
 import { ethToWei, setBalanceVnet } from '@/lib/tenderly/fund';
+import { TENDERLY_DEMO_CONFIG } from '@/lib/network/config';
 import { NextRequest, NextResponse } from 'next/server';
 
 // Configuration constants
@@ -67,7 +68,7 @@ export async function GET(req: NextRequest) {
       let result;
       try {
         // Fund the wallet using Tenderly's setBalanceVnet function
-        if (process.env.NEXT_PUBLIC_TEST_NET_ENV === "development") {
+        if (process.env.NEXT_PUBLIC_TEST_NET_ENV === "development" && TENDERLY_DEMO_CONFIG.rpcUrl.includes('tenderly')) {
           result = await setBalanceVnet([walletAddress], fundingAmountInWei)
         } else {
           result = await addBalanceAnvilFork(walletAddress, BigInt(fundingAmountInWei))
