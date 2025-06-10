@@ -69,7 +69,7 @@ export default async function RootLayout({
           <NetworkProvider>
             <WrappedPrivyProvider>
               <QueryProvider>
-              <SidebarProvider defaultOpen>
+              <SidebarProvider defaultOpen={false}>
             <AppSidebar />
             <div className="flex flex-col flex-1 min-w-0">
               <Header />
