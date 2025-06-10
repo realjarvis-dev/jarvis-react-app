@@ -1,5 +1,5 @@
 import { ethers, JsonRpcProvider, TransactionResponse, Wallet } from 'ethers'
-
+import { TENDERLY_DEMO_CONFIG } from '../network/config'
 // Available Accounts
 // ==================
 // (0) 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 (10000.000000000000000000 ETH)
@@ -26,8 +26,7 @@ import { ethers, JsonRpcProvider, TransactionResponse, Wallet } from 'ethers'
 // (8) 0xdbda1821b80551c9d65939329250298aa3472ba22feea921c0cf5d620ea67b97
 // (9) 0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6
 
-const ANVIL_RPC_URL = 'http://anvil-fork:8545'
-const provider = new JsonRpcProvider(ANVIL_RPC_URL)
+
 
 const privateKeys = [
   '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
@@ -57,6 +56,8 @@ export async function addBalanceAnvilFork(
   recipientAddress: string,
   amountInWei: bigint
 ): Promise<TransactionResponse> {
+  const rpcUrl = TENDERLY_DEMO_CONFIG.rpcUrl
+  const provider = new JsonRpcProvider(rpcUrl)
   if (privateKeys.length === 0) {
     throw new Error('No private keys available to send funds.')
   }
