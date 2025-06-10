@@ -37,6 +37,7 @@ export async function getTokenBalances(
       networkConfig.id === TENDERLY_DEMO_CONFIG.id &&
       networkConfig.rpcUrl === TENDERLY_DEMO_CONFIG.rpcUrl
     ) {
+      console.log("TENDERLY_DEMO_CONFIG.rpcUrl", TENDERLY_DEMO_CONFIG.rpcUrl)
       const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl)
       const allTokenAddresses = [
         ...commonlyUsedPTTokensArray,
