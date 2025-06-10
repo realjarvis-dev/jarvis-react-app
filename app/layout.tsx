@@ -1,5 +1,4 @@
 import AppSidebar from '@/components/app-sidebar'
-import { ArtifactProvider } from '@/components/artifact/artifact-context'
 import ArtifactRoot from '@/components/artifact/artifact-root'
 import Header from '@/components/header'
 import WrappedPrivyProvider from '@/components/privy-provider'
