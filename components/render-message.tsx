@@ -11,7 +11,7 @@ interface RenderMessageProps {
   messageId: string
   getIsOpen: (id: string) => boolean
   onOpenChange: (id: string, open: boolean) => void
-  onQuerySelect: (query: string) => void
+  onQuerySelect?: (query: string) => void
   chatId?: string
   addToolResult?: (params: { toolCallId: string; result: any }) => void
   onUpdateMessage?: (messageId: string, newContent: string) => Promise<void>
@@ -167,7 +167,7 @@ export function RenderMessage({
             return null
         }
       })}
-      {relatedQuestions && relatedQuestions.length > 0 && (
+      {relatedQuestions && relatedQuestions.length > 0 && onQuerySelect && (
         <RelatedQuestions
           annotations={relatedQuestions as JSONValue[]}
           onQuerySelect={onQuerySelect}

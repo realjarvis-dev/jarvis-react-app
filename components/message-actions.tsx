@@ -14,7 +14,6 @@ interface MessageActionsProps {
   messageId: string
   reload?: () => Promise<string | null | undefined>
   chatId?: string
-  enableShare?: boolean
   className?: string
 }
 
@@ -23,7 +22,6 @@ export function MessageActions({
   messageId,
   reload,
   chatId,
-  enableShare,
   className
 }: MessageActionsProps) {
   const { status } = useChat({
@@ -45,6 +43,9 @@ export function MessageActions({
       )}
     >
       {reload && <RetryButton reload={reload} messageId={messageId} />}
+      {process.env.NEXT_PUBLIC_ENABLE_SHARE === 'true' && chatId && (
+        <ChatShare chatId={chatId} />
+      )}
       <Button
         variant="ghost"
         size="icon"
@@ -53,7 +54,6 @@ export function MessageActions({
       >
         <Copy size={14} />
       </Button>
-      {enableShare && chatId && <ChatShare chatId={chatId} />}
     </div>
   )
 }

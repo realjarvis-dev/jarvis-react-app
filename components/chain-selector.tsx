@@ -13,6 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from './ui/dropdown-menu'
+import { UsdBalanceDisplay } from './ui/usd-balance-display'
 
 export function ChainSelector() {
   const { selectedChain, setSelectedChain, isDemoMode } = useNetwork()
@@ -50,20 +51,23 @@ export function ChainSelector() {
             onFocus={() => setShowTooltip(true)}
             onBlur={() => setShowTooltip(false)}
           >
-            {selectedOption?.icon && (
-              <span className="flex items-center">
-                <img
-                  src={selectedOption.icon}
-                  width={20}
-                  height={20}
-                  alt={selectedOption.displayName + ' icon'}
-                  className="block"
-                />
+            <div className="flex items-center gap-2">
+              {selectedOption?.icon && (
+                <span className="flex items-center">
+                  <img
+                    src={selectedOption.icon}
+                    width={20}
+                    height={20}
+                    alt={selectedOption.displayName + ' icon'}
+                    className="block"
+                  />
+                </span>
+              )}
+              <span className="hidden sm:inline text-xs">
+                {selectedOption?.displayName}
               </span>
-            )}
-            <span className="hidden sm:inline text-xs ml-2">
-              {selectedOption?.displayName}
-            </span>
+              <UsdBalanceDisplay />
+            </div>
             <ChevronDown className="size-3 hidden sm:inline" />
           </Button>
           {selectedOption && (

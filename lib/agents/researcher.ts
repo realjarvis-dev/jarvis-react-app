@@ -12,7 +12,7 @@ const get_system_prompt = (searchMode: boolean, supportedTools: string[], regist
     // Define tool descriptions with network context
     const toolDescMap: Record<string, string> = {
       pendle_opportunities: `- pendle_opportunities: Use when the user asks about Pendle yield opportunities, DeFi yields, or APY/yield farming on Ethereum. This tool returns a list of current Pendle opportunities with APY and liquidity information.`,
-      pendle_quote: `- pendle_quote: Use when the user wants to know the conversion rate between ETH and a specific Pendle market token (PT or YT). This requires market address and token out address parameters.`,
+      pendle_quote: `- pendle_quote: Use when the user wants to know the conversion rate between ETH and a specific Pendle market token (PT or YT) in either direction. Requires a token address to generate the quote. This tool can quote both ETH-to-token and token-to-ETH rates.`,
       pendle_swap: `- pendle_swap: Use when the user wants to execute a swap transaction from ETH to a Pendle token (PT or YT). This requires market address, token out address, and ETH amount parameters.`,
       wallet_balance: `- wallet_balance: Use when the user asks about their wallet balance, token holdings, or specific token balance. This tool returns the user's cryptocurrency balances.`,
       market_chart: `- market_chart: Use when the user asks about cryptocurrency price charts, market data, price history, or wants to see price trends for any cryptocurrency. This tool fetches and displays interactive market charts with price, volume, and market cap data.`,
@@ -53,8 +53,9 @@ const get_system_prompt = (searchMode: boolean, supportedTools: string[], regist
       pendle_opportunities: `  • pendle_opportunities  
     - Call it and let the UI show everything.  
     - Acknowledge: "Fetched the latest opportunities. Anything you'd like to explore?"`,
-      pendle_quote: `  • pendle_quote  
-    - If no market given, say: "Which market would you like quoted, or would you like to see opportunities first?"  
+      pendle_quote: `  • pendle_quote
+    - The user will provide you the names of the tokens. Like "Quote for sENA PT to ETH" or "Conversion for ETH to PT sENA". Based on this info you have to call this tool with relevant parameter.  
+    - If the from or to information is missing, say: "Which token would you like quoted, or would you like to see opportunities first?"  
     - Otherwise, "Here's your quote—anything else?"`,
       wallet_balance: `  • wallet_balance  
     - Call it; the UI shows balances.  
@@ -68,7 +69,7 @@ const get_system_prompt = (searchMode: boolean, supportedTools: string[], regist
     - Call it and let the UI show the chart.  
     - Acknowledge: "Here's the market chart. Need data for a different timeframe or coin?"`,
       lifi_bridge_quote: `  • lifi_bridge_quote
-    - If nothing goes wrong, just acknowledge: “Here’s your quote—anything else?”`,
+    - If nothing goes wrong, just acknowledge: "Here's your quote—anything else?"`,
 
     }
 
@@ -326,7 +327,6 @@ Network Context:
     }\nCurrent date and time: ${currentDate}\n${
       model === 'openai:o3-mini' ? '' : userWalletInfo
     }${networkInfo}`
-
     return {
       model: getModel(model),
       system: prompt,
@@ -342,3 +342,4 @@ Network Context:
     throw error
   }
 }
+

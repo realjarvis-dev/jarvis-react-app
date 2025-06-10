@@ -20,11 +20,13 @@ const MAX_TRIALS = 2
 export function Chat({
   id,
   savedMessages = [],
-  query
+  query,
+  isReadOnly = false
 }: {
   id: string
   savedMessages?: Message[]
   query?: string
+  isReadOnly?: boolean
 }) {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const { user, ready, authenticated } = usePrivy()
@@ -259,27 +261,35 @@ export function Chat({
       <ChatMessages
         messages={messages}
         data={data}
-        onQuerySelect={onQuerySelect}
+        onQuerySelect={isReadOnly ? undefined : onQuerySelect}
         isLoading={isLoading}
         chatId={id}
-        addToolResult={addToolResult}
+        addToolResult={isReadOnly ? undefined : addToolResult}
         anchorRef={anchorRef}
         scrollContainerRef={scrollContainerRef}
-        onUpdateMessage={handleUpdateAndReloadMessage}
-        reload={handleReloadFrom}
+        onUpdateMessage={isReadOnly ? undefined : handleUpdateAndReloadMessage}
+        reload={isReadOnly ? undefined : handleReloadFrom}
       />
-      <ChatPanel
-        input={input}
-        handleInputChange={handleInputChange}
-        handleSubmit={onSubmit}
-        isLoading={isLoading}
-        messages={messages}
-        setMessages={setMessages}
-        stop={stop}
-        query={query}
-        append={append}
-        isAutoScroll={isAutoScroll}
-      />
+      {!isReadOnly && (
+        <ChatPanel
+          input={input}
+          handleInputChange={handleInputChange}
+          handleSubmit={onSubmit}
+          isLoading={isLoading}
+          messages={messages}
+          setMessages={setMessages}
+          stop={stop}
+          query={query}
+          append={append}
+          isAutoScroll={isAutoScroll}
+          chatId={id}
+        />
+      )}
+      {isReadOnly && (
+        <div className="w-full shrink-0 bg-background py-4 text-center text-sm text-muted-foreground">
+          This is a read-only shared conversation
+        </div>
+      )}
     </div>
   )
 }

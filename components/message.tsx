@@ -3,9 +3,8 @@
 import { cn } from '@/lib/utils'
 import 'katex/dist/katex.min.css'
 import rehypeExternalLinks from 'rehype-external-links'
-import rehypeKatex from 'rehype-katex'
+// import rehypeKatex from 'rehype-katex'
 import remarkGfm from 'remark-gfm'
-import remarkMath from 'remark-math'
 import { CodeBlock } from './ui/codeblock'
 import { MemoizedReactMarkdown } from './ui/markdown'
 
@@ -17,31 +16,14 @@ export function BotMessage({
   className?: string
 }) {
   // Check if the content contains LaTeX patterns
-  const containsLaTeX = /\\\[([\s\S]*?)\\\]|\\\(([\s\S]*?)\\\)/.test(
-    message || ''
-  )
+  // const containsLaTeX = /\\\[([\s\S]*?)\\\]|\\\(([\s\S]*?)\\\)/.test(
+  //   message || ''
+  // )
 
   // Modify the content to render LaTeX equations if LaTeX patterns are found
   const processedData = preprocessLaTeX(message || '')
 
-  if (containsLaTeX) {
-    return (
-      <MemoizedReactMarkdown
-        rehypePlugins={[
-          [rehypeExternalLinks, { target: '_blank' }],
-          [rehypeKatex]
-        ]}
-        remarkPlugins={[remarkGfm, remarkMath]}
-        className={cn(
-          'prose-sm prose-neutral prose-a:text-accent-foreground/50',
-          className
-        )}
-      >
-        {processedData}
-      </MemoizedReactMarkdown>
-    )
-  }
-
+  // For now, we'll just use the same rendering for all content
   return (
     <MemoizedReactMarkdown
       rehypePlugins={[[rehypeExternalLinks, { target: '_blank' }]]}
@@ -51,15 +33,20 @@ export function BotMessage({
         className
       )}
       components={{
-        code({ node, inline, className, children, ...props }) {
-          if (children.length) {
-            if (children[0] == '▍') {
+        code({ node, inline, className, children, ...props }: any) {
+          const childrenArray = Array.isArray(children) ? children : [children].filter(Boolean);
+          
+          if (childrenArray.length > 0) {
+            if (childrenArray[0] === '▍') {
               return (
                 <span className="mt-1 cursor-default animate-pulse">▍</span>
               )
             }
 
-            children[0] = (children[0] as string).replace('`▍`', '▍')
+            // Handle the case where children might be modified
+            if (typeof childrenArray[0] === 'string') {
+              childrenArray[0] = childrenArray[0].replace('`▍`', '▍')
+            }
           }
 
           const match = /language-(\w+)/.exec(className || '')
@@ -76,12 +63,12 @@ export function BotMessage({
             <CodeBlock
               key={Math.random()}
               language={(match && match[1]) || ''}
-              value={String(children).replace(/\n$/, '')}
+              value={String(children || '').replace(/\n$/, '')}
               {...props}
             />
           )
         },
-        a({ href, children, ...props }) {
+        a({ href, children, ...props }: any) {
           // Only handle in‑page anchors
           if (href?.startsWith('#')) {
             return (
