@@ -37,9 +37,9 @@ export function WithTooltip({ children, tooltipText }: WithTooltipProps) {
             side="top"
             align="center"
             sideOffset={8}
-            className="max-w-[150px] whitespace-normal rounded-xl border border-sky-500/50 bg-black/70 px-3 py-2 text-white shadow-lg shadow-sky-500/10 backdrop-blur-md"
+            className="max-w-[200px] whitespace-normal rounded-xl border border-sky-500/50 bg-black/70 px-3 py-2 text-white shadow-lg shadow-sky-500/10 backdrop-blur-md"
           >
-            <p className="text-sm">{tooltipText}</p>
+            <p className="text-xs">{tooltipText}</p>
           </PopoverContent>
         </Popover>
       </div>
@@ -62,9 +62,9 @@ export function WithTooltip({ children, tooltipText }: WithTooltipProps) {
           side="top"
           align="center"
           sideOffset={8}
-          className="max-w-[150px] whitespace-normal rounded-xl border border-sky-500/50 bg-black/70 px-3 py-2 text-white shadow-lg shadow-sky-500/10 backdrop-blur-md"
+          className="max-w-[200px] whitespace-normal rounded-xl border border-sky-500/50 bg-black/70 px-3 py-2 text-white shadow-lg shadow-sky-500/10 backdrop-blur-md"
         >
-          <p>{tooltipText}</p>
+          <p className="text-xs">{tooltipText}</p>
         </TooltipContent>
       </Tooltip>
     </div>
