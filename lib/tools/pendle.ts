@@ -11,6 +11,7 @@ import {
 } from '../pendle/transactions'
 import { getUserEvmWalletAddress } from '../privy/client'
 import { NetworkContext } from '../types/context'
+import { getConfigByChainId } from '../network/config'
 
 // ETH address constants
 const ETH_ADDRESS_IDENTIFIER = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
@@ -373,6 +374,8 @@ export const pendleSwapTool = tool({
 
       // Execute the transaction
       const result = await executeSwapTransaction(txData, chainId, {estimateGas: true}, isDemo)
+      const explorerLink = getConfigByChainId(chainId!, isDemo).scanLink
+      const explorerLinkWithHash = `https://${explorerLink}/tx/${result.hash}`
 
       const swapData = {
         success: true,
@@ -384,7 +387,8 @@ export const pendleSwapTool = tool({
           input_token_address: actualTokenInAddress,
           output_token_address: actualTokenOutAddress,
           complete_time: new Date().toISOString(),
-          chainId: chainId
+          chainId: chainId,
+          explorer_link: explorerLink ? explorerLinkWithHash : undefined
         }
       }
 

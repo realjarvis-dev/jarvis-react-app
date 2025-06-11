@@ -372,11 +372,11 @@ export function SwapTransactionCard({
               </div>
               
               {/* Transaction Hash */}
-              <div className="pt-2 mt-2 border-t border-gray-100 dark:border-gray-800">
+              {result.swap_details?.explorer_link && <div className="pt-2 mt-2 border-t border-gray-100 dark:border-gray-800">
                 <div className="flex justify-between items-center">
                   <div className="text-xs text-gray-500 dark:text-gray-400">Transaction:</div>
                   <a 
-                    href={`https://${getConfigByChainId(result.swap_details.chainId, isDemoMode).scanLink}/tx/${result.transaction_hash}`} 
+                    href={result.swap_details.explorer_link} 
                     target="_blank" 
                     rel="noreferrer"
                     className="text-xs font-medium text-blue-600 dark:text-blue-400 flex items-center hover:underline"
@@ -385,7 +385,7 @@ export function SwapTransactionCard({
                     <Link className="h-3 w-3 ml-1" />
                   </a>
                 </div>
-              </div>
+              </div>}
             </div>
           </div>
           
