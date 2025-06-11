@@ -403,6 +403,9 @@ export const pendleSwapTool = tool({
         success: false,
         error: error.message || 'Failed to execute Pendle swap.',
         swap_parameters: {
+          from: input_token_name_display || ETH_SYMBOL_IDENTIFIER,
+          to: output_token_name_display || ETH_SYMBOL_IDENTIFIER,
+          amount_in: `${amount_in_human} ${input_token_name_display || ETH_SYMBOL_IDENTIFIER}`,
           input_token_address: input_token_address,
           output_token_address: output_token_address,
           amount_in_human,
