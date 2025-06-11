@@ -1,5 +1,4 @@
 import AppSidebar from '@/components/app-sidebar'
-import { ArtifactProvider } from '@/components/artifact/artifact-context'
 import ArtifactRoot from '@/components/artifact/artifact-root'
 import Header from '@/components/header'
 import WrappedPrivyProvider from '@/components/privy-provider'
@@ -69,16 +68,15 @@ export default async function RootLayout({
           <NetworkProvider>
             <WrappedPrivyProvider>
               <QueryProvider>
-              <SidebarProvider defaultOpen={false}>
-            <AppSidebar />
-            <div className="flex flex-col flex-1 min-w-0">
-              <Header />
-              <main className="flex flex-1 min-h-0">
-                <ArtifactRoot>{children}</ArtifactRoot>
-              </main>
-
-            </div>
-          </SidebarProvider>
+                <SidebarProvider defaultOpen={false}>
+                  <AppSidebar />
+                  <div className="flex flex-col flex-1 min-w-0">
+                    <Header />
+                    <main className="flex flex-1 min-h-0">
+                      <ArtifactRoot>{children}</ArtifactRoot>
+                    </main>
+                  </div>
+                </SidebarProvider>
               </QueryProvider>
             </WrappedPrivyProvider>
           </NetworkProvider>

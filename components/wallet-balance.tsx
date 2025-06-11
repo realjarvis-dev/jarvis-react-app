@@ -1,17 +1,12 @@
 'use client'
 
 import { Badge } from '@/components/ui/badge'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { TokenData } from '@/lib/alchemy/types'
 import { allNetworkConfigs } from '@/lib/network/config'
 import { useNetwork } from '@/lib/network/context'
+import { CopyableWalletAddress } from './copyable-wallet-address'
 
 const TokenRow = ({ token }: { token: TokenData }) => {
   // Format balance to a nice readable format (e.g., 9979.99 ETH)
@@ -72,6 +67,7 @@ interface WalletBalanceProps {
   isLoading: boolean
   error?: string | null
   className?: string
+  filterOnNetwork?: boolean
 }
 
 export function WalletBalance({
@@ -80,7 +76,8 @@ export function WalletBalance({
   tokens,
   isLoading,
   error,
-  className = ''
+  className = '',
+  filterOnNetwork = true
 }: WalletBalanceProps) {
   const { activeNetwork, selectedChain, isDemoMode } = useNetwork()
 
@@ -105,9 +102,9 @@ export function WalletBalance({
   }
 
   // Filter tokens based on the selected network using our improved matching
-  const filteredTokens = tokensList.filter(token =>
-    matchesSelectedNetwork(token.network)
-  )
+  const filteredTokens = filterOnNetwork
+    ? tokensList.filter(token => matchesSelectedNetwork(token.network))
+    : tokensList
 
   // Group tokens by network (we'll only have one network after filtering)
   const tokensByNetwork = filteredTokens.reduce((acc, token) => {
@@ -136,7 +133,9 @@ export function WalletBalance({
   const totalTokenCount = filteredTokens.length
   const hasMultipleNetworks = sortedNetworks.length > 1
   return (
-    <Card className={`w-full max-w-2xl mx-auto ${className} shadow-md`}>
+    <Card
+      className={`w-full max-w-2xl mx-auto ${className} shadow-md flex flex-col max-h-[70vh]`}
+    >
       <CardHeader className="pb-4">
         <div className="flex justify-between items-center">
           <CardTitle>{title}</CardTitle>
@@ -152,14 +151,16 @@ export function WalletBalance({
             </Badge>
           </div>
         </div>
-        <CardDescription>
-          {walletAddress
-            ? `Wallet: ${walletAddress}`
-            : 'Your cryptocurrency holdings'}
-        </CardDescription>
+
+        {walletAddress && (
+          <CopyableWalletAddress
+            walletAddress={walletAddress}
+            walletAddressIntroText="Address: "
+          />
+        )}
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="overflow-y-auto">
         {isLoading && (
           <div className="space-y-6">
             {[1, 2].map(networkIndex => (
@@ -209,7 +210,7 @@ export function WalletBalance({
             {sortedNetworks.map(networkAlchemyName => (
               <NetworkSection
                 key={networkAlchemyName}
-                network={activeNetwork.displayName}
+                network={networkAlchemyName}
                 tokens={tokensByNetwork[networkAlchemyName]}
               />
             ))}

@@ -15,6 +15,7 @@ import React, { useState } from 'react'
 import GuestMenu from './guest-menu'
 import UserMenu from './user-menu'
 import WelcomePopup from './welcome-popup'
+import WalletMenu from './wallet-menu'
 
 export const Header: React.FC = () => {
   const { open } = useSidebar()
@@ -83,6 +84,7 @@ export const Header: React.FC = () => {
       </div>
 
       <div className="flex items-center gap-2">
+        {ready && authenticated && <WalletMenu />}
         {ready && authenticated ? <UserMenu /> : <GuestMenu login={login} />}
       </div>
     </header>
