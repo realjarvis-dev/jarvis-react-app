@@ -19,6 +19,11 @@ export function CopyableWalletAddress({
   walletAddressNotAvailableText
 }: CopyableWalletAddressProps) {
   const [hasCopied, setHasCopied] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   const onCopy = () => {
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
@@ -56,6 +61,9 @@ export function CopyableWalletAddress({
     6
   )}...${walletAddress.substring(walletAddress.length - 4)}`
 
+  const canCopy =
+    isMounted && typeof navigator !== 'undefined' && !!navigator.clipboard
+
   return (
     <div
       className={cn(
@@ -72,7 +80,7 @@ export function CopyableWalletAddress({
         size="icon"
         className="size-5 sm:size-6 shrink-0"
         aria-label="Copy wallet address"
-        disabled={typeof navigator === 'undefined' || !navigator.clipboard}
+        disabled={!canCopy}
       >
         {hasCopied ? (
           <Check className="size-2 sm:size-3 text-green-500" />
