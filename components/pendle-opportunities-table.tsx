@@ -44,14 +44,14 @@ export const PendleOpportunitiesTable: React.FC<
             <TableHead className="p-3 font-normal text-sm text-blue-200/80">
               Pool
             </TableHead>
-            <TableHead className="p-3 font-normal text-sm text-blue-200/80">
-              Expiry
-            </TableHead>
             <TableHead className="p-3 font-normal text-sm text-blue-200/80 text-right">
               Liquidity
             </TableHead>
             <TableHead className="p-3 font-normal text-sm text-blue-200/80 text-right">
               Fixed APY
+            </TableHead>
+            <TableHead className="p-3 font-normal text-sm text-blue-200/80 text-right">
+              Expiry
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -77,12 +77,6 @@ export const PendleOpportunitiesTable: React.FC<
                     {market.name} <span className="text-blue-400">PT</span>
                   </div>
                 </TableCell>
-                <TableCell className="p-3">
-                  <div className="text-sm text-gray-300 whitespace-nowrap">
-                    {expiryDate}{' '}
-                    <span className="ml-1 text-gray-400">({days} days)</span>
-                  </div>
-                </TableCell>
                 <TableCell className="text-right p-3 text-sm font-semibold whitespace-nowrap">
                   {formatUSD(market.liquidity)}
                 </TableCell>
@@ -94,6 +88,12 @@ export const PendleOpportunitiesTable: React.FC<
                   >
                     {formatAPY(market.impliedApy)}
                   </span>
+                </TableCell>
+                <TableCell className="p-3 text-right">
+                  <div className="text-sm text-gray-300 whitespace-nowrap">
+                    {expiryDate}{' '}
+                    <span className="ml-1 text-gray-400">({days} days)</span>
+                  </div>
                 </TableCell>
               </TableRow>
             )
