@@ -458,13 +458,14 @@ export async function getRedeemTransactionFromPendle(
     const url = `${BASE_URL}/sdk/${chainId}/redeem`
     console.log('API URL:', url)
 
+    // Ensure parameters exactly match API documentation
     const params = {
       yt: ytAddress,
-      amountIn,
+      amountIn: amountIn,
       tokenOut: ETH_ADDRESS,
-      slippage,
+      slippage: slippage,
       receiver: RECEIVER,
-      enableAggregator
+      enableAggregator: enableAggregator
     }
     
     console.log('Request parameters:', JSON.stringify(params, null, 2))
@@ -484,11 +485,13 @@ export async function getRedeemTransactionFromPendle(
       return response.data.tx
     } catch (apiError: any) {
       console.error('API Error details:')
-      console.error('Status:', apiError.response?.status)
-      console.error('Status text:', apiError.response?.statusText)
-      console.error('Response data:', JSON.stringify(apiError.response?.data, null, 2))
+      if (apiError.response) {
+        console.error('Status:', apiError.response.status)
+        console.error('Status text:', apiError.response.statusText)
+        console.error('Response data:', JSON.stringify(apiError.response.data, null, 2))
+      }
       console.error('Error message:', apiError.message)
-      throw new Error(`API request failed: ${apiError.response?.status} ${apiError.response?.statusText} - ${apiError.message}`)
+      throw new Error(`API request failed: ${apiError.message}`)
     }
   } catch (error: any) {
     console.error('Error in getRedeemTransactionFromPendle:', error.message)
