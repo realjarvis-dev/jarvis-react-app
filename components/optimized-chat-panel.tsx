@@ -453,12 +453,10 @@ export function ChatPanel({
               >
                 <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto hide-scrollbar">
                   <SearchModeToggle />
-                  <WithTooltip tooltipText="Toggle to use demo funds">
+                  <WithTooltip tooltipText="Toggle to enter dry run mode with demo funds">
                     <DemoToggle />
                   </WithTooltip>
-                  <WithTooltip tooltipText="Select a network to interact with">
                     <ChainSelector />
-                  </WithTooltip>
                 </div>
                 <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                   {messages.length > 0 && (
