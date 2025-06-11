@@ -429,7 +429,7 @@ export const pendleRedeemTool = tool({
     amount_in_human: z
       .string()
       .describe(
-        'Amount of tokens to redeem in human-readable format (e.g., "1", "100.5").'
+        'Amount of tokens to redeem in human-readable format (e.g., "1", "100.5"). If the amount is not provided by the user, use the user\'s current balance of the token.'
       ),
     token_name_display: z
       .string()
