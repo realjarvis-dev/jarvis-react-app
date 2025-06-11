@@ -528,40 +528,60 @@ export const pendleRedeemPTTool = tool({
 
       console.log('Executing redemption transaction using YT address:', ytAddress)
       // Execute the redeem transaction using the YT address
-      const result = await executeRedeemTransaction(
-        ytAddress.trim(),
-        amountInBaseUnits,
-        slippage,
-        chainId,
-        false, // enableAggregator
-        isDemo
-      )
+      try {
+        // Ensure the YT address is properly formatted and trimmed
+        const normalizedYtAddress = ytAddress.trim().toLowerCase()
+        console.log('Normalized YT address for redemption:', normalizedYtAddress)
 
-      console.log('Redemption result:', JSON.stringify(result, null, 2))
-      
-      if (result.status !== 'success') {
-        console.error('Redemption failed:', result.message)
-        throw new Error(result.message || 'Failed to execute redemption')
-      }
+        // Ensure amount is properly formatted as a string
+        const safeAmountInBaseUnits = String(amountInBaseUnits)
+        console.log('Safe amount format for redemption:', safeAmountInBaseUnits)
 
-      const redeemData = {
-        success: true,
-        transaction_hash: result.hash,
-        redeem_details: {
-          token: displayTokenName,
-          amount_in: `${amount_in_human} ${displayTokenName}`,
-          amount_out: result.amountOut,
-          complete_time: new Date().toISOString(),
-          chainId: chainId
+        const result = await executeRedeemTransaction(
+          normalizedYtAddress,
+          safeAmountInBaseUnits,
+          slippage,
+          chainId,
+          false, // enableAggregator
+          isDemo
+        )
+
+        console.log('Redemption result:', JSON.stringify(result, null, 2))
+        
+        if (result.status !== 'success') {
+          console.error('Redemption failed:', result.message)
+          throw new Error(result.message || 'Failed to execute redemption')
         }
-      }
 
-      console.log('Redemption successful:', JSON.stringify(redeemData, null, 2))
-      
-      return {
-        _uiDisplayTool: true,
-        summary: `Redemption executed: ${amount_in_human} ${displayTokenName} → ETH`,
-        data: redeemData
+        const redeemData = {
+          success: true,
+          transaction_hash: result.hash,
+          redeem_details: {
+            token: displayTokenName,
+            amount_in: `${amount_in_human} ${displayTokenName}`,
+            amount_out: result.amountOut,
+            complete_time: new Date().toISOString(),
+            chainId: chainId
+          }
+        }
+
+        console.log('Redemption successful:', JSON.stringify(redeemData, null, 2))
+        
+        return {
+          _uiDisplayTool: true,
+          summary: `Redemption executed: ${amount_in_human} ${displayTokenName} → ETH`,
+          data: redeemData
+        }
+      } catch (execError: any) {
+        console.error('Error during redemption execution:', execError.message)
+        console.error('Error stack:', execError.stack)
+        
+        // Check for serialization errors specifically
+        if (execError.message && execError.message.includes('serialization')) {
+          throw new Error(`Serialization error during redemption. This may be due to an issue with the token format or amount. Details: ${execError.message}`)
+        }
+        
+        throw execError // Re-throw to be caught by the outer catch block
       }
     } catch (error: any) {
       console.error('Error in pendleRedeemPTTool:', error.message)
