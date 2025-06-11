@@ -225,8 +225,10 @@ export async function erc20Approval(
   const provider = new ethers.JsonRpcProvider(
     process.env.TEST_RPC_URL || getConfigByChainId(chainId, isDemo).rpcUrl
   )
+  console.log(process.env.TEST_RPC_URL || getConfigByChainId(chainId, isDemo).rpcUrl)
   const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider)
   const allowance = await tokenContract.allowance(userAddress, spenderAddress)
+  console.log("allowance", allowance)
 
   // Skip approval if allowance is sufficient
   if (allowance >= BigInt(amount)) {
@@ -247,7 +249,11 @@ export async function erc20Approval(
         data: approvalData,
         value: BigInt(0)
       },
-      chainId
+      chainId,
+      {
+        estimateGas: true,
+      },
+      isDemo
     )
     return { status: 'success', hash: txData.hash }
   } catch (error: any) {
@@ -359,17 +365,17 @@ export async function executeSwapTransaction(
     const valueHex = quantity.replace(/^0x/, '')
     const dataHex = (data as string).replace(/^0x/, '')
     const fromAddress = (from as string).replace(/^0x/, '')
-    console.log('fromAddress', fromAddress)
-    console.log('toAddress', toAddress)
-    console.log('dataHex', dataHex)
-    console.log('valueHex', valueHex)
+    // console.log('fromAddress', fromAddress)
+    // console.log('toAddress', toAddress)
+    // console.log('dataHex', dataHex)
+    // console.log('valueHex', valueHex)
 
-    console.log('gasOptions', gasOptions)
-    console.log('gasLimit', gasLimit)
-    console.log('valueHex', valueHex)
-    console.log('chainId', chainId)
-    console.log('maxFeePerGas', maxFeePerGas)
-    console.log('maxPriorityFeePerGas', maxPriorityFeePerGas)
+    // console.log('gasOptions', gasOptions)
+    // console.log('gasLimit', gasLimit)
+    // console.log('valueHex', valueHex)
+    // console.log('chainId', chainId)
+    // console.log('maxFeePerGas', maxFeePerGas)
+    // console.log('maxPriorityFeePerGas', maxPriorityFeePerGas)
 
     const { signedTransaction, encoding } =
       await privy.walletApi.ethereum.signTransaction({

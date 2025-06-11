@@ -67,7 +67,6 @@ export function CopyableWalletAddress({
   return (
     <div
       className={cn(
-        'flex items-center gap-0.5 sm:gap-1 md:gap-2 text-xs sm:text-xs md:text-sm text-muted-foreground flex-wrap sm:flex-nowrap justify-center min-h-[20px] px-0 sm:px-1 md:px-2 w-full',
         className
       )}
     >

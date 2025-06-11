@@ -99,22 +99,14 @@ export function WalletBalanceSection({
       : 'Wallet Balance'
 
   return (
-    <CollapsibleMessage
-    role="assistant"
-    isCollapsible={true}
-    header={title}
-    isOpen={isOpen}
-    onOpenChange={onOpenChange}
-    showIcon={false} // Assuming we want an icon
-  >
+
         <WalletBalance
-          title={title} // Pass the determined title to WalletBalance
+          title={''} // Pass the determined title to WalletBalance
           walletAddress={walletAddressArg} // Pass the wallet address from args for display
           tokens={tokens}
           isLoading={isLoading}
           error={errorMessage}
           className="mt-2 w-full shadow-sm"
         />
-    </CollapsibleMessage>
   )
 }
