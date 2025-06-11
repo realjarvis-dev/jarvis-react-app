@@ -1,18 +1,17 @@
+import { ChainType } from '@/lib/network/types'
 import { z } from 'zod'
 import { searchSchema } from '../schema/search'
 import { getGasPriceTool } from '../tools/gas-price'
-import { genericSwapTool } from '../tools/generic-swap'
 import { kodiakBaultProfitabilityTool, kodiakCompoundBaultTool, kodiakDepositTool, kodiakOpportunitiesTool } from '../tools/kodiak'
 import { bridgeExecuteTool, bridgeQuoteTool } from '../tools/lifi-bridge'
 import { marketChartTool } from '../tools/market-chart'
-import { pendleOpportunitiesTool, pendleQuoteTool, pendleSwapTool } from '../tools/pendle'
+import { pendleOpportunitiesTool, pendleQuoteTool, pendleRedeemRewardsTool, pendleRedeemTool, pendleSwapTool } from '../tools/pendle'
 import { privyTransferTool } from '../tools/privy-transfer'
 import { createQuestionTool } from '../tools/question'
 import { retrieveTool } from '../tools/retrieve'
 import { createSearchTool } from '../tools/search'
 import { createVideoSearchTool } from '../tools/video-search'
 import { fundWalletTool, walletBalanceTool } from '../tools/wallet'
-import { ChainType } from '@/lib/network/types'
 import { NetworkContext, ToolContext } from '../types/context'
 
 
@@ -268,6 +267,32 @@ export function createToolRegistry(model: string): ToolRegistry {
     description: pendleSwapTool.description || '',
     schema: pendleSwapTool.parameters,
     execute: async (params, context) => pendleSwapTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3,
+    supportedNetworks: ['ethereum', 'demo']
+  })
+  
+  registry.registerTool({
+    name: 'pendle_redeem',
+    description: pendleRedeemTool.description || '',
+    schema: pendleRedeemTool.parameters,
+    execute: async (params, context) => pendleRedeemTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3,
+    supportedNetworks: ['ethereum', 'demo']
+  })
+  
+  registry.registerTool({
+    name: 'pendle_redeem_rewards',
+    description: pendleRedeemRewardsTool.description || '',
+    schema: pendleRedeemRewardsTool.parameters,
+    execute: async (params, context) => pendleRedeemRewardsTool.execute(params, {
       toolCallId: context?.toolCallId || 'unknown',
       messages: context?.messages || [],
       networkContext: context?.networkContext!
