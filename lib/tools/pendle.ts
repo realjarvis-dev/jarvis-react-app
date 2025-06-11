@@ -225,22 +225,22 @@ export const pendleQuoteTool = tool({
 
 export const pendleSwapTool = tool({
   description:
-    `Execute a swap transaction between ETH and a Pendle PT token (e.g. ETH to PT, or PT to ETH).
-    You need to retrieve the relevant token address and market address from pendle_opportunities tool before calling this.
+    `Execute a swap transaction between ETH and a Pendle token (PT/YT).
+    Provide the token address and direction to swap.
     This tool automatically renders UI.`,
   parameters: z.object({
-    market_address: z
+    token_address: z
       .string()
-      .describe('The address of the Pendle market'),
-    input_token_address: z
-      .string()
+      .describe('The address of the PT or YT token. The market will be automatically determined from this token.'),
+    direction: z
+      .enum(['ethToToken', 'tokenToEth'])
+      .default('ethToToken')
+      .describe('Direction of the swap - from ETH to token or from token to ETH'),
+    token_type: z
+      .enum(['pt', 'yt'])
+      .default('pt')
       .describe(
-        'Address of the token to swap from. Use "ETH" or its zero address (0xeeee...) for native Ether, or the PT token address.'
-      ),
-    output_token_address: z
-      .string()
-      .describe(
-        'Address of the token to swap to. Use "ETH" or its zero address (0xeeee...) for native Ether, or the PT token address.'
+        'The token type - "pt" for Principal Token or "yt" for Yield Token. Default to pt.'
       ),
     amount_in_human: z
       .string()
@@ -253,28 +253,19 @@ export const pendleSwapTool = tool({
       .max(0.1)
       .default(0.01)
       .describe('Maximum acceptable slippage (default: 0.01, which is 1%).'),
-    input_token_name_display: z
+    market_name: z
       .string()
       .optional()
-      .describe(
-        'Display name for the input token (e.g., "ETH", "PT eETH"). If not provided, a generic name or address will be used.'
-      ),
-    output_token_name_display: z
-      .string()
-      .optional()
-      .describe(
-        'Display name for the output token (e.g., "PT eETH", "ETH"). If not provided, a generic name or address will be used.'
-      )
+      .describe('The name of the market (e.g. "rswETH"). Used for display purposes.')
   }),
   execute: async (params, context: ToolContext) => {
     let {
-      market_address,
-      input_token_address,
-      output_token_address,
+      token_address,
+      direction,
+      token_type,
       amount_in_human,
       slippage = 0.01,
-      input_token_name_display,
-      output_token_name_display
+      market_name
     } = params;
     const networkContext = context?.networkContext;
     const isDemo = networkContext?.isDemo
@@ -282,7 +273,8 @@ export const pendleSwapTool = tool({
       slippage = 0.01
     }
 
-    
+    let input_token_address, output_token_address;
+    let displayTokenIn, displayTokenOut;
     try {
       const evmWalletAddress = await getUserEvmWalletAddress()
       if (!evmWalletAddress) {
@@ -291,44 +283,68 @@ export const pendleSwapTool = tool({
         )
       }
 
-      const chainId = networkContext?.selectedChainId // Assuming Ethereum mainnet for Pendle
+      const chainId = networkContext?.selectedChainId
       const isDemo = networkContext!.isDemo
 
-      let actualTokenInAddress = input_token_address.toLowerCase().trim()
-      let actualTokenOutAddress = output_token_address.toLowerCase().trim()
-      let displayTokenIn: string
-      let displayTokenOut: string
+      console.log('===== PENDLE SWAP TOOL DEBUG =====');
+      console.log('Input parameters:', {
+        token_address,
+        direction,
+        token_type,
+        amount_in_human,
+        slippage
+      });
+      
+      if (!token_address) {
+        throw new Error('Token address must be provided');
+      }
+      
+      // Find market that contains the token
+      console.log('Searching for market using token address:', token_address);
+      const markets = await getPendleMarkets();
+      console.log('Available markets count:', markets.length);
+      
+      const foundMarket = markets.find(market => {
+        const addressToCheck = token_type === 'pt' ? market.pt : market.yt;
+        const matches = addressToCheck.toLowerCase() === token_address.toLowerCase();
+        if (matches) {
+          console.log('Found matching market:', {
+            name: market.name,
+            address: market.address,
+            pt: market.pt,
+            yt: market.yt
+          });
+        }
+        return matches;
+      });
+      
+      if (!foundMarket) {
+        throw new Error(`Could not find a Pendle market with ${token_type.toUpperCase()} token address ${token_address}`);
+      }
+      
+      const market_address = foundMarket.address;
+      const tokenSymbol = market_name || foundMarket.name;
+      const fullTokenName = `${token_type.toUpperCase()} ${tokenSymbol}`;
 
-      const isInputETHRaw =
-        actualTokenInAddress.toUpperCase() === ETH_SYMBOL_IDENTIFIER ||
-        actualTokenInAddress === ETH_ADDRESS_IDENTIFIER
-      const isOutputETHRaw =
-        actualTokenOutAddress.toUpperCase() === ETH_SYMBOL_IDENTIFIER ||
-        actualTokenOutAddress === ETH_ADDRESS_IDENTIFIER
+      // Determine input and output tokens based on direction
 
-      if (isInputETHRaw) {
-        actualTokenInAddress = ETH_ADDRESS_PENDLE
-        displayTokenIn = input_token_name_display || ETH_SYMBOL_IDENTIFIER
-      } else {
-        actualTokenInAddress = ethers.getAddress(actualTokenInAddress) // Validate/checksum
-        displayTokenIn =
-          input_token_name_display || `${actualTokenInAddress.slice(0, 6)}...`
+      
+      if (direction === 'ethToToken') {
+        input_token_address = ETH_ADDRESS_PENDLE;
+        output_token_address = token_address;
+        displayTokenIn = ETH_SYMBOL_IDENTIFIER;
+        displayTokenOut = fullTokenName;
+      } else { // tokenToEth
+        input_token_address = token_address;
+        output_token_address = ETH_ADDRESS_PENDLE;
+        displayTokenIn = fullTokenName;
+        displayTokenOut = ETH_SYMBOL_IDENTIFIER;
       }
 
-      if (isOutputETHRaw) {
-        actualTokenOutAddress = ETH_ADDRESS_PENDLE
-        displayTokenOut = output_token_name_display || ETH_SYMBOL_IDENTIFIER
-      } else {
-        actualTokenOutAddress = ethers.getAddress(actualTokenOutAddress) // Validate/checksum
-        displayTokenOut =
-          output_token_name_display || `${actualTokenOutAddress.slice(0, 6)}...`
-      }
+      let amountInBaseUnits: string;
+      const isInputETH = direction === 'ethToToken';
 
-      const isInputProcessedETH =
-        actualTokenInAddress === ETH_ADDRESS_PENDLE
-      let amountInBaseUnits: string
-
-      if (isInputProcessedETH) {
+      if (isInputETH) {
         try {
           amountInBaseUnits = ethers.parseEther(amount_in_human).toString()
         } catch (error) {
@@ -339,10 +355,10 @@ export const pendleSwapTool = tool({
           )
         }
       } else {
-        // ERC20 input (e.g., PT token)
+        // ERC20 input (e.g., PT/YT token)
           try {
             const tokenDetails = await getERC20Details(
-              actualTokenInAddress,
+              input_token_address,
               chainId
             )
             amountInBaseUnits = ethers
@@ -350,15 +366,15 @@ export const pendleSwapTool = tool({
               .toString()
           } catch (error: any) {
             throw new Error(
-              `Failed to get details or parse amount for input token ${actualTokenInAddress}: ${error.message}`
+              `Failed to get details or parse amount for input token ${input_token_address}: ${error.message}`
             )
           }
       }
 
       const txData = await getSwapTransactionFromPendle(
         market_address.toLowerCase().trim(),
-        actualTokenInAddress,
-        actualTokenOutAddress,
+        input_token_address,
+        output_token_address,
         amountInBaseUnits,
         slippage
       )
@@ -366,12 +382,11 @@ export const pendleSwapTool = tool({
         throw new Error('Failed to prepare transaction data using Pendle.')
       }
 
-      // For ERC20 inputs, handle approval first using the spender from ensoSwap's initial call
-      if (!isInputProcessedETH) {
+      // For ERC20 inputs, handle approval first
+      if (!isInputETH) {
         const spenderAddress = txData.to
-        console.log("ERC20 approval for token", actualTokenInAddress, "to spender", spenderAddress, "with amount", amountInBaseUnits)
         const approvalResult = await erc20Approval(
-          actualTokenInAddress,
+          input_token_address,
           spenderAddress,
           amountInBaseUnits,
           evmWalletAddress,
@@ -380,7 +395,7 @@ export const pendleSwapTool = tool({
         )
         if (approvalResult.status === 'fail') {
           throw new Error(
-            `ERC20 approval failed for token ${actualTokenInAddress} to spender ${spenderAddress}: ${approvalResult.message}`
+            `ERC20 approval failed for token ${input_token_address} to spender ${spenderAddress}: ${approvalResult.message}`
           )
         }
       } 
@@ -397,8 +412,8 @@ export const pendleSwapTool = tool({
           from: displayTokenIn,
           to: displayTokenOut,
           amount_in: `${amount_in_human} ${displayTokenIn}`,
-          input_token_address: actualTokenInAddress,
-          output_token_address: actualTokenOutAddress,
+          direction: direction,
+          token_address: token_address,
           complete_time: new Date().toISOString(),
           chainId: chainId,
           explorer_link: explorerLink ? explorerLinkWithHash : undefined
@@ -416,11 +431,13 @@ export const pendleSwapTool = tool({
         success: false,
         error: error.message || 'Failed to execute Pendle swap.',
         swap_parameters: {
-          from: input_token_name_display || ETH_SYMBOL_IDENTIFIER,
-          to: output_token_name_display || ETH_SYMBOL_IDENTIFIER,
-          amount_in: `${amount_in_human} ${input_token_name_display || ETH_SYMBOL_IDENTIFIER}`,
+          from: displayTokenIn,
+          to: displayTokenOut,
+          amount_in: `${amount_in_human} ${displayTokenIn}`,
           input_token_address: input_token_address,
           output_token_address: output_token_address,
+          token_address,
+          direction,
           amount_in_human,
           slippage
         }

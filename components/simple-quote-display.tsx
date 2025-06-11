@@ -71,7 +71,7 @@ export function SimpleQuoteDisplay({
 
           {/* Main Conversion Display */}
           <div className="bg-black/5 dark:bg-black/20 rounded-lg p-4 shadow-sm">
-            <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">
+            <div className="text-xs tracking-wide text-gray-500 dark:text-gray-400 mb-1">
               For {result.inputAmount || 1} {inputToken} you receive
             </div>
             <div className="text-2xl font-bold text-blue-700 dark:text-blue-400">
