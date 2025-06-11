@@ -455,30 +455,47 @@ export const pendleRedeemTool = tool({
     const isDemo = networkContext?.isDemo
     
     try {
+      console.log('====== PENDLE REDEEM TOOL ======')
+      console.log('Input parameters:', JSON.stringify(params, null, 2))
+      console.log('Network context:', JSON.stringify({
+        selectedChainId: networkContext?.selectedChainId,
+        isDemo: isDemo
+      }, null, 2))
+      
       const evmWalletAddress = await getUserEvmWalletAddress()
       if (!evmWalletAddress) {
+        console.error('Error: EVM wallet address not found')
         throw new Error(
           'EVM wallet address not found. Please connect your wallet.'
         )
       }
+      console.log('Wallet address:', evmWalletAddress)
 
       const chainId = networkContext?.selectedChainId || 1 // Default to Ethereum mainnet
       const displayTokenName = token_name_display || `${yt_address.slice(0, 6)}...`
 
+      console.log('Getting token details for YT token...')
       // Get token details to convert human amount to base units
       let amountInBaseUnits: string
       try {
         const tokenAddress = ethers.getAddress(yt_address.trim())
+        console.log('Normalized token address:', tokenAddress)
+        
         const tokenDetails = await getERC20Details(tokenAddress, chainId)
+        console.log('Token details:', JSON.stringify(tokenDetails, null, 2))
+        
         amountInBaseUnits = ethers
           .parseUnits(amount_in_human, tokenDetails.decimals)
           .toString()
+        console.log('Amount in base units:', amountInBaseUnits)
       } catch (error: any) {
+        console.error('Error getting token details:', error.message)
         throw new Error(
           `Failed to get details or parse amount for YT token ${yt_address}: ${error.message}`
         )
       }
 
+      console.log('Executing redemption transaction...')
       // Execute the redeem transaction
       const result = await executeRedeemTransaction(
         yt_address.trim(),
@@ -489,7 +506,10 @@ export const pendleRedeemTool = tool({
         isDemo
       )
 
+      console.log('Redemption result:', JSON.stringify(result, null, 2))
+      
       if (result.status !== 'success') {
+        console.error('Redemption failed:', result.message)
         throw new Error(result.message || 'Failed to execute redemption')
       }
 
@@ -505,13 +525,17 @@ export const pendleRedeemTool = tool({
         }
       }
 
+      console.log('Redemption successful:', JSON.stringify(redeemData, null, 2))
+      
       return {
         _uiDisplayTool: true,
         summary: `Redemption executed: ${amount_in_human} ${displayTokenName} → ETH`,
         data: redeemData
       }
     } catch (error: any) {
-      console.log(error)
+      console.error('Error in pendleRedeemTool:', error.message)
+      console.error('Error stack:', error.stack)
+      
       const errorData = {
         success: false,
         error: error.message || 'Failed to execute Pendle redemption.',
@@ -547,27 +571,43 @@ export const pendleRedeemRewardsTool = tool({
     const isDemo = networkContext?.isDemo
     
     try {
+      console.log('====== PENDLE REDEEM REWARDS TOOL ======')
+      console.log('Input parameters:', JSON.stringify(params, null, 2))
+      console.log('Network context:', JSON.stringify({
+        selectedChainId: networkContext?.selectedChainId,
+        isDemo: isDemo
+      }, null, 2))
+      
       const evmWalletAddress = await getUserEvmWalletAddress()
       if (!evmWalletAddress) {
+        console.error('Error: EVM wallet address not found')
         throw new Error(
           'EVM wallet address not found. Please connect your wallet.'
         )
       }
+      console.log('Wallet address:', evmWalletAddress)
 
       const chainId = networkContext?.selectedChainId || 1 // Default to Ethereum mainnet
 
       // Check if YT addresses array has items
       if (!yt_addresses || yt_addresses.length === 0) {
+        console.error('Error: Empty YT addresses array')
         throw new Error('YT addresses array must contain at least one address')
       }
 
       // Process addresses to ensure they're properly formatted
-      const processedYtAddresses = yt_addresses.map(addr => addr.trim())
+      console.log('Processing YT addresses...')
+      const processedYtAddresses = yt_addresses.map(addr => {
+        const trimmed = addr.trim()
+        console.log(`Original: ${addr} -> Processed: ${trimmed}`)
+        return trimmed
+      })
       
       // Define empty arrays for market_addresses and sy_addresses as placeholders for future
       const processedMarketAddresses: string[] = []
       const processedSyAddresses: string[] = []
 
+      console.log('Executing redemption transaction for rewards...')
       // Execute the redemption transaction
       const result = await executeRedeemInterestsAndRewardsTransaction(
         processedSyAddresses.length > 0 ? processedSyAddresses : undefined,
@@ -577,7 +617,10 @@ export const pendleRedeemRewardsTool = tool({
         isDemo
       )
 
+      console.log('Redemption result:', JSON.stringify(result, null, 2))
+      
       if (result.status !== 'success') {
+        console.error('Redemption failed:', result.message)
         throw new Error(result.message || 'Failed to redeem rewards')
       }
 
@@ -591,13 +634,17 @@ export const pendleRedeemRewardsTool = tool({
         }
       }
 
+      console.log('Redemption successful:', JSON.stringify(redeemData, null, 2))
+      
       return {
         _uiDisplayTool: true,
         summary: `YT rewards redemption executed successfully`,
         data: redeemData
       }
     } catch (error: any) {
-      console.log(error)
+      console.error('Error in pendleRedeemRewardsTool:', error.message)
+      console.error('Error stack:', error.stack)
+      
       const errorData = {
         success: false,
         error: error.message || 'Failed to redeem Pendle rewards.',

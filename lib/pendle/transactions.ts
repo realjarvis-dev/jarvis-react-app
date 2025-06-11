@@ -437,60 +437,62 @@ export async function getRedeemTransactionFromPendle(
   enableAggregator: boolean = false
 ): Promise<any> {
   try {
-    console.log(`Redeeming with YT: ${ytAddress}`)
-    console.log(`Redeeming amount: ${amountIn}`)
+    console.log('====== PENDLE REDEEM TRANSACTION ======')
+    console.log(`YT Address: ${ytAddress}`)
+    console.log(`Amount: ${amountIn}`)
     console.log(`Token out: ETH (${ETH_ADDRESS})`)
+    console.log(`Chain ID: ${chainId}`)
+    console.log(`Slippage: ${slippage}`)
+    console.log(`Enable Aggregator: ${enableAggregator}`)
 
     const evmWalletAddress = await getUserEvmWalletAddress()
     if (!evmWalletAddress) {
+      console.error('Error: EVM wallet address not found')
       throw new Error('EVM wallet not found')
     }
 
     const RECEIVER = evmWalletAddress
-
-    console.log(`Wallet address: ${RECEIVER}`)
-    console.log(`Slippage: ${slippage}`)
+    console.log(`Receiver Address: ${RECEIVER}`)
 
     // Use redeem API endpoint
     const url = `${BASE_URL}/sdk/${chainId}/redeem`
-
     console.log('API URL:', url)
-    console.log('Payload:', {
+
+    const params = {
       yt: ytAddress,
       amountIn,
       tokenOut: ETH_ADDRESS,
       slippage,
       receiver: RECEIVER,
       enableAggregator
-    })
+    }
+    
+    console.log('Request parameters:', JSON.stringify(params, null, 2))
 
-    const response = await axios.get(url, {
-      params: {
-        yt: ytAddress,
-        amountIn,
-        tokenOut: ETH_ADDRESS,
-        slippage,
-        receiver: RECEIVER,
-        enableAggregator
+    try {
+      const response = await axios.get(url, { params })
+      
+      console.log('Response status:', response.status)
+      console.log('Response data:', JSON.stringify(response.data, null, 2))
+      
+      if (!response.data || !response.data.tx) {
+        console.error('Error: No transaction data in response')
+        throw new Error('No transaction data returned from API')
       }
-    })
 
-    if (!response.data || !response.data.tx) {
-      throw new Error('No transaction data returned from API')
+      console.log('Redeem transaction data fetched successfully')
+      return response.data.tx
+    } catch (apiError: any) {
+      console.error('API Error details:')
+      console.error('Status:', apiError.response?.status)
+      console.error('Status text:', apiError.response?.statusText)
+      console.error('Response data:', JSON.stringify(apiError.response?.data, null, 2))
+      console.error('Error message:', apiError.message)
+      throw new Error(`API request failed: ${apiError.response?.status} ${apiError.response?.statusText} - ${apiError.message}`)
     }
-
-    console.log('Redeem transaction data fetched successfully')
-    console.log('Response data:', response.data)
-    return response.data.tx
   } catch (error: any) {
-    console.error('Error fetching redeem transaction:', error.message)
-
-    if (error.response) {
-      console.error('Response status:', error.response.status)
-      console.error('Response data:', error.response.data)
-    }
-
-    throw new Error(`Failed to get redeem transaction: ${error.message}`)
+    console.error('Error in getRedeemTransactionFromPendle:', error.message)
+    throw error
   }
 }
 
@@ -509,13 +511,20 @@ export async function getRedeemInterestsAndRewardsTransactionFromPendle(
   chainId: number = 1
 ): Promise<any> {
   try {
+    console.log('====== PENDLE REDEEM REWARDS TRANSACTION ======')
+    console.log('SY Addresses:', sysAddresses)
+    console.log('YT Addresses:', ytsAddresses)
+    console.log('Market Addresses:', marketsAddresses)
+    console.log(`Chain ID: ${chainId}`)
+
     const evmWalletAddress = await getUserEvmWalletAddress()
     if (!evmWalletAddress) {
+      console.error('Error: EVM wallet address not found')
       throw new Error('EVM wallet not found')
     }
 
     const RECEIVER = evmWalletAddress
-    console.log(`Wallet address: ${RECEIVER}`)
+    console.log(`Receiver Address: ${RECEIVER}`)
 
     // Convert arrays to comma-separated strings if provided
     const sys = sysAddresses?.join(',')
@@ -531,26 +540,32 @@ export async function getRedeemInterestsAndRewardsTransactionFromPendle(
     if (markets) params.markets = markets
 
     console.log('API URL:', url)
-    console.log('Payload:', params)
+    console.log('Request parameters:', JSON.stringify(params, null, 2))
 
-    const response = await axios.get(url, { params })
+    try {
+      const response = await axios.get(url, { params })
+      
+      console.log('Response status:', response.status)
+      console.log('Response data:', JSON.stringify(response.data, null, 2))
+      
+      if (!response.data || !response.data.tx) {
+        console.error('Error: No transaction data in response')
+        throw new Error('No transaction data returned from API')
+      }
 
-    if (!response.data || !response.data.tx) {
-      throw new Error('No transaction data returned from API')
+      console.log('Redeem interests and rewards transaction data fetched successfully')
+      return response.data.tx
+    } catch (apiError: any) {
+      console.error('API Error details:')
+      console.error('Status:', apiError.response?.status)
+      console.error('Status text:', apiError.response?.statusText)
+      console.error('Response data:', JSON.stringify(apiError.response?.data, null, 2))
+      console.error('Error message:', apiError.message)
+      throw new Error(`API request failed: ${apiError.response?.status} ${apiError.response?.statusText} - ${apiError.message}`)
     }
-
-    console.log('Redeem interests and rewards transaction data fetched successfully')
-    console.log('Response data:', response.data)
-    return response.data.tx
   } catch (error: any) {
-    console.error('Error fetching redeem interests and rewards transaction:', error.message)
-
-    if (error.response) {
-      console.error('Response status:', error.response.status)
-      console.error('Response data:', error.response.data)
-    }
-
-    throw new Error(`Failed to get redeem interests and rewards transaction: ${error.message}`)
+    console.error('Error in getRedeemInterestsAndRewardsTransactionFromPendle:', error.message)
+    throw error
   }
 }
 
@@ -573,56 +588,87 @@ export async function executeRedeemTransaction(
   isDemo: boolean = false
 ): Promise<{ status: string; hash?: string; message?: string; amountOut?: string }> {
   try {
+    console.log('====== EXECUTE PENDLE REDEEM TRANSACTION ======')
+    console.log(`YT Address: ${ytAddress}`)
+    console.log(`Amount: ${amountIn}`)
+    console.log(`Slippage: ${slippage}`)
+    console.log(`Chain ID: ${chainId}`)
+    console.log(`Enable Aggregator: ${enableAggregator}`)
+    console.log(`Is Demo: ${isDemo}`)
+
     const evmWalletAddress = await getUserEvmWalletAddress()
     if (!evmWalletAddress) {
+      console.error('Error: EVM wallet address not found')
       throw new Error('EVM wallet not found')
     }
 
+    console.log('Getting transaction data from Pendle API...')
     // Get transaction data
-    const txData = await getRedeemTransactionFromPendle(
-      ytAddress,
-      amountIn,
-      slippage,
-      chainId,
-      enableAggregator
-    )
+    try {
+      const txData = await getRedeemTransactionFromPendle(
+        ytAddress,
+        amountIn,
+        slippage,
+        chainId,
+        enableAggregator
+      )
 
-    if (!txData) {
-      throw new Error('Failed to prepare redeem transaction data')
-    }
-
-    // Handle token approvals if needed
-    if (txData.tokenApprovals && txData.tokenApprovals.length > 0) {
-      for (const approval of txData.tokenApprovals) {
-        const approvalResult = await erc20Approval(
-          approval.token,
-          txData.to,
-          approval.amount,
-          evmWalletAddress,
-          chainId,
-          isDemo
-        )
-        
-        if (approvalResult.status === 'fail') {
-          throw new Error(
-            `ERC20 approval failed for token ${approval.token}: ${approvalResult.message}`
-          )
-        }
+      if (!txData) {
+        console.error('Error: No transaction data returned')
+        throw new Error('Failed to prepare redeem transaction data')
       }
-    }
 
-    // Execute the transaction
-    const result = await executeSwapTransaction(
-      txData,
-      chainId,
-      { estimateGas: true },
-      isDemo
-    )
+      console.log('Transaction data received:', JSON.stringify(txData, null, 2))
 
-    return {
-      status: 'success',
-      hash: result.hash,
-      amountOut: txData.data?.amountOut
+      // Handle token approvals if needed
+      if (txData.tokenApprovals && txData.tokenApprovals.length > 0) {
+        console.log(`Processing ${txData.tokenApprovals.length} token approvals...`)
+        
+        for (const approval of txData.tokenApprovals) {
+          console.log(`Approving ${approval.token} for amount ${approval.amount}...`)
+          
+          const approvalResult = await erc20Approval(
+            approval.token,
+            txData.to,
+            approval.amount,
+            evmWalletAddress,
+            chainId,
+            isDemo
+          )
+          
+          if (approvalResult.status === 'fail') {
+            console.error(`Approval failed: ${approvalResult.message}`)
+            throw new Error(
+              `ERC20 approval failed for token ${approval.token}: ${approvalResult.message}`
+            )
+          }
+          
+          console.log('Approval successful')
+        }
+      } else {
+        console.log('No token approvals needed')
+      }
+
+      console.log('Executing transaction...')
+      // Execute the transaction
+      const result = await executeSwapTransaction(
+        txData,
+        chainId,
+        { estimateGas: true },
+        isDemo
+      )
+
+      console.log('Transaction executed successfully, hash:', result.hash)
+      console.log('Amount out:', txData.data?.amountOut)
+
+      return {
+        status: 'success',
+        hash: result.hash,
+        amountOut: txData.data?.amountOut
+      }
+    } catch (error: any) {
+      console.error('Error during transaction preparation or execution:', error.message)
+      throw error
     }
   } catch (error: any) {
     console.error('Error executing redeem transaction:', error.message)
@@ -659,54 +705,83 @@ export async function executeRedeemInterestsAndRewardsTransaction(
   isDemo: boolean = false
 ): Promise<{ status: string; hash?: string; message?: string }> {
   try {
+    console.log('====== EXECUTE PENDLE REDEEM REWARDS TRANSACTION ======')
+    console.log('SY Addresses:', sysAddresses)
+    console.log('YT Addresses:', ytsAddresses)
+    console.log('Market Addresses:', marketsAddresses)
+    console.log(`Chain ID: ${chainId}`)
+    console.log(`Is Demo: ${isDemo}`)
+
     const evmWalletAddress = await getUserEvmWalletAddress()
     if (!evmWalletAddress) {
+      console.error('Error: EVM wallet address not found')
       throw new Error('EVM wallet not found')
     }
 
+    console.log('Getting transaction data from Pendle API...')
     // Get transaction data
-    const txData = await getRedeemInterestsAndRewardsTransactionFromPendle(
-      sysAddresses,
-      ytsAddresses,
-      marketsAddresses,
-      chainId
-    )
+    try {
+      const txData = await getRedeemInterestsAndRewardsTransactionFromPendle(
+        sysAddresses,
+        ytsAddresses,
+        marketsAddresses,
+        chainId
+      )
 
-    if (!txData) {
-      throw new Error('Failed to prepare redeem interests and rewards transaction data')
-    }
-
-    // Handle token approvals if needed
-    if (txData.tokenApprovals && txData.tokenApprovals.length > 0) {
-      for (const approval of txData.tokenApprovals) {
-        const approvalResult = await erc20Approval(
-          approval.token,
-          txData.to,
-          approval.amount,
-          evmWalletAddress,
-          chainId,
-          isDemo
-        )
-        
-        if (approvalResult.status === 'fail') {
-          throw new Error(
-            `ERC20 approval failed for token ${approval.token}: ${approvalResult.message}`
-          )
-        }
+      if (!txData) {
+        console.error('Error: No transaction data returned')
+        throw new Error('Failed to prepare redeem interests and rewards transaction data')
       }
-    }
 
-    // Execute the transaction
-    const result = await executeSwapTransaction(
-      txData,
-      chainId,
-      { estimateGas: true },
-      isDemo
-    )
+      console.log('Transaction data received:', JSON.stringify(txData, null, 2))
 
-    return {
-      status: 'success',
-      hash: result.hash
+      // Handle token approvals if needed
+      if (txData.tokenApprovals && txData.tokenApprovals.length > 0) {
+        console.log(`Processing ${txData.tokenApprovals.length} token approvals...`)
+        
+        for (const approval of txData.tokenApprovals) {
+          console.log(`Approving ${approval.token} for amount ${approval.amount}...`)
+          
+          const approvalResult = await erc20Approval(
+            approval.token,
+            txData.to,
+            approval.amount,
+            evmWalletAddress,
+            chainId,
+            isDemo
+          )
+          
+          if (approvalResult.status === 'fail') {
+            console.error(`Approval failed: ${approvalResult.message}`)
+            throw new Error(
+              `ERC20 approval failed for token ${approval.token}: ${approvalResult.message}`
+            )
+          }
+          
+          console.log('Approval successful')
+        }
+      } else {
+        console.log('No token approvals needed')
+      }
+
+      console.log('Executing transaction...')
+      // Execute the transaction
+      const result = await executeSwapTransaction(
+        txData,
+        chainId,
+        { estimateGas: true },
+        isDemo
+      )
+
+      console.log('Transaction executed successfully, hash:', result.hash)
+
+      return {
+        status: 'success',
+        hash: result.hash
+      }
+    } catch (error: any) {
+      console.error('Error during transaction preparation or execution:', error.message)
+      throw error
     }
   } catch (error: any) {
     console.error('Error executing redeem interests and rewards transaction:', error.message)
