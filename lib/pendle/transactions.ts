@@ -7,7 +7,6 @@ import {
 import axios from 'axios'
 import { ethers, TransactionRequest } from 'ethers'
 import { v4 as uuidv4 } from 'uuid'
-import { getGasPriceByChainId } from '../alchemy/get-gas-price'
 
 // Custom error for transaction failures
 export class TransactionError extends Error {
@@ -421,32 +420,311 @@ export async function executeSwapTransaction(
   }
 }
 
-// /**
-//  * Get transaction data for swapping ETH to a specific token
-//  * @param marketAddress The market address
-//  * @param tokenOutAddress Address of the output token
-//  * @param amountIn Amount of ETH in wei
-//  * @param slippage Slippage tolerance (e.g., 0.01 for 1%)
-//  * @returns Promise with transaction result
-//  */
-// export async function getSwapEthToTokenTransaction(
-//   marketAddress: string,
-//   tokenOutAddress: string,
-//   amountIn: string,
-//   slippage: number = 0.01
-// ): Promise<any> {
-//   try {
-//     // Get the transaction data - ETH is hardcoded as input token in getSwapTransaction
-//     const txData = await getSwapTransaction(
-//       marketAddress,
-//       tokenOutAddress,
-//       amountIn,
-//       slippage
-//     )
+/**
+ * Get transaction data for redeeming PT & YT to tokens with Pendle
+ * @param ytAddress The YT token address
+ * @param amountIn Amount to redeem in wei
+ * @param slippage Slippage tolerance (e.g., 0.01 for 1%)
+ * @param chainId Chain ID (defaults to 1 for Ethereum mainnet)
+ * @param enableAggregator Whether to enable swap aggregator
+ * @returns Promise with transaction data
+ */
+export async function getRedeemTransactionFromPendle(
+  ytAddress: string,
+  amountIn: string,
+  slippage: number = 0.01,
+  chainId: number = 1,
+  enableAggregator: boolean = false
+): Promise<any> {
+  try {
+    console.log(`Redeeming with YT: ${ytAddress}`)
+    console.log(`Redeeming amount: ${amountIn}`)
+    console.log(`Token out: ETH (${ETH_ADDRESS})`)
 
-//     return txData
-//   } catch (error: any) {
-//     console.error('Error getting swap transaction data:', error.message)
-//     throw new Error(`Failed to get swap transaction data: ${error.message}`)
-//   }
-// }
+    const evmWalletAddress = await getUserEvmWalletAddress()
+    if (!evmWalletAddress) {
+      throw new Error('EVM wallet not found')
+    }
+
+    const RECEIVER = evmWalletAddress
+
+    console.log(`Wallet address: ${RECEIVER}`)
+    console.log(`Slippage: ${slippage}`)
+
+    // Use redeem API endpoint
+    const url = `${BASE_URL}/sdk/${chainId}/redeem`
+
+    console.log('API URL:', url)
+    console.log('Payload:', {
+      yt: ytAddress,
+      amountIn,
+      tokenOut: ETH_ADDRESS,
+      slippage,
+      receiver: RECEIVER,
+      enableAggregator
+    })
+
+    const response = await axios.get(url, {
+      params: {
+        yt: ytAddress,
+        amountIn,
+        tokenOut: ETH_ADDRESS,
+        slippage,
+        receiver: RECEIVER,
+        enableAggregator
+      }
+    })
+
+    if (!response.data || !response.data.tx) {
+      throw new Error('No transaction data returned from API')
+    }
+
+    console.log('Redeem transaction data fetched successfully')
+    console.log('Response data:', response.data)
+    return response.data.tx
+  } catch (error: any) {
+    console.error('Error fetching redeem transaction:', error.message)
+
+    if (error.response) {
+      console.error('Response status:', error.response.status)
+      console.error('Response data:', error.response.data)
+    }
+
+    throw new Error(`Failed to get redeem transaction: ${error.message}`)
+  }
+}
+
+/**
+ * Get transaction data for redeeming rewards and interests from positions
+ * @param sysAddresses Array of SY addresses (optional)
+ * @param ytsAddresses Array of YT addresses (optional)
+ * @param marketsAddresses Array of market addresses (optional)
+ * @param chainId Chain ID (defaults to 1 for Ethereum mainnet)
+ * @returns Promise with transaction data
+ */
+export async function getRedeemInterestsAndRewardsTransactionFromPendle(
+  sysAddresses?: string[],
+  ytsAddresses?: string[],
+  marketsAddresses?: string[],
+  chainId: number = 1
+): Promise<any> {
+  try {
+    const evmWalletAddress = await getUserEvmWalletAddress()
+    if (!evmWalletAddress) {
+      throw new Error('EVM wallet not found')
+    }
+
+    const RECEIVER = evmWalletAddress
+    console.log(`Wallet address: ${RECEIVER}`)
+
+    // Convert arrays to comma-separated strings if provided
+    const sys = sysAddresses?.join(',')
+    const yts = ytsAddresses?.join(',')
+    const markets = marketsAddresses?.join(',')
+
+    // Use redeem-interests-and-rewards API endpoint
+    const url = `${BASE_URL}/sdk/${chainId}/redeem-interests-and-rewards`
+
+    const params: any = { receiver: RECEIVER }
+    if (sys) params.sys = sys
+    if (yts) params.yts = yts
+    if (markets) params.markets = markets
+
+    console.log('API URL:', url)
+    console.log('Payload:', params)
+
+    const response = await axios.get(url, { params })
+
+    if (!response.data || !response.data.tx) {
+      throw new Error('No transaction data returned from API')
+    }
+
+    console.log('Redeem interests and rewards transaction data fetched successfully')
+    console.log('Response data:', response.data)
+    return response.data.tx
+  } catch (error: any) {
+    console.error('Error fetching redeem interests and rewards transaction:', error.message)
+
+    if (error.response) {
+      console.error('Response status:', error.response.status)
+      console.error('Response data:', error.response.data)
+    }
+
+    throw new Error(`Failed to get redeem interests and rewards transaction: ${error.message}`)
+  }
+}
+
+/**
+ * Execute a redeem transaction to redeem PT & YT to tokens
+ * @param ytAddress The YT token address
+ * @param amountIn Amount to redeem in wei
+ * @param slippage Slippage tolerance (e.g., 0.01 for 1%)
+ * @param chainId Chain ID (defaults to 1 for Ethereum mainnet)
+ * @param enableAggregator Whether to enable swap aggregator
+ * @param isDemo Whether this is a demo transaction
+ * @returns Promise with transaction status and hash
+ */
+export async function executeRedeemTransaction(
+  ytAddress: string,
+  amountIn: string,
+  slippage: number = 0.01,
+  chainId: number = 1,
+  enableAggregator: boolean = false,
+  isDemo: boolean = false
+): Promise<{ status: string; hash?: string; message?: string; amountOut?: string }> {
+  try {
+    const evmWalletAddress = await getUserEvmWalletAddress()
+    if (!evmWalletAddress) {
+      throw new Error('EVM wallet not found')
+    }
+
+    // Get transaction data
+    const txData = await getRedeemTransactionFromPendle(
+      ytAddress,
+      amountIn,
+      slippage,
+      chainId,
+      enableAggregator
+    )
+
+    if (!txData) {
+      throw new Error('Failed to prepare redeem transaction data')
+    }
+
+    // Handle token approvals if needed
+    if (txData.tokenApprovals && txData.tokenApprovals.length > 0) {
+      for (const approval of txData.tokenApprovals) {
+        const approvalResult = await erc20Approval(
+          approval.token,
+          txData.to,
+          approval.amount,
+          evmWalletAddress,
+          chainId,
+          isDemo
+        )
+        
+        if (approvalResult.status === 'fail') {
+          throw new Error(
+            `ERC20 approval failed for token ${approval.token}: ${approvalResult.message}`
+          )
+        }
+      }
+    }
+
+    // Execute the transaction
+    const result = await executeSwapTransaction(
+      txData,
+      chainId,
+      { estimateGas: true },
+      isDemo
+    )
+
+    return {
+      status: 'success',
+      hash: result.hash,
+      amountOut: txData.data?.amountOut
+    }
+  } catch (error: any) {
+    console.error('Error executing redeem transaction:', error.message)
+    
+    if (error instanceof TransactionError) {
+      return {
+        status: 'fail',
+        message: error.message,
+        hash: error.hash
+      }
+    }
+    
+    return {
+      status: 'fail',
+      message: error.message
+    }
+  }
+}
+
+/**
+ * Execute a transaction to redeem interests and rewards
+ * @param sysAddresses Array of SY addresses (optional)
+ * @param ytsAddresses Array of YT addresses (optional)
+ * @param marketsAddresses Array of market addresses (optional)
+ * @param chainId Chain ID (defaults to 1 for Ethereum mainnet)
+ * @param isDemo Whether this is a demo transaction
+ * @returns Promise with transaction status and hash
+ */
+export async function executeRedeemInterestsAndRewardsTransaction(
+  sysAddresses?: string[],
+  ytsAddresses?: string[],
+  marketsAddresses?: string[],
+  chainId: number = 1,
+  isDemo: boolean = false
+): Promise<{ status: string; hash?: string; message?: string }> {
+  try {
+    const evmWalletAddress = await getUserEvmWalletAddress()
+    if (!evmWalletAddress) {
+      throw new Error('EVM wallet not found')
+    }
+
+    // Get transaction data
+    const txData = await getRedeemInterestsAndRewardsTransactionFromPendle(
+      sysAddresses,
+      ytsAddresses,
+      marketsAddresses,
+      chainId
+    )
+
+    if (!txData) {
+      throw new Error('Failed to prepare redeem interests and rewards transaction data')
+    }
+
+    // Handle token approvals if needed
+    if (txData.tokenApprovals && txData.tokenApprovals.length > 0) {
+      for (const approval of txData.tokenApprovals) {
+        const approvalResult = await erc20Approval(
+          approval.token,
+          txData.to,
+          approval.amount,
+          evmWalletAddress,
+          chainId,
+          isDemo
+        )
+        
+        if (approvalResult.status === 'fail') {
+          throw new Error(
+            `ERC20 approval failed for token ${approval.token}: ${approvalResult.message}`
+          )
+        }
+      }
+    }
+
+    // Execute the transaction
+    const result = await executeSwapTransaction(
+      txData,
+      chainId,
+      { estimateGas: true },
+      isDemo
+    )
+
+    return {
+      status: 'success',
+      hash: result.hash
+    }
+  } catch (error: any) {
+    console.error('Error executing redeem interests and rewards transaction:', error.message)
+    
+    if (error instanceof TransactionError) {
+      return {
+        status: 'fail',
+        message: error.message,
+        hash: error.hash
+      }
+    }
+    
+    return {
+      status: 'fail',
+      message: error.message
+    }
+  }
+}
+
+
+
