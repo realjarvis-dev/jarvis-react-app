@@ -274,11 +274,13 @@ export function UnifiedSwapExecutionCard({
   // Success UI
   if (normalizedInfo.status === 'confirmed') {
     return (
-      <Card className="overflow-hidden bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/50 dark:to-emerald-950/50 border border-green-100 dark:border-green-900">
-        <CardContent className="p-6">
+      <Card className="overflow-hidden rounded-xl border border-green-600/20 bg-green-500/10 backdrop-blur-sm dark:bg-sky-950/20 dark:border-sky-400/50">
+        <CardContent className="p-4">
           <div className="flex flex-col gap-4">
-            <div className="flex justify-between items-center pb-3 border-b border-green-100 dark:border-green-900">
-              <h3 className="text-base font-medium">{normalizedInfo.title}</h3>
+            <div className="flex justify-between items-center pb-3 border-b border-green-600/10 dark:border-sky-400/20">
+              <h3 className="text-base font-medium text-gray-800 dark:text-gray-300">
+                {normalizedInfo.title}
+              </h3>
               <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
                 <CheckCircle className="h-3 w-3 mr-1" />
                 Confirmed
@@ -286,7 +288,7 @@ export function UnifiedSwapExecutionCard({
             </div>
 
             {/* Add status component at the top */}
-            <div className="bg-white dark:bg-gray-900 rounded-lg p-3">
+            <div className="bg-black/5 rounded-lg p-3">
               <SwapTransactionStatus
                 status={simulationStatus}
                 txHash={normalizedInfo.txHash}
@@ -296,7 +298,7 @@ export function UnifiedSwapExecutionCard({
             </div>
 
             {/* Transaction Details */}
-            <div className="bg-white dark:bg-gray-900 rounded-lg p-4 shadow-sm">
+            <div className="bg-black/5 rounded-lg p-4 shadow-sm">
               <div className="flex flex-col space-y-3">
                 {/* From/To */}
                 <div className="flex justify-between items-center">
@@ -318,7 +320,7 @@ export function UnifiedSwapExecutionCard({
 
                 {/* Transaction Hash */}
                 {normalizedInfo.explorerLink && (
-                  <div className="pt-2 mt-2 border-t border-gray-100 dark:border-gray-800">
+                  <div className="pt-2 mt-2 border-t border-green-600/10 dark:border-sky-400/20">
                     <div className="flex justify-between items-center">
                       <div className="text-xs text-gray-500 dark:text-gray-400">
                         Transaction:
