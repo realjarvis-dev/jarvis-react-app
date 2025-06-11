@@ -197,7 +197,9 @@ export const pendleQuoteTool = tool({
         rate: quote.rate,
         inverse: quote.inverse,
         outputAmount: quote.outputAmount,
-        complete_time: new Date().toISOString()
+        complete_time: new Date().toISOString(),
+        foundMarketAddress: finalMarketAddress,
+        foundTokenAddress: finalTokenAddress
       }
       
       return {
@@ -265,7 +267,7 @@ export const pendleSwapTool = tool({
       )
   }),
   execute: async (params, context: ToolContext) => {
-    const {
+    let {
       market_address,
       input_token_address,
       output_token_address,
@@ -276,6 +278,10 @@ export const pendleSwapTool = tool({
     } = params;
     const networkContext = context?.networkContext;
     const isDemo = networkContext?.isDemo
+    if (isDemo) {
+      slippage = 0.01
+    }
+
     
     try {
       const evmWalletAddress = await getUserEvmWalletAddress()
@@ -363,7 +369,7 @@ export const pendleSwapTool = tool({
       // For ERC20 inputs, handle approval first using the spender from ensoSwap's initial call
       if (!isInputProcessedETH) {
         const spenderAddress = txData.to
-
+        console.log("ERC20 approval for token", actualTokenInAddress, "to spender", spenderAddress, "with amount", amountInBaseUnits)
         const approvalResult = await erc20Approval(
           actualTokenInAddress,
           spenderAddress,
