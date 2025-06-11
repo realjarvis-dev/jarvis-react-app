@@ -475,7 +475,7 @@ export const pendleRedeemPTTool = tool({
       
       // Find the market using the PT token address to get the corresponding YT token
       console.log('Finding market from PT token address:', pt_address)
-      const markets = await getPendleMarkets();
+      const markets = await getPendleMarkets('all');
       console.log('Available markets count:', markets.length)
       
       // Find market that contains the PT token
