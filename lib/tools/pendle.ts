@@ -417,15 +417,15 @@ export const pendleSwapTool = tool({
   }
 })
 
-export const pendleRedeemTool = tool({
+export const pendleRedeemPTTool = tool({
   description:
     `Redeem Pendle PT & YT tokens to ETH. If called before YT's expiry, both PT & YT of equal amounts 
     are needed and will be burned. After expiry, only PT is needed and will be burned.
     This tool automatically renders UI.`,
   parameters: z.object({
-    yt_address: z
+    pt_address: z
       .string()
-      .describe('The address of the YT token to redeem'),
+      .describe('The address of the PT (Principal Token) to redeem'),
     amount_in_human: z
       .string()
       .describe(
@@ -435,7 +435,7 @@ export const pendleRedeemTool = tool({
       .string()
       .optional()
       .describe(
-        'Display name for the token (e.g., "YT rswETH"). If not provided, a generic name or address will be used.'
+        'Display name for the token (e.g., "PT rswETH"). If not provided, a generic name or address will be used.'
       ),
     slippage: z
       .number()
@@ -446,7 +446,7 @@ export const pendleRedeemTool = tool({
   }),
   execute: async (params, context: ToolContext) => {
     const {
-      yt_address,
+      pt_address,
       amount_in_human,
       token_name_display,
       slippage = 0.01
@@ -455,7 +455,7 @@ export const pendleRedeemTool = tool({
     const isDemo = networkContext?.isDemo
     
     try {
-      console.log('====== PENDLE REDEEM TOOL ======')
+      console.log('====== PENDLE REDEEM PT TOOL ======')
       console.log('Input parameters:', JSON.stringify(params, null, 2))
       console.log('Network context:', JSON.stringify({
         selectedChainId: networkContext?.selectedChainId,
@@ -472,14 +472,45 @@ export const pendleRedeemTool = tool({
       console.log('Wallet address:', evmWalletAddress)
 
       const chainId = networkContext?.selectedChainId || 1 // Default to Ethereum mainnet
-      const displayTokenName = token_name_display || `${yt_address.slice(0, 6)}...`
+      
+      // Find the market using the PT token address to get the corresponding YT token
+      console.log('Finding market from PT token address:', pt_address)
+      const markets = await getPendleMarkets();
+      console.log('Available markets count:', markets.length)
+      
+      // Find market that contains the PT token
+      const foundMarket = markets.find(market => {
+        const matches = market.pt.toLowerCase() === pt_address.toLowerCase();
+        if (matches) {
+          console.log('Found matching market:', {
+            name: market.name,
+            address: market.address,
+            pt: market.pt,
+            yt: market.yt
+          });
+        }
+        return matches;
+      });
+      
+      if (!foundMarket) {
+        console.error('No matching market found for PT address:', pt_address)
+        throw new Error(`Could not find a Pendle market with PT token address ${pt_address}`);
+      }
+      
+      // Get the YT token address from the found market
+      const ytAddress = foundMarket.yt;
+      console.log('Found corresponding YT address:', ytAddress)
+      
+      // Use the market name for display if no name provided
+      const displayTokenName = token_name_display || `PT ${foundMarket.name}`
+      console.log('Using display name:', displayTokenName)
 
-      console.log('Getting token details for YT token...')
+      console.log('Getting token details for PT token...')
       // Get token details to convert human amount to base units
       let amountInBaseUnits: string
       try {
-        const tokenAddress = ethers.getAddress(yt_address.trim())
-        console.log('Normalized token address:', tokenAddress)
+        const tokenAddress = ethers.getAddress(pt_address.trim())
+        console.log('Normalized PT token address:', tokenAddress)
         
         const tokenDetails = await getERC20Details(tokenAddress, chainId)
         console.log('Token details:', JSON.stringify(tokenDetails, null, 2))
@@ -491,14 +522,14 @@ export const pendleRedeemTool = tool({
       } catch (error: any) {
         console.error('Error getting token details:', error.message)
         throw new Error(
-          `Failed to get details or parse amount for YT token ${yt_address}: ${error.message}`
+          `Failed to get details or parse amount for PT token ${pt_address}: ${error.message}`
         )
       }
 
-      console.log('Executing redemption transaction...')
-      // Execute the redeem transaction
+      console.log('Executing redemption transaction using YT address:', ytAddress)
+      // Execute the redeem transaction using the YT address
       const result = await executeRedeemTransaction(
-        yt_address.trim(),
+        ytAddress.trim(),
         amountInBaseUnits,
         slippage,
         chainId,
@@ -533,14 +564,14 @@ export const pendleRedeemTool = tool({
         data: redeemData
       }
     } catch (error: any) {
-      console.error('Error in pendleRedeemTool:', error.message)
+      console.error('Error in pendleRedeemPTTool:', error.message)
       console.error('Error stack:', error.stack)
       
       const errorData = {
         success: false,
         error: error.message || 'Failed to execute Pendle redemption.',
         redeem_parameters: {
-          yt_address,
+          pt_address,
           amount_in_human,
           slippage
         }
@@ -555,13 +586,14 @@ export const pendleRedeemTool = tool({
   }
 })
 
-export const pendleRedeemRewardsTool = tool({
+export const pendleRedeemYTTool = tool({
   description:
-    `Redeem accrued rewards and interests from Pendle positions without affecting your principal. In this case, this tool is used to redeem the YT tokens after expiry of the position. Before expiry, YT cannot be redeemed through this tool. This tool automatically renders UI.`,
+    `Redeem accrued rewards and interests from Pendle YT positions after expiry.
+    Before expiry, YT cannot be redeemed through this tool. This tool automatically renders UI.`,
   parameters: z.object({
     yt_addresses: z
       .array(z.string())
-      .describe('Array of YT token addresses to redeem rewards from.')
+      .describe('Array of YT (Yield Token) addresses to redeem rewards from.')
   }),
   execute: async (params, context: ToolContext) => {
     const {
@@ -571,7 +603,7 @@ export const pendleRedeemRewardsTool = tool({
     const isDemo = networkContext?.isDemo
     
     try {
-      console.log('====== PENDLE REDEEM REWARDS TOOL ======')
+      console.log('====== PENDLE REDEEM YT TOOL ======')
       console.log('Input parameters:', JSON.stringify(params, null, 2))
       console.log('Network context:', JSON.stringify({
         selectedChainId: networkContext?.selectedChainId,
@@ -607,7 +639,7 @@ export const pendleRedeemRewardsTool = tool({
       const processedMarketAddresses: string[] = []
       const processedSyAddresses: string[] = []
 
-      console.log('Executing redemption transaction for rewards...')
+      console.log('Executing redemption transaction for YT rewards...')
       // Execute the redemption transaction
       const result = await executeRedeemInterestsAndRewardsTransaction(
         processedSyAddresses.length > 0 ? processedSyAddresses : undefined,
@@ -642,12 +674,12 @@ export const pendleRedeemRewardsTool = tool({
         data: redeemData
       }
     } catch (error: any) {
-      console.error('Error in pendleRedeemRewardsTool:', error.message)
+      console.error('Error in pendleRedeemYTTool:', error.message)
       console.error('Error stack:', error.stack)
       
       const errorData = {
         success: false,
-        error: error.message || 'Failed to redeem Pendle rewards.',
+        error: error.message || 'Failed to redeem Pendle YT rewards.',
         redeem_parameters: {
           yt_addresses
         }
@@ -655,7 +687,7 @@ export const pendleRedeemRewardsTool = tool({
       
       return {
         _uiDisplayTool: true,
-        summary: `YT rewards redemption failed: ${error.message || 'Failed to redeem Pendle rewards'}`,
+        summary: `YT rewards redemption failed: ${error.message || 'Failed to redeem Pendle YT rewards'}`,
         data: errorData
       }
     }

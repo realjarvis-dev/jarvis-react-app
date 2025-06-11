@@ -5,7 +5,7 @@ import { getGasPriceTool } from '../tools/gas-price'
 import { kodiakBaultProfitabilityTool, kodiakCompoundBaultTool, kodiakDepositTool, kodiakOpportunitiesTool } from '../tools/kodiak'
 import { bridgeExecuteTool, bridgeQuoteTool } from '../tools/lifi-bridge'
 import { marketChartTool } from '../tools/market-chart'
-import { pendleOpportunitiesTool, pendleQuoteTool, pendleRedeemRewardsTool, pendleRedeemTool, pendleSwapTool } from '../tools/pendle'
+import { pendleOpportunitiesTool, pendleQuoteTool, pendleRedeemPTTool, pendleRedeemYTTool, pendleSwapTool } from '../tools/pendle'
 import { privyTransferTool } from '../tools/privy-transfer'
 import { createQuestionTool } from '../tools/question'
 import { retrieveTool } from '../tools/retrieve'
@@ -276,10 +276,10 @@ export function createToolRegistry(model: string): ToolRegistry {
   })
   
   registry.registerTool({
-    name: 'pendle_redeem',
-    description: pendleRedeemTool.description || '',
-    schema: pendleRedeemTool.parameters,
-    execute: async (params, context) => pendleRedeemTool.execute(params, {
+    name: 'pendle_redeem_pt',
+    description: pendleRedeemPTTool.description || '',
+    schema: pendleRedeemPTTool.parameters,
+    execute: async (params, context) => pendleRedeemPTTool.execute(params, {
       toolCallId: context?.toolCallId || 'unknown',
       messages: context?.messages || [],
       networkContext: context?.networkContext!
@@ -289,10 +289,10 @@ export function createToolRegistry(model: string): ToolRegistry {
   })
   
   registry.registerTool({
-    name: 'pendle_redeem_rewards',
-    description: pendleRedeemRewardsTool.description || '',
-    schema: pendleRedeemRewardsTool.parameters,
-    execute: async (params, context) => pendleRedeemRewardsTool.execute(params, {
+    name: 'pendle_redeem_yt',
+    description: pendleRedeemYTTool.description || '',
+    schema: pendleRedeemYTTool.parameters,
+    execute: async (params, context) => pendleRedeemYTTool.execute(params, {
       toolCallId: context?.toolCallId || 'unknown',
       messages: context?.messages || [],
       networkContext: context?.networkContext!
