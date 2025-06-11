@@ -102,10 +102,6 @@ export function WalletMenuItems() {
 
   return (
     <>
-      <DropdownMenuItem onClick={handleWalletDetails}>
-        <Wallet className="mr-2 h-4 w-4" />
-        <span>Wallet details</span>
-      </DropdownMenuItem>
       <DropdownMenuItem onClick={handleDelegateEVMWallet} disabled={evmWalletAlreadyDelegated || !evmReady || !userReady}>
         <ArrowRightCircle className="mr-2 h-4 w-4" />
         <span>{(isMobile ? (evmWalletAlreadyDelegated ? mobileEvmAlreadyDelegatedText : mobileEvmText) : (evmWalletAlreadyDelegated ? desktopEvmAlreadyDelegatedText : desktopEvmText))}</span>
