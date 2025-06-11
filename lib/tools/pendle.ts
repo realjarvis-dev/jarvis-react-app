@@ -276,7 +276,7 @@ export const pendleSwapTool = tool({
     const networkContext = context?.networkContext;
     const isDemo = networkContext?.isDemo
     if (isDemo) {
-      slippage = 0.01
+      slippage = 0.1
     }
 
     let input_token_address, output_token_address;
