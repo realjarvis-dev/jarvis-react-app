@@ -455,104 +455,59 @@ export const pendleRedeemPTTool = tool({
     const isDemo = networkContext?.isDemo
     
     try {
-      console.log('====== PENDLE REDEEM PT TOOL ======')
-      console.log('Input parameters:', JSON.stringify(params, null, 2))
-      console.log('Network context:', JSON.stringify({
-        selectedChainId: networkContext?.selectedChainId,
-        isDemo: isDemo
-      }, null, 2))
-      
       const evmWalletAddress = await getUserEvmWalletAddress()
       if (!evmWalletAddress) {
-        console.error('Error: EVM wallet address not found')
         throw new Error(
           'EVM wallet address not found. Please connect your wallet.'
         )
       }
-      console.log('Wallet address:', evmWalletAddress)
 
       const chainId = networkContext?.selectedChainId || 1 // Default to Ethereum mainnet
       
       // Find the market using the PT token address to get the corresponding YT token
-      console.log('Finding market from PT token address:', pt_address)
       const markets = await getPendleMarkets('all');
-      console.log('Available markets count:', markets.length)
       
       // Find market that contains the PT token
       const foundMarket = markets.find(market => {
-        const matches = market.pt.toLowerCase() === pt_address.toLowerCase();
-        if (matches) {
-          console.log('Found matching market:', {
-            name: market.name,
-            address: market.address,
-            pt: market.pt,
-            yt: market.yt
-          });
-        }
-        return matches;
+        return market.pt.toLowerCase() === pt_address.toLowerCase();
       });
       
       if (!foundMarket) {
-        console.error('No matching market found for PT address:', pt_address)
         throw new Error(`Could not find a Pendle market with PT token address ${pt_address}`);
       }
       
       // Get the YT token address from the found market
       const ytAddress = foundMarket.yt;
-      console.log('Found corresponding YT address:', ytAddress)
       
       // Use the market name for display if no name provided
       const displayTokenName = token_name_display || `PT ${foundMarket.name}`
-      console.log('Using display name:', displayTokenName)
 
-      console.log('Getting token details for PT token...')
       // Get token details to convert human amount to base units
       let amountInBaseUnits: string
       try {
         const tokenAddress = ethers.getAddress(pt_address.trim())
-        console.log('Normalized PT token address:', tokenAddress)
-        
         const tokenDetails = await getERC20Details(tokenAddress, chainId)
-        console.log('Token details:', JSON.stringify(tokenDetails, null, 2))
-        
-        amountInBaseUnits = ethers
-          .parseUnits(amount_in_human, tokenDetails.decimals)
-          .toString()
-        console.log('Amount in base units:', amountInBaseUnits)
+        amountInBaseUnits = ethers.parseUnits(amount_in_human, tokenDetails.decimals).toString()
       } catch (error: any) {
-        console.error('Error getting token details:', error.message)
         throw new Error(
           `Failed to get details or parse amount for PT token ${pt_address}: ${error.message}`
         )
       }
 
-      console.log('Executing redemption transaction using YT address:', ytAddress)
-      
-      // Simplify parameter formatting to match API requirements exactly
+      // Normalize the YT address
       const normalizedYtAddress = ytAddress.trim().toLowerCase()
       
-      console.log('About to execute redemption with parameters:')
-      console.log('- YT Address:', normalizedYtAddress)
-      console.log('- Amount:', amountInBaseUnits.toString())
-      console.log('- Slippage:', slippage)
-      console.log('- Chain ID:', chainId)
-      console.log('- Enable Aggregator:', false)
-      console.log('- Is Demo:', isDemo)
-      
-      // Execute the redeem transaction using the YT address - keep it simple
+      // Execute the redeem transaction using the YT address
       const result = await executeRedeemTransaction(
         normalizedYtAddress,
-        amountInBaseUnits.toString(), // Convert to string to ensure correct format
+        amountInBaseUnits,
         slippage,
         chainId,
         false, // enableAggregator
         isDemo
       )
 
-      console.log('Redemption result:', JSON.stringify(result, null, 2))
-      
       if (result.status !== 'success') {
-        console.error('Redemption failed:', result.message)
         throw new Error(result.message || 'Failed to execute redemption')
       }
 
@@ -567,8 +522,6 @@ export const pendleRedeemPTTool = tool({
           chainId: chainId
         }
       }
-
-      console.log('Redemption successful:', JSON.stringify(redeemData, null, 2))
       
       return {
         _uiDisplayTool: true,
@@ -576,9 +529,6 @@ export const pendleRedeemPTTool = tool({
         data: redeemData
       }
     } catch (error: any) {
-      console.error('Error in pendleRedeemPTTool:', error.message)
-      console.error('Error stack:', error.stack)
-      
       const errorData = {
         success: false,
         error: error.message || 'Failed to execute Pendle redemption.',
@@ -615,43 +565,27 @@ export const pendleRedeemYTTool = tool({
     const isDemo = networkContext?.isDemo
     
     try {
-      console.log('====== PENDLE REDEEM YT TOOL ======')
-      console.log('Input parameters:', JSON.stringify(params, null, 2))
-      console.log('Network context:', JSON.stringify({
-        selectedChainId: networkContext?.selectedChainId,
-        isDemo: isDemo
-      }, null, 2))
-      
       const evmWalletAddress = await getUserEvmWalletAddress()
       if (!evmWalletAddress) {
-        console.error('Error: EVM wallet address not found')
         throw new Error(
           'EVM wallet address not found. Please connect your wallet.'
         )
       }
-      console.log('Wallet address:', evmWalletAddress)
 
       const chainId = networkContext?.selectedChainId || 1 // Default to Ethereum mainnet
 
       // Check if YT addresses array has items
       if (!yt_addresses || yt_addresses.length === 0) {
-        console.error('Error: Empty YT addresses array')
         throw new Error('YT addresses array must contain at least one address')
       }
 
       // Process addresses to ensure they're properly formatted
-      console.log('Processing YT addresses...')
-      const processedYtAddresses = yt_addresses.map(addr => {
-        const trimmed = addr.trim()
-        console.log(`Original: ${addr} -> Processed: ${trimmed}`)
-        return trimmed
-      })
+      const processedYtAddresses = yt_addresses.map(addr => addr.trim());
       
       // Define empty arrays for market_addresses and sy_addresses as placeholders for future
       const processedMarketAddresses: string[] = []
       const processedSyAddresses: string[] = []
 
-      console.log('Executing redemption transaction for YT rewards...')
       // Execute the redemption transaction
       const result = await executeRedeemInterestsAndRewardsTransaction(
         processedSyAddresses.length > 0 ? processedSyAddresses : undefined,
@@ -660,11 +594,8 @@ export const pendleRedeemYTTool = tool({
         chainId,
         isDemo
       )
-
-      console.log('Redemption result:', JSON.stringify(result, null, 2))
       
       if (result.status !== 'success') {
-        console.error('Redemption failed:', result.message)
         throw new Error(result.message || 'Failed to redeem rewards')
       }
 
@@ -677,8 +608,6 @@ export const pendleRedeemYTTool = tool({
           chainId: chainId
         }
       }
-
-      console.log('Redemption successful:', JSON.stringify(redeemData, null, 2))
       
       return {
         _uiDisplayTool: true,
@@ -686,9 +615,6 @@ export const pendleRedeemYTTool = tool({
         data: redeemData
       }
     } catch (error: any) {
-      console.error('Error in pendleRedeemYTTool:', error.message)
-      console.error('Error stack:', error.stack)
-      
       const errorData = {
         success: false,
         error: error.message || 'Failed to redeem Pendle YT rewards.',
