@@ -48,7 +48,7 @@ export function CollapsibleMessage({
       {isCollapsible ? (
         <div
           className={cn(
-            'flex-1 rounded-2xl p-4',
+            'flex-1 rounded-2xl p-4 min-w-0',
             showBorder && 'border border-border/50'
           )}
         >
@@ -76,7 +76,7 @@ export function CollapsibleMessage({
           </Collapsible>
         </div>
       ) : (
-        <div className="flex-1 rounded-2xl px-4">{content}</div>
+        <div className="flex-1 rounded-2xl px-4 min-w-0">{content}</div>
       )}
     </div>
   )

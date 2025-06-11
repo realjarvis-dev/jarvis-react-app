@@ -1,39 +1,42 @@
 'use client'
 
 import { Badge } from '@/components/ui/badge'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { TokenData } from '@/lib/alchemy/types'
 import { allNetworkConfigs } from '@/lib/network/config'
 import { useNetwork } from '@/lib/network/context'
+import { cn } from '@/lib/utils'
+import { CopyableWalletAddress } from './copyable-wallet-address'
 
 const TokenRow = ({ token }: { token: TokenData }) => {
-  // Format balance to a nice readable format (e.g., 9979.99 ETH)
+  // Format balance to a nice readable format (e.g., 9,979.99 ETH)
   const balanceValue = parseFloat(token.balance)
   const formattedBalance =
-    balanceValue >= 0.01 ? balanceValue.toFixed(2) : balanceValue.toPrecision(4)
+    balanceValue >= 0.01
+      ? balanceValue.toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        })
+      : balanceValue.toPrecision(4)
 
   return (
-    <div className="flex items-center justify-between py-3 px-3 rounded-lg border border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-      <div className="flex items-center space-x-3">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
-          {token.symbol.substring(0, 2)}
+    <div className="flex items-center justify-between p-3 rounded-xl transition-colors hover:bg-muted/40">
+      <div className="flex items-center space-x-4">
+        <div className="relative w-10 h-10">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-indigo-600 text-sm font-bold text-white shadow">
+            {token.symbol.substring(0, 2)}
+          </div>
         </div>
         <div>
-          <p className="font-medium">{token.symbol}</p>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            {token.name}
-          </p>
+          <p className="font-semibold text-foreground">{token.symbol}</p>
+          <p className="text-sm text-muted-foreground">{token.name}</p>
         </div>
       </div>
       <div className="text-right">
-        <p className="font-medium text-lg">{formattedBalance}</p>
+        <p className="font-medium text-base tabular-nums tracking-tight">
+          {formattedBalance}
+        </p>
       </div>
     </div>
   )
@@ -48,15 +51,15 @@ const NetworkSection = ({
 }) => {
   return (
     <div className="mb-6 last:mb-0">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100">
+      <div className="flex items-center justify-between mb-3 px-2">
+        <h3 className="text-base font-semibold text-muted-foreground">
           {network}
         </h3>
-        <Badge variant="secondary" className="text-xs">
+        <Badge variant="outline" className="text-xs font-normal">
           {tokens.length} {tokens.length === 1 ? 'token' : 'tokens'}
         </Badge>
       </div>
-      <div className="space-y-2 pl-2 border-l-2 border-gray-200 dark:border-gray-700">
+      <div className="space-y-1">
         {tokens.map(token => (
           <TokenRow key={`${token.address}-${token.network}`} token={token} />
         ))}
@@ -72,6 +75,7 @@ interface WalletBalanceProps {
   isLoading: boolean
   error?: string | null
   className?: string
+  filterOnNetwork?: boolean
 }
 
 export function WalletBalance({
@@ -80,7 +84,8 @@ export function WalletBalance({
   tokens,
   isLoading,
   error,
-  className = ''
+  className = '',
+  filterOnNetwork = true
 }: WalletBalanceProps) {
   const { activeNetwork, selectedChain, isDemoMode } = useNetwork()
 
@@ -105,9 +110,9 @@ export function WalletBalance({
   }
 
   // Filter tokens based on the selected network using our improved matching
-  const filteredTokens = tokensList.filter(token =>
-    matchesSelectedNetwork(token.network)
-  )
+  const filteredTokens = filterOnNetwork
+    ? tokensList.filter(token => matchesSelectedNetwork(token.network))
+    : tokensList
 
   // Group tokens by network (we'll only have one network after filtering)
   const tokensByNetwork = filteredTokens.reduce((acc, token) => {
@@ -120,67 +125,68 @@ export function WalletBalance({
 
   // Sort networks to show mainnet first, then others alphabetically
   const sortedNetworks = Object.keys(tokensByNetwork).sort((a, b) => {
-    if (
-      a.toLowerCase().includes('mainnet') &&
-      !b.toLowerCase().includes('mainnet')
-    )
-      return -1
-    if (
-      !a.toLowerCase().includes('mainnet') &&
-      b.toLowerCase().includes('mainnet')
-    )
-      return 1
+    if (a.toLowerCase().includes('mainnet')) return -1
     return a.localeCompare(b)
   })
 
   const totalTokenCount = filteredTokens.length
   const hasMultipleNetworks = sortedNetworks.length > 1
   return (
-    <Card className={`w-full max-w-2xl mx-auto ${className} shadow-md`}>
-      <CardHeader className="pb-4">
-        <div className="flex justify-between items-center">
-          <CardTitle>{title}</CardTitle>
-          <div className="flex gap-2">
+    <Card
+      className={cn(
+        'w-full  mx-auto flex flex-col max-h-[70vh] rounded-2xl border border-black/5 dark:border-white/10 bg-white/5 dark:bg-black/20 backdrop-blur-xl',
+        className
+      )}
+    >
+      <CardHeader className="border-b pb-4">
+        <div className="flex w-full ">
+          {walletAddress ? (
+            <CopyableWalletAddress
+              walletAddress={walletAddress}
+              walletAddressIntroText=""
+            />
+          ) : (
+            <div />
+          )}
+          <div className="ml-auto flex items-center gap-2">
             {hasMultipleNetworks && (
               <Badge variant="outline" className="text-sm font-normal">
                 {sortedNetworks.length}{' '}
                 {sortedNetworks.length === 1 ? 'Network' : 'Networks'}
               </Badge>
             )}
+            {hasMultipleNetworks && (
             <Badge variant="outline" className="text-sm font-normal">
               {totalTokenCount} {totalTokenCount === 1 ? 'Token' : 'Tokens'}
-            </Badge>
+            </Badge>)}
           </div>
         </div>
-        <CardDescription>
-          {walletAddress
-            ? `Wallet: ${walletAddress}`
-            : 'Your cryptocurrency holdings'}
-        </CardDescription>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="overflow-y-auto pt-6">
         {isLoading && (
           <div className="space-y-6">
             {[1, 2].map(networkIndex => (
-              <div key={networkIndex} className="mb-6">
-                <div className="flex items-center justify-between mb-3">
-                  <Skeleton className="h-6 w-32" />
-                  <Skeleton className="h-5 w-16" />
+              <div key={networkIndex} className="mb-6 last:mb-0">
+                <div className="flex items-center justify-between mb-3 px-2">
+                  <Skeleton className="h-5 w-32" />
+                  <Skeleton className="h-5 w-20" />
                 </div>
-                <div className="space-y-2 pl-2 border-l-2 border-gray-200 dark:border-gray-700">
-                  {[1, 2].map(tokenIndex => (
+                <div className="space-y-1">
+                  {[1, 2, 3].map(tokenIndex => (
                     <div
                       key={tokenIndex}
-                      className="flex items-center space-x-3 py-3 px-3 rounded-lg border border-gray-100 dark:border-gray-800"
+                      className="flex items-center justify-between rounded-xl p-3"
                     >
-                      <Skeleton className="w-8 h-8 rounded-full" />
-                      <div className="space-y-2">
-                        <Skeleton className="h-4 w-[100px]" />
-                        <Skeleton className="h-3 w-[80px]" />
+                      <div className="flex items-center space-x-4">
+                        <Skeleton className="h-10 w-10 rounded-full" />
+                        <div className="space-y-2">
+                          <Skeleton className="h-4 w-20" />
+                          <Skeleton className="h-3 w-24" />
+                        </div>
                       </div>
-                      <div className="ml-auto">
-                        <Skeleton className="h-5 w-[60px]" />
+                      <div className="text-right">
+                        <Skeleton className="h-5 w-16" />
                       </div>
                     </div>
                   ))}
@@ -205,11 +211,11 @@ export function WalletBalance({
         )}
 
         {!isLoading && !error && sortedNetworks.length > 0 && (
-          <div>
+          <div className="pt-2">
             {sortedNetworks.map(networkAlchemyName => (
               <NetworkSection
                 key={networkAlchemyName}
-                network={activeNetwork.displayName}
+                network={networkAlchemyName}
                 tokens={tokensByNetwork[networkAlchemyName]}
               />
             ))}

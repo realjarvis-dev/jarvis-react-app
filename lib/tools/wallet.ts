@@ -1,6 +1,7 @@
 import { tool } from 'ai'
 import { z } from 'zod'
 import { NetworkContext } from '../types/context'
+import { TENDERLY_DEMO_CONFIG } from '../network/config'
 import { getWalletBalances } from '../utils/wallet'
 
 import { addBalanceVnet, ethToWei, REQUESTED_FUNDING_AMOUNT, TenderlyRpcResponse } from '../tenderly/fund'
@@ -182,7 +183,7 @@ export async function fundUserWallet(
     // Convert requested funding amount to wei in hex format
     const fundAmount = ethToWei(REQUESTED_FUNDING_AMOUNT.toString());
     
-    if (process.env.NEXT_PUBLIC_TEST_NET_ENV === "development") {
+    if (process.env.NEXT_PUBLIC_TEST_NET_ENV === "development" && TENDERLY_DEMO_CONFIG.rpcUrl.includes('tenderly')) {
       return await addBalanceVnet([walletAddress], fundAmount);
     } else {
       return await addBalanceAnvilFork(walletAddress, BigInt(fundAmount));

@@ -1,9 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import {
-  usePrivy
-} from '@privy-io/react-auth'
+import { usePrivy } from '@privy-io/react-auth'
 import { Message } from 'ai'
 import { ArrowUp, ChevronDown, MessageCirclePlus, Square } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -15,6 +13,7 @@ import { LazyWallet } from './wallet'
 
 import { MarketPulse } from './market-pulse'
 
+import { TooltipProvider } from '@/components/ui/tooltip'
 import { useNetwork } from '@/lib/network/context'
 import { ChainSelector } from './chain-selector'
 import { DemoToggle } from './demo-toggle'
@@ -22,7 +21,7 @@ import { SearchModeToggle } from './search-mode-toggle'
 import { Button } from './ui/button'
 import { IconLogo } from './ui/icons'
 import { WelcomeMessage } from './welcome-messages'
-
+import { WithTooltip } from './with-tooltip'
 
 function useKeyboardAvoidance({
   ref
@@ -104,8 +103,7 @@ function useKeyboardAvoidance({
           updateInset
         )
       }
-    }
-    else if (hasVisualViewport && window.visualViewport) {
+    } else if (hasVisualViewport && window.visualViewport) {
       window.visualViewport.addEventListener(
         'resize',
         handleVisualViewportChange
@@ -127,8 +125,7 @@ function useKeyboardAvoidance({
           )
         }
       }
-    }
-    else {
+    } else {
       const handleResize = () => {
         const portraitOrientation = window.innerHeight > window.innerWidth
         const normalAspectRatio = portraitOrientation ? 1.6 : 0.625 // Typical aspect ratios
@@ -198,21 +195,20 @@ export function ChatPanel({
   onVideoBgChange, // Destructure this prop
   chatId
 }: ChatPanelProps) {
-
-
   const [mounted, setMounted] = useState(false)
   const router = useRouter()
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const isFirstRender = useRef(true)
   const [isComposing, setIsComposing] = useState(false)
   const [enterDisabled, setEnterDisabled] = useState(false)
-  
+
   const { ready, authenticated, user } = usePrivy()
-  
+
   const { close: closeArtifact } = useArtifact()
   const welcomeSeed = useRef(new Date().getDate()).current
-  
-  const { selectedChain, setSelectedChain, isDemoMode, setIsDemoMode } = useNetwork()
+
+  const { selectedChain, setSelectedChain, isDemoMode, setIsDemoMode } =
+    useNetwork()
 
   useKeyboardAvoidance({ ref: inputRef })
 
@@ -252,23 +248,27 @@ export function ChatPanel({
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
     const urlQuery = urlParams.get('q')
-    
+
     const queryToSubmit = urlQuery || query
-    
-    if (isFirstRender.current && queryToSubmit && queryToSubmit.trim().length > 0) {
+
+    if (
+      isFirstRender.current &&
+      queryToSubmit &&
+      queryToSubmit.trim().length > 0
+    ) {
       handleInputChange({
         target: { value: queryToSubmit }
       } as React.ChangeEvent<HTMLTextAreaElement>)
-      
+
       setTimeout(() => {
         const form = document.querySelector('form') as HTMLFormElement
         if (form) {
           form.requestSubmit()
         }
       }, 100)
-      
+
       isFirstRender.current = false
-      
+
       if (urlQuery) {
         const newUrl = window.location.pathname
         window.history.replaceState({}, '', newUrl)
@@ -290,25 +290,28 @@ export function ChatPanel({
 
   const showEmptyScreenContent = messages.length === 0 // For internal content visibility
 
-  function handleScrollToBottom(event: React.MouseEvent<HTMLButtonElement, MouseEvent>): void {
-    event.preventDefault();
-    const scrollContainer = document.getElementById('scroll-container');
+  function handleScrollToBottom(
+    event: React.MouseEvent<HTMLButtonElement, MouseEvent>
+  ): void {
+    event.preventDefault()
+    const scrollContainer = document.getElementById('scroll-container')
     if (scrollContainer) {
       scrollContainer.scrollTo({
         top: scrollContainer.scrollHeight,
         behavior: 'smooth'
-      });
+      })
     }
   }
-  
+
   return (
-    <> {/* Use a fragment if VideoBackground is fixed and outside the main div's flow */}
+    <TooltipProvider>
+      {/* Use a fragment if VideoBackground is fixed and outside the main div's flow */}
       {showVideoBg && (
-  <div
-    className="fixed inset-0 z-0 bg-cover bg-center"
-    style={{ backgroundImage: "url(/images/background.avif)" }}
-  />
-)}
+        <div
+          className="fixed inset-0 z-0 bg-cover bg-center"
+          style={{ backgroundImage: 'url(/images/background.avif)' }}
+        />
+      )}
       {/* <VideoBackground
         src="/videos/background.mp4"
         poster="/videos/background_poster.jpg"
@@ -337,20 +340,24 @@ export function ChatPanel({
                 'bg-transparent'
               )}
             >
-              <div className="mb-6 w-full flex justify-center"> {/* <-- Added spacing here */}
+              <div className="mb-6 w-full flex justify-center">
+                {' '}
+                {/* <-- Added spacing here */}
                 <MarketPulse />
               </div>
 
               <IconLogo
                 className={cn(
                   'size-6 sm:size-8 md:size-12',
-                  showVideoBg ? 'text-white/90 drop-shadow-md' : 'text-muted-foreground'
+                  showVideoBg
+                    ? 'text-white/90 drop-shadow-md'
+                    : 'text-muted-foreground'
                 )}
               />
 
               {/* Use LazyWallet component instead of directly embedding wallet details */}
               <LazyWallet showVideoBg={showVideoBg} />
-              
+
               {mounted && (
                 <WelcomeMessage
                   seed={welcomeSeed}
@@ -427,7 +434,8 @@ export function ChatPanel({
                   }
 
                   setTimeout(() => {
-                    const scrollContainer = document.getElementById('scroll-container')
+                    const scrollContainer =
+                      document.getElementById('scroll-container')
                     if (scrollContainer) {
                       scrollContainer.scrollTo({
                         top: scrollContainer.scrollHeight,
@@ -445,10 +453,10 @@ export function ChatPanel({
               >
                 <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto hide-scrollbar">
                   <SearchModeToggle />
-                  <DemoToggle />
-                  <ChainSelector
-                  />
-                  
+                  <WithTooltip tooltipText="Enter Demo Mode: no gas, no losses, just learning. Demo network is refreshed every 7 days.">
+                    <DemoToggle />
+                  </WithTooltip>
+                    <ChainSelector />
                 </div>
                 <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                   {messages.length > 0 && (
@@ -458,7 +466,8 @@ export function ChatPanel({
                       onClick={handleNewChat} // Your existing props
                       className={cn(
                         'shrink-0 rounded-full group size-7 sm:size-8',
-                        showVideoBg && 'text-white border-white/30 hover:bg-white/10'
+                        showVideoBg &&
+                          'text-white border-white/30 hover:bg-white/10'
                       )}
                       type="button" // Your existing props
                       disabled={isLoading || isToolInvocationInProgress()} // Your existing props
@@ -472,7 +481,8 @@ export function ChatPanel({
                     variant={'outline'} // Your existing props
                     className={cn(
                       isLoading && 'animate-pulse', // Your existing props
-                      showVideoBg && 'text-white border-white/30 hover:bg-white/10',
+                      showVideoBg &&
+                        'text-white border-white/30 hover:bg-white/10',
                       'rounded-full size-7 sm:size-8'
                     )}
                     disabled={
@@ -505,6 +515,6 @@ export function ChatPanel({
           </form>
         </div>
       </div>
-    </>
+    </TooltipProvider>
   )
 }
