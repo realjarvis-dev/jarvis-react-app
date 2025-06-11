@@ -434,7 +434,7 @@ export async function getRedeemTransactionFromPendle(
   amountIn: string,
   slippage: number = 0.01,
   chainId: number = 1,
-  enableAggregator: boolean = false
+  enableAggregator: boolean = true
 ): Promise<any> {
   try {
     const evmWalletAddress = await getUserEvmWalletAddress()
@@ -444,13 +444,17 @@ export async function getRedeemTransactionFromPendle(
 
     const RECEIVER = evmWalletAddress
     
+    // Handle amount in a way that's safe for very large numbers and expired tokens
+    // Convert to BigInt and back to string to avoid scientific notation
+    const safeAmountIn = BigInt(amountIn).toString();
+    
     // Use redeem API endpoint
     const url = `${BASE_URL}/sdk/${chainId}/redeem`
 
     const response = await axios.get(url, {
       params: {
         yt: ytAddress,
-        amountIn,
+        amountIn: safeAmountIn,
         tokenOut: ETH_ADDRESS,
         slippage,
         receiver: RECEIVER,
@@ -534,7 +538,7 @@ export async function executeRedeemTransaction(
   amountIn: string,
   slippage: number = 0.01,
   chainId: number = 1,
-  enableAggregator: boolean = false,
+  enableAggregator: boolean = true,
   isDemo: boolean = false
 ): Promise<{ status: string; hash?: string; message?: string; amountOut?: string }> {
   try {
@@ -562,9 +566,10 @@ export async function executeRedeemTransaction(
       };
     }
 
-    // Handle token approvals if needed
+    // Handle token approvals exactly as shown in the sample payload
     if (txData.tokenApprovals && txData.tokenApprovals.length > 0) {
       for (const approval of txData.tokenApprovals) {
+        // Each approval has token and amount properties
         const approvalResult = await erc20Approval(
           approval.token,
           txData.to,
@@ -577,7 +582,7 @@ export async function executeRedeemTransaction(
         if (approvalResult.status === 'fail') {
           return {
             status: 'fail',
-            message: `ERC20 approval failed: ${approvalResult.message}`
+            message: `ERC20 approval failed for token ${approval.token}: ${approvalResult.message}`
           };
         }
       }

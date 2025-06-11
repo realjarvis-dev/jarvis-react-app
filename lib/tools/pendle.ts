@@ -485,12 +485,26 @@ export const pendleRedeemPTTool = tool({
       // Get token details to convert human amount to base units
       let amountInBaseUnits: string
       try {
-        const tokenAddress = ethers.getAddress(pt_address.trim())
-        const tokenDetails = await getERC20Details(tokenAddress, chainId)
-        amountInBaseUnits = ethers.parseUnits(amount_in_human, tokenDetails.decimals).toString()
+        // Try to get token details first
+        try {
+          const tokenAddress = ethers.getAddress(pt_address.trim())
+          const tokenDetails = await getERC20Details(tokenAddress, chainId)
+          
+          // Parse the amount with the correct number of decimals
+          const amountBigInt = ethers.parseUnits(amount_in_human, tokenDetails.decimals)
+          // Ensure we have a clean string representation without scientific notation
+          amountInBaseUnits = amountBigInt.toString()
+        } catch (tokenError: any) {
+          // Fallback to 18 decimals (most common) if token details can't be fetched
+          console.log(`Could not get token details, using default 18 decimals: ${tokenError.message}`)
+          
+          // For expired tokens, default to 18 decimals (standard for most ERC20 tokens)
+          const amountBigInt = ethers.parseUnits(amount_in_human, 18)
+          amountInBaseUnits = amountBigInt.toString()
+        }
       } catch (error: any) {
         throw new Error(
-          `Failed to get details or parse amount for PT token ${pt_address}: ${error.message}`
+          `Failed to parse amount for PT token: ${error.message}`
         )
       }
 
