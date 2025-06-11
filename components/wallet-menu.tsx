@@ -15,7 +15,7 @@ export default function WalletMenu() {
       variant="ghost"
       size="icon"
       className="ring-0 outline-none focus:ring-0 focus:outline-none focus:shadow-none active:ring-0 active:outline-none active:shadow-none bg-transparent hover:bg-transparent active:bg-transparent rounded-md"
-      onClick={() => router.push(isWalletPage ? '/' : '/wallet')}
+      onClick={() => (isWalletPage ? router.back() : router.push('/wallet'))}
     >
       {isWalletPage ? (
         <ArrowLeft className="w-4 h-4" />
