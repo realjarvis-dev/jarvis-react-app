@@ -242,6 +242,12 @@ export const pendleSwapTool = tool({
       .describe(
         'The token type - "pt" for Principal Token or "yt" for Yield Token. Default to pt.'
       ),
+    input_token_name_display: z
+      .string()
+      .describe('The name of the input token. Used for display purposes.'),
+    output_token_name_display: z
+      .string()
+      .describe('The name of the output token. Used for display purposes.'),
     amount_in_human: z
       .string()
       .describe(
