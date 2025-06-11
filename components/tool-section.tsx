@@ -125,14 +125,16 @@ export function ToolSection({
       )
     case 'pendle_quote':
       return (
-        <div className="flex flex-col space-y-4 py-4">
-          <div className="flex flex-col">
-            <h3 className="text-base font-medium">Pendle Quote</h3>
-            <div className="mt-2">
-              <SimpleQuoteDisplay tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
-            </div>
-          </div>
-        </div>
+        <SimpleQuoteDisplay tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
+
+        // <div className="flex flex-col space-y-4 py-4">
+        //   <div className="flex flex-col">
+        //     <h3 className="text-base font-medium">Pendle Quote</h3>
+        //     <div className="mt-2">
+        //       <SimpleQuoteDisplay tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
+        //     </div>
+        //   </div>
+        // </div>
       )
     case 'pendle_swap':
       return (

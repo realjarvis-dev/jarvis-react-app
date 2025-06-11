@@ -108,6 +108,11 @@ export const pendleQuoteTool = tool({
     market_name: z
       .string()
       .describe('The name of the market (required, e.g. "rswETH")'),
+    amount_in_human: z
+      .string()
+      .describe(
+        'Amount of input token to swap in human-readable format (e.g., "1", "100.5"). Default to 1'
+    ),
     token_type: z
       .enum(['pt', 'yt'])
       .default('pt')
@@ -123,6 +128,7 @@ export const pendleQuoteTool = tool({
     const {
       token_address,
       market_name,
+      amount_in_human,
       token_type,
       direction
     } = params;
@@ -176,7 +182,7 @@ export const pendleQuoteTool = tool({
         finalMarketAddress.toLowerCase().trim(),
         finalTokenAddress.toLowerCase().trim(),
         fullTokenName,
-        '1', // Fixed amount of 1 ETH or token
+        amount_in_human, // Fixed amount of 1 ETH or token
         direction, // Direction of the swap
         1 // Fixed chain ID (Ethereum)
       )
@@ -185,6 +191,7 @@ export const pendleQuoteTool = tool({
       // Use the new response format from our updated getQuote function
       const quoteData = {
         market: fullTokenName,
+        inputAmount: amount_in_human,
         inputToken: quote.inputToken,
         outputToken: quote.outputToken,
         rate: quote.rate,
