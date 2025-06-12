@@ -582,7 +582,7 @@ export const pendleRedeemPTTool = tool({
           amount_out: result.amountOut,
           complete_time: new Date().toISOString(),
           chainId: chainId,
-          explorer_link: explorerLinkWithHash
+          explorer_link: explorerLink ? explorerLinkWithHash : undefined
         }
       }
       
@@ -689,7 +689,7 @@ export const pendleRedeemYTTool = tool({
           yts: processedYtAddresses,
           complete_time: new Date().toISOString(),
           chainId: chainId,
-          explorer_link: explorerLinkWithHash
+          explorer_link: explorerLink ? explorerLinkWithHash : undefined
         }
       }
       console.log('Redemption successful:', JSON.stringify(redeemData, null, 2));
