@@ -235,7 +235,9 @@ export const executeLifiBridgeTransaction = async (
   if (!recipient) {
     recipient = fromAddress
   }
+  console.log("Amount in", amountIn)
   const inputAmount = parseUnits(amountIn, fromTokenDecimals).toString()
+  console.log("Input amount", inputAmount)
   const quote: LifiQuoteResponse = await getLifiQuote(
     fromChainId,
     toChainId,
@@ -299,7 +301,7 @@ export const executeLifiBridgeTransaction = async (
         getGasPriceFunction: getGasPriceByChainId
       }, isDemo)
     } else {
-      result = await executeSwapTransaction(txData, 1, {
+      result = await executeSwapTransaction(txData, fromChainId, {
         estimateGas: false,
         gasLimit: gasLimit ? toHex(gasLimit) : undefined,
         getGasPriceFunction: getGasPriceByChainId
@@ -324,6 +326,7 @@ export const executeLifiBridgeTransaction = async (
       }
     }
   } catch (error: any) {
+    console.error("Error during transaction execution", error)
     const errorMessage =
       error?.message || 'Unknown error during transaction execution'
     return {
