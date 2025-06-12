@@ -25,7 +25,9 @@ export const commonlyUsedPTTokensArray = ['0xfc66d247f577bfc87df8a5267c43676c4a0
     '0xe2828b5f839bd8bb4168eea4583375727e825058', 
     '0xab365c0879024481e4ad3b47bd6fea9c10014fbc', 
     '0x1132065009850c72e27b7950c0f9285d1d103589', 
-    '0xd1d0ff7bb555f57a9604ce06bca704ab97a0049a']
+    '0xd1d0ff7bb555f57a9604ce06bca704ab97a0049a',
+    "0xb7de5dfcb74d25c2f21841fbd6230355c50d9308"
+  ]
 
 
 const ERC20_ABI = [
