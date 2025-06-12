@@ -1,5 +1,4 @@
 import { parseEther, parseGwei, parseUnits } from 'viem'
-import { TENDERLY_DEMO_CONFIG } from '@/lib/network/config'
 // {
 //     "system": "base",
 //     "network": "mainnet",
@@ -56,29 +55,43 @@ export const getGasPriceByChainId = async (chainId: number) => {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': process.env.BLOCKNATIVE_API_KEY ? `Bearer ${process.env.BLOCKNATIVE_API_KEY}` : ''
+        Authorization: process.env.BLOCKNATIVE_API_KEY
+          ? `Bearer ${process.env.BLOCKNATIVE_API_KEY}`
+          : ''
       }
     })
     const data = await response.json()
-    
+
     const unit = data.unit
     let parseFunc
+    let precision: number
     if (unit === 'gwei') {
       parseFunc = parseGwei
+      precision = 9
     } else if (unit === 'wei') {
       parseFunc = (value: string) => parseUnits(value, 0)
+      precision = 0
     } else if (unit === 'ether') {
       parseFunc = parseEther
+      precision = 18
     } else {
       throw new Error('Invalid unit')
     }
-    const baseFeePerGas = parseFunc(data.blockPrices[0].baseFeePerGas.toString())
-    const maxPriceInMemPool = parseFunc(data.maxPrice.toString())
+    const baseFeePerGas = parseFunc(
+      Number(data.blockPrices[0].baseFeePerGas).toFixed(precision)
+    )
+    const maxPriceInMemPool = parseFunc(
+      Number(data.maxPrice).toFixed(precision)
+    )
     const maxPriorityFeePerGas = parseFunc(
-      data.blockPrices[0].estimatedPrices[0].maxPriorityFeePerGas.toString()
+      Number(
+        data.blockPrices[0].estimatedPrices[0].maxPriorityFeePerGas
+      ).toFixed(precision)
     )
     const maxFeePerGas = parseFunc(
-      data.blockPrices[0].estimatedPrices[0].maxFeePerGas.toString()
+      Number(data.blockPrices[0].estimatedPrices[0].maxFeePerGas).toFixed(
+        precision
+      )
     )
 
     return {
@@ -93,4 +106,4 @@ export const getGasPriceByChainId = async (chainId: number) => {
   }
 }
 
-// console.log(await getGasPriceByChainId(8453))
+console.log(await getGasPriceByChainId(8453))
