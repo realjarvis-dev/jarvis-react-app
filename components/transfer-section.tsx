@@ -56,7 +56,7 @@ export function TransferSection({
       if (toolResult.status === 'success' || toolResult.hash) {
         // const chainId = toolResult.transaction_details?.chain_id || 1 // Default to 1 if not provided
         // const scanLink = getConfigByChainId(chainId, isDemoMode).scanLink
-        console.log('toolResult.transaction_details', toolResult.transaction_details)
+        // console.log('toolResult.transaction_details', toolResult.transaction_details)
         statusDisplay = (
           <div>
             <p className="text-black-600">Transaction completed!</p>

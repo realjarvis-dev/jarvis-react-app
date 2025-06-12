@@ -10,6 +10,9 @@ import { getConfigByChainId } from '@/lib/network/config'
 import { ToolContext } from '../types/context'
 import { getTokenBalances } from '../alchemy/get-token-balance'
 import { TokenMatcher, type Token } from '../token-matcher/fuzzy-token-matcher'
+import { bus } from '../pubsub/simple-pubsub'
+import { getUserId } from '../privy/client'
+import { balanceChangePub } from '../pubsub/balance-change-pub'
 
 export const privyTransferTool = tool({
   description: 'Transfer native token or erc20 token to a specified address',
@@ -73,6 +76,8 @@ export const privyTransferTool = tool({
         )
         const explorerLink = getConfigByChainId(chainId, isDemo).scanLink
         const explorerLinkWithHash = `https://${explorerLink}/tx/${tx.hash}`
+        const userId = await getUserId()
+        balanceChangePub(userId, [networkContext.config.id], isDemo)
         return {
           status: 'success',
           hash: tx.hash,
@@ -125,6 +130,9 @@ export const privyTransferTool = tool({
       const explorerLinkWithHash = `https://${explorerLink}/tx/${hash}`
      
       if (status === 'success') {
+        const userId = await getUserId()
+        balanceChangePub(userId, [networkContext.config.id], isDemo)
+
         return {
           status: 'success',
           hash: hash,

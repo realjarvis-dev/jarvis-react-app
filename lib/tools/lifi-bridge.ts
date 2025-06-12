@@ -8,6 +8,10 @@ import {
 import { getUserEvmWalletAddress } from '../privy/client'
 import { chainsById } from '../token-matcher/fuzzy-chain-matcher'
 import { ToolContext } from '../types/context'
+import { bus } from '../pubsub/simple-pubsub'
+import { getUserId } from '../privy/client'
+import { balanceChangePub } from '../pubsub/balance-change-pub'
+import { ChainType } from '../network/types'
 const bridgeQuoteTool = tool({
   description:
     "Get a quote for a cross-chain bridge transfer from user's wallet. can also be single chain swap. It automatically renders UI on success.",
@@ -165,26 +169,8 @@ const bridgeExecuteTool = tool({
     if (isDemo) {
       slippage = '0.3'
     }
-
-    // if (autoFuel) {
-    //   return await executeLifiBridgeTransactionWithAutoFuel(
-    //     userEvmAddress,
-    //     fromChainId,
-    //     fromToken,
-    //     fromTokenDecimals,
-    //     fromTokenAddress,
-    //     toChainId,
-    //     toToken,
-    //     amountIn,
-    //     slippage,
-    //     recipient,
-    //     isFromNativeToken,
-    //     fromChainName,
-    //     toChainName
-    //   )
-    // }
     
-    return await executeLifiBridgeTransaction(
+    const result =  await executeLifiBridgeTransaction(
       userEvmAddress,
       fromChainId,
       fromToken,
@@ -200,6 +186,9 @@ const bridgeExecuteTool = tool({
       toChainName,
       isDemo
     )
+    const userId = await getUserId()
+    balanceChangePub(userId, [fromChainId.toString() as ChainType, toChainId.toString() as ChainType], isDemo || false)
+    return result
   }
 })
 
