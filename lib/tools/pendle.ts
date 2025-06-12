@@ -5,6 +5,8 @@ import { getPendleMarkets } from '../pendle/api'
 import { getQuote } from '../pendle/quotes'
 import {
   erc20Approval,
+  executeRedeemInterestsAndRewardsTransaction,
+  executeRedeemTransaction,
   executeSwapTransaction,
   getERC20Details,
   getSwapTransactionFromPendle
@@ -452,6 +454,256 @@ export const pendleSwapTool = tool({
       return {
         _uiDisplayTool: true,
         summary: `Swap failed: ${error.message || 'Failed to execute Pendle swap'}`,
+        data: errorData
+      }
+    }
+  }
+})
+
+export const pendleRedeemPTTool = tool({
+  description:
+    `Redeem Pendle PT & YT tokens to ETH. If called before YT's expiry, both PT & YT of equal amounts 
+    are needed and will be burned. After expiry, only PT is needed and will be burned.
+    This tool automatically renders UI.`,
+  parameters: z.object({
+    pt_address: z
+      .string()
+      .describe('The address of the PT (Principal Token) to redeem'),
+    amount_in_human: z
+      .string()
+      .describe(
+        'Amount of tokens to redeem in human-readable format (e.g., "1", "100.5"). If the amount is not provided by the user, use the user\'s current balance of the token.'
+      ),
+    token_name_display: z
+      .string()
+      .optional()
+      .describe(
+        'Display name for the token (e.g., "PT rswETH"). If not provided, a generic name or address will be used.'
+      ),
+    slippage: z
+      .number()
+      .min(0.001)
+      .max(0.1)
+      .default(0.1)
+      .describe('Maximum acceptable slippage (default: 0.01, which is 1%).')
+  }),
+  execute: async (params, context: ToolContext) => {
+    // Keep just one initial log for tracking execution
+    console.log('Starting PT redemption for:', params.pt_address);
+    
+    const {
+      pt_address,
+      amount_in_human,
+      token_name_display,
+      slippage = 0.01
+    } = params;
+    const networkContext = context?.networkContext;
+    const isDemo = networkContext?.isDemo
+    
+    try {
+      const evmWalletAddress = await getUserEvmWalletAddress()
+      if (!evmWalletAddress) {
+        throw new Error(
+          'EVM wallet address not found. Please connect your wallet.'
+        )
+      }
+
+      const chainId = networkContext?.selectedChainId || 1 // Default to Ethereum mainnet
+      
+      // Find the market using the PT token address to get the corresponding YT token
+      const markets = await getPendleMarkets('all');
+      
+      // Find market that contains the PT token
+      const foundMarket = markets.find(market => {
+        return market.pt.toLowerCase() === pt_address.toLowerCase();
+      });
+      
+      if (!foundMarket) {
+        throw new Error(`Could not find a Pendle market with PT token address ${pt_address}`);
+      }
+      
+      // Get the YT token address from the found market
+      const ytAddress = foundMarket.yt;
+      
+      // Use the market name for display if no name provided
+      const displayTokenName = token_name_display || `PT ${foundMarket.name}`
+
+      // Get token details to convert human amount to base units
+      let amountInBaseUnits: string
+      try {
+        // Try to get token details first
+        try {
+          const tokenAddress = ethers.getAddress(pt_address.trim())
+          const tokenDetails = await getERC20Details(tokenAddress, chainId)
+          
+          // Parse the amount with the correct number of decimals
+          const amountBigInt = ethers.parseUnits(amount_in_human, tokenDetails.decimals)
+          // Ensure we have a clean string representation without scientific notation
+          amountInBaseUnits = amountBigInt.toString()
+        } catch (tokenError: any) {
+          // Fallback to 18 decimals (most common) if token details can't be fetched
+          // For expired tokens, default to 18 decimals (standard for most ERC20 tokens)
+          const amountBigInt = ethers.parseUnits(amount_in_human, 18)
+          amountInBaseUnits = amountBigInt.toString()
+        }
+      } catch (error: any) {
+        throw new Error(
+          `Failed to parse amount for PT token: ${error.message}`
+        )
+      }
+
+      // Normalize the YT address
+      const normalizedYtAddress = ytAddress.trim().toLowerCase()
+      
+      // Execute the redeem transaction using the YT address
+      const result = await executeRedeemTransaction(
+        normalizedYtAddress,
+        amountInBaseUnits,
+        slippage,
+        chainId,
+        true,
+        isDemo,
+        pt_address.trim() // Pass the PT token address that was provided to the tool
+      )
+
+      if (result.status !== 'success') {
+        throw new Error(result.message || 'Failed to execute redemption')
+      }
+
+      const redeemData = {
+        success: true,
+        transaction_hash: result.hash,
+        redeem_details: {
+          token: displayTokenName,
+          amount_in: `${amount_in_human} ${displayTokenName}`,
+          amount_out: result.amountOut,
+          complete_time: new Date().toISOString(),
+          chainId: chainId
+        }
+      }
+      
+      return {
+        _uiDisplayTool: true,
+        summary: `Redemption executed: ${amount_in_human} ${displayTokenName} → ETH`,
+        data: redeemData
+      }
+    } catch (error: any) {
+      console.error('Redemption failed:', error.message);
+      const errorData = {
+        success: false,
+        error: error.message || 'Failed to execute Pendle redemption.',
+        redeem_parameters: {
+          pt_address,
+          amount_in_human,
+          slippage
+        }
+      }
+      
+      return {
+        _uiDisplayTool: true,
+        summary: `Redemption failed: ${error.message || 'Failed to execute Pendle redemption'}`,
+        data: errorData
+      }
+    }
+  }
+})
+
+export const pendleRedeemYTTool = tool({
+  description:
+    `Redeem accrued rewards and interests from Pendle YT positions after expiry.
+    Before expiry, YT cannot be redeemed through this tool. This tool automatically renders UI.`,
+  parameters: z.object({
+    yt_addresses: z
+      .array(z.string())
+      .describe('Array of YT (Yield Token) addresses to redeem rewards from.')
+  }),
+  execute: async (params, context: ToolContext) => {
+    const {
+      yt_addresses
+    } = params;
+    const networkContext = context?.networkContext;
+    const isDemo = networkContext?.isDemo
+    
+    try {
+      console.log('===== PENDLE REDEEM YT TOOL =====');
+      console.log('Parameters:', JSON.stringify(params, null, 2));
+      console.log('Network context:', JSON.stringify({
+        chainId: networkContext?.selectedChainId,
+        isDemo
+      }, null, 2));
+      
+      const evmWalletAddress = await getUserEvmWalletAddress()
+      if (!evmWalletAddress) {
+        console.error('Error: No wallet address found');
+        throw new Error(
+          'EVM wallet address not found. Please connect your wallet.'
+        )
+      }
+      console.log('Wallet address:', evmWalletAddress);
+
+      const chainId = networkContext?.selectedChainId || 1 // Default to Ethereum mainnet
+
+      // Check if YT addresses array has items
+      if (!yt_addresses || yt_addresses.length === 0) {
+        console.error('Error: Empty YT addresses array');
+        throw new Error('YT addresses array must contain at least one address')
+      }
+      console.log(`Processing ${yt_addresses.length} YT addresses`);
+
+      // Process addresses to ensure they're properly formatted
+      const processedYtAddresses = yt_addresses.map(addr => addr.trim());
+      console.log('Processed YT addresses:', processedYtAddresses);
+      
+      // Define empty arrays for market_addresses and sy_addresses as placeholders for future
+      const processedMarketAddresses: string[] = []
+      const processedSyAddresses: string[] = []
+      console.log('Using empty market and SY addresses');
+
+      // Execute the redemption transaction
+      console.log('Executing redemption transaction for YT rewards...');
+      const result = await executeRedeemInterestsAndRewardsTransaction(
+        processedSyAddresses.length > 0 ? processedSyAddresses : undefined,
+        processedYtAddresses,
+        processedMarketAddresses.length > 0 ? processedMarketAddresses : undefined,
+        chainId,
+        isDemo
+      )
+      console.log('Redemption result:', JSON.stringify(result, null, 2));
+      
+      if (result.status !== 'success') {
+        console.error('Redemption failed:', result.message);
+        throw new Error(result.message || 'Failed to redeem rewards')
+      }
+
+      const redeemData = {
+        success: true,
+        transaction_hash: result.hash,
+        redeem_details: {
+          yts: processedYtAddresses,
+          complete_time: new Date().toISOString(),
+          chainId: chainId
+        }
+      }
+      console.log('Redemption successful:', JSON.stringify(redeemData, null, 2));
+      
+      return {
+        _uiDisplayTool: true,
+        summary: `YT rewards redemption executed successfully`,
+        data: redeemData
+      }
+    } catch (error: any) {
+      console.error('Error in pendleRedeemYTTool:', error);
+      const errorData = {
+        success: false,
+        error: error.message || 'Failed to redeem Pendle YT rewards.',
+        redeem_parameters: {
+          yt_addresses
+        }
+      }
+      
+      return {
+        _uiDisplayTool: true,
+        summary: `YT rewards redemption failed: ${error.message || 'Failed to redeem Pendle YT rewards'}`,
         data: errorData
       }
     }

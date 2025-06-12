@@ -6,9 +6,12 @@ import { GetGasPriceSection } from './get-gas-price-section'
 import { KodiakBaultProfitability } from './kodiak-bault-profitability'
 import { KodiakDepositCard } from './kodiak-deposit-card'
 import { KodiakOpportunitiesSection } from './kodiak-opportunities-section'
+import { LifiSwapExecuteSection } from './lifi-swap-execute-section'
+import { LifiSwapQuoteSection } from './lifi-swap-quote-section'
 import { MarketChartSection } from './market-chart-section'
 import { PendleOpportunitiesSection } from './pendle-opportunities-section'
 import { QuestionConfirmation } from './question-confirmation'
+import { RedeemTransactionCard } from './redeem-transaction-card'
 import RetrieveSection from './retrieve-section'
 import { SearchSection } from './search-section'
 import { SimpleQuoteDisplay } from './simple-quote-display'
@@ -16,8 +19,7 @@ import { SwapTransactionCard } from './swap-transaction-card'
 import { TransferSection } from './transfer-section'
 import { VideoSearchSection } from './video-search-section'
 import { WalletBalanceSection } from './wallet-balance-section'
-import { LifiSwapQuoteSection } from './lifi-swap-quote-section'
-import { LifiSwapExecuteSection } from './lifi-swap-execute-section'
+
 interface ToolSectionProps {
   tool: ToolInvocation
   isOpen: boolean
@@ -139,6 +141,42 @@ export function ToolSection({
     case 'pendle_swap':
       return (
         <SwapTransactionCard tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
+      )
+    case 'pendle_redeem_pt':
+      return (
+        <div className="flex flex-col space-y-4 py-4">
+          <div className="flex flex-col">
+            <h3 className="text-base font-medium">Principal Token Redemption</h3>
+            <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+              {tool.state === 'call' 
+                ? 'Processing your redemption transaction...' 
+                : tool.state === 'result' && 'result' in tool && tool.result?.success 
+                  ? 'Redemption completed successfully' 
+                  : 'Redemption transaction failed'}
+            </div>
+            <div className="mt-2">
+              <RedeemTransactionCard tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
+            </div>
+          </div>
+        </div>
+      )
+    case 'pendle_redeem_yt':
+      return (
+        <div className="flex flex-col space-y-4 py-4">
+          <div className="flex flex-col">
+            <h3 className="text-base font-medium">Yield Token Redemption</h3>
+            <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+              {tool.state === 'call' 
+                ? 'Processing your redemption transaction...' 
+                : tool.state === 'result' && 'result' in tool && tool.result?.success 
+                  ? 'Redemption completed successfully' 
+                  : 'Redemption transaction failed'}
+            </div>
+            <div className="mt-2">
+              <RedeemTransactionCard tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
+            </div>
+          </div>
+        </div>
       )
     case 'generic_swap':
       return (

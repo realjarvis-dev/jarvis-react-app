@@ -42,4 +42,5 @@ export interface SimplifiedPendleMarket {
   underlyingAsset: string
   liquidity: number
   impliedApy: number
+  active: boolean
 } 
