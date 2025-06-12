@@ -68,7 +68,7 @@ export function RedeemTransactionStatus({
       case 'confirmed':
         return `Redemption confirmed${tokenName ? ` for ${tokenName}` : ''}`
       case 'failed':
-        return 'Redemption failed'
+        return `Redemption failed${tokenName ? ` for ${tokenName}` : ''}`
       default:
         return 'Processing'
     }

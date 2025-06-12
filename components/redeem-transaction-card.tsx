@@ -1,5 +1,6 @@
 'use client'
 
+import { RedeemTransactionStatus } from '@/components/redeem-transaction-status'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { getConfigByChainId } from '@/lib/network/config'
@@ -7,7 +8,6 @@ import { useNetwork } from '@/lib/network/context'
 import { cn } from '@/lib/utils'
 import { AlertCircle, CheckCircle, Clock, Link, Loader2, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { RedeemTransactionStatus } from './redeem-transaction-status'
 
 interface RedeemTransactionCardProps {
   tool: any
@@ -22,6 +22,15 @@ export function RedeemTransactionCard({
   isOpen,
   onOpenChange
 }: RedeemTransactionCardProps) {
+  console.log('==== RedeemTransactionCard RENDERED ====');
+  console.log('Tool:', JSON.stringify({
+    tool: tool.tool,
+    toolName: tool.toolName,
+    state: tool.state,
+    args: tool.args,
+    resultPreview: tool.result ? '[HAS RESULT]' : '[NO RESULT]'
+  }, null, 2));
+  
   const [status, setStatus] = useState<TransactionStatus>('preparing')
   const [tokenName, setTokenName] = useState<string>('PT/YT Token')
   const { isDemoMode } = useNetwork()
@@ -35,48 +44,39 @@ export function RedeemTransactionCard({
   const result = toolResult?.data || toolResult
 
   // Determine if this is a YT rewards redemption or a PT redemption
-  const isYtRewards = tool.tool === 'pendle_redeem_rewards'
+  const isYtRewards = tool.toolName === 'pendle_redeem_yt'
+  const isPtRedemption = tool.toolName === 'pendle_redeem_pt'
 
-  // Attempt to determine token name from the args
+  // Attempt to determine token name from the args or results
   useEffect(() => {
-    if (isYtRewards && tool.args?.yt_addresses && tool.args.yt_addresses.length > 0) {
-      setTokenName('YT Rewards')
-    } else if (!isYtRewards && tool.args?.yt_address && tool.args?.token_name_display) {
-      setTokenName(tool.args.token_name_display)
-    } else if (!isYtRewards && tool.args?.yt_address) {
-      // Try to extract token pattern from YT address
-      const ytAddress = tool.args.yt_address.toLowerCase()
-      
-      // Common Pendle tokens that can be recognized
-      const tokenPatterns = [
-        { pattern: 'weeth', name: 'weETH' },
-        { pattern: 'rseth', name: 'rsETH' },
-        { pattern: 'steth', name: 'stETH' },
-        { pattern: 'reth', name: 'rETH' },
-        { pattern: 'cbeth', name: 'cbETH' },
-        { pattern: 'sfrxeth', name: 'sfrxETH' },
-        { pattern: 'ezeth', name: 'ezETH' },
-        { pattern: 'sweth', name: 'swETH' },
-        { pattern: 'weth', name: 'WETH' },
-        { pattern: 'ethx', name: 'ETHx' }
-      ]
-      
-      // Try to match the address to a known pattern
-      for (const { pattern, name } of tokenPatterns) {
-        if (ytAddress.includes(pattern)) {
-          setTokenName(`YT ${name}`)
-          break
-        }
-      }
-    }
-  }, [tool.args, isYtRewards])
-
-  // Also try to extract token info from result
-  useEffect(() => {
+    // First try to get token name from result data (most reliable)
     if (result?.redeem_details?.token) {
       setTokenName(result.redeem_details.token)
+      return
     }
-  }, [result])
+
+    // If no result yet, fall back to args
+    if (tool.args) {
+      // Use provided display name if available
+      if (tool.args.token_name_display) {
+        setTokenName(tool.args.token_name_display)
+        return
+      }
+
+      // For YT redemption, use generic "YT Rewards" if no specific token name
+      if (isYtRewards) {
+        setTokenName('YT Rewards')
+        return
+      }
+
+      // For PT redemption, try to extract from address if no display name
+      if (isPtRedemption && tool.args.pt_address) {
+        // First try a generic address format if no pattern match
+        const shortAddress = `${tool.args.pt_address.slice(0, 6)}...${tool.args.pt_address.slice(-4)}`
+        setTokenName(`PT Token (${shortAddress})`)
+      }
+    }
+  }, [tool.args, result, isYtRewards, isPtRedemption])
 
   // Simulate transaction flow for better UX
   useEffect(() => {
@@ -229,6 +229,37 @@ export function RedeemTransactionCard({
     return 1; // Default to Ethereum
   };
 
+  // Get a generic redemption title based on the token name and tool type
+  const getRedemptionTitle = () => {
+    if (isYtRewards) {
+      return 'Yield Token Redemption'
+    }
+    
+    if (isPtRedemption) {
+      return 'Principal Token Redemption'
+    }
+    
+    // Generic fallback
+    return 'Token Redemption'
+  }
+
+  // Format token amounts for display
+  const formatAmount = (amount: string | number) => {
+    // Handle hex values (common for ETH amounts)
+    if (typeof amount === 'string' && amount.startsWith('0x')) {
+      try {
+        // Convert hex to decimal and format as ETH
+        return `${Number(BigInt(amount) / BigInt(10**15)) / 1000} ETH`;
+      } catch (e) {
+        // If conversion fails, return as is
+        return amount;
+      }
+    }
+    
+    // Return as is for other formats
+    return amount;
+  };
+
   // If tool is in call state, show pending UI with steps
   if (tool.state === 'call') {
     const statusInfo = getStatusInfo(status)
@@ -240,7 +271,7 @@ export function RedeemTransactionCard({
           <div className="flex flex-col space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="text-base font-medium">
-                {isYtRewards ? 'YT Rewards Redemption' : 'Token Redemption'}
+                {getRedemptionTitle()}
               </h3>
               {getStatusBadge(status)}
             </div>
@@ -307,7 +338,7 @@ export function RedeemTransactionCard({
           <div className="flex flex-col space-y-3">
             <div className="flex justify-between items-center">
               <h3 className="text-base font-medium">
-                {isYtRewards ? 'YT Rewards Redemption' : 'Token Redemption'}
+                {getRedemptionTitle()}
               </h3>
               {getStatusBadge(status)}
             </div>
@@ -344,14 +375,16 @@ export function RedeemTransactionCard({
                 
                 {!isYtRewards && result.redeem_details?.amount_out && (
                   <div className="flex items-center justify-between text-sm text-gray-700 dark:text-gray-300">
-                    <span>ETH Received:</span>
-                    <span>{result.redeem_details.amount_out}</span>
+                    <span>Amount Received:</span>
+                    <span>
+                      {formatAmount(result.redeem_details.amount_out)}
+                    </span>
                   </div>
                 )}
                 
                 {isYtRewards && result.redeem_details?.yts && (
                   <div className="flex items-center justify-between text-sm text-gray-700 dark:text-gray-300">
-                    <span>YT Tokens Redeemed:</span>
+                    <span>Tokens Redeemed:</span>
                     <span>{result.redeem_details.yts.length} token(s)</span>
                   </div>
                 )}

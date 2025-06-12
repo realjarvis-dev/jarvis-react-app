@@ -154,11 +154,11 @@ export function ToolSection({
           </div>
         </div>
       )
-    case 'pendle_redeem':
+    case 'pendle_redeem_pt':
       return (
         <div className="flex flex-col space-y-4 py-4">
           <div className="flex flex-col">
-            <h3 className="text-base font-medium">Pendle Redemption</h3>
+            <h3 className="text-base font-medium">Principal Token Redemption</h3>
             <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
               {tool.state === 'call' 
                 ? 'Processing your redemption transaction...' 
@@ -172,17 +172,17 @@ export function ToolSection({
           </div>
         </div>
       )
-    case 'pendle_redeem_rewards':
+    case 'pendle_redeem_yt':
       return (
         <div className="flex flex-col space-y-4 py-4">
           <div className="flex flex-col">
-            <h3 className="text-base font-medium">Pendle YT Rewards Redemption</h3>
+            <h3 className="text-base font-medium">Yield Token Redemption</h3>
             <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
               {tool.state === 'call' 
-                ? 'Processing your YT rewards redemption...' 
+                ? 'Processing your redemption transaction...' 
                 : tool.state === 'result' && 'result' in tool && tool.result?.success 
-                  ? 'YT rewards redemption completed successfully' 
-                  : 'YT rewards redemption failed'}
+                  ? 'Redemption completed successfully' 
+                  : 'Redemption transaction failed'}
             </div>
             <div className="mt-2">
               <RedeemTransactionCard tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
