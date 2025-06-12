@@ -11,7 +11,6 @@ import { LifiSwapQuoteSection } from './lifi-swap-quote-section'
 import { MarketChartSection } from './market-chart-section'
 import { PendleOpportunitiesSection } from './pendle-opportunities-section'
 import { QuestionConfirmation } from './question-confirmation'
-import { RedeemTransactionCard } from './redeem-transaction-card'
 import RetrieveSection from './retrieve-section'
 import { SearchSection } from './search-section'
 import { SimpleQuoteDisplay } from './simple-quote-display'
@@ -144,39 +143,11 @@ export function ToolSection({
       )
     case 'pendle_redeem_pt':
       return (
-        <div className="flex flex-col space-y-4 py-4">
-          <div className="flex flex-col">
-            <h3 className="text-base font-medium">Principal Token Redemption</h3>
-            <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-              {tool.state === 'call' 
-                ? 'Processing your redemption transaction...' 
-                : tool.state === 'result' && 'result' in tool && tool.result?.success 
-                  ? 'Redemption completed successfully' 
-                  : 'Redemption transaction failed'}
-            </div>
-            <div className="mt-2">
-              <RedeemTransactionCard tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
-            </div>
-          </div>
-        </div>
+        <SwapTransactionCard tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
       )
     case 'pendle_redeem_yt':
       return (
-        <div className="flex flex-col space-y-4 py-4">
-          <div className="flex flex-col">
-            <h3 className="text-base font-medium">Yield Token Redemption</h3>
-            <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-              {tool.state === 'call' 
-                ? 'Processing your redemption transaction...' 
-                : tool.state === 'result' && 'result' in tool && tool.result?.success 
-                  ? 'Redemption completed successfully' 
-                  : 'Redemption transaction failed'}
-            </div>
-            <div className="mt-2">
-              <RedeemTransactionCard tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
-            </div>
-          </div>
-        </div>
+        <SwapTransactionCard tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
       )
     case 'generic_swap':
       return (
