@@ -44,11 +44,11 @@ export function RedeemTransactionStatus({
   const getStatusIcon = () => {
     switch (status) {
       case 'confirmed':
-        return <CheckCircle className="h-4 w-4 mr-1" />
+        return <CheckCircle className="h-4 w-4 mr-2" />
       case 'failed':
-        return <XCircle className="h-4 w-4 mr-1" />
+        return <XCircle className="h-4 w-4 mr-2" />
       default:
-        return <Clock className="h-4 w-4 mr-1" />
+        return <Clock className="h-4 w-4 mr-2" />
     }
   }
 

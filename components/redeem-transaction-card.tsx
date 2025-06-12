@@ -296,7 +296,7 @@ export function RedeemTransactionCard({
                       ></div>
                       <span 
                         className={cn(
-                          "text-xs mt-1.5 absolute top-5 transform -translate-x-1/2 whitespace-nowrap",
+                          "text-xs mt-2 text-center whitespace-nowrap",
                           isCurrent 
                             ? "font-medium text-blue-800 dark:text-blue-300" 
                             : "text-gray-500 dark:text-gray-400"
@@ -310,7 +310,7 @@ export function RedeemTransactionCard({
               </div>
             </div>
             
-            <div className="pt-8">
+            <div className="pt-10">
               <RedeemTransactionStatus 
                 status={status} 
                 tokenName={tokenName}
