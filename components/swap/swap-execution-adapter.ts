@@ -39,11 +39,15 @@ export function normalizeSwapInfo(
     : {}
 
   // tool type detection
-  let toolType: 'pendle' | 'lifi' | undefined
+  let toolType: 'pendle' | 'lifi' | 'pendle_redeem_pt' | 'pendle_redeem_yt' | undefined
   if (tool.toolName === 'pendle_swap') {
     toolType = 'pendle'
   } else if (tool.toolName === 'lifi_bridge_execute') {
     toolType = 'lifi'
+  } else if (tool.toolName === 'pendle_redeem_pt') {
+    toolType = 'pendle_redeem_pt'
+  } else if (tool.toolName === 'pendle_redeem_yt') {
+    toolType = 'pendle_redeem_yt'
   } else {
     // fallback detection
     if (result?.swap_details?.from_chain_name || args?.fromChainName) {
@@ -101,6 +105,114 @@ export function normalizeSwapInfo(
         fromAmount,
         status: 'failed',
         error: data.error || 'Transaction failed',
+        fromChainId: chainId
+      }
+    }
+  }
+
+  // Handle PT redemption
+  if (toolType === 'pendle_redeem_pt') {
+    const data = result?.data || result // results are wrapped in `data`
+
+    // Get token name from args or result
+    const tokenName = args.token_name_display || 
+                     (data?.redeem_details?.token) || 
+                     'PT Token'
+    
+    const fromAmount = args.amount_in_human
+    const chainId = data?.redeem_details?.chainId || currentChainId
+
+    if (tool.state === 'call') {
+      return {
+        title: 'Principal Token Redemption',
+        isBridge: false,
+        fromTokenName: tokenName,
+        toTokenName: 'ETH',
+        fromAmount,
+        status: 'pending',
+        fromChainId: chainId
+      }
+    }
+
+    if (data?.success) {
+      return {
+        title: 'Principal Token Redemption',
+        isBridge: false,
+        fromTokenName: tokenName,
+        toTokenName: 'ETH',
+        fromAmount: args.amount_in_human,
+        status: 'confirmed',
+        txHash: data.transaction_hash,
+        explorerLink: data.redeem_details.explorer_link,
+        completeTime: data.redeem_details.complete_time,
+        sentDisplay: data.redeem_details.amount_in,
+        receivedDisplay: data.redeem_details.amount_out ? `${data.redeem_details.amount_out} ETH` : 'ETH',
+        fromChainId: data.redeem_details.chainId
+      }
+    }
+    
+    if (data && !data.success) {
+      return {
+        title: 'Principal Token Redemption',
+        isBridge: false,
+        fromTokenName: tokenName,
+        toTokenName: 'ETH',
+        fromAmount,
+        status: 'failed',
+        error: data.error || 'Redemption failed',
+        fromChainId: chainId
+      }
+    }
+  }
+
+  // Handle YT redemption
+  if (toolType === 'pendle_redeem_yt') {
+    const data = result?.data || result // results are wrapped in `data`
+    
+    // For YT redemption, we use a generic display name
+    const tokenName = 'YT Rewards'
+    const chainId = data?.redeem_details?.chainId || currentChainId
+
+    if (tool.state === 'call') {
+      return {
+        title: 'Yield Token Redemption',
+        isBridge: false,
+        fromTokenName: tokenName,
+        toTokenName: 'Rewards',
+        fromAmount: args.yt_addresses?.length ? `${args.yt_addresses.length} tokens` : 'Tokens',
+        status: 'pending',
+        fromChainId: chainId
+      }
+    }
+
+    if (data?.success) {
+      const tokenCount = data.redeem_details?.yts?.length || 0;
+      
+      return {
+        title: 'Yield Token Redemption',
+        isBridge: false,
+        fromTokenName: tokenName,
+        toTokenName: 'Rewards',
+        fromAmount: `${tokenCount} tokens`,
+        status: 'confirmed',
+        txHash: data.transaction_hash,
+        explorerLink: data.redeem_details.explorer_link,
+        completeTime: data.redeem_details.complete_time,
+        sentDisplay: `${tokenCount} YT Tokens`,
+        receivedDisplay: 'Accrued Rewards',
+        fromChainId: data.redeem_details.chainId
+      }
+    }
+    
+    if (data && !data.success) {
+      return {
+        title: 'Yield Token Redemption',
+        isBridge: false,
+        fromTokenName: tokenName,
+        toTokenName: 'Rewards',
+        fromAmount: args.yt_addresses?.length ? `${args.yt_addresses.length} tokens` : 'Tokens',
+        status: 'failed',
+        error: data.error || 'Redemption failed',
         fromChainId: chainId
       }
     }
