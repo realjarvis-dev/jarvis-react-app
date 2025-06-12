@@ -247,7 +247,11 @@ export async function erc20Approval(
         data: approvalData,
         value: BigInt(0)
       },
-      chainId
+      chainId,
+      {
+        estimateGas: true
+      },
+      isDemo
     )
     return { status: 'success', hash: txData.hash }
   } catch (error: any) {
