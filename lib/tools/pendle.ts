@@ -441,10 +441,13 @@ export const pendleRedeemPTTool = tool({
       .number()
       .min(0.001)
       .max(0.1)
-      .default(0.01)
+      .default(0.1)
       .describe('Maximum acceptable slippage (default: 0.01, which is 1%).')
   }),
   execute: async (params, context: ToolContext) => {
+    // Keep just one initial log for tracking execution
+    console.log('Starting PT redemption for:', params.pt_address);
+    
     const {
       pt_address,
       amount_in_human,
@@ -496,8 +499,6 @@ export const pendleRedeemPTTool = tool({
           amountInBaseUnits = amountBigInt.toString()
         } catch (tokenError: any) {
           // Fallback to 18 decimals (most common) if token details can't be fetched
-          console.log(`Could not get token details, using default 18 decimals: ${tokenError.message}`)
-          
           // For expired tokens, default to 18 decimals (standard for most ERC20 tokens)
           const amountBigInt = ethers.parseUnits(amount_in_human, 18)
           amountInBaseUnits = amountBigInt.toString()
@@ -517,8 +518,9 @@ export const pendleRedeemPTTool = tool({
         amountInBaseUnits,
         slippage,
         chainId,
-        false, // enableAggregator
-        isDemo
+        true,
+        isDemo,
+        pt_address.trim() // Pass the PT token address that was provided to the tool
       )
 
       if (result.status !== 'success') {
@@ -543,6 +545,7 @@ export const pendleRedeemPTTool = tool({
         data: redeemData
       }
     } catch (error: any) {
+      console.error('Redemption failed:', error.message);
       const errorData = {
         success: false,
         error: error.message || 'Failed to execute Pendle redemption.',
@@ -579,28 +582,42 @@ export const pendleRedeemYTTool = tool({
     const isDemo = networkContext?.isDemo
     
     try {
+      console.log('===== PENDLE REDEEM YT TOOL =====');
+      console.log('Parameters:', JSON.stringify(params, null, 2));
+      console.log('Network context:', JSON.stringify({
+        chainId: networkContext?.selectedChainId,
+        isDemo
+      }, null, 2));
+      
       const evmWalletAddress = await getUserEvmWalletAddress()
       if (!evmWalletAddress) {
+        console.error('Error: No wallet address found');
         throw new Error(
           'EVM wallet address not found. Please connect your wallet.'
         )
       }
+      console.log('Wallet address:', evmWalletAddress);
 
       const chainId = networkContext?.selectedChainId || 1 // Default to Ethereum mainnet
 
       // Check if YT addresses array has items
       if (!yt_addresses || yt_addresses.length === 0) {
+        console.error('Error: Empty YT addresses array');
         throw new Error('YT addresses array must contain at least one address')
       }
+      console.log(`Processing ${yt_addresses.length} YT addresses`);
 
       // Process addresses to ensure they're properly formatted
       const processedYtAddresses = yt_addresses.map(addr => addr.trim());
+      console.log('Processed YT addresses:', processedYtAddresses);
       
       // Define empty arrays for market_addresses and sy_addresses as placeholders for future
       const processedMarketAddresses: string[] = []
       const processedSyAddresses: string[] = []
+      console.log('Using empty market and SY addresses');
 
       // Execute the redemption transaction
+      console.log('Executing redemption transaction for YT rewards...');
       const result = await executeRedeemInterestsAndRewardsTransaction(
         processedSyAddresses.length > 0 ? processedSyAddresses : undefined,
         processedYtAddresses,
@@ -608,8 +625,10 @@ export const pendleRedeemYTTool = tool({
         chainId,
         isDemo
       )
+      console.log('Redemption result:', JSON.stringify(result, null, 2));
       
       if (result.status !== 'success') {
+        console.error('Redemption failed:', result.message);
         throw new Error(result.message || 'Failed to redeem rewards')
       }
 
@@ -622,6 +641,7 @@ export const pendleRedeemYTTool = tool({
           chainId: chainId
         }
       }
+      console.log('Redemption successful:', JSON.stringify(redeemData, null, 2));
       
       return {
         _uiDisplayTool: true,
@@ -629,6 +649,7 @@ export const pendleRedeemYTTool = tool({
         data: redeemData
       }
     } catch (error: any) {
+      console.error('Error in pendleRedeemYTTool:', error);
       const errorData = {
         success: false,
         error: error.message || 'Failed to redeem Pendle YT rewards.',
