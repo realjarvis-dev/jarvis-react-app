@@ -1,6 +1,7 @@
 import { tool } from 'ai'
 import { ethers } from 'ethers'
 import { z } from 'zod'
+import { getConfigByChainId } from '../network/config'
 import { getPendleMarkets } from '../pendle/api'
 import { getQuote } from '../pendle/quotes'
 import {
@@ -13,7 +14,6 @@ import {
 } from '../pendle/transactions'
 import { getUserEvmWalletAddress } from '../privy/client'
 import { NetworkContext } from '../types/context'
-import { getConfigByChainId } from '../network/config'
 
 // ETH address constants
 const ETH_ADDRESS_IDENTIFIER = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
@@ -410,7 +410,7 @@ export const pendleSwapTool = tool({
 
       // Execute the transaction
       const result = await executeSwapTransaction(txData, chainId, {estimateGas: true}, isDemo)
-      const explorerLink = getConfigByChainId(chainId!, isDemo).scanLink
+      const explorerLink = getConfigByChainId(chainId!, isDemo || false).scanLink
       const explorerLinkWithHash = `https://${explorerLink}/tx/${result.hash}`
 
       const swapData = {
@@ -570,6 +570,9 @@ export const pendleRedeemPTTool = tool({
         throw new Error(result.message || 'Failed to execute redemption')
       }
 
+      const explorerLink = getConfigByChainId(chainId, isDemo || false).scanLink
+      const explorerLinkWithHash = `https://${explorerLink}/tx/${result.hash}`
+
       const redeemData = {
         success: true,
         transaction_hash: result.hash,
@@ -578,7 +581,8 @@ export const pendleRedeemPTTool = tool({
           amount_in: `${amount_in_human} ${displayTokenName}`,
           amount_out: result.amountOut,
           complete_time: new Date().toISOString(),
-          chainId: chainId
+          chainId: chainId,
+          explorer_link: explorerLinkWithHash
         }
       }
       
@@ -675,13 +679,17 @@ export const pendleRedeemYTTool = tool({
         throw new Error(result.message || 'Failed to redeem rewards')
       }
 
+      const explorerLink = getConfigByChainId(chainId, isDemo || false).scanLink
+      const explorerLinkWithHash = `https://${explorerLink}/tx/${result.hash}`
+
       const redeemData = {
         success: true,
         transaction_hash: result.hash,
         redeem_details: {
           yts: processedYtAddresses,
           complete_time: new Date().toISOString(),
-          chainId: chainId
+          chainId: chainId,
+          explorer_link: explorerLinkWithHash
         }
       }
       console.log('Redemption successful:', JSON.stringify(redeemData, null, 2));
