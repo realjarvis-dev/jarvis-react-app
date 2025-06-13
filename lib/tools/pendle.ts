@@ -12,10 +12,36 @@ import {
 import { getUserEvmWalletAddress } from '../privy/client'
 import { NetworkContext } from '../types/context'
 
-// ETH address constants
-const ETH_ADDRESS_IDENTIFIER = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
-const ETH_ADDRESS_PENDLE = '0x0000000000000000000000000000000000000000'
-const ETH_SYMBOL_IDENTIFIER = 'ETH'
+
+const PENDLE_CONFIG = {
+  // Ethereum Address Constants
+  ETH_ADDRESS_IDENTIFIER: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+  ETH_ADDRESS_PENDLE: '0x0000000000000000000000000000000000000000',
+  ETH_SYMBOL: 'ETH',
+  
+  // Slippage Configuration
+  DEFAULT_SLIPPAGE: 0.01,        // 1% default slippage
+  DEMO_SLIPPAGE: 0.3,            // 30% slippage for demo mode
+  MAX_SLIPPAGE: 0.1,             // 10% maximum allowed slippage
+  MIN_SLIPPAGE: 0.001,           // 0.1% minimum slippage
+  
+  // Chain and Decimals
+  DEFAULT_CHAIN_ID: 1,           // Ethereum mainnet
+  DEFAULT_DECIMALS: 18,          // Standard ERC20 decimals
+  
+  // Rate Display Configuration
+  INVERSE_RATE_PRECISION: 6,     // Number of decimal places for inverse rate display
+  
+  // Tool Result Limits
+  MAX_OPPORTUNITIES: 50,         // Maximum opportunities to return
+  MIN_OPPORTUNITIES: 1,          // Minimum opportunities to return
+  DEFAULT_OPPORTUNITIES: 10,     // Default number of opportunities
+  
+  // Aggregator Settings
+  ENABLE_AGGREGATOR: true,       // Enable swap aggregator by default
+} as const;
+
+
 
 interface ToolContext {
   toolCallId?: string
@@ -49,8 +75,127 @@ async function findMarketByTokenAddress(tokenAddress: string, tokenType: 'pt' | 
   return foundMarket;
 }
 
+/**
+ * Helper function to prepare swap configuration for Pendle operations
+ * @param tokenAddress The PT or YT token address
+ * @param tokenType The type of token - 'pt' or 'yt'
+ * @param direction The swap direction - 'ethToToken' or 'tokenToEth'
+ * @param amountHuman The human-readable amount to swap
+ * @param marketName The market name for display purposes
+ * @param chainId The chain ID to use for token details lookup
+ * @returns Prepared swap configuration object
+ */
+async function prepareSwapConfiguration(
+  tokenAddress: string,
+  tokenType: 'pt' | 'yt',
+  direction: 'ethToToken' | 'tokenToEth',
+  amountHuman: string,
+  marketName?: string,
+  chainId?: number
+) {
+  // Find market that contains the token
+  const foundMarket = await findMarketByTokenAddress(tokenAddress, tokenType);
+  
+  const marketAddress = foundMarket.address;
+  const tokenSymbol = marketName || foundMarket.name;
+  const fullTokenName = `${tokenType.toUpperCase()} ${tokenSymbol}`;
 
-// <------------------------------------------------------------------------------------------------>
+  // Determine tokenIn, tokenOut, and convert amount to wei
+  let tokenIn: string;
+  let tokenOut: string;
+  let amountInWei: string;
+  let inputToken: string;
+  let outputToken: string;
+  
+  if (direction === 'ethToToken') {
+    tokenIn = PENDLE_CONFIG.ETH_ADDRESS_PENDLE;
+    tokenOut = tokenAddress;
+    inputToken = PENDLE_CONFIG.ETH_SYMBOL;
+    outputToken = fullTokenName;
+    amountInWei = ethers.parseEther(amountHuman).toString();
+  } else {
+    tokenIn = tokenAddress;
+    tokenOut = PENDLE_CONFIG.ETH_ADDRESS_PENDLE;
+    inputToken = fullTokenName;
+    outputToken = PENDLE_CONFIG.ETH_SYMBOL;
+    
+    // For token input, get token details to convert to wei
+    try {
+      const tokenDetails = await getERC20Details(tokenAddress, chainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID);
+      amountInWei = ethers.parseUnits(amountHuman, tokenDetails.decimals).toString();
+    } catch (error) {
+      // Fallback to default decimals if token details can't be fetched
+      amountInWei = ethers.parseUnits(amountHuman, PENDLE_CONFIG.DEFAULT_DECIMALS).toString();
+    }
+  }
+
+  return {
+    foundMarket,
+    marketAddress,
+    fullTokenName,
+    tokenIn,
+    tokenOut,
+    amountInWei,
+    inputToken,
+    outputToken
+  };
+}
+
+/**
+ * Helper function to format swap output amounts and calculate rates
+ * @param swapData The swap data from Pendle containing amountOut
+ * @param direction The swap direction - 'ethToToken' or 'tokenToEth'
+ * @param tokenAddress The token address for getting decimals
+ * @param amountInHuman The human-readable input amount
+ * @param inputToken The input token display name
+ * @param outputToken The output token display name
+ * @param chainId The chain ID for token details lookup
+ * @returns Formatted output data with rates
+ */
+async function formatSwapOutput(
+  swapData: any,
+  direction: 'ethToToken' | 'tokenToEth',
+  tokenAddress: string,
+  amountInHuman: string,
+  inputToken: string,
+  outputToken: string,
+  chainId?: number
+) {
+  // Format output amount based on output token
+  let outputAmountFormatted: string;
+  if (direction === 'ethToToken') {
+    // Output is token, need to format with token decimals
+    try {
+      const tokenDetails = await getERC20Details(tokenAddress, chainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID);
+      outputAmountFormatted = ethers.formatUnits(swapData.amountOut, tokenDetails.decimals);
+    } catch (error) {
+      // Fallback to default decimals
+      outputAmountFormatted = ethers.formatUnits(swapData.amountOut, PENDLE_CONFIG.DEFAULT_DECIMALS);
+    }
+  } else {
+    // Output is ETH
+    outputAmountFormatted = ethers.formatEther(swapData.amountOut);
+  }
+  
+  // Create rate string
+  const rate = `${amountInHuman} ${inputToken} → ${outputAmountFormatted} ${outputToken}`;
+  
+  // Calculate inverse rate
+  const inputAmount = parseFloat(amountInHuman);
+  const outputAmount = parseFloat(outputAmountFormatted);
+  const inverseRatio = inputAmount / outputAmount;
+  const inverse = `1 ${outputToken} → ${inverseRatio.toFixed(PENDLE_CONFIG.INVERSE_RATE_PRECISION)} ${inputToken}`;
+  
+  return {
+    outputAmountFormatted,
+    rate,
+    inverse
+  };
+}
+
+
+// ------------------------------------------------------------------------------------------------------------ //
+// ------------------------------------------------------------------------------------------------------------ //
 
 
 export const pendleOpportunitiesTool = tool({
@@ -59,10 +204,10 @@ export const pendleOpportunitiesTool = tool({
   parameters: z.object({
     max_results: z
       .number()
-      .min(1)
-      .max(50)
-      .default(10)
-      .describe('Number of opportunities to return (default 10)'),
+      .min(PENDLE_CONFIG.MIN_OPPORTUNITIES)
+      .max(PENDLE_CONFIG.MAX_OPPORTUNITIES)
+      .default(PENDLE_CONFIG.DEFAULT_OPPORTUNITIES)
+      .describe(`Number of opportunities to return (default ${PENDLE_CONFIG.DEFAULT_OPPORTUNITIES})`),
     apy_gte: z
       .number()
       .optional()
@@ -93,8 +238,6 @@ export const pendleOpportunitiesTool = tool({
       if (typeof apy_lte === 'number') {
         decimal_apy_lte = apy_lte / 100
       }
-
-      // console.log(max_results, `original apy_gte: ${apy_gte}, converted: ${decimal_apy_gte}`, `original apy_lte: ${apy_lte}, converted: ${decimal_apy_lte}`);
 
       let filtered = markets
       if (decimal_apy_gte !== undefined)
@@ -167,98 +310,56 @@ export const pendleQuoteTool = tool({
     
     try {
             
-      // Find market that contains the token
-      const foundMarket = await findMarketByTokenAddress(token_address, token_type)
-      
-      const finalMarketAddress = foundMarket.address;
-      const finalTokenAddress = token_address;
-
-      // Format full token name with PT/YT prefix
-      const fullTokenName = `${token_type.toUpperCase()} ${market_name}`
-      
-      // Determine tokenIn, tokenOut, and convert amount to wei
-      let tokenIn: string;
-      let tokenOut: string;
-      let amountInWei: string;
-      let inputToken: string;
-      let outputToken: string;
-      
-      if (direction === 'ethToToken') {
-        tokenIn = ETH_ADDRESS_PENDLE;
-        tokenOut = finalTokenAddress;
-        inputToken = ETH_SYMBOL_IDENTIFIER;
-        outputToken = fullTokenName;
-        amountInWei = ethers.parseEther(amount_in_human).toString();
-      } else {
-        tokenIn = finalTokenAddress;
-        tokenOut = ETH_ADDRESS_PENDLE;
-        inputToken = fullTokenName;
-        outputToken = ETH_SYMBOL_IDENTIFIER;
-        
-        // For token input, get token details to convert to wei
-        try {
-          const tokenDetails = await getERC20Details(finalTokenAddress, 1);
-          amountInWei = ethers.parseUnits(amount_in_human, tokenDetails.decimals).toString();
-        } catch (error) {
-          // Fallback to 18 decimals if token details can't be fetched
-          amountInWei = ethers.parseUnits(amount_in_human, 18).toString();
-        }
-      }
+      // Prepare swap configuration using helper function
+      const swapConfig = await prepareSwapConfiguration(
+        token_address,
+        token_type,
+        direction,
+        amount_in_human,
+        market_name,
+        PENDLE_CONFIG.DEFAULT_CHAIN_ID
+      );
       
       // Call the getSwapQuote function
       const swapData = await getSwapQuote(
-        finalMarketAddress,
-        tokenIn,
-        tokenOut,
-        amountInWei,
-        0.01, // 1% slippage
-        true,
-        networkContext?.selectedChainId,
+        swapConfig.marketAddress,
+        swapConfig.tokenIn,
+        swapConfig.tokenOut,
+        swapConfig.amountInWei,
+        PENDLE_CONFIG.DEFAULT_SLIPPAGE,
+        PENDLE_CONFIG.ENABLE_AGGREGATOR,
+        PENDLE_CONFIG.DEFAULT_CHAIN_ID,
         user_wallet_address
       );
 
-      // Format output amount based on output token
-      let outputAmountFormatted: string;
-      if (direction === 'ethToToken') {
-        // Output is token, need to format with token decimals
-        try {
-          const tokenDetails = await getERC20Details(finalTokenAddress, 1);
-          outputAmountFormatted = ethers.formatUnits(swapData.amountOut, tokenDetails.decimals);
-        } catch (error) {
-          // Fallback to 18 decimals
-          outputAmountFormatted = ethers.formatUnits(swapData.amountOut, 18);
-        }
-      } else {
-        // Output is ETH
-        outputAmountFormatted = ethers.formatEther(swapData.amountOut);
-      }
-      
-      // Create rate string
-      const rate = `${amount_in_human} ${inputToken} → ${outputAmountFormatted} ${outputToken}`;
-      
-      // Calculate inverse rate
-      const inputAmount = parseFloat(amount_in_human);
-      const outputAmount = parseFloat(outputAmountFormatted);
-      const inverseRatio = inputAmount / outputAmount;
-      const inverse = `1 ${outputToken} → ${inverseRatio.toFixed(6)} ${inputToken}`;
+      // Format output and calculate rates using helper function
+      const outputData = await formatSwapOutput(
+        swapData,
+        direction,
+        token_address,
+        amount_in_human,
+        swapConfig.inputToken,
+        swapConfig.outputToken,
+        PENDLE_CONFIG.DEFAULT_CHAIN_ID
+      );
       
       const quoteData = {
-        market: fullTokenName,
+        market: swapConfig.fullTokenName,
         inputAmount: amount_in_human,
-        inputToken: inputToken,
-        outputToken: outputToken,
-        rate: rate,
-        inverse: inverse,
-        outputAmount: outputAmountFormatted,
+        inputToken: swapConfig.inputToken,
+        outputToken: swapConfig.outputToken,
+        rate: outputData.rate,
+        inverse: outputData.inverse,
+        outputAmount: outputData.outputAmountFormatted,
         priceImpact: swapData.priceImpact,
         complete_time: new Date().toISOString(),
-        foundMarketAddress: finalMarketAddress,
-        foundTokenAddress: finalTokenAddress
+        foundMarketAddress: swapConfig.marketAddress,
+        foundTokenAddress: token_address
       }
       
       return {
         _uiDisplayTool: true,
-        summary: `Quote for ${rate}`,
+        summary: `Quote for ${outputData.rate}`,
         data: quoteData
       }
     } catch (error: any) {
@@ -310,10 +411,10 @@ export const pendleSwapTool = tool({
       ),
     slippage: z
       .number()
-      .min(0.001)
-      .max(0.1)
-      .default(0.01)
-      .describe('Maximum acceptable slippage (default: 0.01, which is 1%).'),
+      .min(PENDLE_CONFIG.MIN_SLIPPAGE)
+      .max(PENDLE_CONFIG.MAX_SLIPPAGE)
+      .default(PENDLE_CONFIG.DEFAULT_SLIPPAGE)
+      .describe(`Maximum acceptable slippage (default: ${PENDLE_CONFIG.DEFAULT_SLIPPAGE}, which is ${PENDLE_CONFIG.DEFAULT_SLIPPAGE * 100}%).`),
     market_name: z
       .string()
       .optional()
@@ -326,23 +427,17 @@ export const pendleSwapTool = tool({
       direction,
       token_type,
       amount_in_human,
-      slippage = 0.01,
+      slippage = PENDLE_CONFIG.DEFAULT_SLIPPAGE,
       market_name
     } = params;
     const networkContext = context?.networkContext;
     const isDemo = networkContext?.isDemo
     if (isDemo) {
-      slippage = 0.3
+      slippage = PENDLE_CONFIG.DEMO_SLIPPAGE
     }
 
     let displayTokenIn, displayTokenOut;
     try {
-      const evmWalletAddress = await getUserEvmWalletAddress()
-      if (!evmWalletAddress) {
-        throw new Error(
-          'EVM wallet address not found. Please connect your wallet.'
-        )
-      }
 
       const chainId = networkContext?.selectedChainId
       const isDemo = networkContext!.isDemo
@@ -360,52 +455,28 @@ export const pendleSwapTool = tool({
         throw new Error('Token address must be provided');
       }
       
-      // Find market that contains the token
-      console.log('Searching for market using token address:', token_address);
-      const markets = await getPendleMarkets();
-      console.log('Available markets count:', markets.length);
+      // Prepare swap configuration using helper function
+      const swapConfig = await prepareSwapConfiguration(
+        token_address,
+        token_type,
+        direction,
+        amount_in_human,
+        market_name,
+        chainId
+      );
       
-      const foundMarket = await findMarketByTokenAddress(token_address, token_type)
-      
-      const market_address = foundMarket.address;
-      const tokenSymbol = market_name || foundMarket.name;
-      const fullTokenName = `${token_type.toUpperCase()} ${tokenSymbol}`;
-
-      // Determine input and output tokens based on direction and convert amount to wei
-      let tokenIn: string;
-      let tokenOut: string;
-      let amountInWei: string;
-      
-      if (direction === 'ethToToken') {
-        tokenIn = ETH_ADDRESS_PENDLE;
-        tokenOut = token_address;
-        displayTokenIn = ETH_SYMBOL_IDENTIFIER;
-        displayTokenOut = fullTokenName;
-        amountInWei = ethers.parseEther(amount_in_human).toString();
-      } else { // tokenToEth
-        tokenIn = token_address;
-        tokenOut = ETH_ADDRESS_PENDLE;
-        displayTokenIn = fullTokenName;
-        displayTokenOut = ETH_SYMBOL_IDENTIFIER;
-        
-        // For token input, get token details to convert to wei
-        try {
-          const tokenDetails = await getERC20Details(token_address, chainId);
-          amountInWei = ethers.parseUnits(amount_in_human, tokenDetails.decimals).toString();
-        } catch (error) {
-          // Fallback to 18 decimals if token details can't be fetched
-          amountInWei = ethers.parseUnits(amount_in_human, 18).toString();
-        }
-      }
+      // Set display tokens for UI
+      displayTokenIn = swapConfig.inputToken;
+      displayTokenOut = swapConfig.outputToken;
 
       // Execute the swap using executePendleSwap
       const result = await executePendleSwap(
-        market_address,
-        tokenIn,
-        tokenOut,
-        amountInWei,
+        swapConfig.marketAddress,
+        swapConfig.tokenIn,
+        swapConfig.tokenOut,
+        swapConfig.amountInWei,
         slippage,
-        true, // enableAggregator
+        PENDLE_CONFIG.ENABLE_AGGREGATOR,
         chainId,
         isDemo,
         user_wallet_address
@@ -496,7 +567,7 @@ export const pendleRedeemPTTool = tool({
       pt_address,
       amount_in_human,
       token_name_display,
-      slippage = 0.01
+      slippage = PENDLE_CONFIG.DEFAULT_SLIPPAGE
     } = params;
     const networkContext = context?.networkContext;
     const isDemo = networkContext?.isDemo
@@ -509,7 +580,7 @@ export const pendleRedeemPTTool = tool({
         )
       }
 
-      const chainId = networkContext?.selectedChainId || 1 // Default to Ethereum mainnet
+      const chainId = networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID
       
       // Find the market using the PT token address to get the corresponding YT token
       const markets = await getPendleMarkets('all');
@@ -542,9 +613,9 @@ export const pendleRedeemPTTool = tool({
           // Ensure we have a clean string representation without scientific notation
           amountInBaseUnits = amountBigInt.toString()
         } catch (tokenError: any) {
-          // Fallback to 18 decimals (most common) if token details can't be fetched
-          // For expired tokens, default to 18 decimals (standard for most ERC20 tokens)
-          const amountBigInt = ethers.parseUnits(amount_in_human, 18)
+          // Fallback to default decimals if token details can't be fetched
+          // For expired tokens, default to standard ERC20 decimals
+          const amountBigInt = ethers.parseUnits(amount_in_human, PENDLE_CONFIG.DEFAULT_DECIMALS)
           amountInBaseUnits = amountBigInt.toString()
         }
       } catch (error: any) {
@@ -642,7 +713,7 @@ export const pendleRedeemYTTool = tool({
       }
       console.log('Wallet address:', evmWalletAddress);
 
-      const chainId = networkContext?.selectedChainId || 1 // Default to Ethereum mainnet
+      const chainId = networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID
 
       // Check if YT addresses array has items
       if (!yt_addresses || yt_addresses.length === 0) {
