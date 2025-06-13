@@ -1,14 +1,13 @@
 import { tool } from 'ai'
 import { formatUnits, parseUnits } from 'viem'
 import { z } from 'zod'
+import { getConfigByChainId } from '../network/config'
 import { addLiquiditySingleEnableAggregator } from '../pendle/add-liquidity-single'
 import { getPendleMarkets } from '../pendle/api'
+import { getERC20Details } from '../pendle/transactions'
 import { getUserEvmWalletAddress } from '../privy/client'
 import { findTokenByIdentifier } from '../token-matcher/token-utils'
 import { ToolContext } from '../types/context'
-import { getERC20Details } from '../pendle/transactions'
-import { Lekton } from 'next/font/google'
-import { getConfigByChainId } from '../network/config'
 
 export const pendleZapInQuoteTool = tool({
   description:
@@ -60,6 +59,7 @@ export const pendleZapInQuoteTool = tool({
       slippage,
       zeroPriceImpact
     } = params
+    try {
     const networkContext = context.networkContext
     const chainId = networkContext!.selectedChainId
     const isDemo = networkContext!.isDemo
@@ -88,17 +88,17 @@ export const pendleZapInQuoteTool = tool({
       )
     }
     if (!market) {
-        return {
-          status: 'fail',
-          error_message: 'Market not found',
-          hash: null
-        }
+      return {
+        status: 'fail',
+        error_message: 'Market not found',
+        hash: null
       }
-
+    }
+    
     marketAddress = market.address
     const ytAddress = market.yt
     const ytDetails = await getERC20Details(ytAddress, chainId)
-    const ytDecimals = ytDetails.decimals
+    const ytDecimals = Number(ytDetails.decimals)
 
     let tokenInDecimals = 18
     if (!tokenInAddress) {
@@ -116,7 +116,7 @@ export const pendleZapInQuoteTool = tool({
         }
       }
       tokenInAddress = tokenResult.token!.address
-      tokenInDecimals = tokenResult.token!.decimals
+      tokenInDecimals = Number(tokenResult.token!.decimals)
     }
 
     if (tokenInType === 'yt') {
@@ -145,15 +145,22 @@ export const pendleZapInQuoteTool = tool({
       isDemo,
       false
     )
-    
+
     if (result.status === 'fail') {
       return {
         status: 'fail',
         error_message: result.error
       }
     }
-    result.addLiquidityData!.amountLpOut = formatUnits(BigInt(result.addLiquidityData!.amountLpOut), 18)
-    result.addLiquidityData!.amountYtOut = formatUnits(BigInt(result.addLiquidityData!.amountYtOut), ytDecimals)
+    result.addLiquidityData!.amountLpOut = formatUnits(
+      BigInt(result.addLiquidityData!.amountLpOut),
+      18
+    )
+    // console.log('ytDecimals', ytDecimals)
+    result.addLiquidityData!.amountYtOut = formatUnits(
+      BigInt(result.addLiquidityData!.amountYtOut),
+      ytDecimals
+    )
     return {
       status: 'success',
       quote: result.addLiquidityData,
@@ -166,8 +173,15 @@ export const pendleZapInQuoteTool = tool({
       zeroPriceImpact: zeroPriceImpact,
       ytDecimals: ytDecimals,
       ytName: ytDetails.name,
+      completeTime: new Date().toISOString()
     }
-  }
+  } catch (error) {
+    console.error(error)
+    return {
+      status: 'fail',
+      error_message: 'Error getting quote'
+    }
+  }}
 })
 
 export const pendleZapInExecuteTool = tool({
@@ -183,7 +197,11 @@ export const pendleZapInExecuteTool = tool({
     tokenInName: z.string().describe('The name of the input token'),
     tokenInAddress: z.string().describe('The address of the input token'),
     tokenInDecimals: z.number().describe('The decimals of the input token'),
-    ytDecimals: z.number().describe('The decimals of the YT token. This is used to convert the amount of YT token to human readable format.'),
+    ytDecimals: z
+      .number()
+      .describe(
+        'The decimals of the YT token. This is used to convert the amount of YT token to human readable format.'
+      ),
     amountIn: z.string().describe('The amount of the input token'),
     slippage: z
       .number()
@@ -242,19 +260,23 @@ export const pendleZapInExecuteTool = tool({
         error_message: result.error
       }
     }
-    result.addLiquidityData!.amountLpOut = formatUnits(BigInt(result.addLiquidityData!.amountLpOut), 18)
-    result.addLiquidityData!.amountYtOut = formatUnits(BigInt(result.addLiquidityData!.amountYtOut), ytDecimals)
-    const explorerLink = getConfigByChainId(
-        chainId,
-        isDemo
-      ).scanLink
-      const explorerLinkWithHash = `https://${explorerLink}/tx/${result.hash}`    
-      return {
-        status: 'success',
-        hash: result.hash,
-        addLiquidityData: result.addLiquidityData,
-        completeTime: new Date().toISOString(),
-        explorerLink: explorerLink ? explorerLinkWithHash : undefined 
+    result.addLiquidityData!.amountLpOut = formatUnits(
+      BigInt(result.addLiquidityData!.amountLpOut),
+      18
+    )
+    
+    result.addLiquidityData!.amountYtOut = formatUnits(
+      BigInt(result.addLiquidityData!.amountYtOut),
+      ytDecimals
+    )
+    const explorerLink = getConfigByChainId(chainId, isDemo).scanLink
+    const explorerLinkWithHash = `https://${explorerLink}/tx/${result.hash}`
+    return {
+      status: 'success',
+      hash: result.hash,
+      addLiquidityData: result.addLiquidityData,
+      completeTime: new Date().toISOString(),
+      explorerLink: explorerLink ? explorerLinkWithHash : undefined
     }
   }
 })

@@ -32,7 +32,7 @@ async function formatOutputAndExecute(res: MethodReturnType<AddLiquidityData>, c
     } catch (error) {
         if (error instanceof TransactionError) {
             return {
-                status: 'failed',
+                status: 'fail',
                 error: error.message,
                 hash: error.hash,
                 addLiquidityData: res.data as AddLiquidityData
@@ -93,7 +93,7 @@ export async function addLiquiditySingleEnableAggregator(chainId: number, market
     catch (error: any) {
 
         return {
-            status: 'failed',
+            status: 'fail',
             error: error.message,
             hash: null,
             addLiquidityData: null

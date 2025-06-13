@@ -10,6 +10,8 @@ import { LifiSwapExecuteSection } from './lifi-swap-execute-section'
 import { LifiSwapQuoteSection } from './lifi-swap-quote-section'
 import { MarketChartSection } from './market-chart-section'
 import { PendleOpportunitiesSection } from './pendle-opportunities-section'
+import { PendleZapInExecutionCard } from './pendle/pendle-zap-in-execution-card'
+import { PendleZapInQuoteDisplay } from './pendle/pendle-zap-in-quote-display'
 import { QuestionConfirmation } from './question-confirmation'
 import { RedeemTransactionCard } from './redeem-transaction-card'
 import RetrieveSection from './retrieve-section'
@@ -127,7 +129,11 @@ export function ToolSection({
       )
     case 'pendle_quote':
       return (
-        <SimpleQuoteDisplay tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
+        <SimpleQuoteDisplay
+          tool={tool}
+          isOpen={isOpen}
+          onOpenChange={onOpenChange}
+        />
 
         // <div className="flex flex-col space-y-4 py-4">
         //   <div className="flex flex-col">
@@ -140,22 +146,50 @@ export function ToolSection({
       )
     case 'pendle_swap':
       return (
-        <SwapTransactionCard tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
+        <SwapTransactionCard
+          tool={tool}
+          isOpen={isOpen}
+          onOpenChange={onOpenChange}
+        />
+      )
+    case 'pendle_zap_in_quote':
+      return (
+        <PendleZapInQuoteDisplay
+          tool={tool}
+          isOpen={isOpen}
+          onOpenChange={onOpenChange}
+        />
+      )
+    case 'pendle_zap_in_execute':
+      return (
+        <PendleZapInExecutionCard
+          tool={tool}
+          isOpen={isOpen}
+          onOpenChange={onOpenChange}
+        />
       )
     case 'pendle_redeem_pt':
       return (
         <div className="flex flex-col space-y-4 py-4">
           <div className="flex flex-col">
-            <h3 className="text-base font-medium">Principal Token Redemption</h3>
+            <h3 className="text-base font-medium">
+              Principal Token Redemption
+            </h3>
             <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-              {tool.state === 'call' 
-                ? 'Processing your redemption transaction...' 
-                : tool.state === 'result' && 'result' in tool && tool.result?.success 
-                  ? 'Redemption completed successfully' 
-                  : 'Redemption transaction failed'}
+              {tool.state === 'call'
+                ? 'Processing your redemption transaction...'
+                : tool.state === 'result' &&
+                  'result' in tool &&
+                  tool.result?.success
+                ? 'Redemption completed successfully'
+                : 'Redemption transaction failed'}
             </div>
             <div className="mt-2">
-              <RedeemTransactionCard tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
+              <RedeemTransactionCard
+                tool={tool}
+                isOpen={isOpen}
+                onOpenChange={onOpenChange}
+              />
             </div>
           </div>
         </div>
@@ -166,21 +200,31 @@ export function ToolSection({
           <div className="flex flex-col">
             <h3 className="text-base font-medium">Yield Token Redemption</h3>
             <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-              {tool.state === 'call' 
-                ? 'Processing your redemption transaction...' 
-                : tool.state === 'result' && 'result' in tool && tool.result?.success 
-                  ? 'Redemption completed successfully' 
-                  : 'Redemption transaction failed'}
+              {tool.state === 'call'
+                ? 'Processing your redemption transaction...'
+                : tool.state === 'result' &&
+                  'result' in tool &&
+                  tool.result?.success
+                ? 'Redemption completed successfully'
+                : 'Redemption transaction failed'}
             </div>
             <div className="mt-2">
-              <RedeemTransactionCard tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
+              <RedeemTransactionCard
+                tool={tool}
+                isOpen={isOpen}
+                onOpenChange={onOpenChange}
+              />
             </div>
           </div>
         </div>
       )
     case 'generic_swap':
       return (
-        <GenericSwapCard tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
+        <GenericSwapCard
+          tool={tool}
+          isOpen={isOpen}
+          onOpenChange={onOpenChange}
+        />
       )
     case 'kodiak_deposit':
       return (
@@ -188,14 +232,20 @@ export function ToolSection({
           <div className="flex flex-col">
             <h3 className="text-base font-medium">Kodiak Deposit</h3>
             <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-              {tool.state === 'call' 
-                ? 'Processing your deposit transaction...' 
-                : tool.state === 'result' && 'result' in tool && tool.result?.success 
-                  ? 'Deposit completed successfully' 
-                  : 'Deposit transaction failed'}
+              {tool.state === 'call'
+                ? 'Processing your deposit transaction...'
+                : tool.state === 'result' &&
+                  'result' in tool &&
+                  tool.result?.success
+                ? 'Deposit completed successfully'
+                : 'Deposit transaction failed'}
             </div>
             <div className="mt-2">
-              <KodiakDepositCard tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
+              <KodiakDepositCard
+                tool={tool}
+                isOpen={isOpen}
+                onOpenChange={onOpenChange}
+              />
             </div>
           </div>
         </div>
@@ -218,16 +268,22 @@ export function ToolSection({
       )
     case 'lifi_bridge_quote':
       return (
-        <LifiSwapQuoteSection tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
+        <LifiSwapQuoteSection
+          tool={tool}
+          isOpen={isOpen}
+          onOpenChange={onOpenChange}
+        />
       )
     case 'lifi_bridge_execute':
       return (
-        <LifiSwapExecuteSection tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
+        <LifiSwapExecuteSection
+          tool={tool}
+          isOpen={isOpen}
+          onOpenChange={onOpenChange}
+        />
       )
     case 'get_gas_price':
-      return (
-        <GetGasPriceSection tool={tool} />
-      )
+      return <GetGasPriceSection tool={tool} />
     default:
       return null
   }
