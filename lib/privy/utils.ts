@@ -8,7 +8,7 @@ import { getConfigByChainId } from "../network/config";
  * Sign transaction using Privy wallet with advanced gas estimation
  * 
  * @param txData Transaction data object
- * @param chainId Chain ID (default: 1)
+ * @param chainId Chain ID
  * @param gasOptions Gas estimation options
  * @param isDemo Whether this is a demo transaction
  * @returns Signed transaction and provider
@@ -20,7 +20,7 @@ export async function signTransaction(
       data: string;
       value?: string | bigint;
     },
-    chainId: number = 1,
+    chainId: number,
     gasOptions?: {
       estimateGas: boolean;
       gasLimit?: `0x${string}`;
@@ -187,7 +187,7 @@ export async function broadcastTransaction(
  * @param txData Transaction data object
  * @param userAddress User's wallet address
  * @param evmWalletId EVM wallet ID from Privy
- * @param chainId Chain ID (default: 1)
+ * @param chainId Chain ID
  * @param gasOptions Gas estimation options
  * @param isDemo Whether this is a demo transaction
  * @returns Transaction response with hash
@@ -199,7 +199,7 @@ export async function executeTransaction(
       data: string;
       value?: string | bigint;
     },
-    chainId: number = 1,
+    chainId: number,
     gasOptions?: {
       estimateGas: boolean;
       gasLimit?: `0x${string}`;
