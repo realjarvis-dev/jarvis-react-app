@@ -1,6 +1,6 @@
+import { TENDERLY_DEMO_CONFIG } from "@/lib/network/config";
 import { ethers } from "ethers";
 import { TokenData } from "./types";
-import { TENDERLY_DEMO_CONFIG } from "@/lib/network/config";
 
 const commonlyUsedTokens = {
     USDT: '0xdac17f958d2ee523a2206206994597c13d831ec7',
@@ -26,7 +26,10 @@ export const commonlyUsedPTTokensArray = ['0xfc66d247f577bfc87df8a5267c43676c4a0
     '0xab365c0879024481e4ad3b47bd6fea9c10014fbc', 
     '0x1132065009850c72e27b7950c0f9285d1d103589', 
     '0xd1d0ff7bb555f57a9604ce06bca704ab97a0049a',
-    "0xb7de5dfcb74d25c2f21841fbd6230355c50d9308"
+    '0xb7de5dfcb74d25c2f21841fbd6230355c50d9308',
+    '0x9db057e02582d1ceaec287be9861fbe25cecc765',
+    '0x8be3460a480c80728a8c4d7a5d5303c85ba7b3b9',
+    '0xa36ecca8b7624d224f01cd6649c8afad3da12c3d'
   ]
 
 
