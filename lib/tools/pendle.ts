@@ -1,19 +1,16 @@
 import { tool } from 'ai'
 import { ethers } from 'ethers'
 import { z } from 'zod'
+import { getConfigByChainId } from '../network/config'
 import { getPendleMarkets } from '../pendle/api'
-import { getQuote } from '../pendle/quotes'
+import { executePendleSwap, getSwapQuote } from '../pendle/swap'
 import {
-  erc20Approval,
   executeRedeemInterestsAndRewardsTransaction,
   executeRedeemTransaction,
-  executeSwapTransaction,
-  getERC20Details,
-  getSwapTransactionFromPendle
+  getERC20Details
 } from '../pendle/transactions'
 import { getUserEvmWalletAddress } from '../privy/client'
 import { NetworkContext } from '../types/context'
-import { getConfigByChainId } from '../network/config'
 
 // ETH address constants
 const ETH_ADDRESS_IDENTIFIER = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
@@ -25,6 +22,36 @@ interface ToolContext {
   messages?: any[]
   networkContext?: NetworkContext
 }
+
+/**
+ * Helper function to find a Pendle market by token address
+ * @param tokenAddress The PT or YT token address to search for
+ * @param tokenType The type of token - 'pt' or 'yt'
+ * @returns The found market object
+ * @throws Error if no market is found with the given token address
+ */
+async function findMarketByTokenAddress(tokenAddress: string, tokenType: 'pt' | 'yt') {
+  if (!tokenAddress) {
+    throw new Error('Token address must be provided');
+  }
+  
+  const markets = await getPendleMarkets();
+  
+  const foundMarket = markets.find(market => {
+    const addressToCheck = tokenType === 'pt' ? market.pt : market.yt;
+    return addressToCheck.toLowerCase() === tokenAddress.toLowerCase();
+  });
+  
+  if (!foundMarket) {
+    throw new Error(`Could not find a Pendle market with ${tokenType.toUpperCase()} token address ${tokenAddress}`);
+  }
+  
+  return foundMarket;
+}
+
+
+// <------------------------------------------------------------------------------------------------>
+
 
 export const pendleOpportunitiesTool = tool({
   description:
@@ -107,6 +134,7 @@ export const pendleQuoteTool = tool({
     'Get a quote for swapping between ETH and a Pendle market token. This tool automatically renders UI.',
   parameters: z.object({
     token_address: z.string().describe('The address of the PT or YT token. The market will be automatically determined from this token.'),
+    user_wallet_address: z.string().describe('The address of the user\'s EVM wallet.'),
     market_name: z
       .string()
       .describe('The name of the market (required, e.g. "rswETH")'),
@@ -129,6 +157,7 @@ export const pendleQuoteTool = tool({
   execute: async (params, context: ToolContext) => {
     const {
       token_address,
+      user_wallet_address,
       market_name,
       amount_in_human,
       token_type,
@@ -137,41 +166,9 @@ export const pendleQuoteTool = tool({
     const networkContext = context?.networkContext;
     
     try {
-      console.log('===== PENDLE QUOTE TOOL DEBUG =====');
-      console.log('Input parameters:', {
-        token_address,
-        market_name,
-        token_type,
-        direction
-      });
-      
-      if (!token_address) {
-        throw new Error('Token address must be provided');
-      }
-      
-      // Always get market address from token address
-      console.log('Searching for market using token address:', token_address);
-      const markets = await getPendleMarkets();
-      console.log('Available markets count:', markets.length);
-      
+            
       // Find market that contains the token
-      const foundMarket = markets.find(market => {
-        const addressToCheck = token_type === 'pt' ? market.pt : market.yt;
-        const matches = addressToCheck.toLowerCase() === token_address.toLowerCase();
-        if (matches) {
-          console.log('Found matching market:', {
-            name: market.name,
-            address: market.address,
-            pt: market.pt,
-            yt: market.yt
-          });
-        }
-        return matches;
-      });
-      
-      if (!foundMarket) {
-        throw new Error(`Could not find a Pendle market with ${token_type.toUpperCase()} token address ${token_address}`);
-      }
+      const foundMarket = await findMarketByTokenAddress(token_address, token_type)
       
       const finalMarketAddress = foundMarket.address;
       const finalTokenAddress = token_address;
@@ -179,26 +176,81 @@ export const pendleQuoteTool = tool({
       // Format full token name with PT/YT prefix
       const fullTokenName = `${token_type.toUpperCase()} ${market_name}`
       
-      // Call the getQuote function with the direction parameter
-      const quote = await getQuote(
-        finalMarketAddress.toLowerCase().trim(),
-        finalTokenAddress.toLowerCase().trim(),
-        fullTokenName,
-        amount_in_human, // Fixed amount of 1 ETH or token
-        direction, // Direction of the swap
-        1 // Fixed chain ID (Ethereum)
-      )
+      // Determine tokenIn, tokenOut, and convert amount to wei
+      let tokenIn: string;
+      let tokenOut: string;
+      let amountInWei: string;
+      let inputToken: string;
+      let outputToken: string;
+      
+      if (direction === 'ethToToken') {
+        tokenIn = ETH_ADDRESS_PENDLE;
+        tokenOut = finalTokenAddress;
+        inputToken = ETH_SYMBOL_IDENTIFIER;
+        outputToken = fullTokenName;
+        amountInWei = ethers.parseEther(amount_in_human).toString();
+      } else {
+        tokenIn = finalTokenAddress;
+        tokenOut = ETH_ADDRESS_PENDLE;
+        inputToken = fullTokenName;
+        outputToken = ETH_SYMBOL_IDENTIFIER;
+        
+        // For token input, get token details to convert to wei
+        try {
+          const tokenDetails = await getERC20Details(finalTokenAddress, 1);
+          amountInWei = ethers.parseUnits(amount_in_human, tokenDetails.decimals).toString();
+        } catch (error) {
+          // Fallback to 18 decimals if token details can't be fetched
+          amountInWei = ethers.parseUnits(amount_in_human, 18).toString();
+        }
+      }
+      
+      // Call the getSwapQuote function
+      const swapData = await getSwapQuote(
+        finalMarketAddress,
+        tokenIn,
+        tokenOut,
+        amountInWei,
+        0.01, // 1% slippage
+        true,
+        networkContext?.selectedChainId,
+        user_wallet_address
+      );
 
-      // Return a clean response object with minimal streaming data
-      // Use the new response format from our updated getQuote function
+      // Format output amount based on output token
+      let outputAmountFormatted: string;
+      if (direction === 'ethToToken') {
+        // Output is token, need to format with token decimals
+        try {
+          const tokenDetails = await getERC20Details(finalTokenAddress, 1);
+          outputAmountFormatted = ethers.formatUnits(swapData.amountOut, tokenDetails.decimals);
+        } catch (error) {
+          // Fallback to 18 decimals
+          outputAmountFormatted = ethers.formatUnits(swapData.amountOut, 18);
+        }
+      } else {
+        // Output is ETH
+        outputAmountFormatted = ethers.formatEther(swapData.amountOut);
+      }
+      
+      // Create rate string
+      const rate = `${amount_in_human} ${inputToken} → ${outputAmountFormatted} ${outputToken}`;
+      
+      // Calculate inverse rate
+      const inputAmount = parseFloat(amount_in_human);
+      const outputAmount = parseFloat(outputAmountFormatted);
+      const inverseRatio = inputAmount / outputAmount;
+      const inverse = `1 ${outputToken} → ${inverseRatio.toFixed(6)} ${inputToken}`;
+      
       const quoteData = {
         market: fullTokenName,
         inputAmount: amount_in_human,
-        inputToken: quote.inputToken,
-        outputToken: quote.outputToken,
-        rate: quote.rate,
-        inverse: quote.inverse,
-        outputAmount: quote.outputAmount,
+        inputToken: inputToken,
+        outputToken: outputToken,
+        rate: rate,
+        inverse: inverse,
+        outputAmount: outputAmountFormatted,
+        priceImpact: swapData.priceImpact,
         complete_time: new Date().toISOString(),
         foundMarketAddress: finalMarketAddress,
         foundTokenAddress: finalTokenAddress
@@ -206,7 +258,7 @@ export const pendleQuoteTool = tool({
       
       return {
         _uiDisplayTool: true,
-        summary: `Quote for ${quote.rate}`,
+        summary: `Quote for ${rate}`,
         data: quoteData
       }
     } catch (error: any) {
@@ -234,6 +286,7 @@ export const pendleSwapTool = tool({
     token_address: z
       .string()
       .describe('The address of the PT or YT token. The market will be automatically determined from this token.'),
+    user_wallet_address: z.string().describe('The address of the user\'s EVM wallet.'),
     direction: z
       .enum(['ethToToken', 'tokenToEth'])
       .default('ethToToken')
@@ -269,6 +322,7 @@ export const pendleSwapTool = tool({
   execute: async (params, context: ToolContext) => {
     let {
       token_address,
+      user_wallet_address,
       direction,
       token_type,
       amount_in_human,
@@ -281,7 +335,6 @@ export const pendleSwapTool = tool({
       slippage = 0.3
     }
 
-    let input_token_address, output_token_address;
     let displayTokenIn, displayTokenOut;
     try {
       const evmWalletAddress = await getUserEvmWalletAddress()
@@ -312,106 +365,56 @@ export const pendleSwapTool = tool({
       const markets = await getPendleMarkets();
       console.log('Available markets count:', markets.length);
       
-      const foundMarket = markets.find(market => {
-        const addressToCheck = token_type === 'pt' ? market.pt : market.yt;
-        const matches = addressToCheck.toLowerCase() === token_address.toLowerCase();
-        if (matches) {
-          console.log('Found matching market:', {
-            name: market.name,
-            address: market.address,
-            pt: market.pt,
-            yt: market.yt
-          });
-        }
-        return matches;
-      });
-      
-      if (!foundMarket) {
-        throw new Error(`Could not find a Pendle market with ${token_type.toUpperCase()} token address ${token_address}`);
-      }
+      const foundMarket = await findMarketByTokenAddress(token_address, token_type)
       
       const market_address = foundMarket.address;
       const tokenSymbol = market_name || foundMarket.name;
       const fullTokenName = `${token_type.toUpperCase()} ${tokenSymbol}`;
 
-      // Determine input and output tokens based on direction
-
+      // Determine input and output tokens based on direction and convert amount to wei
+      let tokenIn: string;
+      let tokenOut: string;
+      let amountInWei: string;
       
       if (direction === 'ethToToken') {
-        input_token_address = ETH_ADDRESS_PENDLE;
-        output_token_address = token_address;
+        tokenIn = ETH_ADDRESS_PENDLE;
+        tokenOut = token_address;
         displayTokenIn = ETH_SYMBOL_IDENTIFIER;
         displayTokenOut = fullTokenName;
+        amountInWei = ethers.parseEther(amount_in_human).toString();
       } else { // tokenToEth
-        input_token_address = token_address;
-        output_token_address = ETH_ADDRESS_PENDLE;
+        tokenIn = token_address;
+        tokenOut = ETH_ADDRESS_PENDLE;
         displayTokenIn = fullTokenName;
         displayTokenOut = ETH_SYMBOL_IDENTIFIER;
-      }
-
-      let amountInBaseUnits: string;
-      const isInputETH = direction === 'ethToToken';
-
-      if (isInputETH) {
+        
+        // For token input, get token details to convert to wei
         try {
-          amountInBaseUnits = ethers.parseEther(amount_in_human).toString()
+          const tokenDetails = await getERC20Details(token_address, chainId);
+          amountInWei = ethers.parseUnits(amount_in_human, tokenDetails.decimals).toString();
         } catch (error) {
-          throw new Error(
-            `Invalid ETH amount: ${amount_in_human}. ${
-              (error as Error).message
-            }`
-          )
+          // Fallback to 18 decimals if token details can't be fetched
+          amountInWei = ethers.parseUnits(amount_in_human, 18).toString();
         }
-      } else {
-        // ERC20 input (e.g., PT/YT token)
-          try {
-            const tokenDetails = await getERC20Details(
-              input_token_address,
-              chainId
-            )
-            amountInBaseUnits = ethers
-              .parseUnits(amount_in_human, tokenDetails.decimals)
-              .toString()
-          } catch (error: any) {
-            throw new Error(
-              `Failed to get details or parse amount for input token ${input_token_address}: ${error.message}`
-            )
-          }
       }
 
-      const txData = await getSwapTransactionFromPendle(
-        market_address.toLowerCase().trim(),
-        input_token_address,
-        output_token_address,
-        amountInBaseUnits,
-        slippage
-      )
-      if (!txData) {
-        throw new Error('Failed to prepare transaction data using Pendle.')
-      }
+      // Execute the swap using executePendleSwap
+      const result = await executePendleSwap(
+        market_address,
+        tokenIn,
+        tokenOut,
+        amountInWei,
+        slippage,
+        true, // enableAggregator
+        chainId,
+        isDemo,
+        user_wallet_address
+      );
 
-      // For ERC20 inputs, handle approval first
-      if (!isInputETH) {
-        const spenderAddress = txData.to
-        const approvalResult = await erc20Approval(
-          input_token_address,
-          spenderAddress,
-          amountInBaseUnits,
-          evmWalletAddress,
-          chainId,
-          isDemo
-        )
-        if (approvalResult.status === 'fail') {
-          throw new Error(
-            `ERC20 approval failed for token ${input_token_address} to spender ${spenderAddress}: ${approvalResult.message}`
-          )
-        }
-      } 
-
-      // Execute the transaction
-      const result = await executeSwapTransaction(txData, chainId, {estimateGas: true}, isDemo)
       const explorerLink = getConfigByChainId(chainId!, isDemo).scanLink
-      const explorerLinkWithHash = `https://${explorerLink}/tx/${result.hash}`
+      const explorerLinkWithHash = explorerLink?.startsWith('http') 
+        ? `${explorerLink}/tx/${result.hash}`
+        : `https://${explorerLink}/tx/${result.hash}`
 
       const swapData = {
         success: true,
@@ -442,8 +445,6 @@ export const pendleSwapTool = tool({
           from: displayTokenIn,
           to: displayTokenOut,
           amount_in: `${amount_in_human} ${displayTokenIn}`,
-          input_token_address: input_token_address,
-          output_token_address: output_token_address,
           token_address,
           direction,
           amount_in_human,
