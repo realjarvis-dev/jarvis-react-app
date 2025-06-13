@@ -40,7 +40,7 @@ export function normalizeSwapInfo(
 
   // tool type detection
   let toolType: 'pendle' | 'lifi' | undefined
-  if (tool.toolName === 'pendle_swap') {
+  if (tool.toolName === 'pendle_swap' || tool.toolName === 'pendle_mint_py' || tool.toolName === 'pendle_redeem_py') {
     toolType = 'pendle'
   } else if (tool.toolName === 'lifi_bridge_execute') {
     toolType = 'lifi'
@@ -56,17 +56,41 @@ export function normalizeSwapInfo(
   if (toolType === 'pendle') {
     const data = result?.data || result // pendle results are wrapped in `data`
 
-    const fromTokenName =
-      args.input_token_name_display || data?.swap_details?.from || 'Token'
-    const toTokenName =
-      args.output_token_name_display || data?.swap_details?.to || 'Token'
+    // Determine title based on tool type
+    let title: string
+    if (tool.toolName === 'pendle_mint_py') {
+      title = 'Mint Transaction'
+    } else if (tool.toolName === 'pendle_redeem_py') {
+      title = 'Redeem Transaction'
+    } else {
+      title = 'Swap Transaction'
+    }
+
+    // Extract token names based on tool type
+    let fromTokenName: string
+    let toTokenName: string
+    
+    if (tool.toolName === 'pendle_mint_py') {
+      // For mint: input token -> PT + YT
+      fromTokenName = args.is_sy ? 'SY' : (args.input_token_name_display || 'Token')
+      toTokenName = `PT + YT`
+    } else if (tool.toolName === 'pendle_redeem_py') {
+      // For redeem: PT + YT -> output token
+      fromTokenName = `PT + YT`
+      toTokenName = args.is_sy ? 'SY' : (args.output_token_name_display || 'Token')
+    } else {
+      // For swap: existing logic
+      fromTokenName = args.input_token_name_display || data?.swap_details?.from || 'Token'
+      toTokenName = args.output_token_name_display || data?.swap_details?.to || 'Token'
+    }
+
     const fromAmount = args.amount_in_human
 
-    const chainId = data?.swap_details?.chainId || currentChainId
+    const chainId = data?.swap_details?.chainId || data?.mint_details?.chainId || data?.redeem_details?.chainId || currentChainId
 
     if (tool.state === 'call') {
       return {
-        title: 'Swap Transaction',
+        title,
         isBridge: false,
         fromTokenName,
         toTokenName,
@@ -77,24 +101,55 @@ export function normalizeSwapInfo(
     }
 
     if (data?.success) {
+      // Extract transaction details based on tool type
+      let transactionHash: string | undefined
+      let explorerLink: string | undefined
+      let completeTime: string | undefined
+      let sentDisplay: string | undefined
+      let receivedDisplay: string | undefined
+
+      if (tool.toolName === 'pendle_mint_py') {
+        const mintDetails = data.mint_details
+        transactionHash = data.transaction_hash
+        explorerLink = mintDetails?.explorer_link
+        completeTime = mintDetails?.complete_time
+        sentDisplay = `${args.amount_in_human} ${args.is_sy ? 'SY' : 'tokens'}`
+        receivedDisplay = `PT + YT (${mintDetails?.market || 'Market'})`
+      } else if (tool.toolName === 'pendle_redeem_py') {
+        const redeemDetails = data.redeem_details
+        transactionHash = data.transaction_hash
+        explorerLink = redeemDetails?.explorer_link
+        completeTime = redeemDetails?.complete_time
+        sentDisplay = `${args.amount_in_human} PT + YT`
+        receivedDisplay = `${redeemDetails?.output_token_type || 'tokens'}`
+      } else {
+        // For swap: existing logic
+        const swapDetails = data.swap_details
+        transactionHash = data.transaction_hash
+        explorerLink = swapDetails?.explorer_link
+        completeTime = swapDetails?.complete_time
+        sentDisplay = swapDetails?.amount_in || `${args.amount_in_human} ${fromTokenName}`
+        receivedDisplay = swapDetails?.to || toTokenName
+      }
+
       return {
-        title: 'Swap Transaction',
+        title,
         isBridge: false,
-        fromTokenName: data.swap_details.from,
-        toTokenName: data.swap_details.to,
+        fromTokenName,
+        toTokenName,
         fromAmount: args.amount_in_human,
         status: 'confirmed',
-        txHash: data.transaction_hash,
-        explorerLink: data.swap_details.explorer_link,
-        completeTime: data.swap_details.complete_time,
-        sentDisplay: data.swap_details.amount_in, // This already contains unit like "1 ETH"
-        receivedDisplay: data.swap_details.to,
-        fromChainId: data.swap_details.chainId
+        txHash: transactionHash,
+        explorerLink,
+        completeTime,
+        sentDisplay,
+        receivedDisplay,
+        fromChainId: chainId
       }
     }
     if (data && !data.success) {
       return {
-        title: 'Swap Transaction',
+        title,
         isBridge: false,
         fromTokenName,
         toTokenName,
