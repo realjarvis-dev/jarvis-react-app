@@ -5,50 +5,15 @@ import { getGasPriceByChainId } from "../blocknative/get-gas-price";
 import { getConfigByChainId } from "../network/config";
 
 /**
- * Execute transaction using Privy wallet with advanced gas estimation
- * 
- * @example
- * // Example usage for a swap transaction:
- * const result = await executeTransaction(
- *   {
- *     to: swapResult.tx.to,
- *     from: userAddress,
- *     data: swapResult.tx.data,
- *     value: swapResult.tx.value || '0'
- *   },
- *   userAddress,
- *   evmWalletId,
- *   1, // chainId
- *   {
- *     estimateGas: true,
- *     getGasPriceFunction: getGasPriceByChainId // Optional: for custom gas pricing
- *   },
- *   false // isDemo
- * );
- * 
- * @example
- * // Example usage with fixed gas limit for demo:
- * const result = await executeTransaction(
- *   txData,
- *   userAddress,
- *   evmWalletId,
- *   1,
- *   {
- *     estimateGas: false,
- *     gasLimit: ethers.toQuantity(1000000) as `0x${string}`
- *   },
- *   true // isDemo
- * );
+ * Sign transaction using Privy wallet with advanced gas estimation
  * 
  * @param txData Transaction data object
- * @param userAddress User's wallet address
- * @param evmWalletId EVM wallet ID from Privy
  * @param chainId Chain ID (default: 1)
  * @param gasOptions Gas estimation options
  * @param isDemo Whether this is a demo transaction
- * @returns Transaction response with hash
+ * @returns Signed transaction and provider
  */
-export async function executeTransaction(
+export async function signTransaction(
     txData: {
       to: string;
       from: string;
@@ -138,7 +103,7 @@ export async function executeTransaction(
     const weiBig = BigInt(txData.value || '0');
     const quantity = ethers.toQuantity(weiBig);
 
-    // Sign and send transaction with Privy
+    // Sign transaction with Privy
     const { signedTransaction } = await privy.walletApi.ethereum.signTransaction({
       walletId: evmWallet.id,
       transaction: {
@@ -155,6 +120,23 @@ export async function executeTransaction(
       idempotencyKey: uuidv4()
     });
 
+    return {
+      signedTransaction,
+      provider
+    };
+  }
+
+/**
+ * Broadcast signed transaction and wait for confirmation
+ * 
+ * @param signedTransaction Signed transaction from signTransaction
+ * @param provider Ethereum provider
+ * @returns Transaction response with hash
+ */
+export async function broadcastTransaction(
+    signedTransaction: string,
+    provider: ethers.JsonRpcProvider
+  ) {
     // Broadcast the transaction
     const txResponse = await provider.broadcastTransaction(signedTransaction);
     
@@ -164,4 +146,75 @@ export async function executeTransaction(
     return {
       hash: txResponse.hash
     };
+  }
+
+/**
+ * Execute transaction using Privy wallet with advanced gas estimation
+ * 
+ * @example
+ * // Example usage for a swap transaction:
+ * const result = await executeTransaction(
+ *   {
+ *     to: swapResult.tx.to,
+ *     from: userAddress,
+ *     data: swapResult.tx.data,
+ *     value: swapResult.tx.value || '0'
+ *   },
+ *   userAddress,
+ *   evmWalletId,
+ *   1, // chainId
+ *   {
+ *     estimateGas: true,
+ *     getGasPriceFunction: getGasPriceByChainId // Optional: for custom gas pricing
+ *   },
+ *   false // isDemo
+ * );
+ * 
+ * @example
+ * // Example usage with fixed gas limit for demo:
+ * const result = await executeTransaction(
+ *   txData,
+ *   userAddress,
+ *   evmWalletId,
+ *   1,
+ *   {
+ *     estimateGas: false,
+ *     gasLimit: ethers.toQuantity(1000000) as `0x${string}`
+ *   },
+ *   true // isDemo
+ * );
+ * 
+ * @param txData Transaction data object
+ * @param userAddress User's wallet address
+ * @param evmWalletId EVM wallet ID from Privy
+ * @param chainId Chain ID (default: 1)
+ * @param gasOptions Gas estimation options
+ * @param isDemo Whether this is a demo transaction
+ * @returns Transaction response with hash
+ */
+export async function executeTransaction(
+    txData: {
+      to: string;
+      from: string;
+      data: string;
+      value?: string | bigint;
+    },
+    chainId: number = 1,
+    gasOptions?: {
+      estimateGas: boolean;
+      gasLimit?: `0x${string}`;
+      getGasPriceFunction?: (chainId: number) => Promise<{
+        maxPriceInMemPool: bigint;
+        maxPriorityFeePerGas: bigint;
+        maxFeePerGas: bigint;
+      }>;
+    },
+    isDemo: boolean = false
+  ) {
+    
+    // Sign the transaction
+    const { signedTransaction, provider } = await signTransaction(txData, chainId, gasOptions, isDemo);
+    
+    // Broadcast the transaction
+    return await broadcastTransaction(signedTransaction, provider);
   }
