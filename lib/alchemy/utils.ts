@@ -67,7 +67,7 @@ const ERC20_ABI = [
       }
       return null;
     } catch (error) {
-      console.error(`Error fetching data for token ${tokenAddress}:`, error);
+      console.error(`Error fetching data for token ${tokenAddress}:`);
       return null;
     }
   }

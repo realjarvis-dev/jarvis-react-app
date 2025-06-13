@@ -65,8 +65,8 @@ export function processPendleMarkets(markets: PendleMarket[], active: boolean = 
       expiry: market.expiry,
       pt: ptAddress,
       yt: ytAddress,
-      sy: market.sy,
-      underlyingAsset: market.underlyingAsset,
+      sy: market.sy.replace('1-', ''),
+      underlyingAsset: market.underlyingAsset.replace('1-', ''),
       liquidity: market.details.liquidity,
       impliedApy: market.details.impliedApy,
       active: active
