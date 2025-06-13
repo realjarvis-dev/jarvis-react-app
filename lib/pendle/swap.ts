@@ -1,4 +1,3 @@
-import { getUserEvmWalletAddress } from '@/lib/privy/client';
 import { executeTransaction } from '@/lib/privy/utils';
 import { callSDK } from './call-sdk';
 import { SwapData } from './types';
@@ -15,6 +14,7 @@ const CHAIN_ID = 1;
  * @param slippage Slippage tolerance (e.g., 0.01 for 1%)
  * @param enableAggregator Whether to enable swap aggregator for complex routes
  * @param chainId Chain ID (default: 1)
+ * @param userWalletAddress User's wallet address
  * @returns Promise with swap data and transaction
  */
 export async function getPendleSwapTokensData(
@@ -24,15 +24,12 @@ export async function getPendleSwapTokensData(
   amountIn: string,
   slippage: number = 0.01,
   enableAggregator: boolean = true,
-  chainId: number = CHAIN_ID
+  chainId: number = CHAIN_ID,
+  userWalletAddress: string
 ) {
-  const receiverAddress = await getUserEvmWalletAddress();
-  if (!receiverAddress) {
-    throw new Error('EVM wallet not found');
-  }
 
   const res = await callSDK<SwapData>(`/v1/sdk/${chainId}/markets/${marketAddress}/swap`, {
-    receiver: receiverAddress,
+    receiver: userWalletAddress,
     slippage,
     tokenIn,
     tokenOut,
@@ -56,6 +53,7 @@ export async function getPendleSwapTokensData(
  * @param enableAggregator Whether to enable swap aggregator for complex routes
  * @param chainId Chain ID
  * @param isDemo Whether this is a demo transaction
+ * @param userWalletAddress User's wallet address
  * @returns Transaction response with hash
  */
 export async function executePendleSwap(
@@ -66,7 +64,8 @@ export async function executePendleSwap(
   slippage: number = 0.01,
   enableAggregator: boolean = true,
   chainId: number = CHAIN_ID,
-  isDemo: boolean = false
+  isDemo: boolean = false,
+  userWalletAddress: string
 ) {
   // Get swap data
   const swapResult = await getPendleSwapTokensData(
@@ -76,19 +75,14 @@ export async function executePendleSwap(
     amountIn,
     slippage,
     enableAggregator,
-    chainId
+    chainId,
+    userWalletAddress
   );
-
-  // Get user address
-  const userAddress = await getUserEvmWalletAddress();
-  if (!userAddress) {
-    throw new Error('User address not found');
-  }
 
   // Prepare transaction data
   const txData = {
     to: swapResult.tx.to,
-    from: userAddress,
+    from: userWalletAddress,
     data: swapResult.tx.data,
     value: swapResult.tx.value || '0'
   };
@@ -116,6 +110,8 @@ export async function executePendleSwap(
  * @param amountIn Amount of input token in wei
  * @param slippage Slippage tolerance (e.g., 0.01 for 1%)
  * @param enableAggregator Whether to enable swap aggregator
+ * @param chainId Chain ID
+ * @param userWalletAddress User's wallet address
  * @returns Promise with swap data only
  */
 export async function getSwapQuote(
@@ -124,15 +120,20 @@ export async function getSwapQuote(
   tokenOut: string,
   amountIn: string,
   slippage: number = 0.01,
-  enableAggregator: boolean = true
+  enableAggregator: boolean = true,
+  chainId: number = CHAIN_ID,
+  userWalletAddress: string
 ) {
+  
   const swapResult = await getPendleSwapTokensData(
     marketAddress,
     tokenIn,
     tokenOut,
     amountIn,
     slippage,
-    enableAggregator
+    enableAggregator,
+    chainId,
+    userWalletAddress
   );
 
   return swapResult.data; // Return only the swap data, not the transaction
