@@ -16,6 +16,8 @@ const get_system_prompt = (searchMode: boolean, supportedTools: string[], regist
       pendle_swap: `- pendle_swap: Use when the user wants to execute a swap transaction from ETH to a Pendle token (PT or YT). This requires market address, token out address, and ETH amount parameters.`,
       pendle_redeem_pt: `- pendle_redeem_pt: Use when the user wants to redeem Pendle PT tokens to ETH. This tool accepts a PT token address and will automatically find the corresponding YT address. If called before YT's expiry, both PT & YT of equal amounts are needed and will be burned. After expiry, only PT is needed and will be burned.`,
       pendle_redeem_yt: `- pendle_redeem_yt: Use when the user wants to redeem accrued rewards and interests from Pendle YT positions after expiry. This tool accepts YT token addresses directly.`,
+      pendle_mint_py: `- pendle_mint_py: Use when the user wants to mint PT and YT tokens from input tokens using Pendle. Provide the PT token address to automatically determine the market and YT address. Can use either SY tokens or underlying tokens as input.`,
+      pendle_redeem_py: `- pendle_redeem_py: Use when the user wants to redeem equal amounts of PT and YT tokens to get back the underlying asset or SY token using Pendle. Provide the PT token address to automatically determine the market and YT address.`,
       wallet_balance: `- wallet_balance: Use when the user asks about their wallet balance, token holdings, or specific token balance. This tool returns the user's cryptocurrency balances.`,
       market_chart: `- market_chart: Use when the user asks about cryptocurrency price charts, market data, price history, or wants to see price trends for any cryptocurrency. This tool fetches and displays interactive market charts with price, volume, and market cap data.`,
       search: `- search: Use for general web search queries. ONLY USE IF YOU ARE UNAWARE OF THE INFORMATION OR THE OTHER TOOLS ARE NOT APPROPRIATE.`,
@@ -96,6 +98,15 @@ const get_system_prompt = (searchMode: boolean, supportedTools: string[], regist
     - Remind to fetch wallet balance if skipped.
     - You do not need to worry about the expiry. That's user's responsibility.
     - The user will typically ask to redeem YT rewards. This tool accepts YT token addresses directly.`,
+      pendle_mint_py: `  • pendle_mint_py
+    - Remind to check opportunities if skipped.
+    - Confirm minting details before execution.
+    - Can mint from either SY tokens (set is_sy: true) or underlying tokens (provide token_in address).`,
+      pendle_redeem_py: `  • pendle_redeem_py
+    - Remind to fetch wallet balance if skipped.
+    - Confirm redemption details before execution.
+    - Can redeem to either SY tokens (set is_sy: true) or underlying tokens (provide token_out address).
+    - Equal amounts of PT and YT tokens will be burned in the redemption process.`,
       privy_transfer: `  • privy_transfer  
     - Only accept ETH amounts; afterward ask "What's next?"`,
       kodiak_deposit: `  • kodiak_deposit  
@@ -108,7 +119,7 @@ const get_system_prompt = (searchMode: boolean, supportedTools: string[], regist
     // - Confirm swap details before execution.`
     }
 
-    const writeTools = ['pendle_swap', 'pendle_redeem_pt', 'pendle_redeem_yt', 'privy_transfer', 'kodiak_deposit', 'generic_swap', 'lifi_bridge_execute', 'kodiak_compound_bault', 'fund_wallet']
+    const writeTools = ['pendle_swap', 'pendle_redeem_pt', 'pendle_redeem_yt', 'pendle_mint_py', 'pendle_redeem_py', 'privy_transfer', 'kodiak_deposit', 'generic_swap', 'lifi_bridge_execute', 'kodiak_compound_bault', 'fund_wallet']
       .filter(tool => supportedTools.includes(tool))
       .map(tool => writeToolsDescriptions[tool])
       .filter(Boolean)

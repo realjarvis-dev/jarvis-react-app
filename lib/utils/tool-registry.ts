@@ -5,7 +5,7 @@ import { getGasPriceTool } from '../tools/gas-price'
 import { kodiakBaultProfitabilityTool, kodiakCompoundBaultTool, kodiakDepositTool, kodiakOpportunitiesTool } from '../tools/kodiak'
 import { bridgeExecuteTool, bridgeQuoteTool } from '../tools/lifi-bridge'
 import { marketChartTool } from '../tools/market-chart'
-import { pendleOpportunitiesTool, pendleQuoteTool, pendleRedeemPTTool, pendleRedeemYTTool, pendleSwapTool } from '../tools/pendle'
+import { pendleMintPyTool, pendleOpportunitiesTool, pendleQuoteTool, pendleRedeemPTTool, pendleRedeemPyTool, pendleRedeemYTTool, pendleSwapTool } from '../tools/pendle'
 import { privyTransferTool } from '../tools/privy-transfer'
 import { createQuestionTool } from '../tools/question'
 import { retrieveTool } from '../tools/retrieve'
@@ -293,6 +293,32 @@ export function createToolRegistry(model: string): ToolRegistry {
     description: pendleRedeemYTTool.description || '',
     schema: pendleRedeemYTTool.parameters,
     execute: async (params, context) => pendleRedeemYTTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3,
+    supportedNetworks: ['ethereum', 'demo']
+  })
+  
+  registry.registerTool({
+    name: 'pendle_mint_py',
+    description: pendleMintPyTool.description || '',
+    schema: pendleMintPyTool.parameters,
+    execute: async (params, context) => pendleMintPyTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3,
+    supportedNetworks: ['ethereum', 'demo']
+  })
+  
+  registry.registerTool({
+    name: 'pendle_redeem_py',
+    description: pendleRedeemPyTool.description || '',
+    schema: pendleRedeemPyTool.parameters,
+    execute: async (params, context) => pendleRedeemPyTool.execute(params, {
       toolCallId: context?.toolCallId || 'unknown',
       messages: context?.messages || [],
       networkContext: context?.networkContext!
