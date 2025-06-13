@@ -326,8 +326,8 @@ Network Context:
       }
     }
     
-    console.log("supportedTools with network filtering", supportedTools)
-    console.log("web3_tools with network filtering", web3_tools)
+    // console.log("supportedTools with network filtering", supportedTools)
+    // console.log("web3_tools with network filtering", web3_tools)
     
 
     let prompt = `${
