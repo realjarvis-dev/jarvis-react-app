@@ -3,6 +3,8 @@ import { ethers } from 'ethers'
 import { z } from 'zod'
 import { getConfigByChainId } from '../network/config'
 import { getPendleMarkets } from '../pendle/api'
+import { executePendleMintPy } from '../pendle/mint-py'
+import { executePendleRedeemPy } from '../pendle/redeem-py'
 import { executePendleSwap, getSwapQuote } from '../pendle/swap'
 import {
   executeRedeemInterestsAndRewardsTransaction,
@@ -76,6 +78,77 @@ async function findMarketByTokenAddress(tokenAddress: string, tokenType: 'pt' | 
 }
 
 /**
+ * Helper function to parse token amount from human-readable format to wei
+ * @param tokenAddress The token contract address
+ * @param amountHuman The human-readable amount to convert
+ * @param chainId The chain ID for token details lookup
+ * @returns Amount in wei as string
+ */
+async function parseTokenAmount(
+  tokenAddress: string,
+  amountHuman: string,
+  chainId: number = PENDLE_CONFIG.DEFAULT_CHAIN_ID
+): Promise<string> {
+  try {
+    const tokenDetails = await getERC20Details(tokenAddress, chainId);
+    return ethers.parseUnits(amountHuman, tokenDetails.decimals).toString();
+  } catch (error) {
+    // Fallback to default decimals if token details can't be fetched
+    return ethers.parseUnits(amountHuman, PENDLE_CONFIG.DEFAULT_DECIMALS).toString();
+  }
+}
+
+/**
+ * Helper function to prepare swap token configuration for Pendle operations
+ * @param tokenAddress The PT or YT token address
+ * @param tokenType The type of token - 'pt' or 'yt'
+ * @param direction The swap direction - 'ethToToken' or 'tokenToEth'
+ * @param marketName The market name for display purposes
+ * @returns Prepared swap token configuration object
+ */
+async function prepareSwapTokens(
+  tokenAddress: string,
+  tokenType: 'pt' | 'yt',
+  direction: 'ethToToken' | 'tokenToEth',
+  marketName?: string
+) {
+  // Find market that contains the token
+  const foundMarket = await findMarketByTokenAddress(tokenAddress, tokenType);
+  
+  const marketAddress = foundMarket.address;
+  const tokenSymbol = marketName || foundMarket.name;
+  const fullTokenName = `${tokenType.toUpperCase()} ${tokenSymbol}`;
+
+  // Determine tokenIn, tokenOut
+  let tokenIn: string;
+  let tokenOut: string;
+  let inputToken: string;
+  let outputToken: string;
+  
+  if (direction === 'ethToToken') {
+    tokenIn = PENDLE_CONFIG.ETH_ADDRESS_PENDLE;
+    tokenOut = tokenAddress;
+    inputToken = PENDLE_CONFIG.ETH_SYMBOL;
+    outputToken = fullTokenName;
+  } else {
+    tokenIn = tokenAddress;
+    tokenOut = PENDLE_CONFIG.ETH_ADDRESS_PENDLE;
+    inputToken = fullTokenName;
+    outputToken = PENDLE_CONFIG.ETH_SYMBOL;
+  }
+
+  return {
+    foundMarket,
+    marketAddress,
+    fullTokenName,
+    tokenIn,
+    tokenOut,
+    inputToken,
+    outputToken
+  };
+}
+
+/**
  * Helper function to prepare swap configuration for Pendle operations
  * @param tokenAddress The PT or YT token address
  * @param tokenType The type of token - 'pt' or 'yt'
@@ -93,51 +166,22 @@ async function prepareSwapConfiguration(
   marketName?: string,
   chainId?: number
 ) {
-  // Find market that contains the token
-  const foundMarket = await findMarketByTokenAddress(tokenAddress, tokenType);
+  // Get token configuration
+  const swapTokens = await prepareSwapTokens(tokenAddress, tokenType, direction, marketName);
   
-  const marketAddress = foundMarket.address;
-  const tokenSymbol = marketName || foundMarket.name;
-  const fullTokenName = `${tokenType.toUpperCase()} ${tokenSymbol}`;
-
-  // Determine tokenIn, tokenOut, and convert amount to wei
-  let tokenIn: string;
-  let tokenOut: string;
+  // Parse amount to wei based on direction
   let amountInWei: string;
-  let inputToken: string;
-  let outputToken: string;
-  
   if (direction === 'ethToToken') {
-    tokenIn = PENDLE_CONFIG.ETH_ADDRESS_PENDLE;
-    tokenOut = tokenAddress;
-    inputToken = PENDLE_CONFIG.ETH_SYMBOL;
-    outputToken = fullTokenName;
+    // For ETH input, use parseEther
     amountInWei = ethers.parseEther(amountHuman).toString();
   } else {
-    tokenIn = tokenAddress;
-    tokenOut = PENDLE_CONFIG.ETH_ADDRESS_PENDLE;
-    inputToken = fullTokenName;
-    outputToken = PENDLE_CONFIG.ETH_SYMBOL;
-    
-    // For token input, get token details to convert to wei
-    try {
-      const tokenDetails = await getERC20Details(tokenAddress, chainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID);
-      amountInWei = ethers.parseUnits(amountHuman, tokenDetails.decimals).toString();
-    } catch (error) {
-      // Fallback to default decimals if token details can't be fetched
-      amountInWei = ethers.parseUnits(amountHuman, PENDLE_CONFIG.DEFAULT_DECIMALS).toString();
-    }
+    // For token input, use parseTokenAmount
+    amountInWei = await parseTokenAmount(tokenAddress, amountHuman, chainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID);
   }
 
   return {
-    foundMarket,
-    marketAddress,
-    fullTokenName,
-    tokenIn,
-    tokenOut,
-    amountInWei,
-    inputToken,
-    outputToken
+    ...swapTokens,
+    amountInWei
   };
 }
 
@@ -781,3 +825,277 @@ export const pendleRedeemYTTool = tool({
     }
   }
 })
+
+export const pendleMintPyTool = tool({
+  description:
+    `Mint PT and YT tokens from input tokens using Pendle. 
+    Provide the PT token address to automatically determine the market and YT address.
+    This tool automatically renders UI.`,
+  parameters: z.object({
+    pt_address: z
+      .string()
+      .describe('The address of the PT (Principal Token). The YT address will be automatically determined from the market.'),
+    token_in: z
+      .string()
+      .describe('The address of the input token (can be SY token or underlying token like wstETH). Not required if isSy is true.'),
+    amount_in_human: z
+      .string()
+      .describe('Amount of input token to mint from in human-readable format (e.g., "1", "100.5")'),
+    user_wallet_address: z
+      .string()
+      .describe('The address of the user\'s EVM wallet'),
+    is_sy: z
+      .boolean()
+      .describe('If true, uses the SY token address from the market data as token_in. If false, uses the provided token_in parameter.'),
+    slippage: z
+      .number()
+      .min(PENDLE_CONFIG.MIN_SLIPPAGE)
+      .max(PENDLE_CONFIG.MAX_SLIPPAGE)
+      .default(PENDLE_CONFIG.DEFAULT_SLIPPAGE)
+      .describe(`Maximum acceptable slippage (default: ${PENDLE_CONFIG.DEFAULT_SLIPPAGE}, which is ${PENDLE_CONFIG.DEFAULT_SLIPPAGE * 100}%)`)
+  }),
+  execute: async (params, context: ToolContext) => {
+    const {
+      pt_address,
+      token_in,
+      amount_in_human,
+      user_wallet_address,
+      is_sy = false,
+      slippage = PENDLE_CONFIG.DEFAULT_SLIPPAGE
+    } = params;
+    const networkContext = context?.networkContext;
+    const isDemo = networkContext?.isDemo;
+    const chainId = networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID;
+
+    try {
+      console.log('===== PENDLE MINT PY TOOL =====');
+      console.log('Input parameters:', {
+        pt_address,
+        token_in,
+        amount_in_human,
+        is_sy,
+        slippage
+      });
+
+      // Find the market using PT address to get YT address
+      const foundMarket = await findMarketByTokenAddress(pt_address, 'pt');
+      const ytAddress = foundMarket.yt;
+      const marketName = foundMarket.name;
+
+      // Determine the actual token_in to use
+      let actualTokenIn: string;
+      if (is_sy) {
+        actualTokenIn = foundMarket.sy;
+        console.log('Using SY token from market:', actualTokenIn);
+      } else {
+        if (!token_in) {
+          throw new Error('token_in parameter is required when is_sy is false');
+        }
+        actualTokenIn = token_in;
+        console.log('Using provided token_in:', actualTokenIn);
+      }
+
+      console.log('Found market:', {
+        marketAddress: foundMarket.address,
+        ytAddress,
+        marketName,
+        syAddress: foundMarket.sy,
+        actualTokenIn
+      });
+
+      // Convert amount to wei using the helper function
+      const amountInWei = await parseTokenAmount(actualTokenIn, amount_in_human, chainId);
+
+      console.log('Amount in wei:', amountInWei);
+
+      // Execute the mint transaction
+      const result = await executePendleMintPy(
+        ytAddress,
+        actualTokenIn,
+        amountInWei,
+        slippage,
+        chainId,
+        isDemo || false,
+        user_wallet_address
+      );
+
+      const explorerLink = getConfigByChainId(chainId, isDemo || false).scanLink;
+      const explorerLinkWithHash = explorerLink?.startsWith('http') 
+        ? `${explorerLink}/tx/${result.hash}`
+        : `https://${explorerLink}/tx/${result.hash}`;
+
+      const mintData = {
+        success: true,
+        transaction_hash: result.hash,
+        mint_details: {
+          market: marketName,
+          input_token: actualTokenIn,
+          input_token_type: is_sy ? 'SY' : 'Token',
+          amount_in: `${amount_in_human}`,
+          pt_address,
+          yt_address: ytAddress,
+          sy_address: foundMarket.sy,
+          complete_time: new Date().toISOString(),
+          chainId: chainId,
+          explorer_link: explorerLink ? explorerLinkWithHash : undefined
+        }
+      };
+
+      return mintData;
+    } catch (error: any) {
+      console.log('Mint error:', error);
+      const errorData = {
+        success: false,
+        error: error.message || 'Failed to execute Pendle mint.',
+        mint_parameters: {
+          pt_address,
+          token_in,
+          amount_in_human,
+          is_sy,
+          slippage
+        }
+      };
+      
+      return errorData;
+    }
+  }
+});
+
+export const pendleRedeemPyTool = tool({
+  description:
+    `Redeem equal amounts of PT and YT tokens to get back the underlying asset or SY token using Pendle. 
+    Provide the PT token address to automatically determine the market and YT address.
+    This tool automatically renders UI.`,
+  parameters: z.object({
+    pt_address: z
+      .string()
+      .describe('The address of the PT (Principal Token). The market and YT address will be automatically determined from this token.'),
+    token_out: z
+      .string()
+      .describe('The address of the output token (can be SY token or underlying token like wstETH). Not required if is_sy is true.'),
+    amount_in_human: z
+      .string()
+      .describe('Amount of PT and YT tokens to redeem in human-readable format (e.g., "1", "100.5"). Equal amounts of PT and YT will be burned.'),
+    user_wallet_address: z
+      .string()
+      .describe('The address of the user\'s EVM wallet'),
+    is_sy: z
+      .boolean()
+      .describe('If true, uses the SY token address from the market data as token_out. If false, uses the provided token_out parameter.'),
+    slippage: z
+      .number()
+      .min(PENDLE_CONFIG.MIN_SLIPPAGE)
+      .max(PENDLE_CONFIG.MAX_SLIPPAGE)
+      .default(PENDLE_CONFIG.DEFAULT_SLIPPAGE)
+      .describe(`Maximum acceptable slippage (default: ${PENDLE_CONFIG.DEFAULT_SLIPPAGE}, which is ${PENDLE_CONFIG.DEFAULT_SLIPPAGE * 100}%)`)
+  }),
+  execute: async (params, context: ToolContext) => {
+    const {
+      pt_address,
+      token_out,
+      amount_in_human,
+      user_wallet_address,
+      is_sy = false,
+      slippage = PENDLE_CONFIG.DEFAULT_SLIPPAGE
+    } = params;
+    const networkContext = context?.networkContext;
+    const isDemo = networkContext?.isDemo;
+    const chainId = networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID;
+
+    try {
+      console.log('===== PENDLE REDEEM PY TOOL =====');
+      console.log('Input parameters:', {
+        pt_address,
+        token_out,
+        amount_in_human,
+        is_sy,
+        slippage
+      });
+
+      // Find the market using PT address to get market info and YT address
+      const foundMarket = await findMarketByTokenAddress(pt_address, 'pt');
+      const ytAddress = foundMarket.yt;
+      const marketName = foundMarket.name;
+
+      // Determine the actual token_out to use
+      let actualTokenOut: string;
+      if (is_sy) {
+        actualTokenOut = foundMarket.sy;
+        console.log('Using SY token from market:', actualTokenOut);
+      } else {
+        if (!token_out) {
+          throw new Error('token_out parameter is required when is_sy is false');
+        }
+        actualTokenOut = token_out;
+        console.log('Using provided token_out:', actualTokenOut);
+      }
+
+      console.log('Found market:', {
+        marketAddress: foundMarket.address,
+        ptAddress: pt_address,
+        ytAddress,
+        marketName,
+        syAddress: foundMarket.sy,
+        actualTokenOut
+      });
+
+      // Convert amount to wei using the helper function (using PT address for decimals)
+      const amountInWei = await parseTokenAmount(pt_address, amount_in_human, chainId);
+
+      console.log('Amount in wei:', amountInWei);
+
+      // Execute the redeem transaction using YT address (as required by the redeem function)
+      const result = await executePendleRedeemPy(
+        ytAddress,
+        amountInWei,
+        actualTokenOut,
+        slippage,
+        chainId,
+        isDemo || false,
+        user_wallet_address
+      );
+
+      const explorerLink = getConfigByChainId(chainId, isDemo || false).scanLink;
+      const explorerLinkWithHash = explorerLink?.startsWith('http') 
+        ? `${explorerLink}/tx/${result.hash}`
+        : `https://${explorerLink}/tx/${result.hash}`;
+
+      // Determine output token type for display
+      let outputTokenType = is_sy ? 'SY' : 'Token';
+
+      const redeemData = {
+        success: true,
+        transaction_hash: result.hash,
+        redeem_details: {
+          market: marketName,
+          output_token: actualTokenOut,
+          output_token_type: outputTokenType,
+          amount_in: `${amount_in_human}`,
+          pt_address: pt_address,
+          yt_address: ytAddress,
+          sy_address: foundMarket.sy,
+          complete_time: new Date().toISOString(),
+          chainId: chainId,
+          explorer_link: explorerLink ? explorerLinkWithHash : undefined
+        }
+      };
+
+      return redeemData;
+    } catch (error: any) {
+      console.log('Redeem error:', error);
+      const errorData = {
+        success: false,
+        error: error.message || 'Failed to execute Pendle redeem.',
+        redeem_parameters: {
+          pt_address,
+          token_out,
+          amount_in_human,
+          is_sy,
+          slippage
+        }
+      };
+      
+      return errorData;
+    }
+  }
+});
