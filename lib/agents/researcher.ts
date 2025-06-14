@@ -329,7 +329,7 @@ Network Context:
           })
         }
       }  else if (toolDef) {
-        tool_lst[toolName] = {
+        o3_mini_tool_lst[toolName] = {
           description: toolDef.description,
           parameters: toolDef.schema,
         }
