@@ -23,7 +23,7 @@ export interface ToolDefinition<T = any> {
   name: string
   description: string
   schema: z.ZodType<T>
-  execute: (params: T, context?: ToolContext) => Promise<any> | PromiseLike<any>
+  execute?: (params: T, context?: ToolContext) => Promise<any> | PromiseLike<any>
   category: ToolCategory
   supportedNetworks?: (ChainType | 'demo')[]
 }
@@ -218,9 +218,6 @@ export function createToolRegistry(model: string): ToolRegistry {
     name: 'ask_question',
     description: 'Ask clarifying questions to the user',
     schema: askQuestionTool.parameters,
-    execute: async (params, context) => {
-      return { success: true, message: `Question asked: ${params.question}` }
-    },
     category: ToolCategory.UTILITY
   })
   
