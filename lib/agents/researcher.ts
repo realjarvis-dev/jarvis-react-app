@@ -294,14 +294,19 @@ Network Context:
     const tool_lst: Record<string, any> = {}
     for (const toolName of supportedTools) {
       const toolDef = registry.getTool(toolName)
-      if (toolDef) {
+      if (toolDef && toolDef.execute) {
         tool_lst[toolName] = {
           description: toolDef.description,
           parameters: toolDef.schema,
-          execute: (params: any, context?: any) => toolDef.execute(params, {
+          execute: (params: any, context?: any) => toolDef.execute!(params, {
             ...context,
             networkContext
           })
+        }
+      } else if (toolDef) {
+        tool_lst[toolName] = {
+          description: toolDef.description,
+          parameters: toolDef.schema,
         }
       }
     }
@@ -314,14 +319,19 @@ Network Context:
     
     for (const toolName of o3MiniTools) {
       const toolDef = registry.getTool(toolName)
-      if (toolDef) {
+      if (toolDef && toolDef.execute) {
         o3_mini_tool_lst[toolName] = {
           description: toolDef.description,
           parameters: toolDef.schema,
-          execute: (params: any, context?: any) => toolDef.execute(params, {
+          execute: (params: any, context?: any) => toolDef.execute!(params, {
             ...context,
             networkContext
           })
+        }
+      }  else if (toolDef) {
+        tool_lst[toolName] = {
+          description: toolDef.description,
+          parameters: toolDef.schema,
         }
       }
     }
