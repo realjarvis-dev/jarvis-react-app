@@ -11,7 +11,10 @@ import { ToolContext } from '../types/context'
 
 export const pendleZapInQuoteTool = tool({
   description:
-    "Get a quote for adding liquidity (zap in) to a Pendle market. This tool should be used before executing the transaction. You don't have to ask before giving the quote.",
+    `Get a quote for adding liquidity (zap in) to a Pendle market. This tool should be used before executing the transaction. 
+    You MUST confirm with user whether they want the zero price impact mode or not before quoting.
+    If user is asking indepth question about providing liquidity to pendle, you must use retrieve tool to https://pendle.gitbook.io/pendle-academy/yield-trading-deep-dives/chapter-7-providing-liquidity-while-trading-yield when search mode is on
+    `,
   parameters: z.object({
     marketName: z
       .string()
@@ -43,9 +46,8 @@ export const pendleZapInQuoteTool = tool({
       ),
     zeroPriceImpact: z
       .boolean()
-      .default(false)
       .describe(
-        'Whether to use zero price impact for the transaction. YT has to be managed by user if turned on, so it is for more advanced users. Default to false.'
+        'Whether to use zero price impact for the transaction. Please confirm with user if they did not specify.'
       )
   }),
   execute: async (params, context: ToolContext) => {
@@ -211,9 +213,8 @@ export const pendleZapInExecuteTool = tool({
       ),
     zeroPriceImpact: z
       .boolean()
-      .default(false)
       .describe(
-        'Whether to use zero price impact for the transaction. YT has to be managed by user if turned on, so it is for more advanced users. Default to false.'
+        'Whether to use zero price impact for the transaction.'
       )
   }),
   execute: async (params, context: ToolContext) => {

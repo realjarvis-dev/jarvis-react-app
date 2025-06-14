@@ -60,7 +60,7 @@ export function PendleZapInQuoteDisplay({
   const inputAmount = toolArgs.amountIn || '0'
   const lpAmount = Number(result.quote?.amountLpOut).toPrecision(6) || 0
   const ytAmount = Number(result.quote?.amountYtOut).toPrecision(6) || 0
-  const priceImpact = result.quote?.priceImpact || 0
+  const priceImpact = Number(result.quote?.priceImpact) * 100 || 0
 
   // Display the quote result with an improved UI
   return (
@@ -101,7 +101,7 @@ export function PendleZapInQuoteDisplay({
                   LP Tokens
                 </span>
                 <span className="text-lg font-semibold text-blue-700 dark:text-blue-400">
-                  {lpAmount} LP
+                  {lpAmount} {toolArgs.marketName} LP
                 </span>
               </div>
               {Number(ytAmount) > 0 && (
@@ -110,7 +110,7 @@ export function PendleZapInQuoteDisplay({
                     YT Tokens
                   </span>
                   <span className="text-lg font-semibold text-blue-700 dark:text-blue-400">
-                    {ytAmount} YT
+                    {ytAmount} {toolArgs.marketName} YT
                   </span>
                 </div>
               )}
