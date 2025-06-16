@@ -40,7 +40,7 @@ export function normalizeSwapInfo(
 
   // tool type detection
   let toolType: 'pendle' | 'lifi' | undefined
-  if (tool.toolName === 'pendle_swap' || tool.toolName === 'pendle_mint_py' || tool.toolName === 'pendle_redeem_py') {
+  if (tool.toolName === 'pendle_swap' || tool.toolName === 'pendle_mint_py' || tool.toolName === 'pendle_mint_sy' || tool.toolName === 'pendle_redeem_py') {
     toolType = 'pendle'
   } else if (tool.toolName === 'lifi_bridge_execute') {
     toolType = 'lifi'
@@ -60,6 +60,8 @@ export function normalizeSwapInfo(
     let title: string
     if (tool.toolName === 'pendle_mint_py') {
       title = 'Mint Transaction'
+    } else if (tool.toolName === 'pendle_mint_sy') {
+      title = 'SY Mint Transaction'
     } else if (tool.toolName === 'pendle_redeem_py') {
       title = 'Redeem Transaction'
     } else {
@@ -74,6 +76,10 @@ export function normalizeSwapInfo(
       // For mint: input token -> PT + YT
       fromTokenName = args.is_sy ? 'SY' : (args.input_token_name_display || 'Token')
       toTokenName = `PT + YT`
+    } else if (tool.toolName === 'pendle_mint_sy') {
+      // For SY mint: input token -> SY
+      fromTokenName = args.input_token_name_display || 'Token'
+      toTokenName = 'SY'
     } else if (tool.toolName === 'pendle_redeem_py') {
       // For redeem: PT + YT -> output token
       fromTokenName = `PT + YT`
@@ -115,6 +121,13 @@ export function normalizeSwapInfo(
         completeTime = mintDetails?.complete_time
         sentDisplay = `${args.amount_in_human} ${args.is_sy ? 'SY' : 'tokens'}`
         receivedDisplay = `PT + YT (${mintDetails?.market || 'Market'})`
+      } else if (tool.toolName === 'pendle_mint_sy') {
+        const mintDetails = data.mint_details
+        transactionHash = data.transaction_hash
+        explorerLink = mintDetails?.explorer_link
+        completeTime = mintDetails?.complete_time
+        sentDisplay = `${args.amount_in_human} tokens`
+        receivedDisplay = 'SY tokens'
       } else if (tool.toolName === 'pendle_redeem_py') {
         const redeemDetails = data.redeem_details
         transactionHash = data.transaction_hash

@@ -146,6 +146,10 @@ export function ToolSection({
       return (
         <SwapTransactionCard tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
       )
+    case 'pendle_mint_sy':
+      return (
+        <SwapTransactionCard tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
+      )
     case 'pendle_redeem_py':
       return (
         <SwapTransactionCard tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
