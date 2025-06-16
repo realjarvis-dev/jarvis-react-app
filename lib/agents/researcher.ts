@@ -18,6 +18,7 @@ const get_system_prompt = (searchMode: boolean, supportedTools: string[], regist
       pendle_redeem_yt: `- pendle_redeem_yt: Use when the user wants to redeem accrued rewards and interests from Pendle YT positions after expiry. This tool accepts YT token addresses directly.`,
       pendle_mint_py: `- pendle_mint_py: Use when the user wants to mint PT and YT tokens from input tokens using Pendle. Provide the PT token address to automatically determine the market and YT address. Can use either SY tokens or underlying tokens as input.`,
       pendle_mint_sy: `- pendle_mint_sy: Use when the user wants to mint SY (Standardized Yield) tokens from underlying tokens using Pendle. Provide the SY token address and input token address to mint SY tokens.`,
+      pendle_redeem_sy: `- pendle_redeem_sy: Use when the user wants to redeem SY (Standardized Yield) tokens to underlying tokens using Pendle. Provide the SY token address and output token address to redeem SY tokens.`,
       pendle_redeem_py: `- pendle_redeem_py: Use when the user wants to redeem equal amounts of PT and YT tokens to get back the underlying asset or SY token using Pendle. Provide the PT token address to automatically determine the market and YT address.`,
       wallet_balance: `- wallet_balance: Use when the user asks about their wallet balance, token holdings, or specific token balance. This tool returns the user's cryptocurrency balances.`,
       market_chart: `- market_chart: Use when the user asks about cryptocurrency price charts, market data, price history, or wants to see price trends for any cryptocurrency. This tool fetches and displays interactive market charts with price, volume, and market cap data.`,
@@ -107,6 +108,10 @@ const get_system_prompt = (searchMode: boolean, supportedTools: string[], regist
     - Remind to check opportunities if skipped.
     - Confirm minting details before execution.
     - Mints SY tokens from underlying tokens like wstETH, USDC, etc.`,
+      pendle_redeem_sy: `  • pendle_redeem_sy
+    - Remind to fetch wallet balance if skipped.
+    - Confirm redemption details before execution.
+    - Redeems SY tokens to underlying tokens like wstETH, USDC, etc.`,
       pendle_redeem_py: `  • pendle_redeem_py
     - Remind to fetch wallet balance if skipped.
     - Confirm redemption details before execution.
@@ -124,7 +129,7 @@ const get_system_prompt = (searchMode: boolean, supportedTools: string[], regist
     // - Confirm swap details before execution.`
     }
 
-    const writeTools = ['pendle_swap', 'pendle_redeem_pt', 'pendle_redeem_yt', 'pendle_mint_py', 'pendle_mint_sy', 'pendle_redeem_py', 'privy_transfer', 'kodiak_deposit', 'generic_swap', 'lifi_bridge_execute', 'kodiak_compound_bault', 'fund_wallet']
+    const writeTools = ['pendle_swap', 'pendle_redeem_pt', 'pendle_redeem_yt', 'pendle_mint_py', 'pendle_mint_sy', 'pendle_redeem_sy', 'pendle_redeem_py', 'privy_transfer', 'kodiak_deposit', 'generic_swap', 'lifi_bridge_execute', 'kodiak_compound_bault', 'fund_wallet']
       .filter(tool => supportedTools.includes(tool))
       .map(tool => writeToolsDescriptions[tool])
       .filter(Boolean)
