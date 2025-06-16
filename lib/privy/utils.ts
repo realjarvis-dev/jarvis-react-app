@@ -218,3 +218,146 @@ export async function executeTransaction(
     // Broadcast the transaction
     return await broadcastTransaction(signedTransaction, provider);
   }
+
+/**
+ * Approve Pendle tokens for spending
+ * 
+ * @param tokenAddress Reference token address (PT, YT, SY, or underlying)
+ * @param tokenType Type of the reference token ('pt' | 'yt' | 'sy' | 'underlying')
+ * @param amountIn Amount to approve in wei
+ * @param approveFor List of token types to approve (['pt', 'yt', 'sy', 'underlying'])
+ * @param spenderAddress Address of the spender (e.g., router contract)
+ * @param chainId Chain ID
+ * @param isDemo Whether this is a demo transaction
+ * @returns Promise with approval results
+ */
+export async function approvePendleTokens(
+  tokenAddress: string,
+  tokenType: 'pt' | 'yt' | 'sy' | 'underlying',
+  amountIn: string,
+  approveFor: ('pt' | 'yt' | 'sy' | 'underlying')[],
+  spenderAddress: string,
+  userAddress: string,
+  chainId: number,
+  isDemo: boolean = false
+): Promise<{ success: boolean; message?: string }> {
+  try {
+    // Import getPendleMarkets dynamically to avoid circular imports
+    const { getPendleMarkets } = await import('../pendle/api');
+    
+    // Get all markets
+    const markets = await getPendleMarkets('all');
+    
+    // Find the market containing the reference token
+    let foundMarket;
+    for (const market of markets) {
+      if (
+        (tokenType === 'pt' && market.pt.toLowerCase() === tokenAddress.toLowerCase()) ||
+        (tokenType === 'yt' && market.yt.toLowerCase() === tokenAddress.toLowerCase()) ||
+        (tokenType === 'sy' && market.sy.toLowerCase() === tokenAddress.toLowerCase()) ||
+        (tokenType === 'underlying' && market.underlyingAsset.toLowerCase() === tokenAddress.toLowerCase())
+      ) {
+        foundMarket = market;
+        break;
+      }
+    }
+    
+    if (!foundMarket) {
+      throw new Error(`Could not find market for ${tokenType} token: ${tokenAddress}`);
+    }
+    
+    console.log(`Found market: ${foundMarket.name}`);
+    
+    // Get provider for reading contract state
+    const provider = new ethers.JsonRpcProvider(
+      process.env.TEST_RPC_URL || getConfigByChainId(chainId, isDemo).rpcUrl
+    );
+    
+    // ERC20 ABI for approve and allowance functions
+    const ERC20_ABI = [
+      'function approve(address spender, uint256 amount) external returns (bool)',
+      'function allowance(address owner, address spender) external view returns (uint256)'
+    ];
+    
+    const approvalResults: string[] = [];
+    
+    // Check and approve each requested token type
+    for (const approveType of approveFor) {
+      let tokenToApprove: string;
+      
+      switch (approveType) {
+        case 'pt':
+          tokenToApprove = foundMarket.pt;
+          break;
+        case 'yt':
+          tokenToApprove = foundMarket.yt;
+          break;
+        case 'sy':
+          tokenToApprove = foundMarket.sy;
+          break;
+        case 'underlying':
+          tokenToApprove = foundMarket.underlyingAsset;
+          break;
+        default:
+          continue;
+      }
+      
+      console.log(`Checking allowance for ${approveType.toUpperCase()} token: ${tokenToApprove}`);
+      
+      const tokenContract = new ethers.Contract(tokenToApprove, ERC20_ABI, provider);
+      
+      // Check current allowance
+      const currentAllowance = await tokenContract.allowance(userAddress, spenderAddress);
+      const requiredAmount = BigInt(amountIn);
+      
+      console.log(`Current allowance: ${currentAllowance.toString()}, Required: ${requiredAmount.toString()}`);
+      
+      // Only approve if current allowance is insufficient
+      if (currentAllowance < requiredAmount) {
+        console.log(`Approving ${approveType.toUpperCase()} token: ${tokenToApprove}`);
+        
+        // Encode the approve function call
+        const approveData = tokenContract.interface.encodeFunctionData('approve', [
+          spenderAddress,
+          amountIn
+        ]);
+        
+        // Prepare transaction data
+        const txData = {
+          to: tokenToApprove,
+          from: userAddress,
+          data: approveData,
+          value: '0'
+        };
+        
+        // Execute the approval transaction
+        const result = await executeTransaction(
+          txData,
+          chainId,
+          {
+            estimateGas: true
+          },
+          isDemo
+        );
+        
+        console.log(`${approveType.toUpperCase()} token approval successful: ${result.hash}`);
+        approvalResults.push(`${approveType.toUpperCase()} approved: ${result.hash}`);
+      } else {
+        console.log(`${approveType.toUpperCase()} token already has sufficient allowance`);
+        approvalResults.push(`${approveType.toUpperCase()} already approved (sufficient allowance)`);
+      }
+    }
+    
+    return {
+      success: true,
+      message: `Token approval check completed: ${approvalResults.join(', ')}`
+    };
+    
+  } catch (error: any) {
+    console.error('Pendle token approval failed:', error);
+    return {
+      success: false,
+      message: `Pendle token approval failed: ${error.message}`
+    };
+  }
+}
