@@ -13,12 +13,12 @@ import { ToolContext } from '../types/context'
 import { getConfigByChainId } from '../network/config'
 
 export const pendleZapOutQuoteTool = tool({
-  description: `Get a quote for removing liquidity (zap out) from a Pendle market. This tool should be used before executing the transaction.
+  description: `Get a quote for removing liquidity (zap out) from a Pendle market (pool). This tool should be used before executing the transaction.
   `,
   parameters: z.object({
     marketName: z
       .string()
-      .describe('The name of the market to remove liquidity from.'),
+      .describe('The name of the market (pool) to remove liquidity from.'),
     marketAddress: z
       .string()
       .optional()
