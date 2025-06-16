@@ -75,7 +75,7 @@ export async function executePendleRedeemSy(
     syAddress,           // Reference token address (SY token)
     'sy',               // Token type
     amountIn,           // Amount to approve
-    ['underlying'],             // Approve the underlying token
+    ['sy'],             // Approve the underlying token
     redeemResult.tx.to, // Spender address (Pendle router)
     userWalletAddress,
     chainId,
