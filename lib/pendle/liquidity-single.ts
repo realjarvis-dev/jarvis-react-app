@@ -8,7 +8,7 @@ async function formatOutputAndExecute<T>(res: MethodReturnType<T>, chainId: numb
         return {
             status: 'success',
             hash: null,
-            addLiquidityData: res.data as T
+            quoteData: res.data as T
         };
     }
     if (res.tokenApprovals) {
@@ -25,7 +25,7 @@ async function formatOutputAndExecute<T>(res: MethodReturnType<T>, chainId: numb
         return {
             status: 'success',
             hash: tx.hash,
-            addLiquidityData: res.data as T
+            quoteData: res.data as T
         };
     } catch (error) {
         if (error instanceof TransactionError) {
@@ -33,7 +33,7 @@ async function formatOutputAndExecute<T>(res: MethodReturnType<T>, chainId: numb
                 status: 'fail',
                 error: error.message,
                 hash: error.hash,
-                addLiquidityData: res.data as T
+                quoteData: res.data as T
             };
         }
         throw error;
@@ -69,7 +69,7 @@ export async function addLiquiditySingleEnableAggregator(chainId: number, market
             status: 'fail',
             error: error.message,
             hash: null,
-            addLiquidityData: null
+            quoteData: null
         }
         
     }

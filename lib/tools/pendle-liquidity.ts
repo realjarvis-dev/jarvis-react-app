@@ -12,7 +12,7 @@ import { ToolContext } from '../types/context'
 export const pendleZapInQuoteTool = tool({
   description: `Get a quote for adding liquidity (zap in) to a Pendle market. This tool should be used before executing the transaction. 
     You MUST confirm with user whether they want the zero price impact mode or not before quoting.
-    If user is asking indepth question about providing liquidity to pendle, you must use retrieve tool to https://pendle.gitbook.io/pendle-academy/yield-trading-deep-dives/chapter-7-providing-liquidity-while-trading-yield when search mode is on
+    For example, if user say "zap in <number> <token> to <market>", you should ask user whether they want the zero price impact mode or not.
     `,
   parameters: z.object({
     marketName: z
@@ -46,7 +46,7 @@ export const pendleZapInQuoteTool = tool({
     zeroPriceImpact: z
       .boolean()
       .describe(
-        'Whether to use zero price impact for the transaction. Please confirm with user if they did not specify.'
+        'Whether to use zero price impact for the transaction. Please confirm with user if they did not specify use askQuestion tool.'
       )
   }),
   execute: async (params, context: ToolContext) => {
@@ -153,18 +153,18 @@ export const pendleZapInQuoteTool = tool({
           error_message: result.error
         }
       }
-      result.addLiquidityData!.amountLpOut = formatUnits(
-        BigInt(result.addLiquidityData!.amountLpOut),
+      result.quoteData!.amountLpOut = formatUnits(
+        BigInt(result.quoteData!.amountLpOut),
         18
       )
       // console.log('ytDecimals', ytDecimals)
-      result.addLiquidityData!.amountYtOut = formatUnits(
-        BigInt(result.addLiquidityData!.amountYtOut),
+      result.quoteData!.amountYtOut = formatUnits(
+        BigInt(result.quoteData!.amountYtOut),
         ytDecimals
       )
       return {
         status: 'success',
-        quote: result.addLiquidityData,
+        quote: result.quoteData,
         marketAddress: marketAddress,
         tokenInAddress: tokenInAddress,
         tokenInType: tokenInType,
@@ -259,13 +259,13 @@ export const pendleZapInExecuteTool = tool({
         error_message: result.error
       }
     }
-    result.addLiquidityData!.amountLpOut = formatUnits(
-      BigInt(result.addLiquidityData!.amountLpOut),
+    result.quoteData!.amountLpOut = formatUnits(
+      BigInt(result.quoteData!.amountLpOut),
       18
     )
 
-    result.addLiquidityData!.amountYtOut = formatUnits(
-      BigInt(result.addLiquidityData!.amountYtOut),
+    result.quoteData!.amountYtOut = formatUnits(
+      BigInt(result.quoteData!.amountYtOut),
       ytDecimals
     )
     const explorerLink = getConfigByChainId(chainId, isDemo).scanLink
@@ -273,7 +273,7 @@ export const pendleZapInExecuteTool = tool({
     return {
       status: 'success',
       hash: result.hash,
-      addLiquidityData: result.addLiquidityData,
+      addLiquidityData: result.quoteData,
       completeTime: new Date().toISOString(),
       explorerLink: explorerLink ? explorerLinkWithHash : undefined
     }
