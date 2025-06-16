@@ -154,11 +154,11 @@ async function executeNativeToolCall(
   // Prepare tool definitions for OpenAI native tool calling
   for (const toolName of availableTools) {
     const tool = registry.getTool(toolName)
-    if (tool) {
+    if (tool && tool.execute) {
       toolDefinitions[toolName] = {
         description: tool.description,
         parameters: tool.schema,
-        execute: (params: any, context?: any) => tool.execute(params, {
+        execute: (params: any, context?: any) => tool.execute!(params, {
           ...context,
           networkContext: defaultNetworkContext
         })
@@ -284,20 +284,22 @@ async function executeManualToolCall(
   let toolResults = toolResultCache.getCachedResult(toolName, toolParams)
   
   if (toolResults === null) {
-    try {
-      toolResults = await tool.execute(
-        toolParams,
-        { toolCallId, messages: [], networkContext: defaultNetworkContext }
-      )
-      
-      toolResultCache.storeResult(toolName, toolParams, toolResults)
-    } catch (error) {
-      console.error(`Error executing tool ${toolName}:`, error)
-      toolResults = createErrorResponse(
-        ErrorType.UNKNOWN,
-        `Error executing tool ${toolName}`,
-        error
-      )
+    if (tool.execute) {
+      try {
+        toolResults = await tool.execute(
+          toolParams,
+          { toolCallId, messages: [], networkContext: defaultNetworkContext }
+        )
+        
+        toolResultCache.storeResult(toolName, toolParams, toolResults)
+      } catch (error) {
+        console.error(`Error executing tool ${toolName}:`, error)
+        toolResults = createErrorResponse(
+          ErrorType.UNKNOWN,
+          `Error executing tool ${toolName}`,
+          error
+        )
+      }
     }
   }
 
