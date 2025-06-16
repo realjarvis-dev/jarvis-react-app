@@ -6,6 +6,7 @@ import { getPendleMarkets } from '../pendle/api'
 import { executePendleMintPy } from '../pendle/mint-py'
 import { executePendleMintSy } from '../pendle/mint-sy'
 import { executePendleRedeemPy } from '../pendle/redeem-py'
+import { executePendleRedeemSy } from '../pendle/redeem-sy'
 import { executePendleSwap, getSwapQuote } from '../pendle/swap'
 import {
   executeRedeemInterestsAndRewardsTransaction,
@@ -869,14 +870,6 @@ export const pendleMintPyTool = tool({
     const chainId = networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID;
 
     try {
-      console.log('===== PENDLE MINT PY TOOL =====');
-      console.log('Input parameters:', {
-        pt_address,
-        token_in,
-        amount_in_human,
-        is_sy,
-        slippage
-      });
 
       // Find the market using PT address to get YT address
       const foundMarket = await findMarketByTokenAddress(pt_address, 'pt');
@@ -895,14 +888,6 @@ export const pendleMintPyTool = tool({
         actualTokenIn = token_in;
         console.log('Using provided token_in:', actualTokenIn);
       }
-
-      console.log('Found market:', {
-        marketAddress: foundMarket.address,
-        ytAddress,
-        marketName,
-        syAddress: foundMarket.sy,
-        actualTokenIn
-      });
 
       // Convert amount to wei using the helper function
       const amountInWei = await parseTokenAmount(actualTokenIn, amount_in_human, chainId);
@@ -1054,6 +1039,104 @@ export const pendleMintSyTool = tool({
       return {
         _uiDisplayTool: true,
         summary: `SY mint failed: ${error.message || 'Failed to execute Pendle SY mint'}`,
+        data: errorData
+      };
+    }
+  }
+});
+
+export const pendleRedeemSyTool = tool({
+  description:
+    `Redeem SY (Standardized Yield) tokens to underlying tokens using Pendle. 
+    Provide the SY token address and output token to redeem SY tokens.
+    This tool automatically renders UI.`,
+  parameters: z.object({
+    sy_address: z
+      .string()
+      .describe('The address of the SY (Standardized Yield) token to redeem'),
+    token_out: z
+      .string()
+      .describe('The address of the output token (underlying token like wstETH, USDC, etc.)'),
+    amount_in_human: z
+      .string()
+      .describe('Amount of SY token to redeem in human-readable format (e.g., "1", "100.5")'),
+    user_wallet_address: z
+      .string()
+      .describe('The address of the user\'s EVM wallet'),
+    slippage: z
+      .number()
+      .min(PENDLE_CONFIG.MIN_SLIPPAGE)
+      .max(PENDLE_CONFIG.MAX_SLIPPAGE)
+      .default(PENDLE_CONFIG.DEFAULT_SLIPPAGE)
+      .describe(`Maximum acceptable slippage (default: ${PENDLE_CONFIG.DEFAULT_SLIPPAGE}, which is ${PENDLE_CONFIG.DEFAULT_SLIPPAGE * 100}%)`)
+  }),
+  execute: async (params, context: ToolContext) => {
+    const {
+      sy_address,
+      token_out,
+      amount_in_human,
+      user_wallet_address,
+      slippage = PENDLE_CONFIG.DEFAULT_SLIPPAGE
+    } = params;
+    const networkContext = context?.networkContext;
+    const isDemo = networkContext?.isDemo;
+    const chainId = networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID;
+
+    try {
+
+      // Convert amount to wei using the helper function
+      const amountInWei = await parseTokenAmount(sy_address, amount_in_human, chainId);
+
+      // Execute the redeem SY transaction
+      const result = await executePendleRedeemSy(
+        sy_address,
+        amountInWei,
+        token_out,
+        slippage,
+        chainId,
+        isDemo || false,
+        user_wallet_address
+      );
+
+      const explorerLink = getConfigByChainId(chainId, isDemo || false).scanLink;
+      const explorerLinkWithHash = explorerLink?.startsWith('http') 
+        ? `${explorerLink}/tx/${result.hash}`
+        : `https://${explorerLink}/tx/${result.hash}`;
+
+      const redeemData = {
+        success: true,
+        transaction_hash: result.hash,
+        redeem_details: {
+          sy_address,
+          output_token: token_out,
+          amount_in: `${amount_in_human}`,
+          complete_time: new Date().toISOString(),
+          chainId: chainId,
+          explorer_link: explorerLink ? explorerLinkWithHash : undefined
+        }
+      };
+
+      return {
+        _uiDisplayTool: true,
+        summary: `SY tokens redeemed: ${amount_in_human} SY → tokens`,
+        data: redeemData
+      };
+    } catch (error: any) {
+      console.log('Redeem SY error:', error);
+      const errorData = {
+        success: false,
+        error: error.message || 'Failed to execute Pendle SY redeem.',
+        redeem_parameters: {
+          sy_address,
+          token_out,
+          amount_in_human,
+          slippage
+        }
+      };
+      
+      return {
+        _uiDisplayTool: true,
+        summary: `SY redeem failed: ${error.message || 'Failed to execute Pendle SY redeem'}`,
         data: errorData
       };
     }
