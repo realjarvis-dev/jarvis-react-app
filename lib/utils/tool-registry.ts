@@ -5,7 +5,7 @@ import { getGasPriceTool } from '../tools/gas-price'
 import { kodiakBaultProfitabilityTool, kodiakCompoundBaultTool, kodiakDepositTool, kodiakOpportunitiesTool } from '../tools/kodiak'
 import { bridgeExecuteTool, bridgeQuoteTool } from '../tools/lifi-bridge'
 import { marketChartTool } from '../tools/market-chart'
-import { pendleMintPyTool, pendleMintSyTool, pendleOpportunitiesTool, pendleQuoteTool, pendleRedeemPTTool, pendleRedeemPyTool, pendleRedeemSyTool, pendleRedeemYTTool, pendleSwapTool } from '../tools/pendle'
+import { pendleMintPyQuoteTool, pendleMintPyTool, pendleMintSyQuoteTool, pendleMintSyTool, pendleOpportunitiesTool, pendleQuoteTool, pendleRedeemPTTool, pendleRedeemPyQuoteTool, pendleRedeemPyTool, pendleRedeemSyQuoteTool, pendleRedeemSyTool, pendleRedeemYTTool, pendleSwapTool } from '../tools/pendle'
 import { privyTransferTool } from '../tools/privy-transfer'
 import { createQuestionTool } from '../tools/question'
 import { retrieveTool } from '../tools/retrieve'
@@ -325,6 +325,19 @@ export function createToolRegistry(model: string): ToolRegistry {
   })
   
   registry.registerTool({
+    name: 'pendle_redeem_py_quote',
+    description: pendleRedeemPyQuoteTool.description || '',
+    schema: pendleRedeemPyQuoteTool.parameters,
+    execute: async (params, context) => pendleRedeemPyQuoteTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3,
+    supportedNetworks: ['ethereum', 'demo']
+  })
+  
+  registry.registerTool({
     name: 'pendle_mint_sy',
     description: pendleMintSyTool.description || '',
     schema: pendleMintSyTool.parameters,
@@ -342,6 +355,45 @@ export function createToolRegistry(model: string): ToolRegistry {
     description: pendleRedeemSyTool.description || '',
     schema: pendleRedeemSyTool.parameters,
     execute: async (params, context) => pendleRedeemSyTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3,
+    supportedNetworks: ['ethereum', 'demo']
+  })
+  
+  registry.registerTool({
+    name: 'pendle_redeem_sy_quote',
+    description: pendleRedeemSyQuoteTool.description || '',
+    schema: pendleRedeemSyQuoteTool.parameters,
+    execute: async (params, context) => pendleRedeemSyQuoteTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3,
+    supportedNetworks: ['ethereum', 'demo']
+  })
+  
+  registry.registerTool({
+    name: 'pendle_mint_py_quote',
+    description: pendleMintPyQuoteTool.description || '',
+    schema: pendleMintPyQuoteTool.parameters,
+    execute: async (params, context) => pendleMintPyQuoteTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3,
+    supportedNetworks: ['ethereum', 'demo']
+  })
+  
+  registry.registerTool({
+    name: 'pendle_mint_sy_quote',
+    description: pendleMintSyQuoteTool.description || '',
+    schema: pendleMintSyQuoteTool.parameters,
+    execute: async (params, context) => pendleMintSyQuoteTool.execute(params, {
       toolCallId: context?.toolCallId || 'unknown',
       messages: context?.messages || [],
       networkContext: context?.networkContext!
