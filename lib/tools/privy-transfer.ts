@@ -9,7 +9,7 @@ import { erc20Transfer, executeSwapTransaction } from '../pendle/transactions'
 import { getUserId, getUserWallet } from '../privy/client'
 import { balanceChangePub } from '../pubsub/balance-change-pub'
 import { ToolContext } from '../types/context'
-import { findTokenByIdentifier } from '../token-matcher/token-utils'
+import { findTokenInUserWalletByIdentifier } from '../token-matcher/token-utils'
 
 export const privyTransferTool = tool({
   description: 'Transfer native token or erc20 token to a specified address',
@@ -97,7 +97,7 @@ export const privyTransferTool = tool({
       } else {
         // transfer erc20 token
         // fetch wallet balance
-        const tokenResult = await findTokenByIdentifier(
+        const tokenResult = await findTokenInUserWalletByIdentifier(
           identifier,
           evmWallet.address,
           networkContext.selectedChainId,

@@ -2,16 +2,15 @@ import { tool } from 'ai'
 import { formatUnits, parseUnits } from 'viem'
 import { z } from 'zod'
 import { getConfigByChainId } from '../network/config'
-import { addLiquiditySingleEnableAggregator } from '../pendle/add-liquidity-single'
 import { getPendleMarkets } from '../pendle/api'
+import { addLiquiditySingleEnableAggregator } from '../pendle/liquidity-single'
 import { getERC20Details } from '../pendle/transactions'
 import { getUserEvmWalletAddress } from '../privy/client'
-import { findTokenByIdentifier } from '../token-matcher/token-utils'
+import { findTokenInUserWalletByIdentifier } from '../token-matcher/token-utils'
 import { ToolContext } from '../types/context'
 
 export const pendleZapInQuoteTool = tool({
-  description:
-    `Get a quote for adding liquidity (zap in) to a Pendle market. This tool should be used before executing the transaction. 
+  description: `Get a quote for adding liquidity (zap in) to a Pendle market. This tool should be used before executing the transaction. 
     You MUST confirm with user whether they want the zero price impact mode or not before quoting.
     If user is asking indepth question about providing liquidity to pendle, you must use retrieve tool to https://pendle.gitbook.io/pendle-academy/yield-trading-deep-dives/chapter-7-providing-liquidity-while-trading-yield when search mode is on
     `,
@@ -62,128 +61,129 @@ export const pendleZapInQuoteTool = tool({
       zeroPriceImpact
     } = params
     try {
-    const networkContext = context.networkContext
-    const chainId = networkContext!.selectedChainId
-    const isDemo = networkContext!.isDemo
-    const userAddress = await getUserEvmWalletAddress()
-    if (isDemo) {
-      slippage = 0.1
-    }
-    if (!userAddress) {
-      return {
-        status: 'fail',
-        error_message: 'User address not available',
-        hash: null
+      const networkContext = context.networkContext
+      const chainId = networkContext!.selectedChainId
+      const isDemo = networkContext!.isDemo
+      const userAddress = await getUserEvmWalletAddress()
+      if (isDemo) {
+        slippage = 0.1
       }
-    }
-    const markets = await getPendleMarkets()
-    let market = null
-    if (!marketAddress) {
-      market = markets.find(
-        market => market.name.toLowerCase() === marketName.toLowerCase()
-      )
-    } else {
-      market = markets.find(
-        market =>
-          market.address.toLowerCase() ===
-          (marketAddress as string).toLowerCase()
-      )
-    }
-    if (!market) {
-      return {
-        status: 'fail',
-        error_message: 'Market not found',
-        hash: null
-      }
-    }
-    
-    marketAddress = market.address
-    const ytAddress = market.yt
-    const ytDetails = await getERC20Details(ytAddress, chainId)
-    const ytDecimals = Number(ytDetails.decimals)
-
-    let tokenInDecimals = 18
-    if (!tokenInAddress) {
-      const tokenResult = await findTokenByIdentifier(
-        tokenInName,
-        userAddress,
-        chainId,
-        isDemo
-      )
-      if (tokenResult.status === 'fail') {
+      if (!userAddress) {
         return {
           status: 'fail',
-          error_message: tokenResult.error_message,
+          error_message: 'User address not available',
           hash: null
         }
       }
-      tokenInAddress = tokenResult.token!.address
-      tokenInDecimals = Number(tokenResult.token!.decimals)
-    }
+      const markets = await getPendleMarkets()
+      let market = null
+      if (!marketAddress) {
+        market = markets.find(
+          market => market.name.toLowerCase() === marketName.toLowerCase()
+        )
+      } else {
+        market = markets.find(
+          market =>
+            market.address.toLowerCase() ===
+            (marketAddress as string).toLowerCase()
+        )
+      }
+      if (!market) {
+        return {
+          status: 'fail',
+          error_message: 'Market not found',
+          hash: null
+        }
+      }
 
-    if (tokenInType === 'yt') {
-      return {
-        status: 'fail',
-        error_message: 'PT is not supported for zap in',
-        hash: null
-      }
-    }
-    if (tokenInType === 'pt' && zeroPriceImpact) {
-      return {
-        status: 'fail',
-        error_message: 'Zero price impact is not supported for PT',
-        hash: null
-      }
-    }
-    const amountInWei = parseUnits(amountIn, tokenInDecimals).toString()
-    let result = await addLiquiditySingleEnableAggregator(
-      chainId,
-      marketAddress,
-      userAddress,
-      tokenInAddress,
-      amountInWei,
-      slippage,
-      zeroPriceImpact,
-      isDemo,
-      false
-    )
+      marketAddress = market.address
+      const ytAddress = market.yt
+      const ytDetails = await getERC20Details(ytAddress, chainId)
+      const ytDecimals = Number(ytDetails.decimals)
 
-    if (result.status === 'fail') {
+      let tokenInDecimals = 18
+      if (!tokenInAddress) {
+        const tokenResult = await findTokenInUserWalletByIdentifier(
+          tokenInName,
+          userAddress,
+          chainId,
+          isDemo
+        )
+        if (tokenResult.status === 'fail') {
+          return {
+            status: 'fail',
+            error_message: tokenResult.error_message,
+            hash: null
+          }
+        }
+        tokenInAddress = tokenResult.token!.address
+        tokenInDecimals = Number(tokenResult.token!.decimals)
+      }
+
+      if (tokenInType === 'yt') {
+        return {
+          status: 'fail',
+          error_message: 'PT is not supported for zap in',
+          hash: null
+        }
+      }
+      if (tokenInType === 'pt' && zeroPriceImpact) {
+        return {
+          status: 'fail',
+          error_message: 'Zero price impact is not supported for PT',
+          hash: null
+        }
+      }
+      const amountInWei = parseUnits(amountIn, tokenInDecimals).toString()
+      let result = await addLiquiditySingleEnableAggregator(
+        chainId,
+        marketAddress,
+        userAddress,
+        tokenInAddress,
+        amountInWei,
+        slippage,
+        zeroPriceImpact,
+        isDemo,
+        false
+      )
+
+      if (result.status === 'fail') {
+        return {
+          status: 'fail',
+          error_message: result.error
+        }
+      }
+      result.addLiquidityData!.amountLpOut = formatUnits(
+        BigInt(result.addLiquidityData!.amountLpOut),
+        18
+      )
+      // console.log('ytDecimals', ytDecimals)
+      result.addLiquidityData!.amountYtOut = formatUnits(
+        BigInt(result.addLiquidityData!.amountYtOut),
+        ytDecimals
+      )
+      return {
+        status: 'success',
+        quote: result.addLiquidityData,
+        marketAddress: marketAddress,
+        tokenInAddress: tokenInAddress,
+        tokenInType: tokenInType,
+        tokenInDecimals: tokenInDecimals,
+        amountIn: amountIn,
+        slippage: slippage,
+        zeroPriceImpact: zeroPriceImpact,
+        ytDecimals: ytDecimals,
+        ytName: ytDetails.name,
+        completeTime: new Date().toISOString()
+      }
+    } catch (error) {
+      console.error(error)
       return {
         status: 'fail',
-        error_message: result.error
+        error_message: 'Error getting quote'
       }
     }
-    result.addLiquidityData!.amountLpOut = formatUnits(
-      BigInt(result.addLiquidityData!.amountLpOut),
-      18
-    )
-    // console.log('ytDecimals', ytDecimals)
-    result.addLiquidityData!.amountYtOut = formatUnits(
-      BigInt(result.addLiquidityData!.amountYtOut),
-      ytDecimals
-    )
-    return {
-      status: 'success',
-      quote: result.addLiquidityData,
-      marketAddress: marketAddress,
-      tokenInAddress: tokenInAddress,
-      tokenInType: tokenInType,
-      tokenInDecimals: tokenInDecimals,
-      amountIn: amountIn,
-      slippage: slippage,
-      zeroPriceImpact: zeroPriceImpact,
-      ytDecimals: ytDecimals,
-      ytName: ytDetails.name,
-      completeTime: new Date().toISOString()
-    }
-  } catch (error) {
-    console.error(error)
-    return {
-      status: 'fail',
-      error_message: 'Error getting quote'
-    }
-  }}
+  }
 })
 
 export const pendleZapInExecuteTool = tool({
@@ -213,9 +213,7 @@ export const pendleZapInExecuteTool = tool({
       ),
     zeroPriceImpact: z
       .boolean()
-      .describe(
-        'Whether to use zero price impact for the transaction.'
-      )
+      .describe('Whether to use zero price impact for the transaction.')
   }),
   execute: async (params, context: ToolContext) => {
     let {
@@ -265,7 +263,7 @@ export const pendleZapInExecuteTool = tool({
       BigInt(result.addLiquidityData!.amountLpOut),
       18
     )
-    
+
     result.addLiquidityData!.amountYtOut = formatUnits(
       BigInt(result.addLiquidityData!.amountYtOut),
       ytDecimals
