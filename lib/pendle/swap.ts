@@ -1,9 +1,12 @@
-import { executeTransaction } from '@/lib/privy/utils';
+import { approvePendleTokensBruteForce, executeTransaction } from '@/lib/privy/utils';
 import { callSDK } from './call-sdk';
 import { SwapData } from './types';
 
 // Chain ID for Ethereum mainnet
 const CHAIN_ID = 1;
+
+// Native ETH is represented by the zero address in the Pendle API
+const ETH_ADDRESS = '0x0000000000000000000000000000000000000000';
 
 /**
  * Get Pendle swap data using Pendle SDK (simplified approach with Privy)
@@ -78,6 +81,29 @@ export async function executePendleSwap(
     chainId,
     userWalletAddress
   );
+
+  // Check if input token is not ETH and requires approval
+  const isInputTokenETH = tokenIn.toLowerCase() === ETH_ADDRESS.toLowerCase();
+  
+  if (!isInputTokenETH) {
+    console.log('Input token is ERC20, checking approval requirements');
+    
+    const approvalResult = await approvePendleTokensBruteForce(
+      tokenIn,              // Token address to approve
+      amountIn,             // Amount to approve
+      swapResult.tx.to,     // Spender address (Pendle router)
+      userWalletAddress,    // User address
+      chainId,              // Chain ID
+      isDemo                // Demo flag
+    );
+    
+    if (!approvalResult.success) {
+      throw new Error(`Token approval failed: ${approvalResult.message}`);
+    }
+    console.log('Token approval completed successfully');
+  } else {
+    console.log('Input token is ETH, no approval required');
+  }
 
   // Prepare transaction data
   const txData = {
