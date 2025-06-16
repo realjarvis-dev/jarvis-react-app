@@ -14,6 +14,7 @@ export const pendleZapInQuoteTool = tool({
   description: `Get a quote for adding liquidity (zap in) to a Pendle market. This tool should be used before executing the transaction. 
     You MUST confirm with user whether they want the zero price impact mode or not before quoting.
     For example, if user say "zap in <number> <token> to <market>", you should ask user whether they want the zero price impact mode or not.
+    Recommend disable zpi for not advanced users. zpi has to be false if tokenInType is pt.
     `,
   parameters: z.object({
     marketName: z

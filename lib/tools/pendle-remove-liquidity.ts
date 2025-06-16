@@ -197,6 +197,7 @@ export const pendleZapOutExecuteTool = tool({
     marketName: z.string().describe('The name of the market to remove liquidity from.'),
     marketAddress: z.string().describe('The address of the market to remove liquidity from.'),
     tokenOutName: z.string().describe('The name or the symbol of the output token'),
+    tokenOutDecimals: z.number().describe('The decimals of the output token'),
     tokenOutAddress: z.string().describe('The address of the output token'),
     amountLpIn: z.string().describe('The amount of LP token to remove liquidity from, in human readable format.'),
     slippage: z.number().describe('The slippage tolerance for the transaction.')
@@ -208,7 +209,8 @@ export const pendleZapOutExecuteTool = tool({
       tokenOutName,
       tokenOutAddress,
       amountLpIn,
-      slippage
+      slippage,
+      tokenOutDecimals
     } = params
     const networkContext = context.networkContext!
     const isDemo = networkContext.isDemo
@@ -234,6 +236,7 @@ export const pendleZapOutExecuteTool = tool({
         error: quote.error
       }
     }
+    quote.quoteData!.amountOut = formatUnits(BigInt(quote.quoteData!.amountOut), tokenOutDecimals)
 
     const explorerLink = getConfigByChainId(chainId, isDemo).scanLink
     const explorerLinkWithHash = `https://${explorerLink}/tx/${quote.hash}`
