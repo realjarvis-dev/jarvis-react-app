@@ -8,14 +8,6 @@ export const chains = [
       "mainnet": true
     },
     {
-      "key": "demo",
-      "chainType": "EVM",
-      "name": "Demo",
-      "coin": "ETH",
-      "id": 1,
-      "mainnet": true
-    },
-    {
       "key": "bsc",
       "chainType": "EVM",
       "name": "BSC",
@@ -248,6 +240,14 @@ export const chains = [
       "mainnet": true
     },
     {
+      "key": "opb",
+      "chainType": "EVM",
+      "name": "opBNB",
+      "coin": "BNB",
+      "id": 204,
+      "mainnet": true
+    },
+    {
       "key": "crn",
       "chainType": "EVM",
       "name": "Corn",
@@ -269,14 +269,6 @@ export const chains = [
       "name": "Cronos",
       "coin": "CRO",
       "id": 25,
-      "mainnet": true
-    },
-    {
-      "key": "fra",
-      "chainType": "EVM",
-      "name": "Fraxtal",
-      "coin": "frxETH",
-      "id": 252,
       "mainnet": true
     },
     {
@@ -317,6 +309,14 @@ export const chains = [
       "name": "World Chain",
       "coin": "ETH",
       "id": 480,
+      "mainnet": true
+    },
+    {
+      "key": "xdc",
+      "chainType": "EVM",
+      "name": "XDC",
+      "coin": "XDC",
+      "id": 50,
       "mainnet": true
     },
     {
@@ -365,6 +365,14 @@ export const chains = [
       "name": "Kaia",
       "coin": "KLAY",
       "id": 8217,
+      "mainnet": true
+    },
+    {
+      "key": "hyp",
+      "chainType": "EVM",
+      "name": "HyperEVM",
+      "coin": "HYPE",
+      "id": 999,
       "mainnet": true
     }
   ]
