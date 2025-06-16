@@ -97,3 +97,17 @@ export async function getPendleMarkets(filter: 'active' | 'inactive' | 'all' = '
     return [...activeMarkets, ...inactiveMarkets]
   }
 } 
+
+export async function getListPendleAddress() {
+  const markets = await getPendleMarkets()
+  markets.sort((a, b) => b.impliedApy - a.impliedApy)
+  console.log(markets)
+  const listPendleAddress = []
+  for (const market of markets) {
+    listPendleAddress.push(market.address)
+    listPendleAddress.push(market.pt)
+    listPendleAddress.push(market.yt)
+    listPendleAddress.push(market.sy)
+  }
+  return listPendleAddress
+}
