@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { getConfigByChainId } from '../network/config'
 import { getPendleMarkets } from '../pendle/api'
 import { executePendleMintPy } from '../pendle/mint-py'
+import { executePendleMintSy } from '../pendle/mint-sy'
 import { executePendleRedeemPy } from '../pendle/redeem-py'
 import { executePendleSwap, getSwapQuote } from '../pendle/swap'
 import {
@@ -957,6 +958,104 @@ export const pendleMintPyTool = tool({
       };
       
       return errorData;
+    }
+  }
+});
+
+export const pendleMintSyTool = tool({
+  description:
+    `Mint SY (Standardized Yield) tokens from input tokens using Pendle. 
+    Provide the SY token address and input token to mint SY tokens.
+    This tool automatically renders UI.`,
+  parameters: z.object({
+    sy_address: z
+      .string()
+      .describe('The address of the SY (Standardized Yield) token to mint'),
+    token_in: z
+      .string()
+      .describe('The address of the input token (underlying token like wstETH, USDC, etc.)'),
+    amount_in_human: z
+      .string()
+      .describe('Amount of input token to mint from in human-readable format (e.g., "1", "100.5")'),
+    user_wallet_address: z
+      .string()
+      .describe('The address of the user\'s EVM wallet'),
+    slippage: z
+      .number()
+      .min(PENDLE_CONFIG.MIN_SLIPPAGE)
+      .max(PENDLE_CONFIG.MAX_SLIPPAGE)
+      .default(PENDLE_CONFIG.DEFAULT_SLIPPAGE)
+      .describe(`Maximum acceptable slippage (default: ${PENDLE_CONFIG.DEFAULT_SLIPPAGE}, which is ${PENDLE_CONFIG.DEFAULT_SLIPPAGE * 100}%)`)
+  }),
+  execute: async (params, context: ToolContext) => {
+    const {
+      sy_address,
+      token_in,
+      amount_in_human,
+      user_wallet_address,
+      slippage = PENDLE_CONFIG.DEFAULT_SLIPPAGE
+    } = params;
+    const networkContext = context?.networkContext;
+    const isDemo = networkContext?.isDemo;
+    const chainId = networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID;
+
+    try {
+
+      // Convert amount to wei using the helper function
+      const amountInWei = await parseTokenAmount(token_in, amount_in_human, chainId);
+
+      // Execute the mint SY transaction
+      const result = await executePendleMintSy(
+        sy_address,
+        token_in,
+        amountInWei,
+        slippage,
+        chainId,
+        isDemo || false,
+        user_wallet_address
+      );
+
+      const explorerLink = getConfigByChainId(chainId, isDemo || false).scanLink;
+      const explorerLinkWithHash = explorerLink?.startsWith('http') 
+        ? `${explorerLink}/tx/${result.hash}`
+        : `https://${explorerLink}/tx/${result.hash}`;
+
+      const mintData = {
+        success: true,
+        transaction_hash: result.hash,
+        mint_details: {
+          sy_address,
+          input_token: token_in,
+          amount_in: `${amount_in_human}`,
+          complete_time: new Date().toISOString(), 
+          chainId: chainId,
+          explorer_link: explorerLink ? explorerLinkWithHash : undefined
+        }
+      };
+
+      return {
+        _uiDisplayTool: true,
+        summary: `SY tokens minted: ${amount_in_human} → SY tokens`,
+        data: mintData
+      };
+    } catch (error: any) {
+      console.log('Mint SY error:', error);
+      const errorData = {
+        success: false,
+        error: error.message || 'Failed to execute Pendle SY mint.',
+        mint_parameters: {
+          sy_address,
+          token_in,
+          amount_in_human,
+          slippage
+        }
+      };
+      
+      return {
+        _uiDisplayTool: true,
+        summary: `SY mint failed: ${error.message || 'Failed to execute Pendle SY mint'}`,
+        data: errorData
+      };
     }
   }
 });
