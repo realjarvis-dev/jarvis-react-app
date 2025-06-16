@@ -4,11 +4,44 @@ import { NetworkContext } from '../types/context'
 import { getModel } from '../utils/registry'
 import { getToolRegistry, ToolCategory } from '../utils/tool-registry'
 
-const get_system_prompt = (searchMode: boolean, supportedTools: string[], registry: any, networkContext?: NetworkContext) => {
+const createToolList = (
+  toolNames: string[],
+  registry: any,
+  networkContext?: NetworkContext
+): Record<string, any> => {
+  const toolList: Record<string, any> = {}
+  for (const toolName of toolNames) {
+    const toolDef = registry.getTool(toolName)
+    if (toolDef && toolDef.execute) {
+      toolList[toolName] = {
+        description: toolDef.description,
+        parameters: toolDef.schema,
+        execute: (params: any, context?: any) =>
+          toolDef.execute!(params, {
+            ...context,
+            networkContext
+          })
+      }
+    } else if (toolDef) {
+      toolList[toolName] = {
+        description: toolDef.description,
+        parameters: toolDef.schema
+      }
+    }
+  }
+  return toolList
+}
+
+const get_system_prompt = (
+  searchMode: boolean,
+  supportedTools: string[],
+  registry: any,
+  networkContext?: NetworkContext
+) => {
   // Generate dynamic tool descriptions based on actually supported tools
   const generateToolDescriptions = () => {
     const toolDescriptions: string[] = []
-    
+
     // Define tool descriptions with network context
     const toolDescMap: Record<string, string> = {
       pendle_opportunities: `- pendle_opportunities: Use when the user asks about Pendle yield opportunities, DeFi yields, or APY/yield farming on Ethereum. This tool returns a list of current Pendle opportunities with APY and liquidity information.`,
@@ -35,20 +68,22 @@ const get_system_prompt = (searchMode: boolean, supportedTools: string[], regist
       get_gas_price: `- get_gas_price: Use when the user asks about current gas prices for transactions.`,
       fund_wallet: `- fund_wallet: Use when the user requests their wallet to be funded with ETH in demo mode. Only works in the Demo environment.`
     }
-    
+
     // Only include descriptions for supported tools
     for (const toolName of supportedTools) {
       if (toolDescMap[toolName]) {
         toolDescriptions.push(toolDescMap[toolName])
       }
     }
-    
+
     return toolDescriptions.join('\n')
   }
 
   // Generate web3 tools list dynamically
   const generateWeb3ToolsList = () => {
-    const web3Tools = registry.getToolNamesByCategory(ToolCategory.WEB3).filter((tool: string) => supportedTools.includes(tool))
+    const web3Tools = registry
+      .getToolNamesByCategory(ToolCategory.WEB3)
+      .filter((tool: string) => supportedTools.includes(tool))
     return web3Tools.length > 0 ? web3Tools.join('\n- ') : ''
   }
 
@@ -74,11 +109,18 @@ const get_system_prompt = (searchMode: boolean, supportedTools: string[], regist
     - Call it and let the UI show the chart.  
     - Acknowledge: "Here's the market chart. Need data for a different timeframe or coin?"`,
       lifi_bridge_quote: `  • lifi_bridge_quote
-    - If nothing goes wrong, just acknowledge: "Here's your quote—anything else?"`,
-
+    - If nothing goes wrong, just acknowledge: "Here's your quote—anything else?"`
     }
 
-    const readOnlyTools = ['pendle_opportunities', 'pendle_quote', 'wallet_balance', 'kodiak_opportunities', 'kodiak_bault_profitability', 'market_chart', 'lifi_bridge_quote']
+    const readOnlyTools = [
+      'pendle_opportunities',
+      'pendle_quote',
+      'wallet_balance',
+      'kodiak_opportunities',
+      'kodiak_bault_profitability',
+      'market_chart',
+      'lifi_bridge_quote'
+    ]
       .filter(tool => supportedTools.includes(tool))
       .map(tool => readOnlyToolsDescriptions[tool])
       .filter(Boolean)
@@ -119,12 +161,25 @@ const get_system_prompt = (searchMode: boolean, supportedTools: string[], regist
       kodiak_compound_bault: `  • kodiak_compound_bault  
     - First check bault profitability with kodiak_bault_profitability.
     - Only compound baults that show as profitable.
-    - Confirm transaction details before execution.`,
-    //   generic_swap: `  • generic_swap  
-    // - Confirm swap details before execution.`
+    - Confirm transaction details before execution.`
+      //   generic_swap: `  • generic_swap
+      // - Confirm swap details before execution.`
     }
 
-    const writeTools = ['pendle_swap', 'pendle_redeem_pt', 'pendle_redeem_yt', 'pendle_mint_py', 'pendle_mint_sy', 'pendle_redeem_py', 'privy_transfer', 'kodiak_deposit', 'generic_swap', 'lifi_bridge_execute', 'kodiak_compound_bault', 'fund_wallet']
+    const writeTools = [
+      'pendle_swap',
+      'pendle_redeem_pt',
+      'pendle_redeem_yt',
+      'pendle_mint_py',
+      'pendle_mint_sy',
+      'pendle_redeem_py',
+      'privy_transfer',
+      'kodiak_deposit',
+      'generic_swap',
+      'lifi_bridge_execute',
+      'kodiak_compound_bault',
+      'fund_wallet'
+    ]
       .filter(tool => supportedTools.includes(tool))
       .map(tool => writeToolsDescriptions[tool])
       .filter(Boolean)
@@ -140,7 +195,13 @@ You are a helpful AI assistant with access to real-time web search, Pendle DeFi 
 IMPORTANT: When the user has search mode enabled, you MUST use the most appropriate tool for every factual query, even if you believe you know the answer.
 search mode on: ${searchMode}
 
-${networkContext ? `Network Context: You are currently operating on ${networkContext.selectedNetwork} network${networkContext.isDemo ? ' in demo mode' : ''}.` : ''}
+${
+  networkContext
+    ? `Network Context: You are currently operating on ${
+        networkContext.selectedNetwork
+      } network${networkContext.isDemo ? ' in demo mode' : ''}.`
+    : ''
+}
 
 Available tools:
 ${generateToolDescriptions()}
@@ -258,26 +319,31 @@ export function researcher({
     const registry = getToolRegistry(model)
 
     const all_tools = registry.getAllToolNames()
-    const search_tools = [...registry.getToolNamesByCategory(ToolCategory.WEB), ...registry.getToolNamesByCategory(ToolCategory.UTILITY)]
-    
+    const search_tools = [
+      ...registry.getToolNamesByCategory(ToolCategory.WEB),
+      ...registry.getToolNamesByCategory(ToolCategory.UTILITY)
+    ]
+
     // Use network-aware tool filtering if networkContext is provided
-    let supportedTools = networkContext 
+    let supportedTools = networkContext
       ? registry.getSupportedToolNamesForNetwork(model, networkContext)
       : registry.getSupportedToolNames(model)
-    
+
     const maxSteps = registry.getMaxSteps(model, searchMode)
 
     let web3_tools = registry.getToolNamesByCategory(ToolCategory.WEB3)
-    
+
     // Apply network filtering to web3 tools if networkContext is provided
     if (networkContext) {
       web3_tools = web3_tools.filter(toolName => {
         const toolDef = registry.getTool(toolName)
         if (!toolDef || !toolDef.supportedNetworks) return true
-        return toolDef.supportedNetworks.includes(networkContext.selectedNetwork)
+        return toolDef.supportedNetworks.includes(
+          networkContext.selectedNetwork
+        )
       })
     }
-    
+
     // remove web3 tools from supported tools if allowWeb3Tools is false
     if (allowWeb3Tools === 'false') {
       supportedTools = supportedTools.filter(tool => !web3_tools.includes(tool))
@@ -286,7 +352,8 @@ export function researcher({
 
     let userWalletInfo
     if (userEvmWallet === undefined) {
-      userWalletInfo = "The user is not logged in. Don't use any web3 tools. If the user wants to use web3 tools, ask them to login friendly"
+      userWalletInfo =
+        "The user is not logged in. Don't use any web3 tools. If the user wants to use web3 tools, ask them to login friendly"
     } else {
       userWalletInfo = `
 User EVM wallet address: ${userEvmWallet?.address}, delegated status: ${userEvmWallet?.delegated}
@@ -300,56 +367,41 @@ You can only execute on behalf of the user if they have wallets and have delegat
     if (networkContext) {
       networkInfo = `
 Network Context:
-- Selected Network: ${networkContext.selectedNetwork} (default fromChain for bridging, default chain for swapping and transfer)
+- Selected Network: ${
+        networkContext.selectedNetwork
+      } (default fromChain for bridging, default chain for swapping and transfer)
 - Chain ID: ${networkContext.selectedChainId}
 - Demo Mode: ${networkContext.isDemo ? 'ON' : 'OFF'}
 `
     }
 
     // Create tool list from registry with network context
-    const tool_lst: Record<string, any> = {}
-    for (const toolName of supportedTools) {
-      const toolDef = registry.getTool(toolName)
-      if (toolDef) {
-        tool_lst[toolName] = {
-          description: toolDef.description,
-          parameters: toolDef.schema,
-          execute: (params: any, context?: any) => toolDef.execute(params, {
-            ...context,
-            networkContext
-          })
-        }
-      }
-    }
+    const tool_lst = createToolList(supportedTools, registry, networkContext)
 
-    // Create o3-mini specific tool list with network context
-    const o3_mini_tool_lst: Record<string, any> = {}
-    const o3MiniTools = networkContext 
-      ? registry.getSupportedToolNamesForNetwork('openai:o3-mini', networkContext)
+    const o3MiniTools = networkContext
+      ? registry.getSupportedToolNamesForNetwork(
+          'openai:o3-mini',
+          networkContext
+        )
       : registry.getSupportedToolNames('openai:o3-mini')
-    
-    for (const toolName of o3MiniTools) {
-      const toolDef = registry.getTool(toolName)
-      if (toolDef) {
-        o3_mini_tool_lst[toolName] = {
-          description: toolDef.description,
-          parameters: toolDef.schema,
-          execute: (params: any, context?: any) => toolDef.execute(params, {
-            ...context,
-            networkContext
-          })
-        }
-      }
-    }
-    
-    console.log("supportedTools with network filtering", supportedTools)
-    console.log("web3_tools with network filtering", web3_tools)
-    
+    const o3_mini_tool_lst = createToolList(
+      o3MiniTools,
+      registry,
+      networkContext
+    )
+
+    console.log('supportedTools with network filtering', supportedTools)
+    console.log('web3_tools with network filtering', web3_tools)
 
     let prompt = `${
       model === 'openai:o3-mini'
         ? O3_MINI_SYSTEM_PROMPT
-        : get_system_prompt(searchMode, supportedTools, registry, networkContext)
+        : get_system_prompt(
+            searchMode,
+            supportedTools,
+            registry,
+            networkContext
+          )
     }\nCurrent date and time: ${currentDate}\n${
       model === 'openai:o3-mini' ? '' : userWalletInfo
     }${networkInfo}`
@@ -368,4 +420,3 @@ Network Context:
     throw error
   }
 }
-
