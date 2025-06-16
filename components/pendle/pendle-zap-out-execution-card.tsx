@@ -6,22 +6,29 @@ import {
   TransactionStatus,
   useTransactionStatus
 } from '@/lib/hooks/use-transaction-status'
-import { getPendleTransactionStatusInfo } from '@/components/pendle/transaction-status-utils'
 import { cn } from '@/lib/utils'
-import { CheckCircle, Clock, Link, XCircle } from 'lucide-react'
+import {
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  Link,
+  Loader2,
+  XCircle
+} from 'lucide-react'
 import { SwapTransactionStatus } from '../swap-transaction-status'
+import { getPendleTransactionStatusInfo } from './transaction-status-utils'
 
-interface PendleZapInExecutionCardProps {
+interface PendleZapOutExecutionCardProps {
   tool: any
   isOpen?: boolean
   onOpenChange?: (open: boolean) => void
 }
 
-export function PendleZapInExecutionCard({
+export function PendleZapOutExecutionCard({
   tool,
   isOpen,
   onOpenChange
-}: PendleZapInExecutionCardProps) {
+}: PendleZapOutExecutionCardProps) {
   const result = tool.result
     ? typeof tool.result === 'string'
       ? JSON.parse(tool.result)
@@ -42,10 +49,9 @@ export function PendleZapInExecutionCard({
       ? 'failed'
       : null
 
-  // Get appropriate icon and text for current status
-  const getStatusInfo = (status: TransactionStatus) => {
-    return getPendleTransactionStatusInfo(status, 'zap-in')
-  }
+      const getStatusInfo = (status: TransactionStatus) => {
+        return getPendleTransactionStatusInfo(status, 'zap-out')
+      }
 
   // Get status badge based on current status
   const getStatusBadge = (status: TransactionStatus) => {
@@ -101,7 +107,7 @@ export function PendleZapInExecutionCard({
           <div className="flex flex-col space-y-4">
             <div className="flex justify-between items-center pb-3 border-b border-blue-600/10 dark:border-sky-400/20">
               <h3 className="text-base font-medium text-gray-800 dark:text-gray-300">
-                Zapping in to {marketName} LP
+                Zapping out from {marketName} LP
               </h3>
               {getStatusBadge(simulationStatus)}
             </div>
@@ -176,7 +182,7 @@ export function PendleZapInExecutionCard({
           <div className="flex flex-col space-y-4">
             <div className="flex justify-between items-center pb-3 border-b border-red-600/10 dark:border-red-400/20">
               <h3 className="text-base font-medium text-gray-800 dark:text-gray-300">
-                Zapped in to {marketName} LP
+                Zapped out from {marketName} LP
               </h3>
               <Badge variant="destructive">
                 <XCircle className="h-3 w-3 mr-1" />
@@ -206,7 +212,7 @@ export function PendleZapInExecutionCard({
           <div className="flex flex-col gap-4">
             <div className="flex justify-between items-center pb-3 border-b border-green-600/10 dark:border-sky-400/20">
               <h3 className="text-base font-medium text-gray-800 dark:text-gray-300">
-                Zapped in to {marketName} LP
+                Zapped out from {marketName} LP
               </h3>
               <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
                 <CheckCircle className="h-3 w-3 mr-1" />
@@ -226,32 +232,18 @@ export function PendleZapInExecutionCard({
             {/* Transaction Details */}
             <div className="bg-black/5 dark:bg-black/20 rounded-lg p-4 shadow-sm">
               <div className="flex flex-col space-y-3">
-                {/* LP Token */}
+                {/* Output Token */}
                 <div className="flex justify-between items-center">
                   <div className="text-sm text-gray-500 dark:text-gray-400">
-                    LP Tokens:
+                    {toolArgs.tokenOutName}:
                   </div>
                   <div className="text-sm font-medium">
-                    {Number(result.addLiquidityData.amountLpOut).toPrecision(6)}{' '}
-                    {marketName} LP
+                    {Number(result.removeLiquidityData.amountOut).toPrecision(
+                      6
+                    )}{' '}
+                    {toolArgs.tokenOutName}
                   </div>
                 </div>
-
-                {/* YT Token */}
-                {result.addLiquidityData.amountYtOut &&
-                  result.addLiquidityData.amountYtOut !== '0' && (
-                    <div className="flex justify-between items-center">
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
-                        YT Tokens:
-                      </div>
-                      <div className="text-sm font-medium">
-                        {Number(
-                          result.addLiquidityData.amountYtOut
-                        ).toPrecision(6)}{' '}
-                        {marketName} YT
-                      </div>
-                    </div>
-                  )}
 
                 {/* Price Impact */}
                 <div className="flex justify-between items-center">
@@ -259,7 +251,7 @@ export function PendleZapInExecutionCard({
                     Price Impact:
                   </div>
                   <div className="text-sm font-medium">
-                    {(result.addLiquidityData.priceImpact * 100).toFixed(2)}%
+                    {(result.removeLiquidityData.priceImpact * 100).toFixed(2)}%
                   </div>
                 </div>
 

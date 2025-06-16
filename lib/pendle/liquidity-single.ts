@@ -85,7 +85,9 @@ export async function addLiquiditySingleEnableAggregator(chainId: number, market
 
 export async function removeLiquiditySingleEnableAggregator(chainId: number, marketAddress: string, receiverAddress: string, tokenOutAddress: string, amountIn: string, slippage: number, isDemo: boolean, executeTx: boolean) {
     // Remove 1 LP from wstETH pool to PT with 1% slippage
-    const res = await callSDK<RemoveLiquidityData>(`/v1/sdk/${chainId}/markets/${marketAddress}/remove-liquidity`, {
+    let res: MethodReturnType<RemoveLiquidityData> | null = null
+    try {
+    res = await callSDK<RemoveLiquidityData>(`/v1/sdk/${chainId}/markets/${marketAddress}/remove-liquidity`, {
         receiver: receiverAddress,
         slippage: slippage,
         tokenOut: tokenOutAddress,
@@ -94,7 +96,15 @@ export async function removeLiquiditySingleEnableAggregator(chainId: number, mar
     });
 
     console.log('Amount PT Out: ', res.data.amountOut);
-    console.log('Price impact: ', res.data.priceImpact);
+    console.log('Price impact: ', res.data.priceImpact);}
+    catch (error: any) {
+        return {
+            status: 'fail',
+            error: error.message,
+            hash: null,
+            quoteData: null
+        }
+    }
 
     return formatOutputAndExecute(res, chainId, isDemo, executeTx, receiverAddress);
 }

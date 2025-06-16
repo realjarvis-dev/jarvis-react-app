@@ -1,16 +1,18 @@
 import { tool } from 'ai'
-import { parseUnits } from 'viem'
+import { formatUnits, parseUnits } from 'viem'
 import { z } from 'zod'
 import { getTokenBalances } from '../alchemy/get-token-balance'
 import { getPendleMarkets } from '../pendle/api'
 import { removeLiquiditySingleEnableAggregator } from '../pendle/liquidity-single'
-import { getUserEvmWalletAddress } from '../privy/client'
+import { getUserEvmWalletAddress, getUserId } from '../privy/client'
 import {
   findTokenInFullListByIdentifier,
   findTokenInUserWalletByIdentifier
 } from '../token-matcher/token-utils'
 import { ToolContext } from '../types/context'
 import { getConfigByChainId } from '../network/config'
+import { getERC20Details } from '../pendle/transactions'
+import { balanceChangePub } from '../pubsub/balance-change-pub'
 
 export const pendleZapOutQuoteTool = tool({
   description: `Get a quote for removing liquidity (zap out) from a Pendle market (pool). This tool should be used before executing the transaction.
@@ -64,6 +66,7 @@ export const pendleZapOutQuoteTool = tool({
       const market = markets.find(
         market => market.name.toLowerCase() === marketName.toLowerCase() || market.address.toLowerCase() === marketAddress?.toLowerCase()
       )
+      marketName = market?.name || marketName
       if (!market) {
         return {
           status: 'fail',
@@ -97,7 +100,8 @@ export const pendleZapOutQuoteTool = tool({
       }
     }
     const amountLpInWei = parseUnits(amountLpIn, 18)
-
+    let tokenOutDecimals;
+    let tokenOutSymbol;
     // if token out address is not provided, fetch the token from the list of token using the token name
     let tokenOut = tokenOutAddress
     if (!tokenOutAddress) {
@@ -130,6 +134,9 @@ export const pendleZapOutQuoteTool = tool({
           }
         }
         tokenOut = tokenResult.token!.address!
+        tokenOutDecimals = Number(tokenResult.token!.decimals)
+        tokenOutSymbol = tokenResult.token!.symbol!
+        tokenOutName = tokenResult.token!.name!
       } else if (tokenResult.status === 'fail') {
         return {
           status: 'fail',
@@ -137,7 +144,16 @@ export const pendleZapOutQuoteTool = tool({
         }
       } else {
         tokenOut = tokenResult.token!.address!
+        tokenOutDecimals = Number(tokenResult.token!.decimals)
+        tokenOutSymbol = tokenResult.token!.symbol!
+        tokenOutName = tokenResult.token!.name!
       }
+    }
+    if (!tokenOutDecimals) {
+      const tokenDetails = await getERC20Details(tokenOut as string, chainId)
+      tokenOutDecimals = Number(tokenDetails.decimals)
+      tokenOutSymbol = tokenDetails.symbol!
+      tokenOutName = tokenDetails.name!
     }
 
     // get the quote for removing liquidity
@@ -151,12 +167,23 @@ export const pendleZapOutQuoteTool = tool({
       isDemo,
       false
     )
+    if (quote.status === 'fail') {
+      return {
+        status: 'fail',
+        error: quote.error
+      }
+    }
+    quote.quoteData!.amountOut = formatUnits(BigInt(quote.quoteData!.amountOut), tokenOutDecimals)
 
     return {
       status: 'success',
       quote: quote.quoteData,
       marketAddress: marketAddress,
+      marketName: marketName,
       tokenOutAddress: tokenOut,
+      tokenOutDecimals: tokenOutDecimals,
+      tokenOutSymbol: tokenOutSymbol,
+      tokenOutName: tokenOutName,
       amountIn: amountLpIn,
       slippage: slippage,
       completeTime: new Date().toISOString()
@@ -188,7 +215,9 @@ export const pendleZapOutExecuteTool = tool({
     const chainId = networkContext.selectedChainId
     const userAddress = await getUserEvmWalletAddress()
     const amountLpInWei = parseUnits(amountLpIn, 18)
-
+    if (isDemo) {
+      slippage = 0.1
+    }
     const quote = await removeLiquiditySingleEnableAggregator(
       chainId,
       marketAddress,
@@ -199,11 +228,18 @@ export const pendleZapOutExecuteTool = tool({
       isDemo,
       true
     )
-    if (isDemo) {
-      slippage = 0.1
+    if (quote.status === 'fail') {
+      return {
+        status: 'fail',
+        error: quote.error
+      }
     }
+
     const explorerLink = getConfigByChainId(chainId, isDemo).scanLink
     const explorerLinkWithHash = `https://${explorerLink}/tx/${quote.hash}`
+    const userId = await getUserId()
+    balanceChangePub(userId, [networkContext!.config.id], isDemo)
+
 
     return {
       status: 'success',

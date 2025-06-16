@@ -12,6 +12,8 @@ import { MarketChartSection } from './market-chart-section'
 import { PendleOpportunitiesSection } from './pendle-opportunities-section'
 import { PendleZapInExecutionCard } from './pendle/pendle-zap-in-execution-card'
 import { PendleZapInQuoteDisplay } from './pendle/pendle-zap-in-quote-display'
+import { PendleZapOutExecutionCard } from './pendle/pendle-zap-out-execution-card'
+import { PendleZapOutQuoteDisplay } from './pendle/pendle-zap-out-quote-display'
 import { QuestionConfirmation } from './question-confirmation'
 import { RedeemTransactionCard } from './redeem-transaction-card'
 import RetrieveSection from './retrieve-section'
@@ -155,6 +157,22 @@ export function ToolSection({
     case 'pendle_zap_in_quote':
       return (
         <PendleZapInQuoteDisplay
+          tool={tool}
+          isOpen={isOpen}
+          onOpenChange={onOpenChange}
+        />
+      )
+    case 'pendle_zap_out_quote':
+      return (
+        <PendleZapOutQuoteDisplay
+          tool={tool}
+          isOpen={isOpen}
+          onOpenChange={onOpenChange}
+        />
+      )
+    case 'pendle_zap_out_execute':
+      return (
+        <PendleZapOutExecutionCard
           tool={tool}
           isOpen={isOpen}
           onOpenChange={onOpenChange}

@@ -5,9 +5,10 @@ import { getConfigByChainId } from '../network/config'
 import { getPendleMarkets } from '../pendle/api'
 import { addLiquiditySingleEnableAggregator } from '../pendle/liquidity-single'
 import { getERC20Details } from '../pendle/transactions'
-import { getUserEvmWalletAddress } from '../privy/client'
+import { getUserEvmWalletAddress, getUserId } from '../privy/client'
 import { findTokenInUserWalletByIdentifier } from '../token-matcher/token-utils'
 import { ToolContext } from '../types/context'
+import { balanceChangePub } from '../pubsub/balance-change-pub'
 
 export const pendleZapInQuoteTool = tool({
   description: `Get a quote for adding liquidity (zap in) to a Pendle market. This tool should be used before executing the transaction. 
@@ -270,6 +271,9 @@ export const pendleZapInExecuteTool = tool({
     )
     const explorerLink = getConfigByChainId(chainId, isDemo).scanLink
     const explorerLinkWithHash = `https://${explorerLink}/tx/${result.hash}`
+    const userId = await getUserId()
+    balanceChangePub(userId, [networkContext!.config.id], isDemo)
+
     return {
       status: 'success',
       hash: result.hash,
