@@ -1,4 +1,4 @@
-import { executeTransaction } from '@/lib/privy/utils';
+import { approvePendleTokens, executeTransaction } from '@/lib/privy/utils';
 import { callSDK } from './call-sdk';
 import { MintPyData } from './types';
 
@@ -67,6 +67,25 @@ export async function executePendleMintPy(
     chainId,
     userWalletAddress
   );
+
+  // Approve input token using the new utility function
+  console.log('Approving input token for mint operation');
+  
+  const approvalResult = await approvePendleTokens(
+    tokenIn,              // Reference token address (input token)
+    'yt',            // Token type (sy or underlying)
+    amountIn,             // Amount to approve
+    ['sy', 'underlying'],           // Approve the input token
+    mintResult.tx.to,     // Spender address (Pendle router)
+    userWalletAddress,
+    chainId,
+    isDemo
+  );
+  
+  if (!approvalResult.success) {
+    throw new Error(`Token approval failed: ${approvalResult.message}`);
+  }
+  console.log('Input token approval completed successfully');
 
   // Prepare transaction data
   const txData = {

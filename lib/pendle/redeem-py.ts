@@ -1,7 +1,5 @@
-import { executeTransaction } from '@/lib/privy/utils';
-import { getPendleMarkets } from './api';
+import { approvePendleTokens, executeTransaction } from '@/lib/privy/utils';
 import { callSDK } from './call-sdk';
-import { erc20Approval } from './transactions';
 import { RedeemPyData } from './types';
 
 // Chain ID for Ethereum mainnet
@@ -69,49 +67,24 @@ export async function executePendleRedeemPy(
     userWalletAddress
   );
 
-  // Handle token approvals - we need to approve both PT and YT tokens
-  // The callSDK response doesn't include tokenApprovals, so we manually approve PT and YT tokens
-  console.log('Manually approving PT and YT tokens for redeem operation');
+  // Approve PT and YT tokens using the new utility function
+  console.log('Approving PT and YT tokens for redeem operation');
   
-  // Find the corresponding PT token for the given YT token using market data
-  const markets = await getPendleMarkets('all');
-  const market = markets.find(m => m.yt.toLowerCase() === ytAddress.toLowerCase());
-  
-  if (!market) {
-    throw new Error('Could not find corresponding PT token for the YT token');
-  }
-  
-  const ptTokenAddress = market.pt;
-  console.log(`Found PT token: ${ptTokenAddress} for YT token: ${ytAddress}`);
-  
-  // Approve both PT and YT tokens
-  const ptApprovalResult = await erc20Approval(
-    ptTokenAddress,
-    redeemResult.tx.to,
-    amountIn,
+  const approvalResult = await approvePendleTokens(
+    ytAddress,           // Reference token address (YT)
+    'yt',               // Token type
+    amountIn,           // Amount to approve
+    ['pt', 'yt'],       // Approve both PT and YT tokens
+    redeemResult.tx.to, // Spender address (Pendle router)
     userWalletAddress,
     chainId,
     isDemo
   );
   
-  if (ptApprovalResult.status === 'fail') {
-    throw new Error(`ERC20 approval failed for PT token: ${ptApprovalResult.message}`);
+  if (!approvalResult.success) {
+    throw new Error(`Token approval failed: ${approvalResult.message}`);
   }
-  console.log('PT token approval successful');
-  
-  const ytApprovalResult = await erc20Approval(
-    ytAddress,
-    redeemResult.tx.to,
-    amountIn,
-    userWalletAddress,
-    chainId,
-    isDemo
-  );
-  
-  if (ytApprovalResult.status === 'fail') {
-    throw new Error(`ERC20 approval failed for YT token: ${ytApprovalResult.message}`);
-  }
-  console.log('YT token approval successful');
+  console.log('Token approvals completed successfully');
 
   // Prepare transaction data
   const txData = {
