@@ -322,7 +322,6 @@ export async function executeSwapTransaction(
     if (isLegacyGasModeChain) {
       fixGasPrice = parseUnits((await gasOptions.legacyGasPriceFunction(chainId)).toString(), 9)
       console.log("Fetch legacy gas price", fixGasPrice)
-      fixGasPrice = fixGasPrice + fixGasPrice / BigInt(5) // add 20% buffer
     }
     else {
       const estimateGasPrice = await gasOptions.eip1559GasPriceFunction(chainId)
@@ -385,6 +384,8 @@ export async function executeSwapTransaction(
       console.log("gasLimit", gasLimit)
       console.log("fixGasPrice", fixGasPrice)
       console.log("correctNonce", correctNonce)
+      console.log("chainId", chainId)
+      console.log("rpc url", process.env.TEST_RPC_URL || getConfigByChainId(chainId, isDemo).rpcUrl)
       const res = await privy.walletApi.ethereum.signTransaction({
         walletId: evmWallet!.id,
         transaction: {
@@ -431,8 +432,10 @@ export async function executeSwapTransaction(
 
     const txResponse = await provider.broadcastTransaction(signedTransaction)
     hash = txResponse.hash
+    console.log(hash)
     // Wait for confirmation
     const receipt = await txResponse.wait()
+    console.log(receipt)
 
     return {
       hash: txResponse.hash
