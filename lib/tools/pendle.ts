@@ -575,6 +575,333 @@ export const pendleSwapTool = tool({
   }
 })
 
+export const pendleRedeemQuoteTool = tool({
+  description:
+    `Get a quote for redeeming Pendle tokens using different input/output combinations. 
+    Supports py->sy, py->underlying, and sy->underlying redemption quotes.
+    Provide the PT token address to automatically determine the market and token addresses.
+    This tool automatically renders UI.`,
+  parameters: z.object({
+    pt_address: z
+      .string()
+      .describe('The address of the PT (Principal Token). The market, YT, and SY addresses will be automatically determined from this token.'),
+    token_input_type: z
+      .enum(['py', 'sy'])
+      .describe('The type of input tokens - "py" for PT+YT tokens or "sy" for SY token only.'),
+    token_output_type: z
+      .enum(['sy', 'underlying'])
+      .describe('The type of output token - "sy" for SY token or "underlying" for the underlying asset token.'),
+    amount_in_human: z
+      .string()
+      .describe('Amount of input tokens to redeem in human-readable format (e.g., "1", "100.5"). For py input, equal amounts of PT and YT will be burned.'),
+    user_wallet_address: z
+      .string()
+      .describe('The address of the user\'s EVM wallet'),
+    slippage: z
+      .number()
+      .min(PENDLE_CONFIG.MIN_SLIPPAGE)
+      .max(PENDLE_CONFIG.MAX_SLIPPAGE)
+      .default(PENDLE_CONFIG.DEFAULT_SLIPPAGE)
+      .describe(`Maximum acceptable slippage (default: ${PENDLE_CONFIG.DEFAULT_SLIPPAGE}, which is ${PENDLE_CONFIG.DEFAULT_SLIPPAGE * 100}%)`)
+  }),
+  execute: async (params, context: ToolContext) => {
+    const {
+      pt_address,
+      token_input_type,
+      token_output_type,
+      amount_in_human,
+      user_wallet_address,
+      slippage = PENDLE_CONFIG.DEFAULT_SLIPPAGE
+    } = params;
+    const networkContext = context?.networkContext;
+    const chainId = networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID;
+
+    try {
+      // Find the market using PT address to get all required addresses
+      const foundMarket = await findMarketByTokenAddress(pt_address, 'pt');
+      const ytAddress = foundMarket.yt;
+      const syAddress = foundMarket.sy;
+      const marketName = foundMarket.name;
+
+      // Determine the actual token_out based on token_output_type
+      let actualTokenOut: string;
+      if (token_output_type === 'sy') {
+        actualTokenOut = syAddress;
+      } else {
+        actualTokenOut = foundMarket.underlyingAsset;
+      }
+
+      let quote: any;
+      let inputTokenAddress: string;
+      let inputTokenDisplay: string;
+      let outputTokenDisplay: string;
+
+      if (token_input_type === 'py') {
+        // PY redemption quote: quote PT+YT tokens
+        inputTokenAddress = pt_address;
+        inputTokenDisplay = `PT+YT ${marketName}`;
+        outputTokenDisplay = token_output_type === 'sy' ? `SY ${marketName}` : marketName;
+
+        // Convert amount to wei using PT address for decimals
+        const amountInWei = await parseTokenAmount(pt_address, amount_in_human, chainId);
+
+        // Get PY redemption quote using YT address (as required by the quote function)
+        quote = await getRedeemPyQuote(
+          ytAddress,
+          amountInWei,
+          actualTokenOut,
+          slippage,
+          chainId,
+          user_wallet_address
+        );
+      } else {
+        // SY redemption quote: quote SY tokens
+        inputTokenAddress = syAddress;
+        inputTokenDisplay = `SY ${marketName}`;
+        outputTokenDisplay = marketName; // SY can only redeem to underlying
+
+        // Convert amount to wei using SY address for decimals
+        const amountInWei = await parseTokenAmount(syAddress, amount_in_human, chainId);
+
+        // Get SY redemption quote
+        quote = await getRedeemSyQuote(
+          syAddress,
+          amountInWei,
+          actualTokenOut,
+          slippage,
+          chainId,
+          user_wallet_address
+        );
+      }
+
+      // Format the output amount
+      let outputAmountFormatted: string;
+      try {
+        const tokenDetails = await getERC20Details(actualTokenOut, chainId);
+        outputAmountFormatted = ethers.formatUnits(quote.amountOut, tokenDetails.decimals);
+      } catch (error) {
+        // Fallback to default decimals
+        outputAmountFormatted = ethers.formatUnits(quote.amountOut, PENDLE_CONFIG.DEFAULT_DECIMALS);
+      }
+
+      // Create rate string
+      const rate = `${amount_in_human} ${inputTokenDisplay} → ${outputAmountFormatted} ${outputTokenDisplay}`;
+
+      // Calculate inverse rate
+      const inputAmount = parseFloat(amount_in_human);
+      const outputAmount = parseFloat(outputAmountFormatted);
+      const inverseRatio = inputAmount / outputAmount;
+      const inverse = `1 ${outputTokenDisplay} → ${inverseRatio.toFixed(PENDLE_CONFIG.INVERSE_RATE_PRECISION)} ${inputTokenDisplay}`;
+
+      const quoteData = {
+        market: marketName,
+        inputAmount: amount_in_human,
+        inputToken: inputTokenDisplay,
+        outputToken: outputTokenDisplay,
+        rate: rate,
+        inverse: inverse,
+        outputAmount: outputAmountFormatted,
+        priceImpact: quote.priceImpact,
+        complete_time: new Date().toISOString(),
+        chainId: chainId,
+        pt_address: pt_address,
+        yt_address: ytAddress,
+        sy_address: syAddress
+      };
+
+      return {
+        _uiDisplayTool: true,
+        summary: `Redeem quote: ${rate}`,
+        data: quoteData
+      };
+    } catch (error: any) {
+      const errorData = {
+        error: error.message || 'Failed to get Pendle redeem quote.',
+        redeem_parameters: {
+          pt_address,
+          token_input_type,
+          token_output_type,
+          amount_in_human,
+          slippage
+        }
+      };
+      
+      return {
+        _uiDisplayTool: true,
+        summary: `Error getting redeem quote: ${error.message || 'Failed to get Pendle redeem quote'}`,
+        data: errorData
+      };
+    }
+  }
+});
+
+export const pendleMintQuoteTool = tool({
+  description:
+    `Get a quote for minting Pendle tokens using different input/output combinations. 
+    Supports underlying->py, sy->py, and underlying->sy minting quotes.
+    Provide the PT token address to automatically determine the market and token addresses.
+    This tool automatically renders UI.`,
+  parameters: z.object({
+    pt_address: z
+      .string()
+      .describe('The address of the PT (Principal Token). The market, YT, and SY addresses will be automatically determined from this token.'),
+    token_input_type: z
+      .enum(['underlying', 'sy'])
+      .describe('The type of input tokens - "underlying" for underlying asset tokens or "sy" for SY token.'),
+    token_output_type: z
+      .enum(['py', 'sy'])
+      .describe('The type of output tokens - "py" for PT+YT tokens or "sy" for SY token only.'),
+    amount_in_human: z
+      .string()
+      .describe('Amount of input tokens to mint from in human-readable format (e.g., "1", "100.5").'),
+    user_wallet_address: z
+      .string()
+      .describe('The address of the user\'s EVM wallet'),
+    slippage: z
+      .number()
+      .min(PENDLE_CONFIG.MIN_SLIPPAGE)
+      .max(PENDLE_CONFIG.MAX_SLIPPAGE)
+      .default(PENDLE_CONFIG.DEFAULT_SLIPPAGE)
+      .describe(`Maximum acceptable slippage (default: ${PENDLE_CONFIG.DEFAULT_SLIPPAGE}, which is ${PENDLE_CONFIG.DEFAULT_SLIPPAGE * 100}%)`)
+  }),
+  execute: async (params, context: ToolContext) => {
+    const {
+      pt_address,
+      token_input_type,
+      token_output_type,
+      amount_in_human,
+      user_wallet_address,
+      slippage = PENDLE_CONFIG.DEFAULT_SLIPPAGE
+    } = params;
+    const networkContext = context?.networkContext;
+    const chainId = networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID;
+
+    try {
+      // Find the market using PT address to get all required addresses
+      const foundMarket = await findMarketByTokenAddress(pt_address, 'pt');
+      const ytAddress = foundMarket.yt;
+      const syAddress = foundMarket.sy;
+      const marketName = foundMarket.name;
+
+      // Determine the actual token_in based on token_input_type
+      let actualTokenIn: string;
+      if (token_input_type === 'sy') {
+        actualTokenIn = syAddress;
+      } else {
+        actualTokenIn = foundMarket.underlyingAsset;
+      }
+
+      let quote: any;
+      let inputTokenDisplay: string;
+      let outputTokenDisplay: string;
+
+      if (token_output_type === 'py') {
+        // PY minting quote: quote PT+YT tokens
+        inputTokenDisplay = token_input_type === 'sy' ? `SY ${marketName}` : marketName;
+        outputTokenDisplay = `PT+YT ${marketName}`;
+
+        // Convert amount to wei using input token address for decimals
+        const amountInWei = await parseTokenAmount(actualTokenIn, amount_in_human, chainId);
+
+        // Get PY minting quote using YT address (as required by the quote function)
+        quote = await getMintPyQuote(
+          ytAddress,
+          actualTokenIn,
+          amountInWei,
+          slippage,
+          chainId,
+          user_wallet_address
+        );
+      } else {
+        // SY minting quote: quote SY tokens (only from underlying)
+        if (token_input_type !== 'underlying') {
+          throw new Error('SY tokens can only be minted from underlying tokens, not from other SY tokens');
+        }
+        
+        inputTokenDisplay = marketName;
+        outputTokenDisplay = `SY ${marketName}`;
+
+        // Convert amount to wei using underlying token address for decimals
+        const amountInWei = await parseTokenAmount(actualTokenIn, amount_in_human, chainId);
+
+        // Get SY minting quote
+        quote = await getMintSyQuote(
+          syAddress,
+          actualTokenIn,
+          amountInWei,
+          slippage,
+          chainId,
+          user_wallet_address
+        );
+      }
+
+      // Format the output amount
+      let outputAmountFormatted: string;
+      try {
+        if (token_output_type === 'py') {
+          const tokenDetails = await getERC20Details(pt_address, chainId);
+          outputAmountFormatted = ethers.formatUnits(quote.amountOut, tokenDetails.decimals);
+        } else {
+          const syTokenDetails = await getERC20Details(syAddress, chainId);
+          outputAmountFormatted = ethers.formatUnits(quote.amountOut, syTokenDetails.decimals);
+        }
+      } catch (error) {
+        // Fallback to default decimals
+        outputAmountFormatted = ethers.formatUnits(quote.amountOut, PENDLE_CONFIG.DEFAULT_DECIMALS);
+      }
+
+      // Create rate string
+      const rate = `${amount_in_human} ${inputTokenDisplay} → ${outputAmountFormatted} ${outputTokenDisplay}`;
+
+      // Calculate inverse rate
+      const inputAmount = parseFloat(amount_in_human);
+      const outputAmount = parseFloat(outputAmountFormatted);
+      const inverseRatio = inputAmount / outputAmount;
+      const inverse = `1 ${outputTokenDisplay} → ${inverseRatio.toFixed(PENDLE_CONFIG.INVERSE_RATE_PRECISION)} ${inputTokenDisplay}`;
+
+      const quoteData = {
+        market: marketName,
+        inputAmount: amount_in_human,
+        inputToken: inputTokenDisplay,
+        outputToken: outputTokenDisplay,
+        rate: rate,
+        inverse: inverse,
+        outputAmount: outputAmountFormatted,
+        priceImpact: quote.priceImpact,
+        complete_time: new Date().toISOString(),
+        chainId: chainId,
+        pt_address: pt_address,
+        yt_address: ytAddress,
+        sy_address: syAddress,
+        actual_token_in: actualTokenIn
+      };
+
+      return {
+        _uiDisplayTool: true,
+        summary: `Mint quote: ${rate}`,
+        data: quoteData
+      };
+    } catch (error: any) {
+      const errorData = {
+        error: error.message || 'Failed to get Pendle mint quote.',
+        mint_parameters: {
+          pt_address,
+          token_input_type,
+          token_output_type,
+          amount_in_human,
+          slippage
+        }
+      };
+      
+      return {
+        _uiDisplayTool: true,
+        summary: `Error getting mint quote: ${error.message || 'Failed to get Pendle mint quote'}`,
+        data: errorData
+      };
+    }
+  }
+});
+
 export const pendleRedeemTool = tool({
   description:
     `Redeem Pendle tokens using different input/output combinations. 
@@ -876,487 +1203,6 @@ export const pendleMintTool = tool({
       return {
         _uiDisplayTool: true,
         summary: `Mint failed: ${error.message || 'Failed to execute Pendle mint'}`,
-        data: errorData
-      };
-    }
-  }
-});
-
-export const pendleRedeemPyQuoteTool = tool({
-  description:
-    `Get a quote for redeeming PT and YT tokens to get back the underlying asset or SY token using Pendle. 
-    Provide the PT token address to automatically determine the market and YT address.
-    This tool automatically renders UI.`,
-  parameters: z.object({
-    pt_address: z
-      .string()
-      .describe('The address of the PT (Principal Token). The market and YT address will be automatically determined from this token.'),
-    token_type: z
-      .enum(['sy', 'underlying'])
-      .describe('The type of token to redeem to - "sy" for SY token or "underlying" for the underlying asset token.'),
-    amount_in_human: z
-      .string()
-      .describe('Amount of PT and YT tokens to redeem in human-readable format (e.g., "1", "100.5"). Equal amounts of PT and YT will be burned.'),
-    user_wallet_address: z
-      .string()
-      .describe('The address of the user\'s EVM wallet'),
-    slippage: z
-      .number()
-      .min(PENDLE_CONFIG.MIN_SLIPPAGE)
-      .max(PENDLE_CONFIG.MAX_SLIPPAGE)
-      .default(PENDLE_CONFIG.DEFAULT_SLIPPAGE)
-      .describe(`Maximum acceptable slippage (default: ${PENDLE_CONFIG.DEFAULT_SLIPPAGE}, which is ${PENDLE_CONFIG.DEFAULT_SLIPPAGE * 100}%)`)
-  }),
-  execute: async (params, context: ToolContext) => {
-    const {
-      pt_address,
-      token_type,
-      amount_in_human,
-      user_wallet_address,
-      slippage = PENDLE_CONFIG.DEFAULT_SLIPPAGE
-    } = params;
-    const networkContext = context?.networkContext;
-    const chainId = networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID;
-
-    try {
-
-      // Find the market using PT address to get market info and YT address
-      const foundMarket = await findMarketByTokenAddress(pt_address, 'pt');
-      const ytAddress = foundMarket.yt;
-      const marketName = foundMarket.name;
-
-      // Determine the actual token_out to use based on token_type
-      let actualTokenOut: string;
-      if (token_type === 'sy') {
-        actualTokenOut = foundMarket.sy;
-      } else {
-        actualTokenOut = foundMarket.underlyingAsset;
-      }
-
-      // Convert amount to wei using the helper function
-      const amountInWei = await parseTokenAmount(pt_address, amount_in_human, chainId);
-
-      // Get the quote for redeeming PT and YT tokens
-      const quote = await getRedeemPyQuote(
-        ytAddress,
-        amountInWei,
-        actualTokenOut,
-        slippage,
-        chainId,
-        user_wallet_address
-      );
-
-      // Format the output amount
-      let outputAmountFormatted: string;
-      try {
-        if (token_type === 'sy') {
-          // Output is SY token, get its decimals
-          const syTokenDetails = await getERC20Details(actualTokenOut, chainId);
-          outputAmountFormatted = ethers.formatUnits(quote.amountOut, syTokenDetails.decimals);
-        } else {
-          // Output is underlying token, get its decimals
-          const tokenDetails = await getERC20Details(actualTokenOut, chainId);
-          outputAmountFormatted = ethers.formatUnits(quote.amountOut, tokenDetails.decimals);
-        }
-      } catch (error) {
-        // Fallback to default decimals
-        outputAmountFormatted = ethers.formatUnits(quote.amountOut, PENDLE_CONFIG.DEFAULT_DECIMALS);
-      }
-
-      // Create rate string  
-      const outputTokenType = token_type === 'sy' ? `SY ${marketName}` : `${marketName}`;
-      const rate = `${amount_in_human} PT+YT ${marketName} → ${outputAmountFormatted} ${outputTokenType}`;
-
-      // Calculate inverse rate
-      const inputAmount = parseFloat(amount_in_human);
-      const outputAmount = parseFloat(outputAmountFormatted);
-      const inverseRatio = inputAmount / outputAmount;
-      const inverse = `1 ${outputTokenType} → ${inverseRatio.toFixed(PENDLE_CONFIG.INVERSE_RATE_PRECISION)} PT+YT ${marketName}`;
-
-      const quoteData = {
-        market: marketName,
-        inputAmount: amount_in_human,
-        inputToken: `PT+YT ${marketName}`,
-        outputToken: token_type === 'sy' ? `SY ${marketName}` : `${marketName}`,
-        outputTokenType: outputTokenType,
-        rate: rate,
-        inverse: inverse,
-        outputAmount: outputAmountFormatted,
-        priceImpact: quote.priceImpact,
-        complete_time: new Date().toISOString(),
-        chainId: chainId,
-        pt_address: pt_address,
-        yt_address: ytAddress,
-        sy_address: foundMarket.sy
-      };
-
-      return {
-        _uiDisplayTool: true,
-        summary: `Redeem PY quote: ${rate}`,
-        data: quoteData
-      };
-    } catch (error: any) {
-      const errorData = {
-        error: error.message || 'Failed to get Pendle redeem PY quote.',
-        redeem_parameters: {
-          pt_address,
-          token_type,
-          amount_in_human,
-          slippage
-        }
-      };
-      
-      return {
-        _uiDisplayTool: true,
-        summary: `Error getting redeem PY quote: ${error.message || 'Failed to get Pendle redeem PY quote'}`,
-        data: errorData
-      };
-    }
-  }
-});
-
-export const pendleRedeemSyQuoteTool = tool({
-  description:
-    `Get a quote for redeeming SY (Standardized Yield) tokens to underlying tokens using Pendle. 
-    Provide the SY token address to automatically determine the underlying token.
-    This tool automatically renders UI.`,
-  parameters: z.object({
-    sy_address: z
-      .string()
-      .describe('The address of the SY (Standardized Yield) token to redeem'),
-    amount_in_human: z
-      .string()
-      .describe('Amount of SY token to redeem in human-readable format (e.g., "1", "100.5")'),
-    user_wallet_address: z
-      .string()
-      .describe('The address of the user\'s EVM wallet'),
-    slippage: z
-      .number()
-      .min(PENDLE_CONFIG.MIN_SLIPPAGE)
-      .max(PENDLE_CONFIG.MAX_SLIPPAGE)
-      .default(PENDLE_CONFIG.DEFAULT_SLIPPAGE)
-      .describe(`Maximum acceptable slippage (default: ${PENDLE_CONFIG.DEFAULT_SLIPPAGE}, which is ${PENDLE_CONFIG.DEFAULT_SLIPPAGE * 100}%)`)
-  }),
-  execute: async (params, context: ToolContext) => {
-    const {
-      sy_address,
-      amount_in_human,
-      user_wallet_address,
-      slippage = PENDLE_CONFIG.DEFAULT_SLIPPAGE
-    } = params;
-    const networkContext = context?.networkContext;
-    const chainId = networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID;
-
-    try {
-
-      // Find the market using SY address to get market info and underlying token
-      const foundMarket = await findMarketByTokenAddress(sy_address, 'sy');
-      const marketName = foundMarket.name;
-      
-      // Use the underlying asset address from the market
-      const underlyingTokenOut = foundMarket.underlyingAsset;
-
-      // Convert amount to wei using the helper function
-      const amountInWei = await parseTokenAmount(sy_address, amount_in_human, chainId);
-
-      // Get the quote for redeeming SY tokens
-      const quote = await getRedeemSyQuote(
-        sy_address,
-        amountInWei,
-        underlyingTokenOut,
-        slippage,
-        chainId,
-        user_wallet_address
-      );
-
-      // Format the output amount
-      let outputAmountFormatted: string;
-      try {
-        const tokenDetails = await getERC20Details(underlyingTokenOut, chainId);
-        outputAmountFormatted = ethers.formatUnits(quote.amountOut, tokenDetails.decimals);
-      } catch (error) {
-        // Fallback to default decimals
-        outputAmountFormatted = ethers.formatUnits(quote.amountOut, PENDLE_CONFIG.DEFAULT_DECIMALS);
-      }
-
-      // Create rate string
-      const rate = `${amount_in_human} SY ${marketName} → ${outputAmountFormatted} ${marketName}`;
-
-      // Calculate inverse rate
-      const inputAmount = parseFloat(amount_in_human);
-      const outputAmount = parseFloat(outputAmountFormatted);
-      const inverseRatio = inputAmount / outputAmount;
-      const inverse = `1 ${marketName} → ${inverseRatio.toFixed(PENDLE_CONFIG.INVERSE_RATE_PRECISION)} SY ${marketName}`;
-
-      const quoteData = {
-        market: marketName,
-        inputAmount: amount_in_human,
-        inputToken: `SY ${marketName}`,
-        outputToken: `${marketName}`,
-        rate: rate,
-        inverse: inverse,
-        outputAmount: outputAmountFormatted,
-        priceImpact: quote.priceImpact,
-        complete_time: new Date().toISOString(),
-        chainId: chainId,
-        sy_address: sy_address,
-        underlying_token_out: underlyingTokenOut
-      };
-
-      return {
-        _uiDisplayTool: true,
-        summary: `Redeem SY quote: ${rate}`,
-        data: quoteData
-      };
-    } catch (error: any) {
-      const errorData = {
-        error: error.message || 'Failed to get Pendle redeem SY quote.',
-        redeem_parameters: {
-          sy_address,
-          amount_in_human,
-          slippage
-        }
-      };
-      
-      return {
-        _uiDisplayTool: true,
-        summary: `Error getting redeem SY quote: ${error.message || 'Failed to get Pendle redeem SY quote'}`,
-        data: errorData
-      };
-    }
-  }
-});
-
-export const pendleMintPyQuoteTool = tool({
-  description:
-    `Get a quote for minting PT and YT tokens from input tokens using Pendle. 
-    Provide the PT token address to automatically determine the market and YT address.
-    This tool automatically renders UI.`,
-  parameters: z.object({
-    pt_address: z
-      .string()
-      .describe('The address of the PT (Principal Token). The YT address will be automatically determined from the market.'),
-    token_type: z
-      .enum(['sy', 'underlying'])
-      .describe('The type of input token - "sy" for SY token or "underlying" for the underlying asset token.'),
-    amount_in_human: z
-      .string()
-      .describe('Amount of input token to mint from in human-readable format (e.g., "1", "100.5")'),
-    user_wallet_address: z
-      .string()
-      .describe('The address of the user\'s EVM wallet'),
-    slippage: z
-      .number()
-      .min(PENDLE_CONFIG.MIN_SLIPPAGE)
-      .max(PENDLE_CONFIG.MAX_SLIPPAGE)
-      .default(PENDLE_CONFIG.DEFAULT_SLIPPAGE)
-      .describe(`Maximum acceptable slippage (default: ${PENDLE_CONFIG.DEFAULT_SLIPPAGE}, which is ${PENDLE_CONFIG.DEFAULT_SLIPPAGE * 100}%)`)
-  }),
-  execute: async (params, context: ToolContext) => {
-    const {
-      pt_address,
-      token_type,
-      amount_in_human,
-      user_wallet_address,
-      slippage = PENDLE_CONFIG.DEFAULT_SLIPPAGE
-    } = params;
-    const networkContext = context?.networkContext;
-    const chainId = networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID;
-
-    try {
-      // Find the market using PT address to get YT address
-      const foundMarket = await findMarketByTokenAddress(pt_address, 'pt');
-      const ytAddress = foundMarket.yt;
-      const marketName = foundMarket.name;
-
-      // Determine the actual token_in to use based on token_type
-      let actualTokenIn: string;
-      if (token_type === 'sy') {
-        actualTokenIn = foundMarket.sy;
-      } else {
-        actualTokenIn = foundMarket.underlyingAsset;
-      }
-
-      // Convert amount to wei using the helper function
-      const amountInWei = await parseTokenAmount(actualTokenIn, amount_in_human, chainId);
-
-      // Get the quote for minting PT and YT tokens
-      const quote = await getMintPyQuote(
-        ytAddress,
-        actualTokenIn,
-        amountInWei,
-        slippage,
-        chainId,
-        user_wallet_address
-      );
-
-      // Format the output amount (PT and YT tokens have same decimals as underlying)
-      let outputAmountFormatted: string;
-      try {
-        const tokenDetails = await getERC20Details(pt_address, chainId);
-        outputAmountFormatted = ethers.formatUnits(quote.amountOut, tokenDetails.decimals);
-      } catch (error) {
-        // Fallback to default decimals
-        outputAmountFormatted = ethers.formatUnits(quote.amountOut, PENDLE_CONFIG.DEFAULT_DECIMALS);
-      }
-
-      // Create rate string
-      const inputTokenType = token_type === 'sy' ? `SY ${marketName}` : marketName;
-      const rate = `${amount_in_human} ${inputTokenType} → ${outputAmountFormatted} PT+YT ${marketName}`;
-
-      // Calculate inverse rate
-      const inputAmount = parseFloat(amount_in_human);
-      const outputAmount = parseFloat(outputAmountFormatted);
-      const inverseRatio = inputAmount / outputAmount;
-      const inverse = `1 PT+YT ${marketName} → ${inverseRatio.toFixed(PENDLE_CONFIG.INVERSE_RATE_PRECISION)} ${inputTokenType}`;
-
-      const quoteData = {
-        market: marketName,
-        inputAmount: amount_in_human,
-        inputToken: inputTokenType,
-        outputToken: `PT+YT ${marketName}`,
-        rate: rate,
-        inverse: inverse,
-        outputAmount: outputAmountFormatted,
-        priceImpact: quote.priceImpact,
-        complete_time: new Date().toISOString(),
-        chainId: chainId,
-        pt_address: pt_address,
-        yt_address: ytAddress,
-        sy_address: foundMarket.sy,
-        actual_token_in: actualTokenIn
-      };
-
-      return {
-        _uiDisplayTool: true,
-        summary: `Mint PY quote: ${rate}`,
-        data: quoteData
-      };
-    } catch (error: any) {
-      const errorData = {
-        error: error.message || 'Failed to get Pendle mint PY quote.',
-        mint_parameters: {
-          pt_address,
-          token_type,
-          amount_in_human,
-          slippage
-        }
-      };
-      
-      return {
-        _uiDisplayTool: true,
-        summary: `Error getting mint PY quote: ${error.message || 'Failed to get Pendle mint PY quote'}`,
-        data: errorData
-      };
-    }
-  }
-});
-
-export const pendleMintSyQuoteTool = tool({
-  description:
-    `Get a quote for minting SY (Standardized Yield) tokens from input tokens using Pendle. 
-    Provide the SY token address to automatically determine the underlying token.
-    This tool automatically renders UI.`,
-  parameters: z.object({
-    sy_address: z
-      .string()
-      .describe('The address of the SY (Standardized Yield) token to mint'),
-    amount_in_human: z
-      .string()
-      .describe('Amount of input token to mint from in human-readable format (e.g., "1", "100.5")'),
-    user_wallet_address: z
-      .string()
-      .describe('The address of the user\'s EVM wallet'),
-    slippage: z
-      .number()
-      .min(PENDLE_CONFIG.MIN_SLIPPAGE)
-      .max(PENDLE_CONFIG.MAX_SLIPPAGE)
-      .default(PENDLE_CONFIG.DEFAULT_SLIPPAGE)
-      .describe(`Maximum acceptable slippage (default: ${PENDLE_CONFIG.DEFAULT_SLIPPAGE}, which is ${PENDLE_CONFIG.DEFAULT_SLIPPAGE * 100}%)`)
-  }),
-  execute: async (params, context: ToolContext) => {
-    const {
-      sy_address,
-      amount_in_human,
-      user_wallet_address,
-      slippage = PENDLE_CONFIG.DEFAULT_SLIPPAGE
-    } = params;
-    const networkContext = context?.networkContext;
-    const chainId = networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID;
-
-    try {
-      // Find the market using SY address to get market info and underlying token
-      const foundMarket = await findMarketByTokenAddress(sy_address, 'sy');
-      const marketName = foundMarket.name;
-      
-      // Use the underlying asset address from the market
-      const underlyingTokenIn = foundMarket.underlyingAsset;
-
-      // Convert amount to wei using the helper function
-      const amountInWei = await parseTokenAmount(underlyingTokenIn, amount_in_human, chainId);
-
-      // Get the quote for minting SY tokens
-      const quote = await getMintSyQuote(
-        sy_address,
-        underlyingTokenIn,
-        amountInWei,
-        slippage,
-        chainId,
-        user_wallet_address
-      );
-
-      // Format the output amount
-      let outputAmountFormatted: string;
-      try {
-        const syTokenDetails = await getERC20Details(sy_address, chainId);
-        outputAmountFormatted = ethers.formatUnits(quote.amountOut, syTokenDetails.decimals);
-      } catch (error) {
-        // Fallback to default decimals
-        outputAmountFormatted = ethers.formatUnits(quote.amountOut, PENDLE_CONFIG.DEFAULT_DECIMALS);
-      }
-
-      // Create rate string
-      const rate = `${amount_in_human} ${marketName} → ${outputAmountFormatted} SY ${marketName}`;
-
-      // Calculate inverse rate
-      const inputAmount = parseFloat(amount_in_human);
-      const outputAmount = parseFloat(outputAmountFormatted);
-      const inverseRatio = inputAmount / outputAmount;
-      const inverse = `1 SY ${marketName} → ${inverseRatio.toFixed(PENDLE_CONFIG.INVERSE_RATE_PRECISION)} ${marketName}`;
-
-      const quoteData = {
-        market: marketName,
-        inputAmount: amount_in_human,
-        inputToken: `${marketName}`,
-        outputToken: `SY ${marketName}`,
-        rate: rate,
-        inverse: inverse,
-        outputAmount: outputAmountFormatted,
-        priceImpact: quote.priceImpact,
-        complete_time: new Date().toISOString(),
-        chainId: chainId,
-        sy_address: sy_address,
-        underlying_token_in: underlyingTokenIn
-      };
-
-      return {
-        _uiDisplayTool: true,
-        summary: `Mint SY quote: ${rate}`,
-        data: quoteData
-      };
-    } catch (error: any) {
-      const errorData = {
-        error: error.message || 'Failed to get Pendle mint SY quote.',
-        mint_parameters: {
-          sy_address,
-          amount_in_human,
-          slippage
-        }
-      };
-      
-      return {
-        _uiDisplayTool: true,
-        summary: `Error getting mint SY quote: ${error.message || 'Failed to get Pendle mint SY quote'}`,
         data: errorData
       };
     }

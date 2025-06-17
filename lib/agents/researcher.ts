@@ -54,10 +54,8 @@ const get_system_prompt = (
       pendle_swap: `- pendle_swap: Use when the user wants to execute a swap between ETH and a Pendle market token (PT or YT) in either direction. This tool handles the actual transaction execution and requires slippage tolerance and user wallet address.`,
       pendle_mint: `- pendle_mint: Use when the user wants to mint Pendle tokens. Supports minting PT+YT tokens from underlying or SY tokens, or minting SY tokens from underlying tokens. Takes PT address and automatically determines all required token addresses.`,
       pendle_redeem: `- pendle_redeem: Use when the user wants to redeem/unwrap Pendle tokens. Supports redeeming PT+YT tokens to SY or underlying, or redeeming SY tokens to underlying. Takes PT address and automatically determines all required token addresses.`,
-      pendle_mint_py_quote: `- pendle_mint_py_quote: Use when the user wants to get a quote for minting PT and YT tokens. Provides estimated output amounts without executing the transaction.`,
-      pendle_mint_sy_quote: `- pendle_mint_sy_quote: Use when the user wants to get a quote for minting SY tokens. Provides estimated output amounts without executing the transaction.`,
-      pendle_redeem_py_quote: `- pendle_redeem_py_quote: Use when the user wants to get a quote for redeeming PT+YT tokens. Provides estimated output amounts without executing the transaction.`,
-      pendle_redeem_sy_quote: `- pendle_redeem_sy_quote: Use when the user wants to get a quote for redeeming SY tokens. Provides estimated output amounts without executing the transaction.`,
+      pendle_mint_quote: `- pendle_mint_quote: Use when the user wants to get a quote for minting Pendle tokens. Supports underlying->py, sy->py, and underlying->sy minting quotes. Provides estimated output amounts without executing the transaction.`,
+      pendle_redeem_quote: `- pendle_redeem_quote: Use when the user wants to get a quote for redeeming Pendle tokens. Supports py->sy, py->underlying, and sy->underlying redemption quotes. Provides estimated output amounts without executing the transaction.`,
       wallet_balance: `- wallet_balance: Use when the user asks about their wallet balance, token holdings, or wants to check how much of a specific token they own on ${getNetworkName()} network.`,
       wallet_transfer: `- wallet_transfer: Use when the user wants to transfer tokens or ETH to another address on ${getNetworkName()} network. This tool handles the actual transaction execution.`,
       privyTransfer: `- privyTransfer: Use when the user wants to transfer tokens or ETH to another address on ${getNetworkName()} network using Privy wallet. This tool handles the actual transaction execution.`,
@@ -111,22 +109,14 @@ const get_system_prompt = (
     - The user will provide you the names of the tokens. Like "Quote for sENA PT to ETH" or "Conversion for ETH to PT sENA". Based on this info you have to call this tool with relevant parameter.  
     - If the from or to information is missing, say: "Which token would you like quoted, or would you like to see opportunities first?"  
     - Otherwise, "Here's your quote—anything else?"`,
-      pendle_redeem_py_quote: `  • pendle_redeem_py_quote
+      pendle_redeem_quote: `  • pendle_redeem_quote
     - Use when user wants to quote redeeming PT and YT tokens to underlying assets or SY tokens.
     - If the PT address or output token information is missing, ask for clarification.
     - Otherwise, "Here's your redeem quote—anything else?"`,
-      pendle_redeem_sy_quote: `  • pendle_redeem_sy_quote
-    - Use when user wants to quote redeeming SY tokens to underlying tokens.
-    - If the SY address or output token information is missing, ask for clarification.
-    - Otherwise, "Here's your redeem SY quote—anything else?"`,
-      pendle_mint_py_quote: `  • pendle_mint_py_quote
+      pendle_mint_quote: `  • pendle_mint_quote
     - Use when user wants to quote minting PT and YT tokens from input tokens.
     - If the PT address or input token information is missing, ask for clarification.
-    - Otherwise, "Here's your mint PY quote—anything else?"`,
-      pendle_mint_sy_quote: `  • pendle_mint_sy_quote
-    - Use when user wants to quote minting SY tokens from input tokens.
-    - If the SY address or input token information is missing, ask for clarification.
-    - Otherwise, "Here's your mint SY quote—anything else?"`,
+    - Otherwise, "Here's your mint quote—anything else?"`,
       wallet_balance: `  • wallet_balance  
     - Call it; the UI shows balances.  
     - Acknowledge: "Wallet balances are ready. Want to dig into a particular holding?"`,
@@ -145,10 +135,8 @@ const get_system_prompt = (
     const readOnlyTools = [
       'pendle_opportunities',
       'pendle_quote',
-      'pendle_redeem_py_quote',
-      'pendle_redeem_sy_quote',
-      'pendle_mint_py_quote',
-      'pendle_mint_sy_quote',
+      'pendle_redeem_quote',
+      'pendle_mint_quote',
       'wallet_balance',
       'kodiak_opportunities',
       'kodiak_bault_profitability',

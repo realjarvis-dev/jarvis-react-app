@@ -129,8 +129,7 @@ export function ToolSection({
       return (
         <SimpleQuoteDisplay tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
       )
-    case 'pendle_mint_py_quote':
-    case 'pendle_mint_sy_quote':
+    case 'pendle_mint_quote':
       return (
         <SimpleQuoteDisplay tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
       )
@@ -142,8 +141,7 @@ export function ToolSection({
         <SwapTransactionCard tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
       )
 
-    case 'pendle_redeem_py_quote':
-    case 'pendle_redeem_sy_quote':
+    case 'pendle_redeem_quote':
       return (
         <SimpleQuoteDisplay tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
       )
