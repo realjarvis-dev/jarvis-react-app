@@ -25,7 +25,9 @@ export const getGasPriceTool = tool({
     return {
         base_fee_per_gas: `${baseFeePerGasGwei} gwei ${nativeTokenSymbol}`,
         max_fee_per_gas: `${maxFeePerGasGwei} gwei ${nativeTokenSymbol}`,
-        complete_time: new Date().toISOString()
+        complete_time: new Date().toISOString(),
+        chainName: context?.networkContext?.config?.displayName,
+        unit: nativeTokenSymbol
     }
   }
 })

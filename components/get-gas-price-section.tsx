@@ -13,7 +13,8 @@ export function GetGasPriceSection({ tool }: GetGasPriceSectionProps) {
       })
     const isLoading = status === 'submitted' || status === 'streaming'
     const isToolLoading = tool.state === 'call'
-    if (isLoading || isToolLoading) {
+    const result = tool.state === 'result' ? tool.result : undefined
+    if ((isLoading || isToolLoading) && !result) {
         return (
             <ToolArgsSection tool="get_gas_price">
                 <div>
@@ -23,7 +24,6 @@ export function GetGasPriceSection({ tool }: GetGasPriceSectionProps) {
         )
     }
 
-    const result = tool.state === 'result' ? tool.result : undefined
     if (!result) {
         return null
     }
@@ -34,7 +34,7 @@ export function GetGasPriceSection({ tool }: GetGasPriceSectionProps) {
         <ToolArgsSection tool="get_gas_price">
     <div>
       <p>
-        Fetched gas price from Blocknative at {new Date(result.complete_time).toLocaleString()}
+        Fetched gas price {result.chainName && ("for " + result.chainName)} from Blocknative at {new Date(result.complete_time).toLocaleString()}
       </p>
     </div>
   </ToolArgsSection>
