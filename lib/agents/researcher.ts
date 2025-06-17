@@ -338,9 +338,13 @@ export function researcher({
     } else {
       userWalletInfo = `
 User EVM wallet address: ${userEvmWallet?.address}, delegated status: ${userEvmWallet?.delegated}
-User Solana wallet address: ${userSolWallet?.address}, delegated status: ${userSolWallet?.delegated}
 You can only execute on behalf of the user if they have wallets and have delegated you access to their wallet.
 `
+// userWalletInfo = `
+// User EVM wallet address: ${userEvmWallet?.address}, delegated status: ${userEvmWallet?.delegated}
+// User Solana wallet address: ${userSolWallet?.address}, delegated status: ${userSolWallet?.delegated}
+// You can only execute on behalf of the user if they have wallets and have delegated you access to their wallet.
+// `
     }
 
     // Add network context info to the prompt
