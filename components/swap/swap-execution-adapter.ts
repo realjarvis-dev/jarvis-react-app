@@ -40,7 +40,7 @@ export function normalizeSwapInfo(
 
   // tool type detection
   let toolType: 'pendle' | 'lifi' | undefined
-  if (tool.toolName === 'pendle_swap' || tool.toolName === 'pendle_mint_py' || tool.toolName === 'pendle_mint_sy' || tool.toolName === 'pendle_redeem_sy' || tool.toolName === 'pendle_redeem_py') {
+  if (tool.toolName === 'pendle_swap' || tool.toolName === 'pendle_mint_py' || tool.toolName === 'pendle_mint_sy' || tool.toolName === 'pendle_redeem') {
     toolType = 'pendle'
   } else if (tool.toolName === 'lifi_bridge_execute') {
     toolType = 'lifi'
@@ -62,9 +62,7 @@ export function normalizeSwapInfo(
       title = 'Mint Transaction'
     } else if (tool.toolName === 'pendle_mint_sy') {
       title = 'SY Mint Transaction'
-    } else if (tool.toolName === 'pendle_redeem_sy') {
-      title = 'SY Redeem Transaction'
-    } else if (tool.toolName === 'pendle_redeem_py') {
+    } else if (tool.toolName === 'pendle_redeem') {
       title = 'Redeem Transaction'
     } else {
       title = 'Swap Transaction'
@@ -76,20 +74,21 @@ export function normalizeSwapInfo(
     
     if (tool.toolName === 'pendle_mint_py') {
       // For mint: input token -> PT + YT
-      fromTokenName = args.is_sy ? 'SY' : (args.input_token_name_display || 'Token')
+      fromTokenName = args.token_type === 'sy' ? 'SY' : (args.input_token_name_display || 'Token')
       toTokenName = `PT + YT`
     } else if (tool.toolName === 'pendle_mint_sy') {
       // For SY mint: input token -> SY
       fromTokenName = args.input_token_name_display || 'Token'
       toTokenName = 'SY'
-    } else if (tool.toolName === 'pendle_redeem_sy') {
-      // For SY redeem: SY -> output token
-      fromTokenName = 'SY'
-      toTokenName = args.output_token_name_display || 'Token'
-    } else if (tool.toolName === 'pendle_redeem_py') {
-      // For redeem: PT + YT -> output token
-      fromTokenName = `PT + YT`
-      toTokenName = args.is_sy ? 'SY' : (args.output_token_name_display || 'Token')
+    } else if (tool.toolName === 'pendle_redeem') {
+      // For unified redeem: input tokens -> output tokens
+      if (args.token_input_type === 'py') {
+        fromTokenName = `PT + YT`
+        toTokenName = args.token_output_type === 'sy' ? 'SY' : 'Token'
+      } else {
+        fromTokenName = 'SY'
+        toTokenName = 'Token' // SY can only redeem to underlying
+      }
     } else {
       // For swap: existing logic
       fromTokenName = args.input_token_name_display || data?.swap_details?.from || 'Token'
@@ -125,7 +124,7 @@ export function normalizeSwapInfo(
         transactionHash = data.transaction_hash
         explorerLink = mintDetails?.explorer_link
         completeTime = mintDetails?.complete_time
-        sentDisplay = `${args.amount_in_human} ${args.is_sy ? 'SY' : 'tokens'}`
+        sentDisplay = `${args.amount_in_human} ${args.token_type === 'sy' ? 'SY' : 'tokens'}`
         receivedDisplay = `PT + YT (${mintDetails?.market || 'Market'})`
       } else if (tool.toolName === 'pendle_mint_sy') {
         const mintDetails = data.mint_details
@@ -134,20 +133,18 @@ export function normalizeSwapInfo(
         completeTime = mintDetails?.complete_time
         sentDisplay = `${args.amount_in_human} tokens`
         receivedDisplay = 'SY tokens'
-      } else if (tool.toolName === 'pendle_redeem_sy') {
+      } else if (tool.toolName === 'pendle_redeem') {
         const redeemDetails = data.redeem_details
         transactionHash = data.transaction_hash
         explorerLink = redeemDetails?.explorer_link
         completeTime = redeemDetails?.complete_time
-        sentDisplay = `${args.amount_in_human} SY`
-        receivedDisplay = 'tokens'
-      } else if (tool.toolName === 'pendle_redeem_py') {
-        const redeemDetails = data.redeem_details
-        transactionHash = data.transaction_hash
-        explorerLink = redeemDetails?.explorer_link
-        completeTime = redeemDetails?.complete_time
-        sentDisplay = `${args.amount_in_human} PT + YT`
-        receivedDisplay = `${redeemDetails?.output_token_type || 'tokens'}`
+        if (args.token_input_type === 'py') {
+          sentDisplay = `${args.amount_in_human} PT + YT`
+          receivedDisplay = args.token_output_type === 'sy' ? 'SY' : 'tokens'
+        } else {
+          sentDisplay = `${args.amount_in_human} SY`
+          receivedDisplay = 'tokens'
+        }
       } else {
         // For swap: existing logic
         const swapDetails = data.swap_details

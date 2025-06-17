@@ -329,7 +329,8 @@ async function executeManualToolCall(
     'pendle_quote', 
     'pendle_swap',
     'pendle_mint_py',
-    'pendle_redeem_py',
+    'pendle_mint_sy',
+    'pendle_redeem',
     'kodiak_opportunities',
     'market_chart'
   ].includes(toolName)

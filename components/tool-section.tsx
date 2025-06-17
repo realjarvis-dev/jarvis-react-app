@@ -139,13 +139,16 @@ export function ToolSection({
         // </div>
       )
     case 'pendle_redeem_py_quote':
-      return (
-        <SimpleQuoteDisplay tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
-      )
     case 'pendle_redeem_sy_quote':
       return (
         <SimpleQuoteDisplay tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
       )
+
+    case 'pendle_redeem':
+    case 'pendle_redeem_pt':
+    case 'pendle_redeem_yt':
+      return <RedeemTransactionCard tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
+
     case 'pendle_mint_py_quote':
       return (
         <SimpleQuoteDisplay tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
@@ -165,50 +168,6 @@ export function ToolSection({
     case 'pendle_mint_sy':
       return (
         <SwapTransactionCard tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
-      )
-    case 'pendle_redeem_sy':
-      return (
-        <SwapTransactionCard tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
-      )
-    case 'pendle_redeem_py':
-      return (
-        <SwapTransactionCard tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
-      )
-    case 'pendle_redeem_pt':
-      return (
-        <div className="flex flex-col space-y-4 py-4">
-          <div className="flex flex-col">
-            <h3 className="text-base font-medium">Principal Token Redemption</h3>
-            <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-              {tool.state === 'call' 
-                ? 'Processing your redemption transaction...' 
-                : tool.state === 'result' && 'result' in tool && tool.result?.success 
-                  ? 'Redemption completed successfully' 
-                  : 'Redemption transaction failed'}
-            </div>
-            <div className="mt-2">
-              <RedeemTransactionCard tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
-            </div>
-          </div>
-        </div>
-      )
-    case 'pendle_redeem_yt':
-      return (
-        <div className="flex flex-col space-y-4 py-4">
-          <div className="flex flex-col">
-            <h3 className="text-base font-medium">Yield Token Redemption</h3>
-            <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-              {tool.state === 'call' 
-                ? 'Processing your redemption transaction...' 
-                : tool.state === 'result' && 'result' in tool && tool.result?.success 
-                  ? 'Redemption completed successfully' 
-                  : 'Redemption transaction failed'}
-            </div>
-            <div className="mt-2">
-              <RedeemTransactionCard tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
-            </div>
-          </div>
-        </div>
       )
     case 'generic_swap':
       return (

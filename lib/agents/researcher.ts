@@ -47,12 +47,9 @@ const get_system_prompt = (
       pendle_opportunities: `- pendle_opportunities: Use when the user asks about Pendle yield opportunities, DeFi yields, or APY/yield farming on Ethereum. This tool returns a list of current Pendle opportunities with APY and liquidity information.`,
       pendle_quote: `- pendle_quote: Use when the user wants to know the conversion rate between ETH and a specific Pendle market token (PT or YT) in either direction. Requires a token address to generate the quote. This tool can quote both ETH-to-token and token-to-ETH rates.`,
       pendle_swap: `- pendle_swap: Use when the user wants to execute a swap transaction from ETH to a Pendle token (PT or YT). This requires market address, token out address, and ETH amount parameters.`,
-      pendle_redeem_pt: `- pendle_redeem_pt: Use when the user wants to redeem Pendle PT tokens to ETH. This tool accepts a PT token address and will automatically find the corresponding YT address. If called before YT's expiry, both PT & YT of equal amounts are needed and will be burned. After expiry, only PT is needed and will be burned.`,
-      pendle_redeem_yt: `- pendle_redeem_yt: Use when the user wants to redeem accrued rewards and interests from Pendle YT positions after expiry. This tool accepts YT token addresses directly.`,
+      pendle_redeem: `- pendle_redeem: Use when the user wants to redeem Pendle tokens. Supports py->sy, py->underlying, and sy->underlying redemptions. Provide the PT token address and specify input type (py or sy) and output type (sy or underlying).`,
       pendle_mint_py: `- pendle_mint_py: Use when the user wants to mint PT and YT tokens from input tokens using Pendle. Provide the PT token address to automatically determine the market and YT address. Can use either SY tokens or underlying tokens as input.`,
       pendle_mint_sy: `- pendle_mint_sy: Use when the user wants to mint SY (Standardized Yield) tokens from underlying tokens using Pendle. Provide the SY token address and input token address to mint SY tokens.`,
-      pendle_redeem_sy: `- pendle_redeem_sy: Use when the user wants to redeem SY (Standardized Yield) tokens to underlying tokens using Pendle. Provide the SY token address and output token address to redeem SY tokens.`,
-      pendle_redeem_py: `- pendle_redeem_py: Use when the user wants to redeem equal amounts of PT and YT tokens to get back the underlying asset or SY token using Pendle. Provide the PT token address to automatically determine the market and YT address.`,
       pendle_redeem_py_quote: `- pendle_redeem_py_quote: Use when the user wants to get a quote for redeeming PT and YT tokens to underlying assets or SY tokens using Pendle. Provide the PT token address to automatically determine the market and YT address. This tool provides quotes without executing transactions.`,
       pendle_redeem_sy_quote: `- pendle_redeem_sy_quote: Use when the user wants to get a quote for redeeming SY (Standardized Yield) tokens to underlying tokens using Pendle. Provide the SY token address and output token to get redemption quotes without executing transactions.`,
       pendle_mint_py_quote: `- pendle_mint_py_quote: Use when the user wants to get a quote for minting PT and YT tokens from input tokens using Pendle. Provide the PT token address to automatically determine the market and YT address. This tool provides quotes without executing transactions.`,
@@ -158,31 +155,18 @@ const get_system_prompt = (
     const writeToolsDescriptions: Record<string, string> = {
       pendle_swap: `  • pendle_swap  
     - Remind to check opportunities or quote if skipped.`,
-      pendle_redeem_pt: `  • pendle_redeem_pt  
-    - Remind to fetch wallet balance if skipped.
-    - You do not need to worry about the expiry. That's user's responsibility.
-    - The user will typically ask to redeem PT tokens. The tool accepts PT token addresses and will automatically find the corresponding YT address for redemption.`,
-      pendle_redeem_yt: `  • pendle_redeem_yt
-    - Remind to fetch wallet balance if skipped.
-    - You do not need to worry about the expiry. That's user's responsibility.
-    - The user will typically ask to redeem YT rewards. This tool accepts YT token addresses directly.`,
+      pendle_redeem: `  • pendle_redeem  
+    - Remind to check opportunities or fetch wallet balance if skipped.
+    - Supports py->sy, py->underlying, and sy->underlying redemptions.
+    - Confirm redemption details before execution.`,
       pendle_mint_py: `  • pendle_mint_py
     - Remind to check opportunities if skipped.
     - Confirm minting details before execution.
-    - Can mint from either SY tokens (set is_sy: true) or underlying tokens (provide token_in address).`,
+    - Can mint from either SY tokens or underlying tokens.`,
       pendle_mint_sy: `  • pendle_mint_sy
     - Remind to check opportunities if skipped.
     - Confirm minting details before execution.
     - Mints SY tokens from underlying tokens like wstETH, USDC, etc.`,
-      pendle_redeem_sy: `  • pendle_redeem_sy
-    - Remind to fetch wallet balance if skipped.
-    - Confirm redemption details before execution.
-    - Redeems SY tokens to underlying tokens like wstETH, USDC, etc.`,
-      pendle_redeem_py: `  • pendle_redeem_py
-    - Remind to fetch wallet balance if skipped.
-    - Confirm redemption details before execution.
-    - Can redeem to either SY tokens (set is_sy: true) or underlying tokens (provide token_out address).
-    - Equal amounts of PT and YT tokens will be burned in the redemption process.`,
       privy_transfer: `  • privy_transfer  
     - Only accept ETH amounts; afterward ask "What's next?"`,
       kodiak_deposit: `  • kodiak_deposit  
@@ -190,21 +174,20 @@ const get_system_prompt = (
       kodiak_compound_bault: `  • kodiak_compound_bault  
     - First check bault profitability with kodiak_bault_profitability.
     - Only compound baults that show as profitable.
-    - Confirm transaction details before execution.`
-      //   generic_swap: `  • generic_swap
-      // - Confirm swap details before execution.`
+    - Confirm transaction details before execution.`,
+      lifi_bridge_execute: `  • lifi_bridge_execute
+    - Confirm swap details before execution.`,
+      fund_wallet: `  • fund_wallet
+    - Only available in demo mode to fund wallet with ETH.`
     }
 
     const writeTools = [
       'pendle_swap',
-      'pendle_redeem_pt',
-      'pendle_redeem_yt',
+      'pendle_redeem',
       'pendle_mint_py',
       'pendle_mint_sy',
-      'pendle_redeem_py',
       'privy_transfer',
       'kodiak_deposit',
-      'generic_swap',
       'lifi_bridge_execute',
       'kodiak_compound_bault',
       'fund_wallet'

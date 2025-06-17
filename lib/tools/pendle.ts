@@ -9,11 +9,8 @@ import { executePendleRedeemPy, getRedeemPyQuote } from '../pendle/redeem-py'
 import { executePendleRedeemSy, getRedeemSyQuote } from '../pendle/redeem-sy'
 import { executePendleSwap, getSwapQuote } from '../pendle/swap'
 import {
-  executeRedeemInterestsAndRewardsTransaction,
-  executeRedeemTransaction,
   getERC20Details
 } from '../pendle/transactions'
-import { getUserEvmWalletAddress } from '../privy/client'
 import { NetworkContext } from '../types/context'
 
 
@@ -578,255 +575,158 @@ export const pendleSwapTool = tool({
   }
 })
 
-export const pendleRedeemPTTool = tool({
+export const pendleRedeemTool = tool({
   description:
-    `Redeem Pendle PT & YT tokens to ETH. If called before YT's expiry, both PT & YT of equal amounts 
-    are needed and will be burned. After expiry, only PT is needed and will be burned.
+    `Redeem Pendle tokens using different input/output combinations. 
+    Supports py->sy, py->underlying, and sy->underlying redemptions.
+    Provide the PT token address to automatically determine the market and token addresses.
     This tool automatically renders UI.`,
   parameters: z.object({
     pt_address: z
       .string()
-      .describe('The address of the PT (Principal Token) to redeem'),
+      .describe('The address of the PT (Principal Token). The market, YT, and SY addresses will be automatically determined from this token.'),
+    token_input_type: z
+      .enum(['py', 'sy'])
+      .describe('The type of input tokens - "py" for PT+YT tokens or "sy" for SY token only.'),
+    token_output_type: z
+      .enum(['sy', 'underlying'])
+      .describe('The type of output token - "sy" for SY token or "underlying" for the underlying asset token.'),
     amount_in_human: z
       .string()
-      .describe(
-        'Amount of tokens to redeem in human-readable format (e.g., "1", "100.5"). If the amount is not provided by the user, use the user\'s current balance of the token.'
-      ),
-    token_name_display: z
+      .describe('Amount of input tokens to redeem in human-readable format (e.g., "1", "100.5"). For py input, equal amounts of PT and YT will be burned.'),
+    user_wallet_address: z
       .string()
-      .optional()
-      .describe(
-        'Display name for the token (e.g., "PT rswETH"). If not provided, a generic name or address will be used.'
-      ),
+      .describe('The address of the user\'s EVM wallet'),
     slippage: z
       .number()
-      .min(0.001)
-      .max(0.1)
-      .default(0.1)
-      .describe('Maximum acceptable slippage (default: 0.01, which is 1%).')
+      .min(PENDLE_CONFIG.MIN_SLIPPAGE)
+      .max(PENDLE_CONFIG.MAX_SLIPPAGE)
+      .default(PENDLE_CONFIG.DEFAULT_SLIPPAGE)
+      .describe(`Maximum acceptable slippage (default: ${PENDLE_CONFIG.DEFAULT_SLIPPAGE}, which is ${PENDLE_CONFIG.DEFAULT_SLIPPAGE * 100}%)`)
   }),
   execute: async (params, context: ToolContext) => {
-    // Keep just one initial log for tracking execution
-    console.log('Starting PT redemption for:', params.pt_address);
-    
     const {
       pt_address,
+      token_input_type,
+      token_output_type,
       amount_in_human,
-      token_name_display,
+      user_wallet_address,
       slippage = PENDLE_CONFIG.DEFAULT_SLIPPAGE
     } = params;
     const networkContext = context?.networkContext;
-    const isDemo = networkContext?.isDemo
-    
+    const isDemo = networkContext?.isDemo;
+    const chainId = networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID;
+
     try {
-      const evmWalletAddress = await getUserEvmWalletAddress()
-      if (!evmWalletAddress) {
-        throw new Error(
-          'EVM wallet address not found. Please connect your wallet.'
-        )
-      }
-
-      const chainId = networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID
-      
-      // Find the market using the PT token address to get the corresponding YT token
-      const markets = await getPendleMarkets('all');
-      
-      // Find market that contains the PT token
-      const foundMarket = markets.find(market => {
-        return market.pt.toLowerCase() === pt_address.toLowerCase();
-      });
-      
-      if (!foundMarket) {
-        throw new Error(`Could not find a Pendle market with PT token address ${pt_address}`);
-      }
-      
-      // Get the YT token address from the found market
+      // Find the market using PT address to get all required addresses
+      const foundMarket = await findMarketByTokenAddress(pt_address, 'pt');
       const ytAddress = foundMarket.yt;
-      
-      // Use the market name for display if no name provided
-      const displayTokenName = token_name_display || `PT ${foundMarket.name}`
+      const syAddress = foundMarket.sy;
+      const marketName = foundMarket.name;
 
-      // Get token details to convert human amount to base units
-      let amountInBaseUnits: string
-      try {
-        // Try to get token details first
-        try {
-          const tokenAddress = ethers.getAddress(pt_address.trim())
-          const tokenDetails = await getERC20Details(tokenAddress, chainId)
-          
-          // Parse the amount with the correct number of decimals
-          const amountBigInt = ethers.parseUnits(amount_in_human, tokenDetails.decimals)
-          // Ensure we have a clean string representation without scientific notation
-          amountInBaseUnits = amountBigInt.toString()
-        } catch (tokenError: any) {
-          // Fallback to default decimals if token details can't be fetched
-          // For expired tokens, default to standard ERC20 decimals
-          const amountBigInt = ethers.parseUnits(amount_in_human, PENDLE_CONFIG.DEFAULT_DECIMALS)
-          amountInBaseUnits = amountBigInt.toString()
-        }
-      } catch (error: any) {
-        throw new Error(
-          `Failed to parse amount for PT token: ${error.message}`
-        )
+      // Determine the actual token_out based on token_output_type
+      let actualTokenOut: string;
+      if (token_output_type === 'sy') {
+        actualTokenOut = syAddress;
+      } else {
+        actualTokenOut = foundMarket.underlyingAsset;
       }
 
-      // Normalize the YT address
-      const normalizedYtAddress = ytAddress.trim().toLowerCase()
-      
-      // Execute the redeem transaction using the YT address
-      const result = await executeRedeemTransaction(
-        normalizedYtAddress,
-        amountInBaseUnits,
-        slippage,
-        chainId,
-        true,
-        isDemo,
-        pt_address.trim() // Pass the PT token address that was provided to the tool
-      )
+      let result: any;
+      let inputTokenAddress: string;
+      let inputTokenDisplay: string;
+      let outputTokenDisplay: string;
 
-      if (result.status !== 'success') {
-        throw new Error(result.message || 'Failed to execute redemption')
+      if (token_input_type === 'py') {
+        // PY redemption: redeem PT+YT tokens
+        inputTokenAddress = pt_address;
+        inputTokenDisplay = `PT+YT ${marketName}`;
+        outputTokenDisplay = token_output_type === 'sy' ? `SY ${marketName}` : marketName;
+
+        // Convert amount to wei using PT address for decimals
+        const amountInWei = await parseTokenAmount(pt_address, amount_in_human, chainId);
+
+        // Execute PY redemption using YT address (as required by the redeem function)
+        result = await executePendleRedeemPy(
+          ytAddress,
+          amountInWei,
+          actualTokenOut,
+          slippage,
+          chainId,
+          isDemo || false,
+          user_wallet_address
+        );
+      } else {
+        // SY redemption: redeem SY tokens
+        inputTokenAddress = syAddress;
+        inputTokenDisplay = `SY ${marketName}`;
+        outputTokenDisplay = marketName; // SY can only redeem to underlying
+
+        // Convert amount to wei using SY address for decimals
+        const amountInWei = await parseTokenAmount(syAddress, amount_in_human, chainId);
+
+        // Execute SY redemption
+        result = await executePendleRedeemSy(
+          syAddress,
+          amountInWei,
+          actualTokenOut,
+          slippage,
+          chainId,
+          isDemo || false,
+          user_wallet_address
+        );
       }
+
+      const explorerLink = getConfigByChainId(chainId, isDemo || false).scanLink;
+      const explorerLinkWithHash = explorerLink?.startsWith('http') 
+        ? `${explorerLink}/tx/${result.hash}`
+        : `https://${explorerLink}/tx/${result.hash}`;
 
       const redeemData = {
         success: true,
         transaction_hash: result.hash,
         redeem_details: {
-          token: displayTokenName,
-          amount_in: `${amount_in_human} ${displayTokenName}`,
-          amount_out: result.amountOut,
+          market: marketName,
+          input_token_type: token_input_type.toUpperCase(),
+          output_token_type: token_output_type === 'sy' ? 'SY' : 'Token',
+          input_token: inputTokenAddress,
+          output_token: actualTokenOut,
+          amount_in: `${amount_in_human}`,
+          pt_address: pt_address,
+          yt_address: ytAddress,
+          sy_address: syAddress,
           complete_time: new Date().toISOString(),
-          chainId: chainId
+          chainId: chainId,
+          explorer_link: explorerLink ? explorerLinkWithHash : undefined
         }
-      }
-      
+      };
+
       return {
         _uiDisplayTool: true,
-        summary: `Redemption executed: ${amount_in_human} ${displayTokenName} → ETH`,
+        summary: `Redeem executed: ${amount_in_human} ${inputTokenDisplay} → ${outputTokenDisplay}`,
         data: redeemData
-      }
+      };
     } catch (error: any) {
-      console.error('Redemption failed:', error.message);
       const errorData = {
         success: false,
-        error: error.message || 'Failed to execute Pendle redemption.',
+        error: error.message || 'Failed to execute Pendle redeem.',
         redeem_parameters: {
           pt_address,
+          token_input_type,
+          token_output_type,
           amount_in_human,
           slippage
         }
-      }
+      };
       
       return {
         _uiDisplayTool: true,
-        summary: `Redemption failed: ${error.message || 'Failed to execute Pendle redemption'}`,
+        summary: `Redeem failed: ${error.message || 'Failed to execute Pendle redeem'}`,
         data: errorData
-      }
+      };
     }
   }
-})
-
-export const pendleRedeemYTTool = tool({
-  description:
-    `Redeem accrued rewards and interests from Pendle YT positions after expiry.
-    Before expiry, YT cannot be redeemed through this tool. This tool automatically renders UI.`,
-  parameters: z.object({
-    yt_addresses: z
-      .array(z.string())
-      .describe('Array of YT (Yield Token) addresses to redeem rewards from.')
-  }),
-  execute: async (params, context: ToolContext) => {
-    const {
-      yt_addresses
-    } = params;
-    const networkContext = context?.networkContext;
-    const isDemo = networkContext?.isDemo
-    
-    try {
-      console.log('===== PENDLE REDEEM YT TOOL =====');
-      console.log('Parameters:', JSON.stringify(params, null, 2));
-      console.log('Network context:', JSON.stringify({
-        chainId: networkContext?.selectedChainId,
-        isDemo
-      }, null, 2));
-      
-      const evmWalletAddress = await getUserEvmWalletAddress()
-      if (!evmWalletAddress) {
-        console.error('Error: No wallet address found');
-        throw new Error(
-          'EVM wallet address not found. Please connect your wallet.'
-        )
-      }
-      console.log('Wallet address:', evmWalletAddress);
-
-      const chainId = networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID
-
-      // Check if YT addresses array has items
-      if (!yt_addresses || yt_addresses.length === 0) {
-        console.error('Error: Empty YT addresses array');
-        throw new Error('YT addresses array must contain at least one address')
-      }
-      console.log(`Processing ${yt_addresses.length} YT addresses`);
-
-      // Process addresses to ensure they're properly formatted
-      const processedYtAddresses = yt_addresses.map(addr => addr.trim());
-      console.log('Processed YT addresses:', processedYtAddresses);
-      
-      // Define empty arrays for market_addresses and sy_addresses as placeholders for future
-      const processedMarketAddresses: string[] = []
-      const processedSyAddresses: string[] = []
-      console.log('Using empty market and SY addresses');
-
-      // Execute the redemption transaction
-      console.log('Executing redemption transaction for YT rewards...');
-      const result = await executeRedeemInterestsAndRewardsTransaction(
-        processedSyAddresses.length > 0 ? processedSyAddresses : undefined,
-        processedYtAddresses,
-        processedMarketAddresses.length > 0 ? processedMarketAddresses : undefined,
-        chainId,
-        isDemo
-      )
-      console.log('Redemption result:', JSON.stringify(result, null, 2));
-      
-      if (result.status !== 'success') {
-        console.error('Redemption failed:', result.message);
-        throw new Error(result.message || 'Failed to redeem rewards')
-      }
-
-      const redeemData = {
-        success: true,
-        transaction_hash: result.hash,
-        redeem_details: {
-          yts: processedYtAddresses,
-          complete_time: new Date().toISOString(),
-          chainId: chainId
-        }
-      }
-      console.log('Redemption successful:', JSON.stringify(redeemData, null, 2));
-      
-      return {
-        _uiDisplayTool: true,
-        summary: `YT rewards redemption executed successfully`,
-        data: redeemData
-      }
-    } catch (error: any) {
-      console.error('Error in pendleRedeemYTTool:', error);
-      const errorData = {
-        success: false,
-        error: error.message || 'Failed to redeem Pendle YT rewards.',
-        redeem_parameters: {
-          yt_addresses
-        }
-      }
-      
-      return {
-        _uiDisplayTool: true,
-        summary: `YT rewards redemption failed: ${error.message || 'Failed to redeem Pendle YT rewards'}`,
-        data: errorData
-      }
-    }
-  }
-})
+});
 
 export const pendleMintPyTool = tool({
   description:
@@ -1030,215 +930,6 @@ export const pendleMintSyTool = tool({
         summary: `SY mint failed: ${error.message || 'Failed to execute Pendle SY mint'}`,
         data: errorData
       };
-    }
-  }
-});
-
-export const pendleRedeemSyTool = tool({
-  description:
-    `Redeem SY (Standardized Yield) tokens to underlying tokens using Pendle. 
-    Provide the SY token address to automatically determine the underlying token.
-    This tool automatically renders UI.`,
-  parameters: z.object({
-    sy_address: z
-      .string()
-      .describe('The address of the SY (Standardized Yield) token to redeem'),
-    amount_in_human: z
-      .string()
-      .describe('Amount of SY token to redeem in human-readable format (e.g., "1", "100.5")'),
-    user_wallet_address: z
-      .string()
-      .describe('The address of the user\'s EVM wallet'),
-    slippage: z
-      .number()
-      .min(PENDLE_CONFIG.MIN_SLIPPAGE)
-      .max(PENDLE_CONFIG.MAX_SLIPPAGE)
-      .default(PENDLE_CONFIG.DEFAULT_SLIPPAGE)
-      .describe(`Maximum acceptable slippage (default: ${PENDLE_CONFIG.DEFAULT_SLIPPAGE}, which is ${PENDLE_CONFIG.DEFAULT_SLIPPAGE * 100}%)`)
-  }),
-  execute: async (params, context: ToolContext) => {
-    const {
-      sy_address,
-      amount_in_human,
-      user_wallet_address,
-      slippage = PENDLE_CONFIG.DEFAULT_SLIPPAGE
-    } = params;
-    const networkContext = context?.networkContext;
-    const isDemo = networkContext?.isDemo;
-    const chainId = networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID;
-
-    try {
-
-      // Find the market using SY address to get market info and underlying token
-      const foundMarket = await findMarketByTokenAddress(sy_address, 'sy');
-      const marketName = foundMarket.name;
-      
-      // Use the underlying asset address from the market
-      const underlyingTokenOut = foundMarket.underlyingAsset;
-
-      // Convert amount to wei using the helper function
-      const amountInWei = await parseTokenAmount(sy_address, amount_in_human, chainId);
-
-      // Execute the redeem SY transaction
-      const result = await executePendleRedeemSy(
-        sy_address,
-        amountInWei,
-        underlyingTokenOut,
-        slippage,
-        chainId,
-        isDemo || false,
-        user_wallet_address
-      );
-
-      const explorerLink = getConfigByChainId(chainId, isDemo || false).scanLink;
-      const explorerLinkWithHash = explorerLink?.startsWith('http') 
-        ? `${explorerLink}/tx/${result.hash}`
-        : `https://${explorerLink}/tx/${result.hash}`;
-
-      const redeemData = {
-        success: true,
-        transaction_hash: result.hash,
-        redeem_details: {
-          market: marketName,
-          sy_address,
-          underlying_token_out: underlyingTokenOut,
-          amount_in: `${amount_in_human}`,
-          complete_time: new Date().toISOString(),
-          chainId: chainId,
-          explorer_link: explorerLink ? explorerLinkWithHash : undefined
-        }
-      };
-
-      return {
-        _uiDisplayTool: true,
-        summary: `SY tokens redeemed: ${amount_in_human} SY → ${marketName}`,
-        data: redeemData
-      };
-    } catch (error: any) {
-      const errorData = {
-        success: false,
-        error: error.message || 'Failed to execute Pendle SY redeem.',
-        redeem_parameters: {
-          sy_address,
-          amount_in_human,
-          slippage
-        }
-      };
-      
-      return {
-        _uiDisplayTool: true,
-        summary: `SY redeem failed: ${error.message || 'Failed to execute Pendle SY redeem'}`,
-        data: errorData
-      };
-    }
-  }
-});
-
-export const pendleRedeemPyTool = tool({
-  description:
-    `Redeem equal amounts of PT and YT tokens to get back the underlying asset or SY token using Pendle. 
-    Provide the PT token address to automatically determine the market and YT address.
-    This tool automatically renders UI.`,
-  parameters: z.object({
-    pt_address: z
-      .string()
-      .describe('The address of the PT (Principal Token). The market and YT address will be automatically determined from this token.'),
-    token_type: z
-      .enum(['sy', 'underlying'])
-      .describe('The type of token to redeem to - "sy" for SY token or "underlying" for the underlying asset token.'),
-    amount_in_human: z
-      .string()
-      .describe('Amount of PT and YT tokens to redeem in human-readable format (e.g., "1", "100.5"). Equal amounts of PT and YT will be burned.'),
-    user_wallet_address: z
-      .string()
-      .describe('The address of the user\'s EVM wallet'),
-    slippage: z
-      .number()
-      .min(PENDLE_CONFIG.MIN_SLIPPAGE)
-      .max(PENDLE_CONFIG.MAX_SLIPPAGE)
-      .default(PENDLE_CONFIG.DEFAULT_SLIPPAGE)
-      .describe(`Maximum acceptable slippage (default: ${PENDLE_CONFIG.DEFAULT_SLIPPAGE}, which is ${PENDLE_CONFIG.DEFAULT_SLIPPAGE * 100}%)`)
-  }),
-  execute: async (params, context: ToolContext) => {
-    const {
-      pt_address,
-      token_type,
-      amount_in_human,
-      user_wallet_address,
-      slippage = PENDLE_CONFIG.DEFAULT_SLIPPAGE
-    } = params;
-    const networkContext = context?.networkContext;
-    const isDemo = networkContext?.isDemo;
-    const chainId = networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID;
-
-    try {
-
-      // Find the market using PT address to get market info and YT address
-      const foundMarket = await findMarketByTokenAddress(pt_address, 'pt');
-      const ytAddress = foundMarket.yt;
-      const marketName = foundMarket.name;
-
-      // Determine the actual token_out to use based on token_type
-      let actualTokenOut: string;
-      if (token_type === 'sy') {
-        actualTokenOut = foundMarket.sy;
-      } else {
-        actualTokenOut = foundMarket.underlyingAsset;
-      }
-
-      // Convert amount to wei using the helper function (using PT address for decimals)
-      const amountInWei = await parseTokenAmount(pt_address, amount_in_human, chainId);
-
-      // Execute the redeem transaction using YT address (as required by the redeem function)
-      const result = await executePendleRedeemPy(
-        ytAddress,
-        amountInWei,
-        actualTokenOut,
-        slippage,
-        chainId,
-        isDemo || false,
-        user_wallet_address
-      );
-
-      const explorerLink = getConfigByChainId(chainId, isDemo || false).scanLink;
-      const explorerLinkWithHash = explorerLink?.startsWith('http') 
-        ? `${explorerLink}/tx/${result.hash}`
-        : `https://${explorerLink}/tx/${result.hash}`;
-
-      // Determine output token type for display
-      let outputTokenType = token_type === 'sy' ? 'SY' : 'Token';
-
-      const redeemData = {
-        success: true,
-        transaction_hash: result.hash,
-        redeem_details: {
-          market: marketName,
-          output_token: actualTokenOut,
-          output_token_type: outputTokenType,
-          amount_in: `${amount_in_human}`,
-          pt_address: pt_address,
-          yt_address: ytAddress,
-          sy_address: foundMarket.sy,
-          complete_time: new Date().toISOString(),
-          chainId: chainId,
-          explorer_link: explorerLink ? explorerLinkWithHash : undefined
-        }
-      };
-
-      return redeemData;
-    } catch (error: any) {
-      const errorData = {
-        success: false,
-        error: error.message || 'Failed to execute Pendle redeem.',
-        redeem_parameters: {
-          pt_address,
-          token_type,
-          amount_in_human,
-          slippage
-        }
-      };
-      
-      return errorData;
     }
   }
 });
