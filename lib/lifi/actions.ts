@@ -298,13 +298,13 @@ export const executeLifiBridgeTransaction = async (
     if (!isDemo) {
     result = await executeSwapTransaction(txData, fromChainId, {
         estimateGas: true,
-        getGasPriceFunction: getGasPriceByChainId
+        eip1559GasPriceFunction: getGasPriceByChainId
       }, isDemo)
     } else {
       result = await executeSwapTransaction(txData, fromChainId, {
         estimateGas: false,
         gasLimit: gasLimit ? toHex(gasLimit) : undefined,
-        getGasPriceFunction: getGasPriceByChainId
+        eip1559GasPriceFunction: getGasPriceByChainId
       }, isDemo)
     }
     const explorerLink = getConfigByChainId(fromChainId, isDemo).scanLink

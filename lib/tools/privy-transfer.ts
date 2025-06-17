@@ -10,7 +10,6 @@ import { getConfigByChainId } from '@/lib/network/config'
 import { ToolContext } from '../types/context'
 import { getTokenBalances } from '../alchemy/get-token-balance'
 import { TokenMatcher, type Token } from '../token-matcher/fuzzy-token-matcher'
-import { bus } from '../pubsub/simple-pubsub'
 import { getUserId } from '../privy/client'
 import { balanceChangePub } from '../pubsub/balance-change-pub'
 
@@ -70,7 +69,7 @@ export const privyTransferTool = tool({
           {
             estimateGas: false,
             gasLimit: ethers.toQuantity(21000) as `0x${string}`,
-            getGasPriceFunction: getGasPriceByChainId
+            eip1559GasPriceFunction: getGasPriceByChainId
           },
           isDemo
         )
