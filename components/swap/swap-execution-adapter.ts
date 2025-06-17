@@ -40,7 +40,7 @@ export function normalizeSwapInfo(
 
   // tool type detection
   let toolType: 'pendle' | 'lifi' | undefined
-  if (tool.toolName === 'pendle_swap' || tool.toolName === 'pendle_mint_py' || tool.toolName === 'pendle_mint_sy' || tool.toolName === 'pendle_redeem') {
+  if (tool.toolName === 'pendle_swap' || tool.toolName === 'pendle_mint_py' || tool.toolName === 'pendle_mint_sy' || tool.toolName === 'pendle_mint' || tool.toolName === 'pendle_redeem') {
     toolType = 'pendle'
   } else if (tool.toolName === 'lifi_bridge_execute') {
     toolType = 'lifi'
@@ -62,6 +62,8 @@ export function normalizeSwapInfo(
       title = 'Mint Transaction'
     } else if (tool.toolName === 'pendle_mint_sy') {
       title = 'SY Mint Transaction'
+    } else if (tool.toolName === 'pendle_mint') {
+      title = 'Mint Transaction'
     } else if (tool.toolName === 'pendle_redeem') {
       title = 'Redeem Transaction'
     } else {
@@ -80,6 +82,15 @@ export function normalizeSwapInfo(
       // For SY mint: input token -> SY
       fromTokenName = args.input_token_name_display || 'Token'
       toTokenName = 'SY'
+    } else if (tool.toolName === 'pendle_mint') {
+      // For unified mint: handle both PY and SY minting
+      if (args.token_output_type === 'py') {
+        fromTokenName = args.token_input_type === 'sy' ? 'SY' : 'Token'
+        toTokenName = 'PT + YT'
+      } else {
+        fromTokenName = 'Token' // SY can only be minted from underlying
+        toTokenName = 'SY'
+      }
     } else if (tool.toolName === 'pendle_redeem') {
       // For unified redeem: input tokens -> output tokens
       if (args.token_input_type === 'py') {
@@ -133,6 +144,18 @@ export function normalizeSwapInfo(
         completeTime = mintDetails?.complete_time
         sentDisplay = `${args.amount_in_human} tokens`
         receivedDisplay = 'SY tokens'
+      } else if (tool.toolName === 'pendle_mint') {
+        const mintDetails = data.mint_details
+        transactionHash = data.transaction_hash
+        explorerLink = mintDetails?.explorer_link
+        completeTime = mintDetails?.complete_time
+        if (args.token_output_type === 'py') {
+          sentDisplay = `${args.amount_in_human} ${args.token_input_type === 'sy' ? 'SY' : 'tokens'}`
+          receivedDisplay = `PT + YT (${mintDetails?.market || 'Market'})`
+        } else {
+          sentDisplay = `${args.amount_in_human} tokens`
+          receivedDisplay = 'SY tokens'
+        }
       } else if (tool.toolName === 'pendle_redeem') {
         const redeemDetails = data.redeem_details
         transactionHash = data.transaction_hash

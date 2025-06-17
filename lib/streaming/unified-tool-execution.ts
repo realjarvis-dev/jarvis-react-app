@@ -1,9 +1,9 @@
 import {
-    CoreMessage,
-    DataStreamWriter,
-    JSONValue,
-    generateId,
-    generateText
+  CoreMessage,
+  DataStreamWriter,
+  JSONValue,
+  generateId,
+  generateText
 } from 'ai'
 import { ExtendedCoreMessage } from '../types'
 import { ErrorType, createErrorResponse, executeWithRetry } from '../utils/error-handling'
@@ -328,8 +328,7 @@ async function executeManualToolCall(
     'wallet_balance',
     'pendle_quote', 
     'pendle_swap',
-    'pendle_mint_py',
-    'pendle_mint_sy',
+    'pendle_mint',
     'pendle_redeem',
     'kodiak_opportunities',
     'market_chart'

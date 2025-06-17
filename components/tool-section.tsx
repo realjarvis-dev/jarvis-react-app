@@ -128,16 +128,20 @@ export function ToolSection({
     case 'pendle_quote':
       return (
         <SimpleQuoteDisplay tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
-
-        // <div className="flex flex-col space-y-4 py-4">
-        //   <div className="flex flex-col">
-        //     <h3 className="text-base font-medium">Pendle Quote</h3>
-        //     <div className="mt-2">
-        //       <SimpleQuoteDisplay tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
-        //     </div>
-        //   </div>
-        // </div>
       )
+    case 'pendle_mint_py_quote':
+    case 'pendle_mint_sy_quote':
+      return (
+        <SimpleQuoteDisplay tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
+      )
+
+    case 'pendle_mint':
+    case 'pendle_mint_py':
+    case 'pendle_mint_sy':
+      return (
+        <SwapTransactionCard tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
+      )
+
     case 'pendle_redeem_py_quote':
     case 'pendle_redeem_sy_quote':
       return (
@@ -149,26 +153,11 @@ export function ToolSection({
     case 'pendle_redeem_yt':
       return <RedeemTransactionCard tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
 
-    case 'pendle_mint_py_quote':
-      return (
-        <SimpleQuoteDisplay tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
-      )
-    case 'pendle_mint_sy_quote':
-      return (
-        <SimpleQuoteDisplay tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
-      )
     case 'pendle_swap':
       return (
         <SwapTransactionCard tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
       )
-    case 'pendle_mint_py':
-      return (
-        <SwapTransactionCard tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
-      )
-    case 'pendle_mint_sy':
-      return (
-        <SwapTransactionCard tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
-      )
+
     case 'generic_swap':
       return (
         <GenericSwapCard tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />

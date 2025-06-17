@@ -728,21 +728,25 @@ export const pendleRedeemTool = tool({
   }
 });
 
-export const pendleMintPyTool = tool({
+export const pendleMintTool = tool({
   description:
-    `Mint PT and YT tokens from input tokens using Pendle. 
-    Provide the PT token address to automatically determine the market and YT address.
+    `Mint Pendle tokens using different input/output combinations. 
+    Supports underlying->py, sy->py, and underlying->sy minting.
+    Provide the PT token address to automatically determine the market and token addresses.
     This tool automatically renders UI.`,
   parameters: z.object({
     pt_address: z
       .string()
-      .describe('The address of the PT (Principal Token). The YT address will be automatically determined from the market.'),
-    token_type: z
-      .enum(['sy', 'underlying'])
-      .describe('The type of input token - "sy" for SY token or "underlying" for the underlying asset token.'),
+      .describe('The address of the PT (Principal Token). The market, YT, and SY addresses will be automatically determined from this token.'),
+    token_input_type: z
+      .enum(['underlying', 'sy'])
+      .describe('The type of input tokens - "underlying" for underlying asset tokens or "sy" for SY token.'),
+    token_output_type: z
+      .enum(['py', 'sy'])
+      .describe('The type of output tokens - "py" for PT+YT tokens or "sy" for SY token only.'),
     amount_in_human: z
       .string()
-      .describe('Amount of input token to mint from in human-readable format (e.g., "1", "100.5")'),
+      .describe('Amount of input tokens to mint from in human-readable format (e.g., "1", "100.5").'),
     user_wallet_address: z
       .string()
       .describe('The address of the user\'s EVM wallet'),
@@ -756,7 +760,8 @@ export const pendleMintPyTool = tool({
   execute: async (params, context: ToolContext) => {
     const {
       pt_address,
-      token_type,
+      token_input_type,
+      token_output_type,
       amount_in_human,
       user_wallet_address,
       slippage = PENDLE_CONFIG.DEFAULT_SLIPPAGE
@@ -766,33 +771,65 @@ export const pendleMintPyTool = tool({
     const chainId = networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID;
 
     try {
-
-      // Find the market using PT address to get YT address
+      // Find the market using PT address to get all required addresses
       const foundMarket = await findMarketByTokenAddress(pt_address, 'pt');
       const ytAddress = foundMarket.yt;
+      const syAddress = foundMarket.sy;
       const marketName = foundMarket.name;
 
-      // Determine the actual token_in to use based on token_type
+      // Determine the actual token_in based on token_input_type
       let actualTokenIn: string;
-      if (token_type === 'sy') {
-        actualTokenIn = foundMarket.sy;
+      if (token_input_type === 'sy') {
+        actualTokenIn = syAddress;
       } else {
         actualTokenIn = foundMarket.underlyingAsset;
       }
 
-      // Convert amount to wei using the helper function
-      const amountInWei = await parseTokenAmount(actualTokenIn, amount_in_human, chainId);
+      let result: any;
+      let inputTokenDisplay: string;
+      let outputTokenDisplay: string;
 
-      // Execute the mint transaction
-      const result = await executePendleMintPy(
-        ytAddress,
-        actualTokenIn,
-        amountInWei,
-        slippage,
-        chainId,
-        isDemo || false,
-        user_wallet_address
-      );
+      if (token_output_type === 'py') {
+        // PY minting: mint PT+YT tokens
+        inputTokenDisplay = token_input_type === 'sy' ? `SY ${marketName}` : marketName;
+        outputTokenDisplay = `PT+YT ${marketName}`;
+
+        // Convert amount to wei using input token address for decimals
+        const amountInWei = await parseTokenAmount(actualTokenIn, amount_in_human, chainId);
+
+        // Execute PY minting using YT address (as required by the mint function)
+        result = await executePendleMintPy(
+          ytAddress,
+          actualTokenIn,
+          amountInWei,
+          slippage,
+          chainId,
+          isDemo || false,
+          user_wallet_address
+        );
+      } else {
+        // SY minting: mint SY tokens (only from underlying)
+        if (token_input_type !== 'underlying') {
+          throw new Error('SY tokens can only be minted from underlying tokens, not from other SY tokens');
+        }
+        
+        inputTokenDisplay = marketName;
+        outputTokenDisplay = `SY ${marketName}`;
+
+        // Convert amount to wei using underlying token address for decimals
+        const amountInWei = await parseTokenAmount(actualTokenIn, amount_in_human, chainId);
+
+        // Execute SY minting
+        result = await executePendleMintSy(
+          syAddress,
+          actualTokenIn,
+          amountInWei,
+          slippage,
+          chainId,
+          isDemo || false,
+          user_wallet_address
+        );
+      }
 
       const explorerLink = getConfigByChainId(chainId, isDemo || false).scanLink;
       const explorerLinkWithHash = explorerLink?.startsWith('http') 
@@ -804,122 +841,33 @@ export const pendleMintPyTool = tool({
         transaction_hash: result.hash,
         mint_details: {
           market: marketName,
+          input_token_type: token_input_type.toUpperCase(),
+          output_token_type: token_output_type.toUpperCase(),
           input_token: actualTokenIn,
-          input_token_type: token_type === 'sy' ? 'SY' : 'Token',
+          output_token: token_output_type === 'py' ? `${pt_address},${ytAddress}` : syAddress,
           amount_in: `${amount_in_human}`,
-          pt_address,
+          pt_address: pt_address,
           yt_address: ytAddress,
-          sy_address: foundMarket.sy,
+          sy_address: syAddress,
           complete_time: new Date().toISOString(),
           chainId: chainId,
           explorer_link: explorerLink ? explorerLinkWithHash : undefined
         }
       };
 
-      return mintData;
+      return {
+        _uiDisplayTool: true,
+        summary: `Mint executed: ${amount_in_human} ${inputTokenDisplay} → ${outputTokenDisplay}`,
+        data: mintData
+      };
     } catch (error: any) {
       const errorData = {
         success: false,
         error: error.message || 'Failed to execute Pendle mint.',
         mint_parameters: {
           pt_address,
-          token_type,
-          amount_in_human,
-          slippage
-        }
-      };
-      
-      return errorData;
-    }
-  }
-});
-
-export const pendleMintSyTool = tool({
-  description:
-    `Mint SY (Standardized Yield) tokens from input tokens using Pendle. 
-    Provide the SY token address to automatically determine the underlying token.
-    This tool automatically renders UI.`,
-  parameters: z.object({
-    sy_address: z
-      .string()
-      .describe('The address of the SY (Standardized Yield) token to mint'),
-    amount_in_human: z
-      .string()
-      .describe('Amount of input token to mint from in human-readable format (e.g., "1", "100.5")'),
-    user_wallet_address: z
-      .string()
-      .describe('The address of the user\'s EVM wallet'),
-    slippage: z
-      .number()
-      .min(PENDLE_CONFIG.MIN_SLIPPAGE)
-      .max(PENDLE_CONFIG.MAX_SLIPPAGE)
-      .default(PENDLE_CONFIG.DEFAULT_SLIPPAGE)
-      .describe(`Maximum acceptable slippage (default: ${PENDLE_CONFIG.DEFAULT_SLIPPAGE}, which is ${PENDLE_CONFIG.DEFAULT_SLIPPAGE * 100}%)`)
-  }),
-  execute: async (params, context: ToolContext) => {
-    const {
-      sy_address,
-      amount_in_human,
-      user_wallet_address,
-      slippage = PENDLE_CONFIG.DEFAULT_SLIPPAGE
-    } = params;
-    const networkContext = context?.networkContext;
-    const isDemo = networkContext?.isDemo;
-    const chainId = networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID;
-
-    try {
-
-      // Find the market using SY address to get market info and underlying token
-      const foundMarket = await findMarketByTokenAddress(sy_address, 'sy');
-      const marketName = foundMarket.name;
-      
-      // Use the underlying asset address from the market
-      const underlyingTokenIn = foundMarket.underlyingAsset;
-
-      // Convert amount to wei using the helper function
-      const amountInWei = await parseTokenAmount(underlyingTokenIn, amount_in_human, chainId);
-
-      // Execute the mint SY transaction
-      const result = await executePendleMintSy(
-        sy_address,
-        underlyingTokenIn,
-        amountInWei,
-        slippage,
-        chainId,
-        isDemo || false,
-        user_wallet_address
-      );
-
-      const explorerLink = getConfigByChainId(chainId, isDemo || false).scanLink;
-      const explorerLinkWithHash = explorerLink?.startsWith('http') 
-        ? `${explorerLink}/tx/${result.hash}`
-        : `https://${explorerLink}/tx/${result.hash}`;
-
-      const mintData = {
-        success: true,
-        transaction_hash: result.hash,
-        mint_details: {
-          market: marketName,
-          sy_address,
-          underlying_token_in: underlyingTokenIn,
-          amount_in: `${amount_in_human}`,
-          complete_time: new Date().toISOString(), 
-          chainId: chainId,
-          explorer_link: explorerLink ? explorerLinkWithHash : undefined
-        }
-      };
-
-      return {
-        _uiDisplayTool: true,
-        summary: `SY tokens minted: ${amount_in_human} ${marketName} → SY tokens`,
-        data: mintData
-      };
-    } catch (error: any) {
-      const errorData = {
-        success: false,
-        error: error.message || 'Failed to execute Pendle SY mint.',
-        mint_parameters: {
-          sy_address,
+          token_input_type,
+          token_output_type,
           amount_in_human,
           slippage
         }
@@ -927,7 +875,7 @@ export const pendleMintSyTool = tool({
       
       return {
         _uiDisplayTool: true,
-        summary: `SY mint failed: ${error.message || 'Failed to execute Pendle SY mint'}`,
+        summary: `Mint failed: ${error.message || 'Failed to execute Pendle mint'}`,
         data: errorData
       };
     }

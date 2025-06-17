@@ -5,7 +5,7 @@ import { getGasPriceTool } from '../tools/gas-price'
 import { kodiakBaultProfitabilityTool, kodiakCompoundBaultTool, kodiakDepositTool, kodiakOpportunitiesTool } from '../tools/kodiak'
 import { bridgeExecuteTool, bridgeQuoteTool } from '../tools/lifi-bridge'
 import { marketChartTool } from '../tools/market-chart'
-import { pendleMintPyQuoteTool, pendleMintPyTool, pendleMintSyQuoteTool, pendleMintSyTool, pendleOpportunitiesTool, pendleQuoteTool, pendleRedeemPyQuoteTool, pendleRedeemSyQuoteTool, pendleRedeemTool, pendleSwapTool } from '../tools/pendle'
+import { pendleMintPyQuoteTool, pendleMintSyQuoteTool, pendleMintTool, pendleOpportunitiesTool, pendleQuoteTool, pendleRedeemPyQuoteTool, pendleRedeemSyQuoteTool, pendleRedeemTool, pendleSwapTool } from '../tools/pendle'
 import { privyTransferTool } from '../tools/privy-transfer'
 import { createQuestionTool } from '../tools/question'
 import { retrieveTool } from '../tools/retrieve'
@@ -286,10 +286,10 @@ export function createToolRegistry(model: string): ToolRegistry {
   })
   
   registry.registerTool({
-    name: 'pendle_mint_py',
-    description: pendleMintPyTool.description || '',
-    schema: pendleMintPyTool.parameters,
-    execute: async (params, context) => pendleMintPyTool.execute(params, {
+    name: 'pendle_mint',
+    description: pendleMintTool.description || '',
+    schema: pendleMintTool.parameters,
+    execute: async (params, context) => pendleMintTool.execute(params, {
       toolCallId: context?.toolCallId || 'unknown',
       messages: context?.messages || [],
       networkContext: context?.networkContext!
@@ -303,19 +303,6 @@ export function createToolRegistry(model: string): ToolRegistry {
     description: pendleRedeemPyQuoteTool.description || '',
     schema: pendleRedeemPyQuoteTool.parameters,
     execute: async (params, context) => pendleRedeemPyQuoteTool.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!
-    } as any),
-    category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'demo']
-  })
-  
-  registry.registerTool({
-    name: 'pendle_mint_sy',
-    description: pendleMintSyTool.description || '',
-    schema: pendleMintSyTool.parameters,
-    execute: async (params, context) => pendleMintSyTool.execute(params, {
       toolCallId: context?.toolCallId || 'unknown',
       messages: context?.messages || [],
       networkContext: context?.networkContext!
