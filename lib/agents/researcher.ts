@@ -157,10 +157,12 @@ const get_system_prompt = (
     - Remind to check opportunities or quote if skipped.`,
       pendle_redeem: `  • pendle_redeem  
     - Remind to check opportunities or fetch wallet balance if skipped.
+    - Remind to get quote if skipped. It's very helpful for the user if this is executed after getting quote.
     - Supports py->sy, py->underlying, and sy->underlying redemptions.
     - Confirm redemption details before execution.`,
       pendle_mint: `  • pendle_mint
-    - Remind to check opportunities if skipped.
+    - Remind to check opportunities or fetch wallet balance if skipped.
+    - Remind to get quote if skipped. It's very helpful for the user if this is executed after getting quote.
     - Confirm minting details before execution.
     - Can mint from either SY tokens or underlying tokens.`,
       privyTransfer: `  • privyTransfer  
