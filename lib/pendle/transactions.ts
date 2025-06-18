@@ -5,7 +5,7 @@ import {
   privy
 } from '@/lib/privy/client'
 import axios from 'axios'
-import { ethers, parseUnits, TransactionRequest } from 'ethers'
+import { ethers, parseUnits, TransactionRequest, JsonRpcProvider } from 'ethers'
 import { v4 as uuidv4 } from 'uuid'
 import { getPendleMarkets } from '../pendle/api'
 import { getGasPriceByChainId } from '../blocknative/get-gas-price'
@@ -308,9 +308,8 @@ export async function executeSwapTransaction(
   }
   try {
     let provider: ethers.JsonRpcProvider
-    provider = new ethers.JsonRpcProvider(
-      process.env.TEST_RPC_URL || getConfigByChainId(chainId, isDemo).rpcUrl
-    )
+    const rpcUrl = process.env.TEST_RPC_URL || getConfigByChainId(chainId, isDemo).rpcUrl
+    provider = new JsonRpcProvider(rpcUrl)
     const block = await provider.getBlock('latest')
     const baseFee = block?.baseFeePerGas
     const maxFee = baseFee ? BigInt(baseFee) * BigInt(2) : BigInt(1010690044) // ~2× base fee
@@ -342,7 +341,7 @@ export async function executeSwapTransaction(
     }
     const correctNonce = await provider.getTransactionCount(
       txData.from as `0x${string}`,
-      'pending'
+      // 'pending'
     )
 
     const weiBig = BigInt(value || '0')
@@ -395,6 +394,7 @@ export async function executeSwapTransaction(
           value: `0x${valueHex}` as `0x${string}`,
           data: `0x${dataHex}` as `0x${string}`,
           gasLimit: gasLimit,
+          type: 0,
           // only set gasPrice for legacy gas mode chains (BNB Smart Chain)
           gasPrice: ethers.toQuantity(fixGasPrice) as `0x${string}`,        
           nonce: correctNonce
@@ -429,7 +429,7 @@ export async function executeSwapTransaction(
       encoding = res.encoding
     }
     
-
+    console.log("signedTransaction", signedTransaction)
     const txResponse = await provider.broadcastTransaction(signedTransaction)
     hash = txResponse.hash
     console.log(hash)
