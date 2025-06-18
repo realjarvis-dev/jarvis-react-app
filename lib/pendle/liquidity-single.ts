@@ -12,14 +12,19 @@ async function formatOutputAndExecute<T>(res: MethodReturnType<T>, chainId: numb
             quoteData: res.data as T
         };
     }
+    console.log(res)
     if (res.tokenApprovals) {
+        console.log("tokenApprovals", res.tokenApprovals)
         const tokenApprovals = res.tokenApprovals.map((tokenApproval) => {
+            
             return erc20Approval(tokenApproval.token, res.tx.to, tokenApproval.amount, userAddress, chainId, isDemo);
         });
+        const tx = await Promise.all(tokenApprovals);
+        console.log("tx", tx)
     }
     // Send tx
     try {
-        const tx = await executeTransaction(res.tx, chainId, {estimateGas: true}, isDemo);
+        const tx = await executeSwapTransaction(res.tx, chainId, {estimateGas: true}, isDemo);
         return {
             status: 'success',
             hash: tx.hash,

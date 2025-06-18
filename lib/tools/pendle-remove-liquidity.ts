@@ -218,7 +218,7 @@ export const pendleZapOutExecuteTool = tool({
     const userAddress = await getUserEvmWalletAddress()
     const amountLpInWei = parseUnits(amountLpIn, 18)
     if (isDemo) {
-      slippage = 0.1
+      slippage = 0.3
     }
     const quote = await removeLiquiditySingleEnableAggregator(
       chainId,

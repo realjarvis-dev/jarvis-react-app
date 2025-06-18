@@ -68,7 +68,7 @@ export const pendleZapInQuoteTool = tool({
       const isDemo = networkContext!.isDemo
       const userAddress = await getUserEvmWalletAddress()
       if (isDemo) {
-        slippage = 0.1
+        slippage = 0.3
       }
       if (!userAddress) {
         return {
@@ -240,7 +240,7 @@ export const pendleZapInExecuteTool = tool({
       }
     }
     if (isDemo) {
-      slippage = 0.1
+      slippage = 0.3
     }
     const amountInWei = parseUnits(amountIn, tokenInDecimals).toString()
     const result = await addLiquiditySingleEnableAggregator(
