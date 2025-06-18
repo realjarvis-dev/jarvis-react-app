@@ -16,9 +16,6 @@ async function formatOutputAndExecute<T>(res: MethodReturnType<T>, chainId: numb
         const tokenApprovals = res.tokenApprovals.map((tokenApproval) => {
             return erc20Approval(tokenApproval.token, res.tx.to, tokenApproval.amount, userAddress, chainId, isDemo);
         });
-        // console.log("tokenApprovals", tokenApprovals)
-        const txs = await Promise.all(tokenApprovals);
-        console.log("txs", txs)
     }
     // Send tx
     try {
@@ -75,8 +72,6 @@ export async function addLiquiditySingleEnableAggregator(chainId: number, market
         
     }
 
-    console.log('Amount LP Out: ', res.data.amountLpOut);
-    console.log('Price impact: ', res.data.priceImpact);
     return formatOutputAndExecute(res, chainId, isDemo, executeTx, receiverAddress);
 
     
@@ -95,8 +90,7 @@ export async function removeLiquiditySingleEnableAggregator(chainId: number, mar
         enableAggregator: true
     });
 
-    console.log('Amount PT Out: ', res.data.amountOut);
-    console.log('Price impact: ', res.data.priceImpact);}
+   }
     catch (error: any) {
         return {
             status: 'fail',

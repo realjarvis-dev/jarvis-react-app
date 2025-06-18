@@ -70,7 +70,7 @@ export const pendleZapOutQuoteTool = tool({
       if (!market) {
         return {
           status: 'fail',
-          error: `Market not found`
+          error_message: `Market not found`
         }
       }
       if (tokenOutType === "sy" && !tokenOutAddress) {
@@ -90,13 +90,13 @@ export const pendleZapOutQuoteTool = tool({
     if (!lpToken) {
       return {
         status: 'fail',
-        error: `LP token not found in user's wallet`
+        error_message: `LP token not found in user's wallet`
       }
     }
     if (Number(amountLpIn) > Number(lpToken.balance)) {
       return {
         status: 'fail',
-        error: `Amount of LP token to remove liquidity from is greater than the amount in user's wallet`
+        error_message: `Amount of LP token to remove liquidity from is greater than the amount in user's wallet`
       }
     }
     const amountLpInWei = parseUnits(amountLpIn, 18)
@@ -130,7 +130,7 @@ export const pendleZapOutQuoteTool = tool({
         if (tokenResult.status === 'fail') {
           return {
             status: 'fail',
-            error: tokenResult.error_message
+            error_message: tokenResult.error_message
           }
         }
         tokenOut = tokenResult.token!.address!
@@ -140,7 +140,7 @@ export const pendleZapOutQuoteTool = tool({
       } else if (tokenResult.status === 'fail') {
         return {
           status: 'fail',
-          error: tokenResult.error_message
+          error_message: tokenResult.error_message
         }
       } else {
         tokenOut = tokenResult.token!.address!
@@ -170,7 +170,7 @@ export const pendleZapOutQuoteTool = tool({
     if (quote.status === 'fail') {
       return {
         status: 'fail',
-        error: quote.error
+        error_message: quote.error
       }
     }
     quote.quoteData!.amountOut = formatUnits(BigInt(quote.quoteData!.amountOut), tokenOutDecimals)

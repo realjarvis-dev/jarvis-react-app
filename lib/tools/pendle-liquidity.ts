@@ -125,7 +125,7 @@ export const pendleZapInQuoteTool = tool({
       if (tokenInType === 'yt') {
         return {
           status: 'fail',
-          error_message: 'PT is not supported for zap in',
+          error_message: 'YT is not supported for zap in',
           hash: null
         }
       }
@@ -159,7 +159,6 @@ export const pendleZapInQuoteTool = tool({
         BigInt(result.quoteData!.amountLpOut),
         18
       )
-      // console.log('ytDecimals', ytDecimals)
       result.quoteData!.amountYtOut = formatUnits(
         BigInt(result.quoteData!.amountYtOut),
         ytDecimals
