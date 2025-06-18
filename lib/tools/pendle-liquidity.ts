@@ -13,7 +13,7 @@ import { balanceChangePub } from '../pubsub/balance-change-pub'
 export const pendleZapInQuoteTool = tool({
   description: `Get a quote for adding liquidity (zap in) to a Pendle market. This tool should be used before executing the transaction. 
     You MUST confirm with user whether they want the zero price impact mode or not before quoting.
-    For example, if user say "zap in <number> <token> to <market>", you should ask user whether they want the zero price impact mode or not.
+    For example, if user say "zap in <number> <token> to <market>", you should ask user whether they want the zero price impact mode or not if they are not using pt token.
     Recommend disable zpi for not advanced users. zpi has to be false if tokenInType is pt.
     `,
   parameters: z.object({
@@ -48,7 +48,7 @@ export const pendleZapInQuoteTool = tool({
     zeroPriceImpact: z
       .boolean()
       .describe(
-        'Whether to use zero price impact for the transaction. Please confirm with user if they did not specify use askQuestion tool.'
+        'Whether to use zero price impact for the transaction. Default to false if user uses pt token to zap in, otherwise please confirm with user if they did not specify use askQuestion tool.'
       )
   }),
   execute: async (params, context: ToolContext) => {
