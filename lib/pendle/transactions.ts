@@ -341,7 +341,7 @@ export async function executeSwapTransaction(
     }
     const correctNonce = await provider.getTransactionCount(
       txData.from as `0x${string}`,
-      // 'pending'
+      'pending'
     )
 
     const weiBig = BigInt(value || '0')
