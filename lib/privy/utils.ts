@@ -3,9 +3,10 @@ import {
   getUserWallet,
   privy
 } from '@/lib/privy/client'
-import { ethers, TransactionRequest } from 'ethers'
+import { ethers, parseUnits, TransactionRequest } from 'ethers'
 import { v4 as uuidv4 } from 'uuid'
 import { getGasPriceByChainId } from '../blocknative/get-gas-price'
+import { getProposedGasPrice } from '../etherscan/gas-price'
 import { getConfigByChainId } from '../network/config'
 
 // Custom error for transaction failures
@@ -37,11 +38,12 @@ export async function signTransaction(
   gasOptions?: {
     estimateGas: boolean
     gasLimit?: `0x${string}`
-    getGasPriceFunction?: (chainId: number) => Promise<{
+    eip1559GasPriceFunction?: (chainId: number) => Promise<{
       maxPriceInMemPool: bigint
       maxPriorityFeePerGas: bigint
       maxFeePerGas: bigint
     }>
+    legacyGasPriceFunction?: (chainId: number) => Promise<number>
   },
   isDemo: boolean = false
 ) {
@@ -54,6 +56,21 @@ export async function signTransaction(
   const userAddress = await getUserEvmWalletAddress()
   if (!userAddress) {
     throw new Error('User address not found')
+  }
+
+  // Set default gas options if not provided
+  if (!gasOptions) {
+    gasOptions = {
+      estimateGas: true,
+      eip1559GasPriceFunction: getGasPriceByChainId,
+      legacyGasPriceFunction: getProposedGasPrice
+    }
+  }
+  if (!gasOptions?.eip1559GasPriceFunction) {
+    gasOptions.eip1559GasPriceFunction = getGasPriceByChainId
+  }
+  if (!gasOptions?.legacyGasPriceFunction) {
+    gasOptions.legacyGasPriceFunction = getProposedGasPrice
   }
 
   // Get provider for gas estimation
@@ -69,24 +86,19 @@ export async function signTransaction(
   let maxFeePerGas = maxFee + priority
   let maxPriorityFeePerGas = priority
 
-  // Use blocknative API for gas pricing if available
-  if (gasOptions?.getGasPriceFunction) {
-    const estimateGasPrice = await gasOptions.getGasPriceFunction(chainId)
+  // Handle legacy gas mode chains (e.g., BNB Smart Chain)
+  const isLegacyGasModeChain = [56].includes(chainId)
+  let fixGasPrice: bigint = BigInt(0)
+  if (isLegacyGasModeChain) {
+    fixGasPrice = parseUnits(
+      (await gasOptions.legacyGasPriceFunction(chainId)).toString(),
+      9
+    )
+    console.log('Fetch legacy gas price', fixGasPrice)
+  } else {
+    const estimateGasPrice = await gasOptions.eip1559GasPriceFunction(chainId)
     maxFeePerGas = estimateGasPrice.maxFeePerGas
     maxPriorityFeePerGas = estimateGasPrice.maxPriorityFeePerGas
-  } else {
-    // Try to use blocknative by default
-    try {
-      const gasPriceData = await getGasPriceByChainId(chainId)
-      maxFeePerGas = gasPriceData.maxFeePerGas
-      maxPriorityFeePerGas = gasPriceData.maxPriorityFeePerGas
-    } catch (error) {
-      console.warn(
-        'Failed to get gas price from Blocknative, using fallback:',
-        error
-      )
-      // Fallback values already set above
-    }
   }
 
   // Get current nonce
@@ -101,6 +113,7 @@ export async function signTransaction(
 
   if (isDemo) {
     estimateGas = false
+    chainId = 1
   }
 
   if (estimateGas) {
@@ -109,7 +122,8 @@ export async function signTransaction(
       to: txData.to,
       from: txData.from,
       data: txData.data,
-      value: txData.value || BigInt(0)
+      value: txData.value || BigInt(0),
+      chainId: chainId
     })
     // Add 20% buffer to gas estimate
     gasLimit = ethers.toQuantity(
@@ -124,24 +138,71 @@ export async function signTransaction(
   const weiBig = BigInt(txData.value || '0')
   const quantity = ethers.toQuantity(weiBig)
 
-  // Sign transaction with Privy
-  const { signedTransaction } = await privy.walletApi.ethereum.signTransaction({
-    walletId: evmWallet.id,
-    transaction: {
-      to: txData.to as `0x${string}`,
-      from: txData.from as `0x${string}`,
-      chainId: chainId,
-      value: quantity as `0x${string}`,
-      data: txData.data as `0x${string}`,
-      gasLimit: gasLimit,
-      maxFeePerGas: ethers.toQuantity(maxFeePerGas) as `0x${string}`,
-      maxPriorityFeePerGas: ethers.toQuantity(
-        maxPriorityFeePerGas
-      ) as `0x${string}`,
-      nonce: nonce
-    },
-    idempotencyKey: uuidv4()
-  })
+  // Prepare transaction data
+  const to = txData.to
+  const from = txData.from
+  const data = txData.data
+
+  // strip the 0x prefix for to, quantity, and data
+  const toAddress = (to as string).replace(/^0x/, '')
+  const valueHex = quantity.replace(/^0x/, '')
+  const dataHex = (data as string).replace(/^0x/, '')
+  const fromAddress = (from as string).replace(/^0x/, '')
+
+  // Sign transaction with Privy based on chain type
+  let signedTransaction: string
+  let encoding: string
+
+  if (isLegacyGasModeChain) {
+    console.log('gasLimit', gasLimit)
+    console.log('fixGasPrice', fixGasPrice)
+    console.log('correctNonce', nonce)
+    console.log('chainId', chainId)
+    console.log(
+      'rpc url',
+      process.env.TEST_RPC_URL || getConfigByChainId(chainId, isDemo).rpcUrl
+    )
+
+    const res = await privy.walletApi.ethereum.signTransaction({
+      walletId: evmWallet.id,
+      transaction: {
+        to: `0x${toAddress}` as `0x${string}`,
+        from: `0x${fromAddress}` as `0x${string}`,
+        chainId: chainId,
+        value: `0x${valueHex}` as `0x${string}`,
+        data: `0x${dataHex}` as `0x${string}`,
+        gasLimit: gasLimit,
+        type: 0,
+        // only set gasPrice for legacy gas mode chains (BNB Smart Chain)
+        gasPrice: ethers.toQuantity(fixGasPrice) as `0x${string}`,
+        nonce: nonce
+      },
+      idempotencyKey: uuidv4()
+    })
+    signedTransaction = res.signedTransaction
+    encoding = res.encoding
+  } else {
+    const res = await privy.walletApi.ethereum.signTransaction({
+      walletId: evmWallet.id,
+      transaction: {
+        to: `0x${toAddress}` as `0x${string}`,
+        from: `0x${fromAddress}` as `0x${string}`,
+        chainId: chainId,
+        value: `0x${valueHex}` as `0x${string}`,
+        data: `0x${dataHex}` as `0x${string}`,
+        gasLimit: gasLimit,
+        // set maxFeePerGas and maxPriorityFeePerGas for EIP-1559 chains
+        maxFeePerGas: ethers.toQuantity(maxFeePerGas) as `0x${string}`,
+        maxPriorityFeePerGas: ethers.toQuantity(
+          maxPriorityFeePerGas
+        ) as `0x${string}`,
+        nonce: nonce
+      },
+      idempotencyKey: uuidv4()
+    })
+    signedTransaction = res.signedTransaction
+    encoding = res.encoding
+  }
 
   return {
     signedTransaction,
