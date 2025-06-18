@@ -3,6 +3,7 @@ import { getTokenBalances } from '../alchemy/get-token-balance'
 import { TokenData } from '../alchemy/types'
 import { allNetworkConfigs, TENDERLY_DEMO_CONFIG } from '../network/config'
 import { NetworkConfig } from '../network/types'
+import { getPendleMarkets } from '../pendle/api'
 import { getUserEvmWalletAddress } from '../privy/client'
 
 // ERC20 standard interface
@@ -150,10 +151,31 @@ export async function getWalletBalances(
 
     // Flatten the results as each call to getTokenBalances returns TokenData[]
     let tokenData = allTokenDataArrays.flat()
-    // console.log(tokenData)
+
+    // Get Pendle markets data
+    const pendleMarkets = await getPendleMarkets('all')
+
+    // Add Pendle market names to tokens that are Pendle markets
+    tokenData = tokenData.map(token => {
+      // Check if token is a Pendle market token (PT, YT, or SY)
+      const market = pendleMarkets.find(
+        m =>
+          m.address.toLowerCase() === token.address.toLowerCase()
+      )
+
+      if (market) {
+        // Add market name to token name
+        return {
+          ...token,
+          name: `${token.name} (${market.name})`
+        }
+      }
+      return token
+    })
+
     // filter out decimal = 0
     tokenData = tokenData.filter(token => token.decimals !== 0)
-    // console.log(tokenData)
+
     // Create the final result object
     return {
       tokens: tokenData

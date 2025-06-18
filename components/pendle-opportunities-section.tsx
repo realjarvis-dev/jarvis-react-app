@@ -9,12 +9,11 @@ interface PendleOpportunitiesSectionProps {
   onOpenChange: (open: boolean) => void
 }
 
-export function PendleOpportunitiesSection({ 
-  tool, 
-  isOpen, 
-  onOpenChange 
+export function PendleOpportunitiesSection({
+  tool,
+  isOpen,
+  onOpenChange
 }: PendleOpportunitiesSectionProps) {
-
   if (tool.state === 'call') {
     return <DefaultSkeleton />
   }
@@ -25,16 +24,16 @@ export function PendleOpportunitiesSection({
 
   const toolResult = tool.result || {}
   const results = toolResult.data || toolResult || []
-  
+
   return (
     <CollapsibleMessage
-    role="assistant"
-    isCollapsible={true}
-    header={header}
-    isOpen={isOpen}
-    onOpenChange={onOpenChange}
-    showIcon={false}
-  >
+      role="assistant"
+      isCollapsible={true}
+      header={header}
+      isOpen={isOpen}
+      onOpenChange={onOpenChange}
+      showIcon={false}
+    >
       {results.length === 0 && <div>No opportunities found.</div>}
       <PendleOpportunitiesTable opportunities={results} />
     </CollapsibleMessage>
