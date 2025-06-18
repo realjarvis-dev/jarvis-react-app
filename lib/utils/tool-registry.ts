@@ -13,6 +13,8 @@ import { createSearchTool } from '../tools/search'
 import { createVideoSearchTool } from '../tools/video-search'
 import { fundWalletTool, walletBalanceTool } from '../tools/wallet'
 import { NetworkContext, ToolContext } from '../types/context'
+import { pendleZapInQuoteTool, pendleZapInExecuteTool } from '../tools/pendle-liquidity'
+import { pendleZapOutExecuteTool, pendleZapOutQuoteTool } from '../tools/pendle-remove-liquidity'
 
 
 
@@ -432,6 +434,56 @@ export function createToolRegistry(model: string): ToolRegistry {
     supportedNetworks: ['demo']
   })
 
+  registry.registerTool({
+    name: 'pendle_zap_in_quote',
+    description: pendleZapInQuoteTool.description || '',
+    schema: pendleZapInQuoteTool.parameters,
+    execute: async (params, context) => pendleZapInQuoteTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3,
+    supportedNetworks: ['ethereum', 'demo']
+  })
+
+  registry.registerTool({
+    name: 'pendle_zap_in_execute',
+    description: pendleZapInExecuteTool.description || '',
+    schema: pendleZapInExecuteTool.parameters,
+    execute: async (params, context) => pendleZapInExecuteTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3,
+    supportedNetworks: ['ethereum', 'demo']
+  })
+  registry.registerTool({
+    name: 'pendle_zap_out_quote',
+    description: pendleZapOutQuoteTool.description || '',
+    schema: pendleZapOutQuoteTool.parameters,
+    execute: async (params, context) => pendleZapOutQuoteTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3,
+    supportedNetworks: ['ethereum', 'demo']
+  })
+
+  registry.registerTool({
+    name: 'pendle_zap_out_execute',
+    description: pendleZapOutExecuteTool.description || '',
+    schema: pendleZapOutExecuteTool.parameters,
+    execute: async (params, context) => pendleZapOutExecuteTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3,
+    supportedNetworks: ['ethereum', 'demo']
+  })
 
   
 

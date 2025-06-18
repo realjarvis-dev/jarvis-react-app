@@ -26,7 +26,20 @@ export const commonlyUsedPTTokensArray = ['0xfc66d247f577bfc87df8a5267c43676c4a0
     '0xab365c0879024481e4ad3b47bd6fea9c10014fbc', 
     '0x1132065009850c72e27b7950c0f9285d1d103589', 
     '0xd1d0ff7bb555f57a9604ce06bca704ab97a0049a',
-    "0xb7de5dfcb74d25c2f21841fbd6230355c50d9308"
+    "0xb7de5dfcb74d25c2f21841fbd6230355c50d9308",
+    "0xda57abf95a7c21eb9df08fbaada182f749f6c62f",
+  "0x9db057e02582d1ceaec287be9861fbe25cecc765", "0xa36ecca8b7624d224f01cd6649c8afad3da12c3d",
+  "0x4d7356369273c6373e6c5074fe540cb070acfe6b", "0xeead826151d25f44418553303f2722893f08478c",
+  "0x613b5ebcea88a64d484ff91347073c153a4d3aa4", "0x18c11b1dc74cab82ad18d5034fde93fe90a41d99",
+  "0x048680f64d6dff1748ba6d9a01f578433787e24b", "0xf696fe29ef85e892b5926313897d178288faa07e",
+  "0xead01319c2ab0dc2c690eff5dfc5f465cd38fc87", "0x52453825c287ddef62d647ce51c0979d27c461f7",
+  "0xa77c0de4d26b7c97d1d42abd6733201206122e25", "0x933b9ffee0ad3ef8e4dbb52688ea905826d73755",
+  "0x42e2ba2bab73650442f0624297190fab219bb5d5", "0xfcaae839cfc7e3627741bd9914f661fd75cc3cbf",
+  "0xbaa5aed0afd90390f00b1915744ad7e3296fb880", "0xa28194de3de7166ee81c2e13c864b9c7cca1b8ef",
+  "0xa3d827d2604b547d1858e3cdc11707c27930d142", "0x338e2cafa81e72ff422983e124e265eeccd718cb",
+  "0x55f06992e4c3ed17df830da37644885c0c34edda", "0x742b4166878bfd339db65a29a17e49b81a6b6aac",
+  "0xf2ad4ec58033be97ec3f4f61b660156fb38ecb30", "0xa004dd9439c2cf00794786c9662267bee6d9f723",
+  "0x47306e3cb4e325042556864b38aa0cbe8d928be5"
   ]
 
 
@@ -67,7 +80,7 @@ const ERC20_ABI = [
       }
       return null;
     } catch (error) {
-      console.error(`Error fetching data for token ${tokenAddress}:`, error);
+      console.error(`Error fetching data for token ${tokenAddress}:`);
       return null;
     }
   }
