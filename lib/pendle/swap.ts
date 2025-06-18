@@ -1,4 +1,4 @@
-import { approvePendleTokensBruteForce, executeTransaction } from '@/lib/privy/utils';
+import { approvePendleTokens, executeTransaction } from '@/lib/privy/utils';
 import { callSDK } from './call-sdk';
 import { SwapData } from './types';
 
@@ -57,6 +57,7 @@ export async function getPendleSwapTokensData(
  * @param chainId Chain ID
  * @param isDemo Whether this is a demo transaction
  * @param userWalletAddress User's wallet address
+ * @param tokenType Type of the input token ('pt' or 'yt')
  * @returns Transaction response with hash
  */
 export async function executePendleSwap(
@@ -68,7 +69,8 @@ export async function executePendleSwap(
   enableAggregator: boolean = true,
   chainId: number = CHAIN_ID,
   isDemo: boolean = false,
-  userWalletAddress: string
+  userWalletAddress: string,
+  tokenType: 'pt' | 'yt' = 'pt'
 ) {
   // Get swap data
   const swapResult = await getPendleSwapTokensData(
@@ -88,9 +90,11 @@ export async function executePendleSwap(
   if (!isInputTokenETH) {
     console.log('Input token is ERC20, checking approval requirements');
     
-    const approvalResult = await approvePendleTokensBruteForce(
+    const approvalResult = await approvePendleTokens(
       tokenIn,              // Token address to approve
+      tokenType,            // Token type ('pt' or 'yt')
       amountIn,             // Amount to approve
+      [tokenType],          // Approve only the input token type
       swapResult.tx.to,     // Spender address (Pendle router)
       userWalletAddress,    // User address
       chainId,              // Chain ID

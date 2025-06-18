@@ -437,9 +437,8 @@ export const pendleSwapTool = tool({
       .describe('Direction of the swap - from ETH to token or from token to ETH'),
     token_type: z
       .enum(['pt', 'yt'])
-      .default('pt')
       .describe(
-        'The token type - "pt" for Principal Token or "yt" for Yield Token. Default to pt.'
+        'The token type - "pt" for Principal Token or "yt" for Yield Token.'
       ),
     input_token_name_display: z
       .string()
@@ -522,7 +521,8 @@ export const pendleSwapTool = tool({
         PENDLE_CONFIG.ENABLE_AGGREGATOR,
         chainId,
         isDemo,
-        user_wallet_address
+        user_wallet_address,
+        token_type
       );
 
       const explorerLink = getConfigByChainId(chainId!, isDemo).scanLink
