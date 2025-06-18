@@ -173,8 +173,11 @@ export const pendleZapOutQuoteTool = tool({
         error_message: quote.error
       }
     }
-    quote.quoteData!.amountOut = formatUnits(BigInt(quote.quoteData!.amountOut), tokenOutDecimals)
-
+    try {
+      quote.quoteData!.amountOut = formatUnits(BigInt(quote.quoteData!.amountOut), tokenOutDecimals)
+    } catch (error) {
+      console.log("can't convert quote data passing it as is", error)
+    }
     return {
       status: 'success',
       quote: quote.quoteData,
@@ -236,9 +239,13 @@ export const pendleZapOutExecuteTool = tool({
         error: quote.error
       }
     }
-    quote.quoteData!.amountOut = formatUnits(BigInt(quote.quoteData!.amountOut), tokenOutDecimals)
+    try {
+      quote.quoteData!.amountOut = formatUnits(BigInt(quote.quoteData!.amountOut), tokenOutDecimals)
+    } catch (error) {
+      console.log("can't convert quote data passing it as is", error)
+    }
 
-    const explorerLink = getConfigByChainId(chainId, isDemo).scanLink
+    const explorerLink = getConfigByChainId(chainId, isDemo).scanLink 
     const explorerLinkWithHash = `https://${explorerLink}/tx/${quote.hash}`
     const userId = await getUserId()
     balanceChangePub(userId, [networkContext!.config.id], isDemo)
