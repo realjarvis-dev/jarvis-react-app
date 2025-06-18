@@ -356,17 +356,17 @@ export async function executeSwapTransaction(
     const dataHex = (data as string).replace(/^0x/, '')
     const fromAddress = (from as string).replace(/^0x/, '')
 
-    // console.log('fromAddress', fromAddress)
-    // console.log('toAddress', toAddress)
-    // console.log('dataHex', dataHex)
-    // console.log('valueHex', valueHex)
+    console.log('fromAddress', fromAddress)
+    console.log('toAddress', toAddress)
+    console.log('dataHex', dataHex)
+    console.log('valueHex', valueHex)
 
-    // console.log('gasOptions', gasOptions)
-    // console.log('gasLimit', gasLimit)
-    // console.log('valueHex', valueHex)
-    // console.log('chainId', chainId)
-    // console.log('maxFeePerGas', maxFeePerGas)
-    // console.log('maxPriorityFeePerGas', maxPriorityFeePerGas)
+    console.log('gasOptions', gasOptions)
+    console.log('gasLimit', gasLimit)
+    console.log('valueHex', valueHex)
+    console.log('chainId', chainId)
+    console.log('maxFeePerGas', maxFeePerGas)
+    console.log('maxPriorityFeePerGas', maxPriorityFeePerGas)
 
     const { signedTransaction, encoding } =
       await privy.walletApi.ethereum.signTransaction({
@@ -391,6 +391,7 @@ export async function executeSwapTransaction(
     hash = txResponse.hash
     // Wait for confirmation
     const receipt = await txResponse.wait()
+    console.log(receipt)
 
     return {
       hash: txResponse.hash

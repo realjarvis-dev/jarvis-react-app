@@ -155,14 +155,21 @@ export const pendleZapInQuoteTool = tool({
           error_message: result.error
         }
       }
-      result.quoteData!.amountLpOut = formatUnits(
-        BigInt(result.quoteData!.amountLpOut),
-        18
-      )
-      result.quoteData!.amountYtOut = formatUnits(
-        BigInt(result.quoteData!.amountYtOut),
-        ytDecimals
-      )
+      
+      try {
+        result.quoteData!.amountLpOut = formatUnits(
+          BigInt(result.quoteData!.amountLpOut),
+          18
+        )
+    
+        result.quoteData!.amountYtOut = formatUnits(
+          BigInt(result.quoteData!.amountYtOut),
+          ytDecimals
+        )
+      } catch (error) {
+        console.log("can't convert quote data passing it as is", error)
+      }
+  
       return {
         status: 'success',
         quote: result.quoteData,
@@ -260,15 +267,22 @@ export const pendleZapInExecuteTool = tool({
         error_message: result.error
       }
     }
-    result.quoteData!.amountLpOut = formatUnits(
-      BigInt(result.quoteData!.amountLpOut),
-      18
-    )
 
-    result.quoteData!.amountYtOut = formatUnits(
-      BigInt(result.quoteData!.amountYtOut),
-      ytDecimals
-    )
+    try {
+      result.quoteData!.amountLpOut = formatUnits(
+        BigInt(result.quoteData!.amountLpOut),
+        18
+      )
+  
+      result.quoteData!.amountYtOut = formatUnits(
+        BigInt(result.quoteData!.amountYtOut),
+        ytDecimals
+      )
+    } catch (error) {
+      console.log("can't convert quote data passing it as is", error)
+    }
+
+
     const explorerLink = getConfigByChainId(chainId, isDemo).scanLink
     const explorerLinkWithHash = `https://${explorerLink}/tx/${result.hash}`
     const userId = await getUserId()
