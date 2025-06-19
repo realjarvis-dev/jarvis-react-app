@@ -385,6 +385,7 @@ export const pendleQuoteTool = tool({
                               name.includes(query) ||
                               (query.includes('solvbtc') && (symbol.includes('xsolvbtc') || name.includes('xsolvbtc'))) ||
                               (query.includes('sena') && (symbol.includes('sena') || name.includes('sena'))) ||
+                              (query.includes('eusde') && (symbol.includes('eusde') || name.includes('eusde'))) ||
                               symbol.replace(/[^a-z0-9]/g, '').includes(query.replace(/[^a-z0-9]/g, '')) ||
                               name.replace(/[^a-z0-9]/g, '').includes(query.replace(/[^a-z0-9]/g, ''));
           
@@ -395,14 +396,31 @@ export const pendleQuoteTool = tool({
           resolvedTokenAddress = pendleMatches[0].address;
           resolvedMarketName = resolvedMarketName || pendleMatches[0].name.replace(/^(PT|YT)\s+/, '');
         } else {
-          const availableTokens = matches
-            .filter(token => token_type === 'pt' ? token.symbol.toLowerCase().includes('pt-') : token.symbol.toLowerCase().includes('yt-'))
+          const { pendleTokenMatcher } = await import('../token-matcher/pendle-token-matcher');
+          const allPendleTokens = pendleTokenMatcher.getAllTokensForChain(chainId);
+          
+          const similarTokens = allPendleTokens
+            .filter(token => {
+              const symbol = token.symbol.toLowerCase();
+              const isCorrectType = token_type === 'pt' ? symbol.includes('pt-') : symbol.includes('yt-');
+              
+              const query = tokenAddressOrName.toLowerCase().replace(/\s+/g, '');
+              const tokenName = token.name.toLowerCase();
+              const tokenSymbol = symbol;
+              
+              return isCorrectType && (
+                tokenName.includes(query.substring(0, 4)) || // Match first 4 chars
+                tokenSymbol.includes(query.substring(0, 4)) ||
+                query.includes(tokenName.substring(3, 7)) || // Skip PT-/YT- prefix
+                query.includes(tokenSymbol.substring(3, 7))
+              );
+            })
             .slice(0, 3)
             .map(token => token.name.replace(/^(PT|YT)\s+/, ''))
             .join(', ');
           
-          const suggestion = availableTokens 
-            ? `Could not find a Pendle ${token_type.toUpperCase()} token matching "${tokenAddressOrName}" on chain ${chainId}. Did you mean one of these: ${availableTokens}? Please provide a valid token address or try a different token name.`
+          const suggestion = similarTokens 
+            ? `Could not find a Pendle ${token_type.toUpperCase()} token matching "${tokenAddressOrName}" on chain ${chainId}. Did you mean one of these: ${similarTokens}? Please provide a valid token address or try a different token name.`
             : `Could not find a Pendle ${token_type.toUpperCase()} token matching "${tokenAddressOrName}" on chain ${chainId}. Please provide a valid token address or try a different token name.`;
           
           throw new Error(suggestion);
