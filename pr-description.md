@@ -29,12 +29,13 @@ This PR implements a centralized, performant token resolution system that elimin
   - Pendle opportunities: 30 minutes (increased from 5 minutes)
   - Pendle quotes: 30 seconds (unchanged)
 
-### 5. SENA Token Resolution Fix
+### 5. Enhanced Token Name Resolution
 - **Updated** `pendleQuoteTool` to accept both token addresses and token names
-- **Added** fuzzy token matching logic to resolve names like "sENA PT" to addresses
-- **Enhanced** token filtering to handle SENA token variations and case sensitivity
+- **Added** flexible fuzzy token matching logic to resolve names like "sENA PT" and "solvBTC PT" to addresses
+- **Implemented** robust token name variation handling (e.g., "solvBTC" → "xSolvBTC")
+- **Enhanced** error handling to suggest similar tokens when matches aren't found instead of direct errors
 - **Updated** AI researcher instructions to reflect token name acceptance capability
-- **Fixed** the reported issue where users couldn't get quotes for SENA PT tokens
+- **Fixed** both SENA and solvBTC token resolution issues reported by users
 
 ## Performance Benefits
 - ✅ **Eliminated** redundant API calls for token resolution
@@ -56,11 +57,13 @@ This PR implements a centralized, performant token resolution system that elimin
 - ✅ All imports and exports properly structured
 - ✅ Type definitions correctly implemented
 - ✅ Backward compatibility maintained
-- ✅ **SENA PT token resolution verified working**:
-  - Fuzzy matcher correctly finds SENA PT token from query "sENA PT"
-  - Resolves to expected address: `0xfc66d247f577bfc87df8a5267c43676c4a088b8b`
-  - Token filtering logic properly handles PT/YT type matching
-  - Error handling provides clear messages for unresolvable tokens
+- ✅ **Enhanced Token Resolution verified working**:
+  - SENA PT token: "sENA PT" → `0xfc66d247f577bfc87df8a5267c43676c4a088b8b` ✅
+  - solvBTC PT token: "solvBTC PT" → `0x4f62a7a25a4fd6ae386e957284afb5fbf1e1f32c` ✅
+  - Flexible matching: "solv btc" → xSolvBTC PT token ✅
+  - Direct matching: "xSolvBTC PT" → xSolvBTC PT token ✅
+  - Error handling provides helpful token suggestions when matches aren't found
+  - Token filtering logic properly handles PT/YT type matching and name variations
 
 ## Implementation Details
 - **Token Naming**: Uses format `PT-{underlying}-{expiry}` and `YT-{underlying}-{expiry}`
