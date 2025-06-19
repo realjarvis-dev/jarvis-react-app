@@ -37,6 +37,7 @@ export function Chat({
   const [anonTrial, setAnonTrial] = useLocalStorage('anonTrial', {
     defaultValue: MAX_TRIALS
   })
+  const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
     if (!ready) return
@@ -98,22 +99,26 @@ export function Chat({
     },
     headers,
     onFinish: () => {
+      setIsSaving(true)
       router.replace(`/search/${id}`)
       startTransition(() => {
         router.refresh()
+        setIsSaving(false)
       })
     },
     onError: error => {
       toast.error(`Error in chat: ${error.message}`)
+      setIsSaving(false)
     },
     sendExtraMessageFields: false,
     experimental_throttle: 100
   })
 
   const isLoading = status === 'submitted' || status === 'streaming'
+  const isProcessing = isLoading || isSaving
 
   const { anchorRef, isAutoScroll } = useAutoScroll({
-    isLoading,
+    isLoading: isProcessing,
     dependency: messages.length,
     isStreaming: () => status === 'streaming',
     scrollContainer: scrollContainerRef,
@@ -157,7 +162,6 @@ export function Chat({
       return
     }
     if (!authenticated) {
-      // check trial limit, execute callback if limit reached
       checkTrialLimit(
         () => {
           toast.error('No trials left – please log in!')
@@ -232,7 +236,6 @@ export function Chat({
       return
     }
     if (!authenticated) {
-      // check trial limit, execute callback if limit reached
       checkTrialLimit(
         () => {
           toast.error('No trials left – please log in!')
@@ -246,7 +249,6 @@ export function Chat({
       return
     }
 
-    // has to keep it for authenticated users
     sendMessage()
   }
 
@@ -275,7 +277,7 @@ export function Chat({
           input={input}
           handleInputChange={handleInputChange}
           handleSubmit={onSubmit}
-          isLoading={isLoading}
+          isLoading={isProcessing}
           messages={messages}
           setMessages={setMessages}
           stop={stop}
