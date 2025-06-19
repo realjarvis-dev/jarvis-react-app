@@ -1,7 +1,7 @@
-import { callSDK, MethodReturnType } from "./call-sdk";
-import { erc20Approval, executeSwapTransaction, TransactionError } from "./transactions";
-import { AddLiquidityData, RemoveLiquidityData } from "./types";
 import { executeTransaction } from "../privy/utils";
+import { callSDK, MethodReturnType } from "./call-sdk";
+import { erc20Approval, TransactionError } from "./transactions";
+import { AddLiquidityData, RemoveLiquidityData } from "./types";
 
 
 async function formatOutputAndExecute<T>(res: MethodReturnType<T>, chainId: number, isDemo: boolean, executeTx: boolean, userAddress: string) {
@@ -19,7 +19,15 @@ async function formatOutputAndExecute<T>(res: MethodReturnType<T>, chainId: numb
     }
     // Send tx
     try {
-        const tx = await executeTransaction(res.tx, chainId, {estimateGas: true}, isDemo);
+        // Prepare transaction data with the required 'from' property
+        const txData = {
+            to: res.tx.to,
+            from: userAddress,
+            data: res.tx.data,
+            value: res.tx.value || '0'
+        };
+        
+        const tx = await executeTransaction(txData, chainId, {estimateGas: true}, isDemo);
         return {
             status: 'success',
             hash: tx.hash,
