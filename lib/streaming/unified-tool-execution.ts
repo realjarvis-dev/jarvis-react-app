@@ -47,8 +47,9 @@ class ToolResultCache {
     search: 5 * 60 * 1000, // 5 minutes
     gas_price: 3 * 60 * 1000, // 3 minutes (was 1 minute)
     wallet_balance: 2 * 60 * 1000, // 2 minutes (was 30 seconds)
-    pendle_opportunities: 5 * 60 * 1000, // 5 minutes (was 1 minute)
+    pendle_opportunities: 30 * 60 * 1000, // 30 minutes (was 5 minutes)
     pendle_quote: 30 * 1000, // 30 seconds
+    pendle_static_tokens: 24 * 60 * 60 * 1000, // 24 hours for static token metadata
     kodiak_opportunities: 5 * 60 * 1000, // 5 minutes (was 1 minute)
     generic_swap: 0, // No caching for swap transactions
     retrieve: 10 * 60 * 1000, // 10 minutes

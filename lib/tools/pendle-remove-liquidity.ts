@@ -62,8 +62,9 @@ export const pendleZapOutQuoteTool = tool({
     // if market address is not provided, fetch the market from the list of market using the market name
     // also if tokenOutType is sy and tokenOutAddress is not provided, fetch the sy from the market
     if (!marketAddress || (tokenOutType === "sy" && !tokenOutAddress)) {
-      const markets = await getPendleMarkets()
-      const market = markets.find(
+      const { pendleTokenMatcher } = await import('../token-matcher/pendle-token-matcher')
+      const allMarkets = pendleTokenMatcher.getAllMarketsForChain(chainId)
+      const market = allMarkets.find(
         market => market.name.toLowerCase() === marketName.toLowerCase() || market.address.toLowerCase() === marketAddress?.toLowerCase()
       )
       marketName = market?.name || marketName

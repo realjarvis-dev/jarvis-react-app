@@ -51,29 +51,38 @@ interface ToolContext {
 }
 
 /**
- * Helper function to find a Pendle market by token address
+ * Helper function to find a Pendle market by token address using static cache
  * @param tokenAddress The PT or YT token address to search for
  * @param tokenType The type of token - 'pt' or 'yt'
+ * @param chainId The chain ID to search on
  * @returns The found market object
  * @throws Error if no market is found with the given token address
  */
-async function findMarketByTokenAddress(tokenAddress: string, tokenType: 'pt' | 'yt' | 'sy') {
+async function findMarketByTokenAddress(tokenAddress: string, tokenType: 'pt' | 'yt' | 'sy', chainId: number = 1) {
   if (!tokenAddress) {
     throw new Error('Token address must be provided');
   }
   
-  const markets = await getPendleMarkets();
+  const { pendleTokenMatcher } = await import('../token-matcher/pendle-token-matcher');
   
-  const foundMarket = markets.find(market => {
-    const addressToCheck = tokenType === 'pt' ? market.pt : tokenType === 'yt' ? market.yt : market.sy;
-    return addressToCheck.toLowerCase() === tokenAddress.toLowerCase();
-  });
+  const market = pendleTokenMatcher.findMarketByTokenAddress(tokenAddress, tokenType, chainId);
   
-  if (!foundMarket) {
-    throw new Error(`Could not find a Pendle market with ${tokenType.toUpperCase()} token address ${tokenAddress}`);
+  if (!market) {
+    throw new Error(`Could not find a Pendle market with ${tokenType.toUpperCase()} token address ${tokenAddress} on chain ${chainId}`);
   }
   
-  return foundMarket;
+  return {
+    name: market.name,
+    address: market.address,
+    expiry: market.expiry,
+    pt: market.pt,
+    yt: market.yt,
+    sy: market.sy,
+    underlyingAsset: market.underlyingAsset,
+    liquidity: 0,
+    impliedApy: 0,
+    active: true
+  };
 }
 
 /**
@@ -109,10 +118,11 @@ async function prepareSwapTokens(
   tokenAddress: string,
   tokenType: 'pt' | 'yt',
   direction: 'ethToToken' | 'tokenToEth',
-  marketName?: string
+  marketName?: string,
+  chainId?: number
 ) {
   // Find market that contains the token
-  const foundMarket = await findMarketByTokenAddress(tokenAddress, tokenType);
+  const foundMarket = await findMarketByTokenAddress(tokenAddress, tokenType, chainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID);
   
   const marketAddress = foundMarket.address;
   const tokenSymbol = marketName || foundMarket.name;
@@ -166,7 +176,7 @@ async function prepareSwapConfiguration(
   chainId?: number
 ) {
   // Get token configuration
-  const swapTokens = await prepareSwapTokens(tokenAddress, tokenType, direction, marketName);
+  const swapTokens = await prepareSwapTokens(tokenAddress, tokenType, direction, marketName, chainId);
   
   // Parse amount to wei based on direction
   let amountInWei: string;
@@ -360,7 +370,7 @@ export const pendleQuoteTool = tool({
         direction,
         amount_in_human,
         market_name,
-        PENDLE_CONFIG.DEFAULT_CHAIN_ID
+        networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID
       );
       
       // Call the getSwapQuote function
@@ -383,7 +393,7 @@ export const pendleQuoteTool = tool({
         amount_in_human,
         swapConfig.inputToken,
         swapConfig.outputToken,
-        PENDLE_CONFIG.DEFAULT_CHAIN_ID
+        networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID
       );
       
       const quoteData = {
