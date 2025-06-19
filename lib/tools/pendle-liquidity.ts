@@ -13,7 +13,7 @@ import { balanceChangePub } from '../pubsub/balance-change-pub'
 export const pendleZapInQuoteTool = tool({
   description: `Get a quote for adding liquidity (zap in) to a Pendle market. This tool should be used before executing the transaction. 
     You MUST confirm with user whether they want the zero price impact mode or not before quoting.
-    For example, if user say "zap in <number> <token> to <market>", you should ask user whether they want the zero price impact mode or not.
+    For example, if user say "zap in <number> <token> to <market>", you should ask user whether they want the zero price impact mode or not if they are not using pt token.
     Recommend disable zpi for not advanced users. zpi has to be false if tokenInType is pt.
     `,
   parameters: z.object({
@@ -48,7 +48,7 @@ export const pendleZapInQuoteTool = tool({
     zeroPriceImpact: z
       .boolean()
       .describe(
-        'Whether to use zero price impact for the transaction. Please confirm with user if they did not specify use askQuestion tool.'
+        'Whether to use zero price impact for the transaction. Default to false if user uses pt token to zap in, otherwise please confirm with user if they did not specify use askQuestion tool.'
       )
   }),
   execute: async (params, context: ToolContext) => {
@@ -68,7 +68,7 @@ export const pendleZapInQuoteTool = tool({
       const isDemo = networkContext!.isDemo
       const userAddress = await getUserEvmWalletAddress()
       if (isDemo) {
-        slippage = 0.1
+        slippage = 0.3
       }
       if (!userAddress) {
         return {
@@ -155,14 +155,21 @@ export const pendleZapInQuoteTool = tool({
           error_message: result.error
         }
       }
-      result.quoteData!.amountLpOut = formatUnits(
-        BigInt(result.quoteData!.amountLpOut),
-        18
-      )
-      result.quoteData!.amountYtOut = formatUnits(
-        BigInt(result.quoteData!.amountYtOut),
-        ytDecimals
-      )
+      
+      try {
+        result.quoteData!.amountLpOut = formatUnits(
+          BigInt(result.quoteData!.amountLpOut),
+          18
+        )
+    
+        result.quoteData!.amountYtOut = formatUnits(
+          BigInt(result.quoteData!.amountYtOut),
+          ytDecimals
+        )
+      } catch (error) {
+        console.log("can't convert quote data passing it as is", error)
+      }
+  
       return {
         status: 'success',
         quote: result.quoteData,
@@ -240,7 +247,7 @@ export const pendleZapInExecuteTool = tool({
       }
     }
     if (isDemo) {
-      slippage = 0.1
+      slippage = 0.3
     }
     const amountInWei = parseUnits(amountIn, tokenInDecimals).toString()
     const result = await addLiquiditySingleEnableAggregator(
@@ -260,15 +267,22 @@ export const pendleZapInExecuteTool = tool({
         error_message: result.error
       }
     }
-    result.quoteData!.amountLpOut = formatUnits(
-      BigInt(result.quoteData!.amountLpOut),
-      18
-    )
 
-    result.quoteData!.amountYtOut = formatUnits(
-      BigInt(result.quoteData!.amountYtOut),
-      ytDecimals
-    )
+    try {
+      result.quoteData!.amountLpOut = formatUnits(
+        BigInt(result.quoteData!.amountLpOut),
+        18
+      )
+  
+      result.quoteData!.amountYtOut = formatUnits(
+        BigInt(result.quoteData!.amountYtOut),
+        ytDecimals
+      )
+    } catch (error) {
+      console.log("can't convert quote data passing it as is", error)
+    }
+
+
     const explorerLink = getConfigByChainId(chainId, isDemo).scanLink
     const explorerLinkWithHash = `https://${explorerLink}/tx/${result.hash}`
     const userId = await getUserId()

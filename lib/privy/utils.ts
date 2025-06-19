@@ -232,12 +232,7 @@ export async function broadcastTransaction(
  * @returns Transaction response with hash
  */
 export async function executeTransaction(
-    txData: {
-      to: string;
-      from: string;
-      data: string;
-      value?: string | bigint;
-    },
+    txData: TransactionRequest,
     chainId: number,
     gasOptions?: {
       estimateGas: boolean;
