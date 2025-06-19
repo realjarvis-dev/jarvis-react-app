@@ -22,6 +22,7 @@ import { Button } from './ui/button'
 import { IconLogo } from './ui/icons'
 import { WelcomeMessage } from './welcome-messages'
 import { WithTooltip } from './with-tooltip'
+import NeonBorderBackground from './ui/neon-border-background'
 
 function useKeyboardAvoidance({
   ref
@@ -306,12 +307,7 @@ export function ChatPanel({
   return (
     <TooltipProvider>
       {/* Use a fragment if VideoBackground is fixed and outside the main div's flow */}
-      {showVideoBg && (
-        <div
-          className="fixed inset-0 z-0 bg-cover bg-center"
-          style={{ backgroundImage: 'url(/images/background.avif)' }}
-        />
-      )}
+      {showVideoBg && <NeonBorderBackground />}
       {/* <VideoBackground
         src="/videos/background.mp4"
         poster="/videos/background_poster.jpg"
