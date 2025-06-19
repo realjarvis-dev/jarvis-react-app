@@ -383,8 +383,10 @@ export const pendleQuoteTool = tool({
           
           const matchesQuery = symbol.includes(query) || 
                               name.includes(query) ||
-                              symbol.includes('sena') ||
-                              name.includes('sena');
+                              (query.includes('solvbtc') && (symbol.includes('xsolvbtc') || name.includes('xsolvbtc'))) ||
+                              (query.includes('sena') && (symbol.includes('sena') || name.includes('sena'))) ||
+                              symbol.replace(/[^a-z0-9]/g, '').includes(query.replace(/[^a-z0-9]/g, '')) ||
+                              name.replace(/[^a-z0-9]/g, '').includes(query.replace(/[^a-z0-9]/g, ''));
           
           return isCorrectType && matchesQuery;
         });
@@ -393,7 +395,17 @@ export const pendleQuoteTool = tool({
           resolvedTokenAddress = pendleMatches[0].address;
           resolvedMarketName = resolvedMarketName || pendleMatches[0].name.replace(/^(PT|YT)\s+/, '');
         } else {
-          throw new Error(`Could not find a Pendle ${token_type.toUpperCase()} token matching "${tokenAddressOrName}" on chain ${chainId}. Please provide a valid token address or try a different token name.`);
+          const availableTokens = matches
+            .filter(token => token_type === 'pt' ? token.symbol.toLowerCase().includes('pt-') : token.symbol.toLowerCase().includes('yt-'))
+            .slice(0, 3)
+            .map(token => token.name.replace(/^(PT|YT)\s+/, ''))
+            .join(', ');
+          
+          const suggestion = availableTokens 
+            ? `Could not find a Pendle ${token_type.toUpperCase()} token matching "${tokenAddressOrName}" on chain ${chainId}. Did you mean one of these: ${availableTokens}? Please provide a valid token address or try a different token name.`
+            : `Could not find a Pendle ${token_type.toUpperCase()} token matching "${tokenAddressOrName}" on chain ${chainId}. Please provide a valid token address or try a different token name.`;
+          
+          throw new Error(suggestion);
         }
       }
             
