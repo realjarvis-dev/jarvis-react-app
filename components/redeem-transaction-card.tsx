@@ -46,6 +46,7 @@ export function RedeemTransactionCard({
   // Determine if this is a YT rewards redemption or a PT redemption
   const isYtRewards = tool.toolName === 'pendle_redeem_yt'
   const isPtRedemption = tool.toolName === 'pendle_redeem_pt'
+  const isUnifiedRedeem = tool.toolName === 'pendle_redeem'
 
   // Attempt to determine token name from the args or results
   useEffect(() => {
