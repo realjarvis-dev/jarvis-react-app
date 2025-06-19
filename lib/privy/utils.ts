@@ -9,6 +9,157 @@ import { getGasPriceByChainId } from '../blocknative/get-gas-price'
 import { getProposedGasPrice } from '../etherscan/gas-price'
 import { getConfigByChainId } from '../network/config'
 
+
+const ERC20_ABI = [
+  'function approve(address spender, uint256 amount) external returns (bool)',
+  'function allowance(address owner, address spender) external view returns (uint256)',
+  'function decimals() view returns (uint8)',
+  'function symbol() view returns (string)',
+  'function name() view returns (string)',
+  'function transfer(address to, uint256 amount) returns (bool)'
+]
+
+export async function getERC20Details(
+  tokenAddress: string,
+  chainId: number = 1
+): Promise<{ decimals: number; symbol: string; name: string }> {
+  try {
+    const provider = new ethers.JsonRpcProvider(
+      process.env.TEST_RPC_URL || getConfigByChainId(chainId, false).rpcUrl
+    )
+    const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider)
+    const [decimals, symbol, name] = await Promise.all([
+      tokenContract.decimals(),
+      tokenContract.symbol(),
+      tokenContract.name()
+    ])
+    return { decimals, symbol, name }
+  } catch (error: any) {
+    console.error('Error fetching ERC20 details:', error.message)
+    throw new Error(`Failed to get ERC20 details: ${error.message}`)
+  }
+}
+
+/**
+ * Transfer ERC20 token
+ * @param tokenAddress Address of the token to transfer
+ * @param toAddress Address of the recipient
+ * @param amount Amount of token to transfer in wei
+ * @param userAddress Address of the user
+ * @param chainId Chain ID
+ * @param isDemo If the transaction is for demo
+ * @returns Promise with transaction hash
+ */
+export async function erc20Transfer(
+  tokenAddress: string,
+  toAddress: string,
+  amount: string,
+  userAddress: string,
+  chainId: number = 1,
+  isDemo: boolean = false
+): Promise<{ status: string; hash?: string; message?: string }> {
+  const provider = new ethers.JsonRpcProvider(
+    process.env.TEST_RPC_URL || getConfigByChainId(chainId, isDemo).rpcUrl
+  )
+  const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider)
+  const transferData = tokenContract.interface.encodeFunctionData('transfer', [
+    toAddress,
+    amount
+  ])
+  let txData;
+  try {
+    if (!isDemo) {
+    txData = await executeTransaction(
+      {
+        to: tokenAddress,
+        from: userAddress,
+        data: transferData,
+        value: BigInt(0)
+      },
+      chainId, {
+        estimateGas: true
+      },
+      isDemo
+      )
+    } else {
+      txData = await executeTransaction(
+        {
+          to: tokenAddress,
+          from: userAddress,
+          data: transferData,
+          value: BigInt(0)
+        },
+        chainId,
+        {
+          estimateGas: false,
+          gasLimit: ethers.toQuantity(1000000) as `0x${string}`
+        },
+        isDemo
+      )
+    }
+
+    return { status: 'success', hash: txData.hash }
+  } catch (error: any) {
+    if (error instanceof TransactionError) {
+      return { status: 'fail', message: error.message, hash: error.hash }
+    }
+    return { status: 'fail', message: (error as Error).message }
+  }
+}
+
+export async function erc20Approval(
+  tokenAddress: string,
+  spenderAddress: string,
+  amount: string,
+  userAddress: string,
+  chainId: number = 1,
+  isDemo: boolean
+): Promise<{ status: string; hash?: string; message?: string }> {
+  // default to use the TEST_RPC_URL in env
+  // on localhost can put 127.0.0.1:8545 for local testing
+  // TODO: on deployment have to remove the TEST_RPC_URL for multichain support
+  const provider = new ethers.JsonRpcProvider(
+    process.env.TEST_RPC_URL || getConfigByChainId(chainId, isDemo).rpcUrl
+  )
+  console.log(process.env.TEST_RPC_URL || getConfigByChainId(chainId, isDemo).rpcUrl)
+  const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider)
+  const allowance = await tokenContract.allowance(userAddress, spenderAddress)
+  console.log("allowance", allowance)
+
+  // Skip approval if allowance is sufficient
+  if (allowance >= BigInt(amount)) {
+    return { status: 'success', message: 'Allowance is sufficient' }
+  }
+
+  // Generate approval transaction
+  const approvalData = tokenContract.interface.encodeFunctionData('approve', [
+    spenderAddress,
+    amount
+  ])
+
+  try {
+    const txData = await executeTransaction(
+      {
+        to: tokenAddress,
+        from: userAddress,
+        data: approvalData,
+        value: BigInt(0)
+      },
+      chainId,
+      {
+        estimateGas: true,
+      },
+      isDemo
+    )
+    return { status: 'success', hash: txData.hash }
+  } catch (error: any) {
+    if (error instanceof TransactionError) {
+      return { status: 'fail', message: error.message, hash: error.hash }
+    }
+    return { status: 'fail', message: (error as Error).message }
+  }
+}
+
 // Custom error for transaction failures
 export class TransactionError extends Error {
   hash?: string
@@ -298,11 +449,12 @@ export async function executeTransaction(
     gasOptions?: {
       estimateGas: boolean;
       gasLimit?: `0x${string}`;
-      getGasPriceFunction?: (chainId: number) => Promise<{
+      eip1559GasPriceFunction?: (chainId: number) => Promise<{
         maxPriceInMemPool: bigint;
         maxPriorityFeePerGas: bigint;
         maxFeePerGas: bigint;
       }>;
+      legacyGasPriceFunction?: (chainId: number) => Promise<number>;
     },
     isDemo: boolean = false
   ) {

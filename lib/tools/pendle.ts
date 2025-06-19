@@ -8,9 +8,7 @@ import { executePendleMintSy, getMintSyQuote } from '../pendle/mint-sy'
 import { executePendleRedeemPy, getRedeemPyQuote } from '../pendle/redeem-py'
 import { executePendleRedeemSy, getRedeemSyQuote } from '../pendle/redeem-sy'
 import { executePendleSwap, getSwapQuote } from '../pendle/swap'
-import {
-  getERC20Details
-} from '../pendle/transactions'
+import { getERC20Details } from '../privy/utils'
 import { NetworkContext } from '../types/context'
 
 

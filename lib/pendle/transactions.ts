@@ -1,15 +1,9 @@
-import { getConfigByChainId } from '@/lib/network/config'
 import {
   getUserEvmWalletAddress,
-  getUserWallet,
-  privy
 } from '@/lib/privy/client'
 import axios from 'axios'
-import { ethers, parseUnits, TransactionRequest, JsonRpcProvider } from 'ethers'
-import { v4 as uuidv4 } from 'uuid'
 import { getPendleMarkets } from '../pendle/api'
-import { getGasPriceByChainId } from '../blocknative/get-gas-price'
-import { getProposedGasPrice } from '../etherscan/gas-price'
+import { erc20Approval, executeTransaction } from '../privy/utils'
 
 // Custom error for transaction failures
 export class TransactionError extends Error {
@@ -116,344 +110,198 @@ export async function getSwapTransactionFromPendle(
   }
 }
 
-const ERC20_ABI = [
-  'function approve(address spender, uint256 amount) external returns (bool)',
-  'function allowance(address owner, address spender) external view returns (uint256)',
-  'function decimals() view returns (uint8)',
-  'function symbol() view returns (string)',
-  'function name() view returns (string)',
-  'function transfer(address to, uint256 amount) returns (bool)'
-]
 
-export async function getERC20Details(
-  tokenAddress: string,
-  chainId: number = 1
-): Promise<{ decimals: number; symbol: string; name: string }> {
-  try {
-    const provider = new ethers.JsonRpcProvider(
-      process.env.TEST_RPC_URL || getConfigByChainId(chainId, false).rpcUrl
-    )
-    const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider)
-    const [decimals, symbol, name] = await Promise.all([
-      tokenContract.decimals(),
-      tokenContract.symbol(),
-      tokenContract.name()
-    ])
-    return { decimals, symbol, name }
-  } catch (error: any) {
-    console.error('Error fetching ERC20 details:', error.message)
-    throw new Error(`Failed to get ERC20 details: ${error.message}`)
-  }
-}
 
-/**
- * Transfer ERC20 token
- * @param tokenAddress Address of the token to transfer
- * @param toAddress Address of the recipient
- * @param amount Amount of token to transfer in wei
- * @param userAddress Address of the user
- * @param chainId Chain ID
- * @param isDemo If the transaction is for demo
- * @returns Promise with transaction hash
- */
-export async function erc20Transfer(
-  tokenAddress: string,
-  toAddress: string,
-  amount: string,
-  userAddress: string,
-  chainId: number = 1,
-  isDemo: boolean = false
-): Promise<{ status: string; hash?: string; message?: string }> {
-  const provider = new ethers.JsonRpcProvider(
-    process.env.TEST_RPC_URL || getConfigByChainId(chainId, isDemo).rpcUrl
-  )
-  const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider)
-  const transferData = tokenContract.interface.encodeFunctionData('transfer', [
-    toAddress,
-    amount
-  ])
-  let txData;
-  try {
-    if (!isDemo) {
-    txData = await executeSwapTransaction(
-      {
-        to: tokenAddress,
-        from: userAddress,
-        data: transferData,
-        value: BigInt(0)
-      },
-      chainId, {
-        estimateGas: true
-      },
-      isDemo
-      )
-    } else {
-      txData = await executeSwapTransaction(
-        {
-          to: tokenAddress,
-          from: userAddress,
-          data: transferData,
-          value: BigInt(0)
-        },
-        chainId,
-        {
-          estimateGas: false,
-          gasLimit: ethers.toQuantity(1000000) as `0x${string}`
-        },
-        isDemo
-      )
-    }
 
-    return { status: 'success', hash: txData.hash }
-  } catch (error: any) {
-    if (error instanceof TransactionError) {
-      return { status: 'fail', message: error.message, hash: error.hash }
-    }
-    return { status: 'fail', message: (error as Error).message }
-  }
-}
 
-export async function erc20Approval(
-  tokenAddress: string,
-  spenderAddress: string,
-  amount: string,
-  userAddress: string,
-  chainId: number = 1,
-  isDemo: boolean
-): Promise<{ status: string; hash?: string; message?: string }> {
-  // default to use the TEST_RPC_URL in env
-  // on localhost can put 127.0.0.1:8545 for local testing
-  // TODO: on deployment have to remove the TEST_RPC_URL for multichain support
-  const provider = new ethers.JsonRpcProvider(
-    process.env.TEST_RPC_URL || getConfigByChainId(chainId, isDemo).rpcUrl
-  )
-  console.log(process.env.TEST_RPC_URL || getConfigByChainId(chainId, isDemo).rpcUrl)
-  const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider)
-  const allowance = await tokenContract.allowance(userAddress, spenderAddress)
-  console.log("allowance", allowance)
+// // TODO: add an option to support no gas estimation since kodiak deposit can't be estimated
+// /**
+//  * Executes a transaction with the given transaction data
+//  * @param txData Transaction data to execute
+//  * @param chainId Chain ID
+//  * @param gasOptions Gas options
+//  * @param gasLimit Hardcoded gas limit, please set estimateGas to false if use the provided gasLimit
+//  * @param estimateGas If or not to estimate gas in executeSwapTransaction function using ether's estimateGas
+//  * @param getGasPriceFunction Function to get estimated gas price by chain Id
+//  * @returns Promise with transaction hash
+//  */
+// export async function executeSwapTransaction(
+//   txData: TransactionRequest,
+//   chainId: number = 1,
+//   gasOptions?: {
+//     estimateGas: boolean
+//     gasLimit?: `0x${string}`
+//     eip1559GasPriceFunction?: (chainId: number) => Promise<{
+//       maxPriceInMemPool: bigint
+//       maxPriorityFeePerGas: bigint
+//       maxFeePerGas: bigint
+//     }>
+//     legacyGasPriceFunction?: (chainId: number) => Promise<number>
+//   },
+//   isDemo: boolean = false
+// ): Promise<{ hash: string }> {
+//   let hash: string | null = null
+//   if (!gasOptions) {
+//     gasOptions = {
+//       estimateGas: true,
+//       eip1559GasPriceFunction: getGasPriceByChainId,
+//       legacyGasPriceFunction: getProposedGasPrice
+//     }
+//   }
+//   if (!gasOptions?.eip1559GasPriceFunction) {
+//     gasOptions.eip1559GasPriceFunction = getGasPriceByChainId
+//   }
+//   if (!gasOptions?.legacyGasPriceFunction) {
+//     gasOptions.legacyGasPriceFunction = getProposedGasPrice
+//   }
+//   try {
+//     let provider: ethers.JsonRpcProvider
+//     const rpcUrl = process.env.TEST_RPC_URL || getConfigByChainId(chainId, isDemo).rpcUrl
+//     provider = new JsonRpcProvider(rpcUrl)
+//     const block = await provider.getBlock('latest')
+//     const baseFee = block?.baseFeePerGas
+//     const maxFee = baseFee ? BigInt(baseFee) * BigInt(2) : BigInt(1010690044) // ~2× base fee
+//     const priority = ethers.parseUnits('1', 'gwei') // 1 gwei tip
+//     let maxFeePerGas = maxFee + priority
+//     let maxPriorityFeePerGas = priority
+//     const isLegacyGasModeChain = [56].includes(chainId)
+//     let fixGasPrice: bigint = BigInt(0)
+//     if (isLegacyGasModeChain) {
+//       fixGasPrice = parseUnits((await gasOptions.legacyGasPriceFunction(chainId)).toString(), 9)
+//       console.log("Fetch legacy gas price", fixGasPrice)
+//     }
+//     else {
+//       const estimateGasPrice = await gasOptions.eip1559GasPriceFunction(chainId)
+//       maxFeePerGas = estimateGasPrice.maxFeePerGas
+//       maxPriorityFeePerGas = estimateGasPrice.maxPriorityFeePerGas
+//     }
 
-  // Skip approval if allowance is sufficient
-  if (allowance >= BigInt(amount)) {
-    return { status: 'success', message: 'Allowance is sufficient' }
-  }
+//     const to = txData.to
+//     const from = txData.from
+//     const data = txData.data
+//     const value = txData.value
+//     const evmWallet = await getUserWallet('ethereum')
+//     if (!evmWallet) {
+//       throw new Error('EVM wallet not found')
+//     }
+//     if (!evmWallet.id) {
+//       throw new Error('EVM wallet ID not found')
+//     }
+//     const correctNonce = await provider.getTransactionCount(
+//       txData.from as `0x${string}`,
+//       'pending'
+//     )
 
-  // Generate approval transaction
-  const approvalData = tokenContract.interface.encodeFunctionData('approve', [
-    spenderAddress,
-    amount
-  ])
+//     const weiBig = BigInt(value || '0')
+//     const quantity = ethers.toQuantity(weiBig)
+//     let gasLimit: `0x${string}`
 
-  try {
-    const txData = await executeSwapTransaction(
-      {
-        to: tokenAddress,
-        from: userAddress,
-        data: approvalData,
-        value: BigInt(0)
-      },
-      chainId,
-      {
-        estimateGas: true,
-      },
-      isDemo
-    )
-    return { status: 'success', hash: txData.hash }
-  } catch (error: any) {
-    if (error instanceof TransactionError) {
-      return { status: 'fail', message: error.message, hash: error.hash }
-    }
-    return { status: 'fail', message: (error as Error).message }
-  }
-}
+//     let estimateGas = gasOptions?.estimateGas !== false // Default to true if not specified or explicitly true
+//     if (isDemo) {
+//       estimateGas = false
+//       chainId = 1
+//     }
+//     if (estimateGas) {
+//       // Gas estimation
+//       const gasEstimate = await provider.estimateGas({
+//         to: txData.to,
+//         from: txData.from,
+//         data: txData.data,
+//         value: txData.value ?? BigInt(0),
+//         chainId: chainId
+//       })
+//       // Add a 20% buffer
+//       gasLimit = ethers.toQuantity(
+//         gasEstimate + gasEstimate / BigInt(5)
+//       ) as `0x${string}`
+//     } else {
+//       gasLimit =
+//         gasOptions?.gasLimit ?? (ethers.toQuantity(1000000) as `0x${string}`)
+//     }
 
-// TODO: add an option to support no gas estimation since kodiak deposit can't be estimated
-/**
- * Executes a transaction with the given transaction data
- * @param txData Transaction data to execute
- * @param chainId Chain ID
- * @param gasOptions Gas options
- * @param gasLimit Hardcoded gas limit, please set estimateGas to false if use the provided gasLimit
- * @param estimateGas If or not to estimate gas in executeSwapTransaction function using ether's estimateGas
- * @param getGasPriceFunction Function to get estimated gas price by chain Id
- * @returns Promise with transaction hash
- */
-export async function executeSwapTransaction(
-  txData: TransactionRequest,
-  chainId: number = 1,
-  gasOptions?: {
-    estimateGas: boolean
-    gasLimit?: `0x${string}`
-    eip1559GasPriceFunction?: (chainId: number) => Promise<{
-      maxPriceInMemPool: bigint
-      maxPriorityFeePerGas: bigint
-      maxFeePerGas: bigint
-    }>
-    legacyGasPriceFunction?: (chainId: number) => Promise<number>
-  },
-  isDemo: boolean = false
-): Promise<{ hash: string }> {
-  let hash: string | null = null
-  if (!gasOptions) {
-    gasOptions = {
-      estimateGas: true,
-      eip1559GasPriceFunction: getGasPriceByChainId,
-      legacyGasPriceFunction: getProposedGasPrice
-    }
-  }
-  if (!gasOptions?.eip1559GasPriceFunction) {
-    gasOptions.eip1559GasPriceFunction = getGasPriceByChainId
-  }
-  if (!gasOptions?.legacyGasPriceFunction) {
-    gasOptions.legacyGasPriceFunction = getProposedGasPrice
-  }
-  try {
-    let provider: ethers.JsonRpcProvider
-    const rpcUrl = process.env.TEST_RPC_URL || getConfigByChainId(chainId, isDemo).rpcUrl
-    provider = new JsonRpcProvider(rpcUrl)
-    const block = await provider.getBlock('latest')
-    const baseFee = block?.baseFeePerGas
-    const maxFee = baseFee ? BigInt(baseFee) * BigInt(2) : BigInt(1010690044) // ~2× base fee
-    const priority = ethers.parseUnits('1', 'gwei') // 1 gwei tip
-    let maxFeePerGas = maxFee + priority
-    let maxPriorityFeePerGas = priority
-    const isLegacyGasModeChain = [56].includes(chainId)
-    let fixGasPrice: bigint = BigInt(0)
-    if (isLegacyGasModeChain) {
-      fixGasPrice = parseUnits((await gasOptions.legacyGasPriceFunction(chainId)).toString(), 9)
-      console.log("Fetch legacy gas price", fixGasPrice)
-    }
-    else {
-      const estimateGasPrice = await gasOptions.eip1559GasPriceFunction(chainId)
-      maxFeePerGas = estimateGasPrice.maxFeePerGas
-      maxPriorityFeePerGas = estimateGasPrice.maxPriorityFeePerGas
-    }
+//     // strip the 0x prefix for to, quantity, and data
+//     const toAddress = (to as string).replace(/^0x/, '')
+//     const valueHex = quantity.replace(/^0x/, '')
+//     const dataHex = (data as string).replace(/^0x/, '')
+//     const fromAddress = (from as string).replace(/^0x/, '')
 
-    const to = txData.to
-    const from = txData.from
-    const data = txData.data
-    const value = txData.value
-    const evmWallet = await getUserWallet('ethereum')
-    if (!evmWallet) {
-      throw new Error('EVM wallet not found')
-    }
-    if (!evmWallet.id) {
-      throw new Error('EVM wallet ID not found')
-    }
-    const correctNonce = await provider.getTransactionCount(
-      txData.from as `0x${string}`,
-      'pending'
-    )
-
-    const weiBig = BigInt(value || '0')
-    const quantity = ethers.toQuantity(weiBig)
-    let gasLimit: `0x${string}`
-
-    let estimateGas = gasOptions?.estimateGas !== false // Default to true if not specified or explicitly true
-    if (isDemo) {
-      estimateGas = false
-      chainId = 1
-    }
-    if (estimateGas) {
-      // Gas estimation
-      const gasEstimate = await provider.estimateGas({
-        to: txData.to,
-        from: txData.from,
-        data: txData.data,
-        value: txData.value ?? BigInt(0),
-        chainId: chainId
-      })
-      // Add a 20% buffer
-      gasLimit = ethers.toQuantity(
-        gasEstimate + gasEstimate / BigInt(5)
-      ) as `0x${string}`
-    } else {
-      gasLimit =
-        gasOptions?.gasLimit ?? (ethers.toQuantity(1000000) as `0x${string}`)
-    }
-
-    // strip the 0x prefix for to, quantity, and data
-    const toAddress = (to as string).replace(/^0x/, '')
-    const valueHex = quantity.replace(/^0x/, '')
-    const dataHex = (data as string).replace(/^0x/, '')
-    const fromAddress = (from as string).replace(/^0x/, '')
-
-    let signedTransaction: string
-    let encoding: string
-    if (isLegacyGasModeChain) {
-      console.log("gasLimit", gasLimit)
-      console.log("fixGasPrice", fixGasPrice)
-      console.log("correctNonce", correctNonce)
-      console.log("chainId", chainId)
-      console.log("rpc url", process.env.TEST_RPC_URL || getConfigByChainId(chainId, isDemo).rpcUrl)
-      const res = await privy.walletApi.ethereum.signTransaction({
-        walletId: evmWallet!.id,
-        transaction: {
-          to: `0x${toAddress}` as `0x${string}`,
-          from: `0x${fromAddress}` as `0x${string}`,
-          chainId: chainId,
-          value: `0x${valueHex}` as `0x${string}`,
-          data: `0x${dataHex}` as `0x${string}`,
-          gasLimit: gasLimit,
-          type: 0,
-          // only set gasPrice for legacy gas mode chains (BNB Smart Chain)
-          gasPrice: ethers.toQuantity(fixGasPrice) as `0x${string}`,        
-          nonce: correctNonce
-        },
-        idempotencyKey: uuidv4() // unique key for this transaction
-      })
-      signedTransaction = res.signedTransaction
-      encoding = res.encoding
-    }
-    else {
+//     let signedTransaction: string
+//     let encoding: string
+//     if (isLegacyGasModeChain) {
+//       console.log("gasLimit", gasLimit)
+//       console.log("fixGasPrice", fixGasPrice)
+//       console.log("correctNonce", correctNonce)
+//       console.log("chainId", chainId)
+//       console.log("rpc url", process.env.TEST_RPC_URL || getConfigByChainId(chainId, isDemo).rpcUrl)
+//       const res = await privy.walletApi.ethereum.signTransaction({
+//         walletId: evmWallet!.id,
+//         transaction: {
+//           to: `0x${toAddress}` as `0x${string}`,
+//           from: `0x${fromAddress}` as `0x${string}`,
+//           chainId: chainId,
+//           value: `0x${valueHex}` as `0x${string}`,
+//           data: `0x${dataHex}` as `0x${string}`,
+//           gasLimit: gasLimit,
+//           type: 0,
+//           // only set gasPrice for legacy gas mode chains (BNB Smart Chain)
+//           gasPrice: ethers.toQuantity(fixGasPrice) as `0x${string}`,        
+//           nonce: correctNonce
+//         },
+//         idempotencyKey: uuidv4() // unique key for this transaction
+//       })
+//       signedTransaction = res.signedTransaction
+//       encoding = res.encoding
+//     }
+//     else {
       
-      const res =
-      await privy.walletApi.ethereum.signTransaction({
-        walletId: evmWallet!.id,
-        transaction: {
-          to: `0x${toAddress}` as `0x${string}`,
-          from: `0x${fromAddress}` as `0x${string}`,
-          chainId: chainId,
-          value: `0x${valueHex}` as `0x${string}`,
-          data: `0x${dataHex}` as `0x${string}`,
-          gasLimit: gasLimit,
-          // set maxFeePerGas and maxPriorityFeePerGas for EIP-1559 chains (Ethereum, Unichain, Sonic)
-          maxFeePerGas: ethers.toQuantity(maxFeePerGas) as `0x${string}`,
-          maxPriorityFeePerGas: ethers.toQuantity(
-            maxPriorityFeePerGas
-          ) as `0x${string}`,
-          nonce: correctNonce
-        },
-        idempotencyKey: uuidv4() // unique key for this transaction
-      })
-      signedTransaction = res.signedTransaction
-      encoding = res.encoding
-    }
+//       const res =
+//       await privy.walletApi.ethereum.signTransaction({
+//         walletId: evmWallet!.id,
+//         transaction: {
+//           to: `0x${toAddress}` as `0x${string}`,
+//           from: `0x${fromAddress}` as `0x${string}`,
+//           chainId: chainId,
+//           value: `0x${valueHex}` as `0x${string}`,
+//           data: `0x${dataHex}` as `0x${string}`,
+//           gasLimit: gasLimit,
+//           // set maxFeePerGas and maxPriorityFeePerGas for EIP-1559 chains (Ethereum, Unichain, Sonic)
+//           maxFeePerGas: ethers.toQuantity(maxFeePerGas) as `0x${string}`,
+//           maxPriorityFeePerGas: ethers.toQuantity(
+//             maxPriorityFeePerGas
+//           ) as `0x${string}`,
+//           nonce: correctNonce
+//         },
+//         idempotencyKey: uuidv4() // unique key for this transaction
+//       })
+//       signedTransaction = res.signedTransaction
+//       encoding = res.encoding
+//     }
     
-    console.log("signedTransaction", signedTransaction)
-    const txResponse = await provider.broadcastTransaction(signedTransaction)
-    hash = txResponse.hash
-    console.log(hash)
-    // Wait for confirmation
-    const receipt = await txResponse.wait()
-    console.log(receipt)
+//     console.log("signedTransaction", signedTransaction)
+//     const txResponse = await provider.broadcastTransaction(signedTransaction)
+//     hash = txResponse.hash
+//     console.log(hash)
+//     // Wait for confirmation
+//     const receipt = await txResponse.wait()
+//     console.log(receipt)
 
-    return {
-      hash: txResponse.hash
-    }
-  } catch (error: any) {
-    console.error('Error executing transaction:', error.message)
-    if (hash) {
-      throw new TransactionError(
-        `Failed to execute transaction (hash: ${hash}): ${error.message}`,
-        hash
-      )
-    } else {
-      throw new TransactionError(
-        `Failed to execute transaction: ${error.message}`
-      )
-    }
-  }
-}
+//     return {
+//       hash: txResponse.hash
+//     }
+//   } catch (error: any) {
+//     console.error('Error executing transaction:', error.message)
+//     if (hash) {
+//       throw new TransactionError(
+//         `Failed to execute transaction (hash: ${hash}): ${error.message}`,
+//         hash
+//       )
+//     } else {
+//       throw new TransactionError(
+//         `Failed to execute transaction: ${error.message}`
+//       )
+//     }
+//   }
+// }
 
 /**
  * Get transaction data for redeeming PT & YT to tokens with Pendle
@@ -705,7 +553,7 @@ export async function executeRedeemTransaction(
     }
 
     // Execute the transaction
-    const result = await executeSwapTransaction(
+    const result = await executeTransaction(
       txData,
       chainId,
       { estimateGas: true },
@@ -813,7 +661,7 @@ export async function executeRedeemInterestsAndRewardsTransaction(
 
     // Execute the transaction
     console.log('Executing transaction...');
-    const result = await executeSwapTransaction(
+    const result = await executeTransaction(
       txData,
       chainId,
       { estimateGas: true },

@@ -6,7 +6,7 @@ import path, { dirname } from 'path'; // Added import for path operations
 import { promisify } from 'util';
 import { z } from 'zod';
 import { ensoSwap } from '../enso/swap'; // Import ensoSwap
-import { erc20Approval, executeSwapTransaction } from '../pendle/transactions';
+import { erc20Approval, executeTransaction } from '../privy/utils';
 import { getUserEvmWalletAddress } from '../privy/client';
 import { NetworkContext } from '../types/context';
 
@@ -196,7 +196,7 @@ export const genericSwapTool = tool({
       await logToFile(logFilePath, logContent)
 
       // TODO: uncomment this when ready
-      const result = await executeSwapTransaction(txData, effectiveChainId)
+      const result = await executeTransaction(txData, effectiveChainId)
 
       const completeTime = new Date().toISOString()
 
