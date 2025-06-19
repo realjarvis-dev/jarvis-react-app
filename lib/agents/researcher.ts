@@ -38,6 +38,11 @@ const get_system_prompt = (
   registry: any,
   networkContext?: NetworkContext
 ) => {
+  // Helper function to get network name
+  const getNetworkName = () => {
+    return networkContext?.selectedNetwork || 'Ethereum'
+  }
+
   // Generate dynamic tool descriptions based on actually supported tools
   const generateToolDescriptions = () => {
     const toolDescriptions: string[] = []
@@ -46,23 +51,33 @@ const get_system_prompt = (
     const toolDescMap: Record<string, string> = {
       pendle_opportunities: `- pendle_opportunities: Use when the user asks about Pendle yield opportunities, DeFi yields, or APY/yield farming on Ethereum. This tool returns a list of current Pendle opportunities with APY and liquidity information.`,
       pendle_quote: `- pendle_quote: Use when the user wants to know the conversion rate between ETH and a specific Pendle market token (PT or YT) in either direction. Requires a token address to generate the quote. This tool can quote both ETH-to-token and token-to-ETH rates.`,
-      pendle_swap: `- pendle_swap: Use when the user wants to execute a swap transaction from ETH to a Pendle token (PT or YT). This requires market address, token out address, and ETH amount parameters.`,
-      pendle_redeem_pt: `- pendle_redeem_pt: Use when the user wants to redeem Pendle PT tokens to ETH. This tool accepts a PT token address and will automatically find the corresponding YT address. If called before YT's expiry, both PT & YT of equal amounts are needed and will be burned. After expiry, only PT is needed and will be burned.`,
-      pendle_redeem_yt: `- pendle_redeem_yt: Use when the user wants to redeem accrued rewards and interests from Pendle YT positions after expiry. This tool accepts YT token addresses directly.`,
-      wallet_balance: `- wallet_balance: Use when the user asks about their wallet balance, token holdings, or specific token balance. This tool returns the user's cryptocurrency balances.`,
-      market_chart: `- market_chart: Use when the user asks about cryptocurrency price charts, market data, price history, or wants to see price trends for any cryptocurrency. This tool fetches and displays interactive market charts with price, volume, and market cap data.`,
+      pendle_swap: `- pendle_swap: Use when the user wants to execute a swap between ETH and a Pendle market token (PT or YT) in either direction. This tool handles the actual transaction execution and requires slippage tolerance and user wallet address.`,
+      pendle_mint: `- pendle_mint: Use when the user wants to mint Pendle tokens. Supports minting PT+YT tokens from underlying or SY tokens, or minting SY tokens from underlying tokens. Takes PT address and automatically determines all required token addresses.`,
+      pendle_redeem: `- pendle_redeem: Use when the user wants to redeem/unwrap Pendle tokens. Supports redeeming PT+YT tokens to SY or underlying, or redeeming SY tokens to underlying. Takes PT address and automatically determines all required token addresses.`,
+      pendle_mint_quote: `- pendle_mint_quote: Use when the user wants to get a quote for minting Pendle tokens. Supports underlying->py, sy->py, and underlying->sy minting quotes. Provides estimated output amounts without executing the transaction.`,
+      pendle_redeem_quote: `- pendle_redeem_quote: Use when the user wants to get a quote for redeeming Pendle tokens. Supports py->sy, py->underlying, and sy->underlying redemption quotes. Provides estimated output amounts without executing the transaction.`,
+      wallet_balance: `- wallet_balance: Use when the user asks about their wallet balance, token holdings, or wants to check how much of a specific token they own on ${getNetworkName()} network.`,
+      wallet_transfer: `- wallet_transfer: Use when the user wants to transfer tokens or ETH to another address on ${getNetworkName()} network. This tool handles the actual transaction execution.`,
+      privyTransfer: `- privyTransfer: Use when the user wants to transfer tokens or ETH to another address on ${getNetworkName()} network using Privy wallet. This tool handles the actual transaction execution.`,
+      token_price: `- token_price: Use when the user asks about current token prices, price changes, or market data for any cryptocurrency or token.`,
+      swap_quote: `- swap_quote: Use when the user wants to get a quote for swapping tokens on ${getNetworkName()} network. Provides exchange rates and estimated amounts without executing the swap.`,
+      swap_execute: `- swap_execute: Use when the user wants to execute a token swap on ${getNetworkName()} network. This tool handles the actual transaction execution.`,
+      market_chart: `- market_chart: Use when the user asks for price charts, historical price data, or wants to visualize token price movements over time.`,
+      bridge_quote: `- bridge_quote: Use when the user wants to get a quote for bridging tokens between different networks/chains. Provides estimated costs and routes.`,
+      bridge_execute: `- bridge_execute: Use when the user wants to execute a cross-chain bridge transaction between different networks.`,
+      gas_price: `- gas_price: Use when the user asks about current gas prices or transaction costs on ${getNetworkName()} network.`,
+      kodiak_opportunities: `- kodiak_opportunities: Use when the user asks about Kodiak liquidity opportunities, yield farming, or LP positions on ${getNetworkName()} network.`,
+      kodiak_deposit: `- kodiak_deposit: Use when the user wants to deposit tokens into Kodiak liquidity pools on ${getNetworkName()} network.`,
+      kodiak_compound_vault: `- kodiak_compound_vault: Use when the user wants to compound their Kodiak vault positions on ${getNetworkName()} network.`,
+      kodiak_vault_profitability: `- kodiak_vault_profitability: Use when the user asks about Kodiak vault profitability, APR, or yield analysis on ${getNetworkName()} network.`,
       search: `- search: Use for general web search queries. ONLY USE IF YOU ARE UNAWARE OF THE INFORMATION OR THE OTHER TOOLS ARE NOT APPROPRIATE.`,
       retrieve: `- retrieve: Use to get detailed content from specific URLs.`,
       videoSearch: `- video search: Use when looking for video content.`,
       ask_question: `- ask_question: Use to clarify ambiguous or incomplete user queries.`,
-      privy_transfer: `- privy_transfer: Use when the user wants to transfer tokens to a specified address.`,
       lifi_bridge_quote: `- lifi_bridge_quote: Use when user wants to swap between two arbitrary tokens to first quote a price.`,
       lifi_bridge_execute: `- lifi_bridge_execute: Use when user wants to swap between two arbitrary tokens to execute the transaction.`,
-      kodiak_opportunities: `- kodiak_opportunities: Use when the user asks about Kodiak Island yield opportunities on Berachain. This tool returns a list of current Kodiak opportunities with APY and liquidity information.`,
-      kodiak_deposit: `- kodiak_deposit: Use when the user wants to deposit tokens into a Kodiak Island yield opportunity on Berachain.`,
       kodiak_bault_profitability: `- kodiak_bault_profitability: Use when the user wants to check the profitability of Kodiak Baults for compounding on Berachain. This tool analyzes profitability metrics for specified Baults.`,
       kodiak_compound_bault: `- kodiak_compound_bault: Use when the user wants to compound a profitable Kodiak Bault. This tool executes a transaction to claim BGT rewards using the BountyHelper contract (zero-capital compounding).`,
-      get_gas_price: `- get_gas_price: Use when the user asks about current gas prices for transactions.`,
       fund_wallet: `- fund_wallet: Use when the user requests their wallet to be funded with ETH in demo mode. Only works in the Demo environment.`
     }
 
@@ -92,7 +107,16 @@ const get_system_prompt = (
     - Acknowledge: "Fetched the latest opportunities. Anything you'd like to explore?"`,
       pendle_quote: `  • pendle_quote
     - The user will provide you the names of the tokens. Like "Quote for sENA PT to ETH" or "Conversion for ETH to PT sENA". Based on this info you have to call this tool with relevant parameter.  
-    - If the from or to information is missing, say: "Which token would you like quoted, or would you like to see opportunities first?"  `,
+    - If the from or to information is missing, say: "Which token would you like quoted, or would you like to see opportunities first?"  
+    - Otherwise, "Here's your quote—anything else?"`,
+      pendle_redeem_quote: `  • pendle_redeem_quote
+    - Use when user wants to quote redeeming PT and YT tokens to underlying assets or SY tokens.
+    - If the PT address or output token information is missing, ask for clarification.
+    - Otherwise, "Here's your redeem quote—anything else?"`,
+      pendle_mint_quote: `  • pendle_mint_quote
+    - Use when user wants to quote minting PT and YT tokens from input tokens.
+    - If the PT address or input token information is missing, ask for clarification.
+    - Otherwise, "Here's your mint quote—anything else?"`,
       wallet_balance: `  • wallet_balance  
     - Call it; the UI shows balances.  
     - Acknowledge: "Wallet balances are ready. Want to dig into a particular holding?"`,
@@ -111,6 +135,8 @@ const get_system_prompt = (
     const readOnlyTools = [
       'pendle_opportunities',
       'pendle_quote',
+      'pendle_redeem_quote',
+      'pendle_mint_quote',
       'wallet_balance',
       'kodiak_opportunities',
       'kodiak_bault_profitability',
@@ -129,35 +155,38 @@ const get_system_prompt = (
     const writeToolsDescriptions: Record<string, string> = {
       pendle_swap: `  • pendle_swap  
     - Remind to check opportunities or quote if skipped.`,
-      pendle_redeem_pt: `  • pendle_redeem_pt  
-    - Remind to fetch wallet balance if skipped.
-    - You do not need to worry about the expiry. That's user's responsibility.
-    - The user will typically ask to redeem PT tokens. The tool accepts PT token addresses and will automatically find the corresponding YT address for redemption.`,
-      pendle_redeem_yt: `  • pendle_redeem_yt
-    - Remind to fetch wallet balance if skipped.
-    - You do not need to worry about the expiry. That's user's responsibility.
-    - The user will typically ask to redeem YT rewards. This tool accepts YT token addresses directly.`,
-      privy_transfer: `  • privy_transfer  
+      pendle_redeem: `  • pendle_redeem  
+    - Remind to check opportunities or fetch wallet balance if skipped.
+    - Remind to get quote if skipped. It's very helpful for the user if this is executed after getting quote.
+    - Supports py->sy, py->underlying, and sy->underlying redemptions.
+    - Confirm redemption details before execution.`,
+      pendle_mint: `  • pendle_mint
+    - Remind to check opportunities or fetch wallet balance if skipped.
+    - Remind to get quote if skipped. It's very helpful for the user if this is executed after getting quote.
+    - Confirm minting details before execution.
+    - Can mint from either SY tokens or underlying tokens.`,
+      privyTransfer: `  • privyTransfer  
     - Only accept ETH amounts; afterward ask "What's next?"`,
       kodiak_deposit: `  • kodiak_deposit  
     - Remind to check opportunities if skipped.`,
-      kodiak_compound_bault: `  • kodiak_compound_bault  
+      kodiak_compound_vault: `  • kodiak_compound_vault  
     - First check bault profitability with kodiak_bault_profitability.
     - Only compound baults that show as profitable.
-    - Confirm transaction details before execution.`
-      //   generic_swap: `  • generic_swap
-      // - Confirm swap details before execution.`
+    - Confirm transaction details before execution.`,
+      swap_execute: `  • swap_execute
+    - Confirm swap details before execution.`,
+      fund_wallet: `  • fund_wallet
+    - Only available in demo mode to fund wallet with ETH.`
     }
 
     const writeTools = [
       'pendle_swap',
-      'pendle_redeem_pt',
-      'pendle_redeem_yt',
-      'privy_transfer',
+      'pendle_redeem',
+      'pendle_mint',
+      'privyTransfer',
       'kodiak_deposit',
-      'generic_swap',
-      'lifi_bridge_execute',
-      'kodiak_compound_bault',
+      'kodiak_compound_vault',
+      'swap_execute',
       'fund_wallet'
     ]
       .filter(tool => supportedTools.includes(tool))

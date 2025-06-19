@@ -76,13 +76,17 @@ export function processPendleMarkets(
   active: boolean = true
 ): SimplifiedPendleMarket[] {
   return markets.map(market => {
-    // Remove "1-" prefix from PT and YT token addresses if present
-    const ptAddress = market.pt.startsWith('1-')
-      ? market.pt.substring(2)
-      : market.pt
-    const ytAddress = market.yt.startsWith('1-')
-      ? market.yt.substring(2)
-      : market.yt
+    
+    // Helper function to remove "1-" prefix from addresses if present
+    const cleanAddress = (address: string): string => {
+      return address.startsWith('1-') ? address.substring(2) : address;
+    };
+
+    // Clean all addresses that might have the "1-" prefix
+    const ptAddress = cleanAddress(market.pt);
+    const ytAddress = cleanAddress(market.yt);
+    const syAddress = cleanAddress(market.sy);
+    const underlyingAssetAddress = cleanAddress(market.underlyingAsset);
 
     return {
       name: market.name,
@@ -90,8 +94,8 @@ export function processPendleMarkets(
       expiry: market.expiry,
       pt: ptAddress,
       yt: ytAddress,
-      sy: market.sy.replace('1-', ''),
-      underlyingAsset: market.underlyingAsset.replace('1-', ''),
+      sy: syAddress,
+      underlyingAsset: underlyingAssetAddress,
       liquidity: market.details.liquidity,
       impliedApy: market.details.impliedApy,
       active: active

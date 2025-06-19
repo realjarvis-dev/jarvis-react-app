@@ -10,8 +10,8 @@ import { ErrorType, createErrorResponse, executeWithRetry } from '../utils/error
 import { getModel, isToolCallSupported } from '../utils/registry'
 import { ToolRegistry, getToolRegistry } from '../utils/tool-registry'
 
-import { parseToolCallXml } from './parse-tool-call'
 import { NetworkContext } from '../types/context'
+import { parseToolCallXml } from './parse-tool-call'
 
 /**
  * Result of a tool execution
@@ -328,6 +328,8 @@ async function executeManualToolCall(
     'wallet_balance',
     'pendle_quote', 
     'pendle_swap',
+    'pendle_mint',
+    'pendle_redeem',
     'kodiak_opportunities',
     'market_chart'
   ].includes(toolName)
