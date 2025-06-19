@@ -81,6 +81,11 @@ const bridgeQuoteTool = tool({
         details: "User's embedded wallet not found"
       }
     }
+    if (isDemo) {
+      slippage = '0.3'
+      fromChain = 'Ethereum'
+      toChain = 'Ethereum'
+    }
     return await generateLifiBridgeQuote(
       fromChain,
       toChain,
