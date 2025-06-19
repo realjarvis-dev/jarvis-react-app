@@ -77,18 +77,39 @@ export const pendleZapInQuoteTool = tool({
           hash: null
         }
       }
-      const markets = await getPendleMarkets()
       let market = null
       if (!marketAddress) {
+        const markets = await getPendleMarkets()
         market = markets.find(
           market => market.name.toLowerCase() === marketName.toLowerCase()
         )
       } else {
-        market = markets.find(
-          market =>
-            market.address.toLowerCase() ===
-            (marketAddress as string).toLowerCase()
+        const { pendleTokenMatcher } = await import('../token-matcher/pendle-token-matcher')
+        const staticMarket = pendleTokenMatcher.getAllMarketsForChain(chainId).find(
+          m => m.address.toLowerCase() === (marketAddress as string).toLowerCase()
         )
+        
+        if (staticMarket) {
+          market = {
+            name: staticMarket.name,
+            address: staticMarket.address,
+            expiry: staticMarket.expiry,
+            pt: staticMarket.pt,
+            yt: staticMarket.yt,
+            sy: staticMarket.sy,
+            underlyingAsset: staticMarket.underlyingAsset,
+            liquidity: 0, // Will be fetched dynamically if needed
+            impliedApy: 0, // Will be fetched dynamically if needed
+            active: true
+          }
+        } else {
+          const markets = await getPendleMarkets()
+          market = markets.find(
+            market =>
+              market.address.toLowerCase() ===
+              (marketAddress as string).toLowerCase()
+          )
+        }
       }
       if (!market) {
         return {
