@@ -1,7 +1,7 @@
-# Implement Unified Token Registry with Static Cache Files
+# Implement Unified Token Registry with Static Cache Files + Fix SENA Token Resolution
 
 ## Overview
-This PR implements a centralized, performant token resolution system that eliminates fragmented token lookup approaches across Pendle tokens, wallet tokens, and common tokens in the Jarvis investment agent.
+This PR implements a centralized, performant token resolution system that eliminates fragmented token lookup approaches across Pendle tokens, wallet tokens, and common tokens in the Jarvis investment agent. Additionally, it fixes the critical SENA PT token matching issue by adding token name resolution capabilities to the pendleQuoteTool.
 
 ## Key Changes
 
@@ -29,6 +29,13 @@ This PR implements a centralized, performant token resolution system that elimin
   - Pendle opportunities: 30 minutes (increased from 5 minutes)
   - Pendle quotes: 30 seconds (unchanged)
 
+### 5. SENA Token Resolution Fix
+- **Updated** `pendleQuoteTool` to accept both token addresses and token names
+- **Added** fuzzy token matching logic to resolve names like "sENA PT" to addresses
+- **Enhanced** token filtering to handle SENA token variations and case sensitivity
+- **Updated** AI researcher instructions to reflect token name acceptance capability
+- **Fixed** the reported issue where users couldn't get quotes for SENA PT tokens
+
 ## Performance Benefits
 - ✅ **Eliminated** redundant API calls for token resolution
 - ✅ **Enabled** offline token resolution capability
@@ -49,12 +56,20 @@ This PR implements a centralized, performant token resolution system that elimin
 - ✅ All imports and exports properly structured
 - ✅ Type definitions correctly implemented
 - ✅ Backward compatibility maintained
+- ✅ **SENA PT token resolution verified working**:
+  - Fuzzy matcher correctly finds SENA PT token from query "sENA PT"
+  - Resolves to expected address: `0xfc66d247f577bfc87df8a5267c43676c4a088b8b`
+  - Token filtering logic properly handles PT/YT type matching
+  - Error handling provides clear messages for unresolvable tokens
 
 ## Implementation Details
 - **Token Naming**: Uses format `PT-{underlying}-{expiry}` and `YT-{underlying}-{expiry}`
 - **Chain Support**: All provided chain files processed and integrated
 - **Fuzzy Matching**: Consistent behavior across Li.Fi and Pendle tokens
 - **Cache Strategy**: Static tokens cached for 24+ hours, dynamic data refreshed appropriately
+- **Token Resolution**: Supports both direct addresses and natural language queries
+- **Error Handling**: Clear error messages when tokens cannot be resolved
+- **Backward Compatibility**: Existing address-based functionality unchanged
 
 ---
 
