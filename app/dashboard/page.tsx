@@ -4,6 +4,7 @@ import { getAccessToken, usePrivy } from "@privy-io/react-auth";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+
 async function verifyToken() {
   const url = "/api/verify";
   const accessToken = await getAccessToken();

@@ -1,7 +1,7 @@
 import { TransactionRequest } from 'ethers'
 import { formatUnits, parseUnits, toHex } from 'viem'
 import { getGasPriceByChainId } from '../blocknative/get-gas-price'
-import { erc20Approval, executeSwapTransaction } from '../pendle/transactions'
+import { erc20Approval, executeTransaction } from '../privy/utils'
 import { getUserEvmWalletAddress } from '../privy/client'
 import {
   crossChainMatcher,
@@ -296,15 +296,15 @@ export const executeLifiBridgeTransaction = async (
     // const gasPriceHex = "0x" + newGas.toString(16) as `0x${string}`
     
     if (!isDemo) {
-    result = await executeSwapTransaction(txData, fromChainId, {
+    result = await executeTransaction(txData, fromChainId, {
         estimateGas: true,
-        getGasPriceFunction: getGasPriceByChainId
+        eip1559GasPriceFunction: getGasPriceByChainId
       }, isDemo)
     } else {
-      result = await executeSwapTransaction(txData, fromChainId, {
+      result = await executeTransaction(txData, fromChainId, {
         estimateGas: false,
         gasLimit: gasLimit ? toHex(gasLimit) : undefined,
-        getGasPriceFunction: getGasPriceByChainId
+        eip1559GasPriceFunction: getGasPriceByChainId
       }, isDemo)
     }
     const explorerLink = getConfigByChainId(fromChainId, isDemo).scanLink

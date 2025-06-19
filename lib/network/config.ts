@@ -18,6 +18,43 @@ export const ethereumConfig: NetworkConfig = {
   nativeAsset: { name: 'Ether', symbol: 'ETH', decimals: 18 }
 }
 
+export const unichainConfig: NetworkConfig = {
+  id: 'unichain' as const,
+  displayName: 'Unichain',
+  chainId: 130,
+  rpcUrl: 'https://unichain-mainnet.g.alchemy.com/v2/yIRJoLX9TId7oSWYdnflKgthIy59m-vr',
+  scanLink: 'uniscan.xyz',
+  isDemo: false,
+  alchemyNetwork: Network.UNICHAIN_MAINNET,
+  icon: '/icons/chains/unichain.svg',
+  nativeAsset: { name: 'Ether', symbol: 'ETH', decimals: 18 }
+}
+
+export const bnbSmartChainConfig: NetworkConfig = {
+  id: 'bnbSmartChain' as const,
+  displayName: 'BNB Smart Chain',
+  chainId: 56,
+  rpcUrl: 'https://bnb-mainnet.g.alchemy.com/v2/yIRJoLX9TId7oSWYdnflKgthIy59m-vr',
+  scanLink: 'bscscan.com',
+  isDemo: false,
+  alchemyNetwork: Network.BNB_MAINNET,
+  icon: 'https://altcoinsbox.com/wp-content/uploads/2023/01/bnb-chain-binance-smart-chain-logo.svg',
+  nativeAsset: { name: 'BNB', symbol: 'BNB', decimals: 18 }
+}
+
+export const sonicConfig: NetworkConfig = {
+  id: 'sonic' as const,
+  displayName: 'Sonic',
+  chainId: 146,
+  rpcUrl: 'https://sonic-mainnet.g.alchemy.com/v2/yIRJoLX9TId7oSWYdnflKgthIy59m-vr',
+  scanLink: 'explorer.soniclabs.com',
+  isDemo: false,
+  alchemyNetwork: Network.SONIC_MAINNET,
+  icon: '/icons/chains/sonic-light.svg',
+  nativeAsset: { name: 'S', symbol: 'S', decimals: 18 }
+}
+
+
 export const berachainConfig: NetworkConfig = {
   id: 'berachain' as const,
   displayName: 'Berachain',
@@ -94,7 +131,10 @@ export const allNetworkConfigs = {
   base: baseConfig,
   arbitrum: arbitrumConfig,
   polygon: polygonConfig,
-  optimism: optimismConfig
+  optimism: optimismConfig,
+  unichain: unichainConfig,
+  bnbSmartChain: bnbSmartChainConfig,
+  sonic: sonicConfig
 } as const
 
 /**

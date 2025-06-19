@@ -1,19 +1,20 @@
+import { ChainType } from '@/lib/network/types'
 import { z } from 'zod'
 import { searchSchema } from '../schema/search'
 import { getGasPriceTool } from '../tools/gas-price'
-import { genericSwapTool } from '../tools/generic-swap'
 import { kodiakBaultProfitabilityTool, kodiakCompoundBaultTool, kodiakDepositTool, kodiakOpportunitiesTool } from '../tools/kodiak'
 import { bridgeExecuteTool, bridgeQuoteTool } from '../tools/lifi-bridge'
 import { marketChartTool } from '../tools/market-chart'
-import { pendleOpportunitiesTool, pendleQuoteTool, pendleSwapTool } from '../tools/pendle'
+import { pendleMintQuoteTool, pendleMintTool, pendleOpportunitiesTool, pendleQuoteTool, pendleRedeemQuoteTool, pendleRedeemTool, pendleSwapTool } from '../tools/pendle'
 import { privyTransferTool } from '../tools/privy-transfer'
 import { createQuestionTool } from '../tools/question'
 import { retrieveTool } from '../tools/retrieve'
 import { createSearchTool } from '../tools/search'
 import { createVideoSearchTool } from '../tools/video-search'
 import { fundWalletTool, walletBalanceTool } from '../tools/wallet'
-import { ChainType } from '@/lib/network/types'
 import { NetworkContext, ToolContext } from '../types/context'
+import { pendleZapInQuoteTool, pendleZapInExecuteTool } from '../tools/pendle-liquidity'
+import { pendleZapOutExecuteTool, pendleZapOutQuoteTool } from '../tools/pendle-remove-liquidity'
 
 
 
@@ -24,7 +25,7 @@ export interface ToolDefinition<T = any> {
   name: string
   description: string
   schema: z.ZodType<T>
-  execute: (params: T, context?: ToolContext) => Promise<any> | PromiseLike<any>
+  execute?: (params: T, context?: ToolContext) => Promise<any> | PromiseLike<any>
   category: ToolCategory
   supportedNetworks?: (ChainType | 'demo')[]
 }
@@ -176,7 +177,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism']
+    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism', 'unichain', 'bnbSmartChain', 'sonic']
   })
   
   registry.registerTool({
@@ -219,9 +220,6 @@ export function createToolRegistry(model: string): ToolRegistry {
     name: 'ask_question',
     description: 'Ask clarifying questions to the user',
     schema: askQuestionTool.parameters,
-    execute: async (params, context) => {
-      return { success: true, message: `Question asked: ${params.question}` }
-    },
     category: ToolCategory.UTILITY
   })
   
@@ -277,6 +275,58 @@ export function createToolRegistry(model: string): ToolRegistry {
   })
   
   registry.registerTool({
+    name: 'pendle_redeem',
+    description: pendleRedeemTool.description || '',
+    schema: pendleRedeemTool.parameters,
+    execute: async (params, context) => pendleRedeemTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3,
+    supportedNetworks: ['ethereum', 'demo']
+  })
+  
+  registry.registerTool({
+    name: 'pendle_mint',
+    description: pendleMintTool.description || '',
+    schema: pendleMintTool.parameters,
+    execute: async (params, context) => pendleMintTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3,
+    supportedNetworks: ['ethereum', 'demo']
+  })
+  
+  registry.registerTool({
+    name: 'pendle_redeem_quote',
+    description: pendleRedeemQuoteTool.description || '',
+    schema: pendleRedeemQuoteTool.parameters,
+    execute: async (params, context) => pendleRedeemQuoteTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3,
+    supportedNetworks: ['ethereum', 'demo']
+  })
+  
+  registry.registerTool({
+    name: 'pendle_mint_quote',
+    description: pendleMintQuoteTool.description || '',
+    schema: pendleMintQuoteTool.parameters,
+    execute: async (params, context) => pendleMintQuoteTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3,
+    supportedNetworks: ['ethereum', 'demo']
+  })
+  
+  registry.registerTool({
     name: 'wallet_balance',
     description: 'Get wallet balance information',
     schema: walletBalanceTool.parameters,
@@ -286,7 +336,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism']
+    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism', 'unichain', 'bnbSmartChain', 'sonic']
   })
   
   registry.registerTool({
@@ -299,7 +349,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism']
+    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism', 'unichain', 'bnbSmartChain', 'sonic']
   })
   
   registry.registerTool({
@@ -380,7 +430,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism']
+    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism', 'unichain', 'bnbSmartChain', 'sonic']
   })
 
   registry.registerTool({
@@ -393,7 +443,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism']
+    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism', 'unichain', 'bnbSmartChain', 'sonic']
   })
 
   
@@ -410,6 +460,56 @@ export function createToolRegistry(model: string): ToolRegistry {
     supportedNetworks: ['demo']
   })
 
+  registry.registerTool({
+    name: 'pendle_zap_in_quote',
+    description: pendleZapInQuoteTool.description || '',
+    schema: pendleZapInQuoteTool.parameters,
+    execute: async (params, context) => pendleZapInQuoteTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3,
+    supportedNetworks: ['ethereum', 'demo']
+  })
+
+  registry.registerTool({
+    name: 'pendle_zap_in_execute',
+    description: pendleZapInExecuteTool.description || '',
+    schema: pendleZapInExecuteTool.parameters,
+    execute: async (params, context) => pendleZapInExecuteTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3,
+    supportedNetworks: ['ethereum', 'demo']
+  })
+  registry.registerTool({
+    name: 'pendle_zap_out_quote',
+    description: pendleZapOutQuoteTool.description || '',
+    schema: pendleZapOutQuoteTool.parameters,
+    execute: async (params, context) => pendleZapOutQuoteTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3,
+    supportedNetworks: ['ethereum', 'demo']
+  })
+
+  registry.registerTool({
+    name: 'pendle_zap_out_execute',
+    description: pendleZapOutExecuteTool.description || '',
+    schema: pendleZapOutExecuteTool.parameters,
+    execute: async (params, context) => pendleZapOutExecuteTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3,
+    supportedNetworks: ['ethereum', 'demo']
+  })
 
   
 

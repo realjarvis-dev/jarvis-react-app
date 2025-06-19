@@ -1,6 +1,7 @@
 // fuzzyTokenMatcher.js
 import Fuse from 'fuse.js'
 import { tokensByChain } from './config/lifi/tokens'
+import { pendleTokensByChain, type PendleToken } from './config/pendle/tokens'
 
 export type Token = {
   chainId: number
@@ -22,7 +23,23 @@ export class TokenMatcher {
    */
   constructor(chainId: number, threshold = 0.3, tokenList?: Token[]) {
     this.chainId = String(chainId)
-    this.tokenList = tokenList || tokensByChain[this.chainId as ChainIdKey] || []
+    
+    if (tokenList) {
+      this.tokenList = tokenList
+    } else {
+      const lifiTokens = tokensByChain[this.chainId as ChainIdKey] || []
+      const pendleTokens = pendleTokensByChain[this.chainId] || []
+      
+      const convertedPendleTokens: Token[] = pendleTokens.map((token: PendleToken) => ({
+        chainId: token.chainId,
+        address: token.address,
+        symbol: token.symbol,
+        name: token.name,
+        decimals: token.decimals
+      }))
+      
+      this.tokenList = [...lifiTokens, ...convertedPendleTokens]
+    }
 
     this.fuse = new Fuse(this.tokenList, {
       keys: [

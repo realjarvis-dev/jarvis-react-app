@@ -7,6 +7,8 @@ import { getWalletBalances } from '../utils/wallet'
 import { addBalanceVnet, ethToWei, REQUESTED_FUNDING_AMOUNT, TenderlyRpcResponse } from '../tenderly/fund'
 import { addBalanceAnvilFork } from '../anvil-fork/fund'
 import { TransactionResponse } from 'ethers'
+import { balanceChangePub } from '../pubsub/balance-change-pub'
+import { getUserId } from '../privy/client'
 
 interface ToolContext {
   toolCallId?: string
@@ -134,7 +136,9 @@ export const fundWalletTool = tool({
           }
         };
       }
-      
+      const userId = await getUserId()
+      balanceChangePub(userId, [networkContext.config.id], isDemo || true)
+
       return {
         _uiDisplayTool: true,
         summary: `Successfully funded wallet with 0.1 ETH`,
@@ -182,12 +186,13 @@ export async function fundUserWallet(
   try {
     // Convert requested funding amount to wei in hex format
     const fundAmount = ethToWei(REQUESTED_FUNDING_AMOUNT.toString());
-    
+    let result;
     if (process.env.NEXT_PUBLIC_TEST_NET_ENV === "development" && TENDERLY_DEMO_CONFIG.rpcUrl.includes('tenderly')) {
-      return await addBalanceVnet([walletAddress], fundAmount);
+      result = await addBalanceVnet([walletAddress], fundAmount);
     } else {
-      return await addBalanceAnvilFork(walletAddress, BigInt(fundAmount));
+      result = await addBalanceAnvilFork(walletAddress, BigInt(fundAmount));
     }
+    return result;
   } catch (error) {
     console.error('Error funding user wallet:', error);
     return {

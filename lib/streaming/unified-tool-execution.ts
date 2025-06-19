@@ -10,8 +10,8 @@ import { ErrorType, createErrorResponse, executeWithRetry } from '../utils/error
 import { getModel, isToolCallSupported } from '../utils/registry'
 import { ToolRegistry, getToolRegistry } from '../utils/tool-registry'
 
-import { parseToolCallXml } from './parse-tool-call'
 import { NetworkContext } from '../types/context'
+import { parseToolCallXml } from './parse-tool-call'
 
 /**
  * Result of a tool execution
@@ -47,8 +47,9 @@ class ToolResultCache {
     search: 5 * 60 * 1000, // 5 minutes
     gas_price: 3 * 60 * 1000, // 3 minutes (was 1 minute)
     wallet_balance: 2 * 60 * 1000, // 2 minutes (was 30 seconds)
-    pendle_opportunities: 5 * 60 * 1000, // 5 minutes (was 1 minute)
+    pendle_opportunities: 30 * 60 * 1000, // 30 minutes (was 5 minutes)
     pendle_quote: 30 * 1000, // 30 seconds
+    pendle_static_tokens: 24 * 60 * 60 * 1000, // 24 hours for static token metadata
     kodiak_opportunities: 5 * 60 * 1000, // 5 minutes (was 1 minute)
     generic_swap: 0, // No caching for swap transactions
     retrieve: 10 * 60 * 1000, // 10 minutes
@@ -154,11 +155,11 @@ async function executeNativeToolCall(
   // Prepare tool definitions for OpenAI native tool calling
   for (const toolName of availableTools) {
     const tool = registry.getTool(toolName)
-    if (tool) {
+    if (tool && tool.execute) {
       toolDefinitions[toolName] = {
         description: tool.description,
         parameters: tool.schema,
-        execute: (params: any, context?: any) => tool.execute(params, {
+        execute: (params: any, context?: any) => tool.execute!(params, {
           ...context,
           networkContext: defaultNetworkContext
         })
@@ -284,20 +285,22 @@ async function executeManualToolCall(
   let toolResults = toolResultCache.getCachedResult(toolName, toolParams)
   
   if (toolResults === null) {
-    try {
-      toolResults = await tool.execute(
-        toolParams,
-        { toolCallId, messages: [], networkContext: defaultNetworkContext }
-      )
-      
-      toolResultCache.storeResult(toolName, toolParams, toolResults)
-    } catch (error) {
-      console.error(`Error executing tool ${toolName}:`, error)
-      toolResults = createErrorResponse(
-        ErrorType.UNKNOWN,
-        `Error executing tool ${toolName}`,
-        error
-      )
+    if (tool.execute) {
+      try {
+        toolResults = await tool.execute(
+          toolParams,
+          { toolCallId, messages: [], networkContext: defaultNetworkContext }
+        )
+        
+        toolResultCache.storeResult(toolName, toolParams, toolResults)
+      } catch (error) {
+        console.error(`Error executing tool ${toolName}:`, error)
+        toolResults = createErrorResponse(
+          ErrorType.UNKNOWN,
+          `Error executing tool ${toolName}`,
+          error
+        )
+      }
     }
   }
 
@@ -326,6 +329,8 @@ async function executeManualToolCall(
     'wallet_balance',
     'pendle_quote', 
     'pendle_swap',
+    'pendle_mint',
+    'pendle_redeem',
     'kodiak_opportunities',
     'market_chart'
   ].includes(toolName)
