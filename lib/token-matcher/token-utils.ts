@@ -68,7 +68,7 @@ export async function findTokenInUserWalletByIdentifier(
     decimals: token.decimals
   }))
 
-  const tokenMatcher = new TokenMatcher(chainId, 0.3, tokenForMatcher)
+  const tokenMatcher = new TokenMatcher(chainId, 0.5, tokenForMatcher)
   const tokenMatches = tokenMatcher.match(identifier)
 
   const result = processTokenMatches(tokenMatches, identifier)
@@ -82,7 +82,7 @@ export async function findTokenInFullListByIdentifier(
   identifier: string,
   chainId: number
 ): Promise<TokenMatchResult> {
-  const tokenMatcher = new TokenMatcher(chainId, 0.3)
+  const tokenMatcher = new TokenMatcher(chainId, 0.5)
   const tokenMatches = tokenMatcher.match(identifier)
 
   const result = processTokenMatches(tokenMatches, identifier)

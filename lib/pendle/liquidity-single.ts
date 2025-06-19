@@ -1,7 +1,6 @@
 import { callSDK, MethodReturnType } from "./call-sdk";
 import { erc20Approval, executeSwapTransaction, TransactionError } from "./transactions";
 import { AddLiquidityData, RemoveLiquidityData } from "./types";
-import { executeTransaction } from "../privy/utils";
 
 
 async function formatOutputAndExecute<T>(res: MethodReturnType<T>, chainId: number, isDemo: boolean, executeTx: boolean, userAddress: string) {
@@ -12,20 +11,26 @@ async function formatOutputAndExecute<T>(res: MethodReturnType<T>, chainId: numb
             quoteData: res.data as T
         };
     }
+
+    try {
     if (res.tokenApprovals) {
         const tokenApprovals = res.tokenApprovals.map((tokenApproval) => {
+            
             return erc20Approval(tokenApproval.token, res.tx.to, tokenApproval.amount, userAddress, chainId, isDemo);
         });
+        const tx = await Promise.all(tokenApprovals);
+
     }
     // Send tx
-    try {
-        const tx = await executeTransaction(res.tx, chainId, {estimateGas: true}, isDemo);
+    
+        const tx = await executeSwapTransaction(res.tx, chainId, {estimateGas: true}, isDemo);
         return {
             status: 'success',
             hash: tx.hash,
             quoteData: res.data as T
         };
     } catch (error) {
+        console.log("error in formatOutputAndExecute", error)
         if (error instanceof TransactionError) {
             return {
                 status: 'fail',
@@ -71,6 +76,14 @@ export async function addLiquiditySingleEnableAggregator(chainId: number, market
         }
         
     }
+    
+    if (tokenInAddress !== "0x0000000000000000000000000000000000000000" && res.tokenApprovals?.length === 0) {
+        // fill in the tokenApprovals if it is not provided
+        res.tokenApprovals = [{
+            token: tokenInAddress,
+            amount: amountIn
+        }]
+    }
 
     return formatOutputAndExecute(res, chainId, isDemo, executeTx, receiverAddress);
 
@@ -102,3 +115,4 @@ export async function removeLiquiditySingleEnableAggregator(chainId: number, mar
 
     return formatOutputAndExecute(res, chainId, isDemo, executeTx, receiverAddress);
 }
+

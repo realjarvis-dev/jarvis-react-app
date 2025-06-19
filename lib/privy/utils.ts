@@ -306,6 +306,7 @@ export async function executeTransaction(
   },
   isDemo: boolean = false
 ) {
+  try {
   // Sign the transaction
   const { signedTransaction, provider } = await signTransaction(
     txData,
@@ -316,4 +317,8 @@ export async function executeTransaction(
 
   // Broadcast the transaction
   return await broadcastTransaction(signedTransaction, provider)
+  } catch (error) {
+    console.error('Error executing transaction:', error)
+    throw error
+  }
 }
