@@ -327,13 +327,14 @@ export const pendleOpportunitiesTool = tool({
 
 export const pendleQuoteTool = tool({
   description:
-    'Get a quote for swapping between ETH and a Pendle market token. This tool automatically renders UI.',
+    'Get a quote for swapping between ETH and a Pendle market token. Accepts either token address or token name (e.g. "sENA PT", "PT-sENA-25SEP2025"). This tool automatically renders UI.',
   parameters: z.object({
-    token_address: z.string().describe('The address of the PT or YT token. The market will be automatically determined from this token.'),
+    token_address: z.string().describe('The address of the PT or YT token, OR the token name/symbol (e.g. "sENA PT", "PT-sENA-25SEP2025"). The market will be automatically determined from this token.'),
     user_wallet_address: z.string().describe('The address of the user\'s EVM wallet.'),
     market_name: z
       .string()
-      .describe('The name of the market (required, e.g. "rswETH")'),
+      .optional()
+      .describe('The name of the market (optional, will be auto-determined if not provided)'),
     amount_in_human: z
       .string()
       .describe(
@@ -352,7 +353,7 @@ export const pendleQuoteTool = tool({
   }),
   execute: async (params, context: ToolContext) => {
     const {
-      token_address,
+      token_address: tokenAddressOrName,
       user_wallet_address,
       market_name,
       amount_in_human,
@@ -360,17 +361,49 @@ export const pendleQuoteTool = tool({
       direction
     } = params;
     const networkContext = context?.networkContext;
+    const chainId = networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID;
     
     try {
+      let resolvedTokenAddress = tokenAddressOrName;
+      let resolvedMarketName = market_name;
+      
+      const isAddress = /^0x[a-fA-F0-9]{40}$/.test(tokenAddressOrName);
+      
+      if (!isAddress) {
+        const { TokenMatcher } = await import('../token-matcher/fuzzy-token-matcher');
+        const tokenMatcher = new TokenMatcher(chainId);
+        const matches = tokenMatcher.match(tokenAddressOrName, 5);
+        
+        const pendleMatches = matches.filter(token => {
+          const symbol = token.symbol.toLowerCase();
+          const name = token.name.toLowerCase();
+          const query = tokenAddressOrName.toLowerCase().replace(/\s+/g, '');
+          
+          const isCorrectType = token_type === 'pt' ? symbol.includes('pt-') : symbol.includes('yt-');
+          
+          const matchesQuery = symbol.includes(query) || 
+                              name.includes(query) ||
+                              symbol.includes('sena') ||
+                              name.includes('sena');
+          
+          return isCorrectType && matchesQuery;
+        });
+        
+        if (pendleMatches.length > 0) {
+          resolvedTokenAddress = pendleMatches[0].address;
+          resolvedMarketName = resolvedMarketName || pendleMatches[0].name.replace(/^(PT|YT)\s+/, '');
+        } else {
+          throw new Error(`Could not find a Pendle ${token_type.toUpperCase()} token matching "${tokenAddressOrName}" on chain ${chainId}. Please provide a valid token address or try a different token name.`);
+        }
+      }
             
-      // Prepare swap configuration using helper function
       const swapConfig = await prepareSwapConfiguration(
-        token_address,
+        resolvedTokenAddress,
         token_type,
         direction,
         amount_in_human,
-        market_name,
-        networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID
+        resolvedMarketName,
+        chainId
       );
       
       // Call the getSwapQuote function
@@ -385,15 +418,14 @@ export const pendleQuoteTool = tool({
         user_wallet_address
       );
 
-      // Format output and calculate rates using helper function
       const outputData = await formatSwapOutput(
         swapData,
         direction,
-        token_address,
+        resolvedTokenAddress,
         amount_in_human,
         swapConfig.inputToken,
         swapConfig.outputToken,
-        networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID
+        chainId
       );
       
       const quoteData = {
@@ -407,7 +439,7 @@ export const pendleQuoteTool = tool({
         priceImpact: swapData.priceImpact,
         complete_time: new Date().toISOString(),
         foundMarketAddress: swapConfig.marketAddress,
-        foundTokenAddress: token_address
+        foundTokenAddress: resolvedTokenAddress
       }
       
       return {
@@ -419,7 +451,7 @@ export const pendleQuoteTool = tool({
       // Return a simple error object
       const errorData = {
         error: error.message || 'Failed to get quote',
-        token_address
+        token_address: tokenAddressOrName
       }
       
       return {

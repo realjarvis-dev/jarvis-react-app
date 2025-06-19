@@ -50,7 +50,7 @@ const get_system_prompt = (
     // Define tool descriptions with network context
     const toolDescMap: Record<string, string> = {
       pendle_opportunities: `- pendle_opportunities: Use when the user asks about Pendle yield opportunities, DeFi yields, or APY/yield farming on Ethereum. This tool returns a list of current Pendle opportunities with APY and liquidity information.`,
-      pendle_quote: `- pendle_quote: Use when the user wants to know the conversion rate between ETH and a specific Pendle market token (PT or YT) in either direction. Requires a token address to generate the quote. This tool can quote both ETH-to-token and token-to-ETH rates.`,
+      pendle_quote: `- pendle_quote: Use when the user wants to know the conversion rate between ETH and a specific Pendle market token (PT or YT) in either direction. Accepts either token address or token name (e.g. "sENA PT", "PT-sENA-25SEP2025"). This tool can quote both ETH-to-token and token-to-ETH rates.`,
       pendle_swap: `- pendle_swap: Use when the user wants to execute a swap between ETH and a Pendle market token (PT or YT) in either direction. This tool handles the actual transaction execution and requires slippage tolerance and user wallet address.`,
       pendle_mint: `- pendle_mint: Use when the user wants to mint Pendle tokens. Supports minting PT+YT tokens from underlying or SY tokens, or minting SY tokens from underlying tokens. Takes PT address and automatically determines all required token addresses.`,
       pendle_redeem: `- pendle_redeem: Use when the user wants to redeem/unwrap Pendle tokens. Supports redeeming PT+YT tokens to SY or underlying, or redeeming SY tokens to underlying. Takes PT address and automatically determines all required token addresses.`,
@@ -106,7 +106,7 @@ const get_system_prompt = (
     - Call it and let the UI show everything.  
     - Acknowledge: "Fetched the latest opportunities. Anything you'd like to explore?"`,
       pendle_quote: `  • pendle_quote
-    - The user will provide you the names of the tokens. Like "Quote for sENA PT to ETH" or "Conversion for ETH to PT sENA". Based on this info you have to call this tool with relevant parameter.  
+    - The user will provide you the names of the tokens. Like "Quote for sENA PT to ETH" or "Conversion for ETH to PT sENA". You can pass the token name directly (e.g. "sENA PT") and the tool will resolve it to the correct address.  
     - If the from or to information is missing, say: "Which token would you like quoted, or would you like to see opportunities first?"  
     - Otherwise, "Here's your quote—anything else?"`,
       pendle_redeem_quote: `  • pendle_redeem_quote
