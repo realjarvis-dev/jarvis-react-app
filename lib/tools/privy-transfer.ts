@@ -5,11 +5,11 @@ import { ethers } from 'ethers'
 import { parseUnits } from 'viem'
 import { z } from 'zod'
 import { getGasPriceByChainId } from '../blocknative/get-gas-price'
-import { erc20Transfer, executeSwapTransaction } from '../pendle/transactions'
 import { getUserId, getUserWallet } from '../privy/client'
 import { balanceChangePub } from '../pubsub/balance-change-pub'
 import { ToolContext } from '../types/context'
 import { findTokenInUserWalletByIdentifier } from '../token-matcher/token-utils'
+import { erc20Transfer, executeTransaction } from '../privy/utils'
 
 export const privyTransferTool = tool({
   description: 'Transfer native token or erc20 token to a specified address',
@@ -59,7 +59,7 @@ export const privyTransferTool = tool({
         // convert amount to wei
         const amountInWei = parseUnits(amount.toString(), nativeTokenDecimal)
         const chainId = networkContext?.selectedChainId || 1
-        const tx = await executeSwapTransaction(
+        const tx = await executeTransaction(
           {
             from: evmWallet.address,
             to: address as `0x${string}`,
@@ -70,7 +70,7 @@ export const privyTransferTool = tool({
           {
             estimateGas: false,
             gasLimit: ethers.toQuantity(21000) as `0x${string}`,
-            getGasPriceFunction: getGasPriceByChainId
+            eip1559GasPriceFunction: getGasPriceByChainId
           },
           isDemo
         )

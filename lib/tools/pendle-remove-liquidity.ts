@@ -11,7 +11,7 @@ import {
 } from '../token-matcher/token-utils'
 import { ToolContext } from '../types/context'
 import { getConfigByChainId } from '../network/config'
-import { getERC20Details } from '../pendle/transactions'
+import { getERC20Details } from '../privy/utils'
 import { balanceChangePub } from '../pubsub/balance-change-pub'
 
 export const pendleZapOutQuoteTool = tool({

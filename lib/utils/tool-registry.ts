@@ -177,7 +177,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism']
+    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism', 'unichain', 'bnbSmartChain', 'sonic']
   })
   
   registry.registerTool({
@@ -336,7 +336,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism']
+    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism', 'unichain', 'bnbSmartChain', 'sonic']
   })
   
   registry.registerTool({
@@ -349,7 +349,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism']
+    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism', 'unichain', 'bnbSmartChain', 'sonic']
   })
   
   registry.registerTool({
@@ -430,7 +430,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism']
+    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism', 'unichain', 'bnbSmartChain', 'sonic']
   })
 
   registry.registerTool({
@@ -443,7 +443,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism']
+    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism', 'unichain', 'bnbSmartChain', 'sonic']
   })
 
   

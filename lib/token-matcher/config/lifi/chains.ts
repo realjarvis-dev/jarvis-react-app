@@ -10,7 +10,7 @@ export const chains = [
     {
       "key": "bsc",
       "chainType": "EVM",
-      "name": "BSC",
+      "name": "BNB Smart Chain",
       "coin": "BNB",
       "id": 56,
       "mainnet": true
