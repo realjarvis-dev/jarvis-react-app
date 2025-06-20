@@ -31,8 +31,8 @@ export const unichainConfig: NetworkConfig = {
 }
 
 export const bnbSmartChainConfig: NetworkConfig = {
-  id: 'bnbSmartChain' as const,
-  displayName: 'BNB Smart Chain',
+  id: 'bsc' as const,
+  displayName: 'BSC',
   chainId: 56,
   rpcUrl: 'https://bnb-mainnet.g.alchemy.com/v2/yIRJoLX9TId7oSWYdnflKgthIy59m-vr',
   scanLink: 'bscscan.com',
@@ -133,7 +133,7 @@ export const allNetworkConfigs = {
   polygon: polygonConfig,
   optimism: optimismConfig,
   unichain: unichainConfig,
-  bnbSmartChain: bnbSmartChainConfig,
+  bsc: bnbSmartChainConfig,
   sonic: sonicConfig
 } as const
 
