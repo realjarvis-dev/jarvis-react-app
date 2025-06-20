@@ -1,4 +1,4 @@
-import { TokenMatcher, type Token } from './fuzzy-token-matcher'
+import { TokenMatcher, type Token, type ScoredToken } from './fuzzy-token-matcher'
 import { pendleTokenMatcher } from './pendle-token-matcher'
 import type { PendleToken } from './config/pendle/tokens'
 
@@ -11,7 +11,7 @@ export class UnifiedTokenMatcher {
     this.tokenMatcher = new TokenMatcher(chainId, threshold)
   }
 
-  public match(query: string, limit = 5): Token[] {
+  public match(query: string, limit = 5): ScoredToken[] {
     return this.tokenMatcher.match(query, limit)
   }
 

@@ -11,6 +11,10 @@ export type Token = {
   decimals: number
 }
 
+export type ScoredToken = Token & {
+  score: number
+}
+
 // Define a type for the keys of tokensByChain
 type ChainIdKey = keyof typeof tokensByChain
 
@@ -55,10 +59,11 @@ export class TokenMatcher {
 
   /**
    * @param {string} query — symbol or name to search
-   * @returns {{...Token, score: number}[]}
+   * @returns {ScoredToken[]}
    */
-  match(query: string, limit = 5): Token[] {
+  match(query: string, limit = 5): ScoredToken[] {
     return this.fuse
-      .search(query, { limit }).map(({ item }) => item)
+      .search(query, { limit })
+      .map(({ item, score }) => ({ ...item, score: score || 0 }))
   }
 }
