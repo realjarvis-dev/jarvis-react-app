@@ -83,6 +83,75 @@ async function processMention(tweet: any) {
 
 
 
+function generateOAuthSignature(method: string, url: string, oauthParams: Record<string, string>) {
+  const crypto = require('crypto');
+  
+  const sortedParams = Object.keys(oauthParams)
+    .sort()
+    .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(oauthParams[key])}`)
+    .join('&');
+  
+  const signatureBaseString = `${method.toUpperCase()}&${encodeURIComponent(url)}&${encodeURIComponent(sortedParams)}`;
+  
+  const signingKey = `${encodeURIComponent(process.env.TWITTER_API_SECRET!)}&${encodeURIComponent(process.env.TWITTER_ACCESS_TOKEN_SECRET!)}`;
+  
+  const signature = crypto.createHmac('sha1', signingKey).update(signatureBaseString).digest('base64');
+  
+  return signature;
+}
+
+async function postTweetReply(tweetId: string, message: string) {
+  const crypto = require('crypto');
+  const url = 'https://api.twitter.com/2/tweets';
+  const method = 'POST';
+  
+  const accessToken = process.env.TWITTER_ACCESS_TOKEN;
+  if (!accessToken) {
+    throw new Error('TWITTER_ACCESS_TOKEN environment variable is not set');
+  }
+  
+  const oauthParams: Record<string, string> = {
+    oauth_consumer_key: process.env.TWITTER_API_KEY!,
+    oauth_token: accessToken,
+    oauth_signature_method: 'HMAC-SHA1',
+    oauth_timestamp: Math.floor(Date.now() / 1000).toString(),
+    oauth_nonce: crypto.randomBytes(16).toString('hex'),
+    oauth_version: '1.0'
+  };
+  
+  const signature = generateOAuthSignature(method, url, oauthParams);
+  oauthParams.oauth_signature = signature;
+  
+  const authHeader = 'OAuth ' + Object.keys(oauthParams)
+    .map(key => `${encodeURIComponent(key)}="${encodeURIComponent(oauthParams[key])}"`)
+    .join(', ');
+  
+  const requestBody = {
+    text: message,
+    reply: {
+      in_reply_to_tweet_id: tweetId
+    }
+  };
+  
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': authHeader,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(requestBody)
+  });
+
+  if (!response.ok) {
+    const errorData = await response.text();
+    throw new Error(`Twitter API error: ${response.status} - ${errorData}`);
+  }
+
+  return await response.json();
+}
+
+
+
 async function replyToTweet(tweetId: string, message: string) {
   try {
     const maxLength = 280;
@@ -90,10 +159,9 @@ async function replyToTweet(tweetId: string, message: string) {
       ? message.substring(0, maxLength - 3) + '...'
       : message;
 
-    console.log(`Would reply to tweet ${tweetId}: ${truncatedMessage}`);
+    const result = await postTweetReply(tweetId, truncatedMessage);
     
-    // const twitterClient = await getTwitterClient();
-    // await twitterClient.v2.reply(truncatedMessage, tweetId);
+    console.log(`Successfully replied to tweet ${tweetId} with ID: ${result.data?.id}`);
   } catch (error) {
     console.error('Error replying to tweet:', error);
     throw error;
@@ -105,7 +173,10 @@ export async function GET(request: NextRequest) {
   const crc_token = url.searchParams.get('crc_token');
   
   if (crc_token) {
-    const responseToken = 'sha256=mock_response_token_for_testing';
+    const crypto = require('crypto');
+    const hmac = crypto.createHmac('sha256', process.env.TWITTER_WEBHOOK_SECRET || 'fallback_secret');
+    hmac.update(crc_token);
+    const responseToken = 'sha256=' + hmac.digest('base64');
     
     return NextResponse.json({ response_token: responseToken });
   }
