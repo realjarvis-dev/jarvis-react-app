@@ -1,7 +1,7 @@
 const fetch = require('node-fetch');
 
 async function testTwitterWebhook() {
-  const webhookUrl = 'http://localhost:3001/api/twitter-webhook';
+  const webhookUrl = 'http://localhost:3000/api/twitter-webhook';
   
   const mockTwitterPayload = {
     tweet_create_events: [
