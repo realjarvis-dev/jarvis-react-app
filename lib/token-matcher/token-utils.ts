@@ -1,5 +1,5 @@
 import { getTokenBalances } from '../alchemy/get-token-balance'
-import { Token, TokenMatcher } from './fuzzy-token-matcher'
+import { Token, TokenMatcher, ScoredToken } from './fuzzy-token-matcher'
 
 export interface TokenMatchResult {
   status: 'success' | 'fail'
@@ -7,11 +7,62 @@ export interface TokenMatchResult {
   error_message?: string
 }
 
+interface ScoredTokenMatch {
+  token: Token
+  score: number
+  characterOverlapScore: number
+  tokenTypePreference: number
+  totalScore: number
+}
+
+/**
+ * Enhanced scoring function that combines Fuse.js scores with character overlap and token type preference
+ */
+function calculateEnhancedTokenScore(
+  token: Token,
+  query: string,
+  fuseScore: number
+): ScoredTokenMatch {
+  const symbol = token.symbol.toLowerCase()
+  const name = token.name.toLowerCase()
+  const normalizedQuery = query.toLowerCase().replace(/\s+/g, '')
+  
+  let tokenTypePreference = 0
+  if (normalizedQuery.includes('pt') && symbol.includes('pt-')) {
+    tokenTypePreference = 0.3
+  } else if (normalizedQuery.includes('yt') && symbol.includes('yt-')) {
+    tokenTypePreference = 0.3
+  }
+  
+  let characterOverlapScore = 0
+  const matchesQuery = symbol.includes(normalizedQuery) || 
+                      name.includes(normalizedQuery) ||
+                      (normalizedQuery.includes('solvbtc') && (symbol.includes('xsolvbtc') || name.includes('xsolvbtc'))) ||
+                      (normalizedQuery.includes('sena') && (symbol.includes('sena') || name.includes('sena'))) ||
+                      (normalizedQuery.includes('eusde') && (symbol.includes('eusde') || name.includes('eusde'))) ||
+                      symbol.replace(/[^a-z0-9]/g, '').includes(normalizedQuery.replace(/[^a-z0-9]/g, '')) ||
+                      name.replace(/[^a-z0-9]/g, '').includes(normalizedQuery.replace(/[^a-z0-9]/g, ''))
+  
+  if (matchesQuery) {
+    characterOverlapScore = 0.4
+  }
+  
+  const totalScore = (1 - fuseScore) * 0.3 + characterOverlapScore + tokenTypePreference
+  
+  return {
+    token,
+    score: fuseScore,
+    characterOverlapScore,
+    tokenTypePreference,
+    totalScore
+  }
+}
+
 /**
  * Helper function to process token matches and return appropriate result
  */
 function processTokenMatches(
-  tokenMatches: Token[],
+  tokenMatches: ScoredToken[],
   identifier: string
 ): TokenMatchResult {
   if (tokenMatches.length === 0) {
@@ -21,26 +72,35 @@ function processTokenMatches(
     }
   }
 
-  // test for exact match
-  const token = tokenMatches[0]
-  if (
-    tokenMatches.length > 1 &&
-    !(
-      token.symbol.toLowerCase() === identifier.toLowerCase() ||
-      token.address.toLowerCase() === identifier.toLowerCase() ||
-      token.name.toLowerCase() === identifier.toLowerCase()
-    )
-  ) {
-    const possibleTokens = tokenMatches.map(token => token.name)
+  const exactMatch = tokenMatches.find(token =>
+    token.symbol.toLowerCase() === identifier.toLowerCase() ||
+    token.address.toLowerCase() === identifier.toLowerCase() ||
+    token.name.toLowerCase() === identifier.toLowerCase()
+  )
+  
+  if (exactMatch) {
     return {
-      status: 'fail',
-      error_message: `Found multiple matches, possible matches: ${possibleTokens}`
+      status: 'success',
+      token: exactMatch
+    }
+  }
+
+  if (tokenMatches.length > 1) {
+    const scoredMatches = tokenMatches.map(token => 
+      calculateEnhancedTokenScore(token, identifier, token.score)
+    )
+    
+    scoredMatches.sort((a, b) => b.totalScore - a.totalScore)
+    
+    return {
+      status: 'success',
+      token: scoredMatches[0].token
     }
   }
 
   return {
     status: 'success',
-    token
+    token: tokenMatches[0]
   }
 }
 
