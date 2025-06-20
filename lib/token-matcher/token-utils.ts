@@ -49,6 +49,9 @@ function calculateEnhancedTokenScore(
   
   const totalScore = (1 - fuseScore) * 0.3 + characterOverlapScore + tokenTypePreference
   
+  console.log(`[TOKEN MATCHING] Query: "${query}" -> Token: ${symbol} (${name})`)
+  console.log(`[TOKEN MATCHING] Scores - Fuse: ${fuseScore.toFixed(3)}, CharOverlap: ${characterOverlapScore}, TokenType: ${tokenTypePreference}, Total: ${totalScore.toFixed(3)}`)
+  
   return {
     token,
     score: fuseScore,
@@ -86,11 +89,15 @@ function processTokenMatches(
   }
 
   if (tokenMatches.length > 1) {
+    console.log(`[TOKEN MATCHING] Multiple matches found for "${identifier}": ${tokenMatches.length} tokens`)
+    
     const scoredMatches = tokenMatches.map(token => 
       calculateEnhancedTokenScore(token, identifier, token.score)
     )
     
     scoredMatches.sort((a, b) => b.totalScore - a.totalScore)
+    
+    console.log(`[TOKEN MATCHING] Best match selected: ${scoredMatches[0].token.symbol} (${scoredMatches[0].token.name}) with score ${scoredMatches[0].totalScore.toFixed(3)}`)
     
     return {
       status: 'success',
