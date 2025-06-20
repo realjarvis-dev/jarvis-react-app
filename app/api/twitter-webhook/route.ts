@@ -23,11 +23,15 @@ interface TwitterWebhookEvent {
 export async function POST(request: NextRequest) {
   try {
     const body: TwitterWebhookEvent = await request.json();
+    console.log('Webhook received payload:', JSON.stringify(body, null, 2));
     
     if (body.tweet_create_events) {
+      console.log(`Processing ${body.tweet_create_events.length} tweet events`);
       for (const tweet of body.tweet_create_events) {
         await processMention(tweet);
       }
+    } else {
+      console.log('No tweet_create_events in payload');
     }
 
     return NextResponse.json({ status: 'success' });
@@ -42,16 +46,22 @@ export async function POST(request: NextRequest) {
 
 async function processMention(tweet: any) {
   try {
+    console.log(`Processing tweet from @${tweet.user.screen_name}: "${tweet.text}"`);
+    console.log('User mentions:', tweet.entities.user_mentions.map((m: any) => m.screen_name));
+    
     const jarvisMention = tweet.entities.user_mentions.find(
       (mention: any) => mention.screen_name.toLowerCase() === 'jarviscryptoai'
     );
     
     if (!jarvisMention) {
+      console.log('No @JarvisCryptoAI mention found, skipping');
       return;
     }
 
     const botUserId = process.env.TWITTER_BOT_USER_ID;
+    console.log(`Bot user ID: ${botUserId}, Tweet user ID: ${tweet.user.id_str}`);
     if (tweet.user.id_str === botUserId) {
+      console.log('Skipping own tweet');
       return;
     }
 
