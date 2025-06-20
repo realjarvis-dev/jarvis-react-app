@@ -37,7 +37,23 @@ export async function processTwitterQuery(
 function formatTwitterResponse(result: string): string {
   const maxLength = 250;
   
-  return result.length > maxLength 
-    ? result.substring(0, maxLength - 3) + '...'
-    : result;
+  let cryptoResponse = result;
+  
+  cryptoResponse = cryptoResponse
+    .replace(/\bBitcoin\b/gi, 'Bitcoin 🟠')
+    .replace(/\bETH\b/gi, 'ETH 💎')
+    .replace(/\bEthereum\b/gi, 'Ethereum 💎')
+    .replace(/\bprice\b/gi, 'price 📊')
+    .replace(/\bincrease\b/gi, 'pump 🚀')
+    .replace(/\bdecrease\b/gi, 'dump 📉')
+    .replace(/\bhigh\b/gi, 'ATH 🔥')
+    .replace(/\blow\b/gi, 'bottom 🩸');
+  
+  if (!cryptoResponse.startsWith('GM') && !cryptoResponse.startsWith('🚀')) {
+    cryptoResponse = '🚀 ' + cryptoResponse;
+  }
+  
+  return cryptoResponse.length > maxLength 
+    ? cryptoResponse.substring(0, maxLength - 3) + '...'
+    : cryptoResponse;
 }

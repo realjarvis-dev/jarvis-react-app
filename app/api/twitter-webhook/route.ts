@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
 async function processMention(tweet: any) {
   try {
     const jarvisMention = tweet.entities.user_mentions.find(
-      (mention: any) => mention.screen_name.toLowerCase() === 'jarvis'
+      (mention: any) => mention.screen_name.toLowerCase() === 'jarviscryptoai'
     );
     
     if (!jarvisMention) {
@@ -56,14 +56,14 @@ async function processMention(tweet: any) {
     }
 
     const query = tweet.text
-      .replace(/@jarvis\s*/gi, '')
+      .replace(/@jarviscryptoai\s*/gi, '')
       .replace(/@\w+\s*/g, '')
       .trim();
 
     if (!query) {
       await replyToTweet(
         tweet.id_str,
-        `Hi @${tweet.user.screen_name}! Please include your investment research question after mentioning @jarvis.`
+        `GM @${tweet.user.screen_name}! 🚀 Drop your crypto research question after tagging @JarvisCryptoAI and I'll alpha you up! 📈`
       );
       return;
     }

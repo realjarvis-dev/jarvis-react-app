@@ -7,7 +7,7 @@ async function testTwitterWebhook() {
     tweet_create_events: [
       {
         id_str: '1234567890',
-        text: '@jarvis What is the current price of Bitcoin?',
+        text: '@JarvisCryptoAI What is the current price of Bitcoin?',
         user: {
           id_str: '987654321',
           screen_name: 'testuser'
@@ -15,7 +15,7 @@ async function testTwitterWebhook() {
         entities: {
           user_mentions: [
             {
-              screen_name: 'jarvis',
+              screen_name: 'JarvisCryptoAI',
               id_str: '123456789'
             }
           ]
