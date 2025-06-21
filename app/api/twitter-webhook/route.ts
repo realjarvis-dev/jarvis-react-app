@@ -73,12 +73,22 @@ async function checkMentions() {
     if (mentions.data && mentions.data.length > 0) {
       console.log(`Found ${mentions.data.length} new mentions`);
       
-      for (const mention of mentions.data) {
-        await processMention(mention, mentions.includes?.users || []);
+      const mentionsToProcess = mentions.data.slice(0, 3);
+      if (mentions.data.length > 3) {
+        console.log(`Rate limiting: processing first 3 of ${mentions.data.length} mentions to avoid API limits`);
       }
       
-      if (mentions.meta?.newest_id) {
-        setLastProcessedMentionId(mentions.meta.newest_id);
+      for (const mention of mentionsToProcess) {
+        try {
+          await processMention(mention, mentions.includes?.users || []);
+        } catch (error) {
+          console.error(`Error processing mention ${mention.id}:`, error);
+        }
+      }
+      
+      const lastProcessedMention = mentionsToProcess[mentionsToProcess.length - 1];
+      if (lastProcessedMention) {
+        setLastProcessedMentionId(lastProcessedMention.id);
       }
     } else {
       console.log('No new mentions found');

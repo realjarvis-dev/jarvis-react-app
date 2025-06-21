@@ -35,6 +35,8 @@ interface TwitterMentionsResponse {
 let lastProcessedMentionId: string | null = null;
 let cachedUserId: string | null = null;
 let lastRateLimitReset: number = 0;
+let lastMentionProcessTime: number = 0;
+const MENTION_PROCESSING_DELAY = 5000; // 5 seconds between mentions
 
 export function getLastProcessedMentionId(): string | null {
   return lastProcessedMentionId;
@@ -46,6 +48,14 @@ export function setLastProcessedMentionId(id: string): void {
 
 async function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function isRateLimited(): boolean {
+  return Date.now() < lastRateLimitReset;
+}
+
+function setRateLimitReset(resetTime: number): void {
+  lastRateLimitReset = resetTime;
 }
 
 async function handleRateLimit(response: Response, operation: string): Promise<boolean> {
@@ -60,9 +70,16 @@ async function handleRateLimit(response: Response, operation: string): Promise<b
       const waitTime = Math.max(resetTimestamp - Date.now(), 60000); // Wait at least 1 minute
       console.log(`Waiting ${Math.round(waitTime / 1000)}s for rate limit reset...`);
       
-      if (waitTime <= 15 * 60 * 1000) {
+      const maxWaitTime = operation === 'postTweetReply' ? 20 * 60 * 1000 : 15 * 60 * 1000;
+      
+      if (waitTime <= maxWaitTime) {
+        setRateLimitReset(resetTimestamp);
         await sleep(waitTime);
         return true; // Indicate we should retry
+      } else {
+        console.log(`Wait time too long (${Math.round(waitTime / 1000)}s), skipping retry for ${operation}`);
+        setRateLimitReset(resetTimestamp);
+        return false;
       }
     } else {
       console.log('No reset time provided, waiting 5 minutes...');
@@ -190,20 +207,32 @@ export async function fetchMentions(userId: string): Promise<TwitterMentionsResp
 
 export async function processMention(mention: TwitterMention, users: TwitterUser[]) {
   try {
+    const now = Date.now();
+    const timeSinceLastProcess = now - lastMentionProcessTime;
+    if (timeSinceLastProcess < MENTION_PROCESSING_DELAY) {
+      const waitTime = MENTION_PROCESSING_DELAY - timeSinceLastProcess;
+      console.log(`Rate limiting: waiting ${waitTime}ms before processing next mention`);
+      await sleep(waitTime);
+    }
+    lastMentionProcessTime = Date.now();
+
     const author = users.find(user => user.id === mention.author_id);
     const authorUsername = author?.username || 'unknown';
     
     console.log(`Processing mention from @${authorUsername}: "${mention.text}"`);
     
-    let botUserId: string | null = null;
-    try {
-      botUserId = await getJarvisUserId();
-      if (mention.author_id === botUserId) {
-        console.log('Skipping own mention');
-        return;
+    let botUserId: string | null = cachedUserId;
+    if (!botUserId) {
+      try {
+        botUserId = await getJarvisUserId();
+      } catch (error) {
+        console.warn('Could not verify bot user ID due to rate limiting, continuing with mention processing');
       }
-    } catch (error) {
-      console.warn('Could not verify bot user ID due to rate limiting, continuing with mention processing');
+    }
+    
+    if (botUserId && mention.author_id === botUserId) {
+      console.log('Skipping own mention');
+      return;
     }
 
     const query = mention.text
@@ -229,11 +258,15 @@ export async function processMention(mention: TwitterMention, users: TwitterUser
     const authorUsername = author?.username || 'unknown';
     
     const errorMessage = error instanceof Error ? error.message : String(error);
-    if (!errorMessage.includes('429')) {
-      await replyToTweet(
-        mention.id,
-        `@${authorUsername} Sorry, I encountered an error processing your request. Please try again later.`
-      );
+    if (!errorMessage.includes('429') && !errorMessage.includes('rate limit')) {
+      try {
+        await replyToTweet(
+          mention.id,
+          `@${authorUsername} Sorry, I encountered an error processing your request. Please try again later.`
+        );
+      } catch (replyError) {
+        console.log(`Could not send error reply due to rate limiting for mention ${mention.id}`);
+      }
     } else {
       console.log(`Skipping error reply due to rate limiting for mention ${mention.id}`);
     }
@@ -256,7 +289,7 @@ async function postTweetReply(tweetId: string, message: string) {
   const url = 'https://api.twitter.com/2/tweets';
   
   let retryCount = 0;
-  const maxRetries = 2; // Fewer retries for posting to avoid spam
+  const maxRetries = 3; // Increased retries for better reliability
 
   while (retryCount < maxRetries) {
     try {
