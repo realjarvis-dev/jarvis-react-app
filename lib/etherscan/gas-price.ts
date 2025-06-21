@@ -2,7 +2,7 @@ import axios from 'axios'
 import { hexToBigInt } from 'viem'
 export const etherScanApiUrl = "https://api.etherscan.io/v2/api"
 
-export async function getProposedGasPrice(chainId: number=1): Promise<number> {
+export async function getProposedGasPrice(chainId: number): Promise<number> {
   const response = await axios.get(etherScanApiUrl + "?chainid=" + chainId + "&module=gastracker&action=gasoracle&apikey=" + process.env.ETHERSCAN_API_KEY)
   console.log(response.data)
   return response.data.result.ProposeGasPrice
