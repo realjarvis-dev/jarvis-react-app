@@ -170,7 +170,10 @@ export async function fetchMentions(userId: string): Promise<TwitterMentionsResp
     throw new Error('TWITTER_API_BEARER_TOKEN environment variable is not set');
   }
 
-  let url = `https://api.twitter.com/2/users/${userId}/mentions?tweet.fields=created_at,author_id,public_metrics&expansions=author_id&user.fields=username,name&max_results=10`;
+  const cutoffTime = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const startTime = cutoffTime.toISOString();
+
+  let url = `https://api.twitter.com/2/users/${userId}/mentions?tweet.fields=created_at,author_id,public_metrics&expansions=author_id&user.fields=username,name&max_results=10&start_time=${startTime}`;
 
   if (lastProcessedMentionId) {
     url += `&since_id=${lastProcessedMentionId}`;
