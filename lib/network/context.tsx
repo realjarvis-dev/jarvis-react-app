@@ -62,7 +62,7 @@ export function NetworkProvider({
   initialIsDemoMode 
 }: NetworkProviderProps) {
   const [mounted, setMounted] = useState(false)
-  const [isDemoMode, setIsDemoModeInternal] = useState(initialIsDemoMode ?? false)
+  const [isDemoMode, setIsDemoModeInternal] = useState(initialIsDemoMode ?? true)
   const [selectedChain, setSelectedChainInternal] = useState<ChainType>(initialSelectedChain ?? 'ethereum')
 
   const allChainTypes = Object.keys(allNetworkConfigs) as ChainType[]
