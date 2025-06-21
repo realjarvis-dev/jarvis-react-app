@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function startMentionPolling() {
+export async function startMentionPolling() {
   if (pollingInterval) {
     console.log('Mention polling already running');
     return;

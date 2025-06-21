@@ -23,6 +23,7 @@ const nextConfig = {
     ]
   },
   experimental: {
+    instrumentation: true,
     optimizeCss: true,
     optimizePackageImports: ['@ai-sdk/react', '@privy-io/react-auth', 'ethers', 'axios']
   },
