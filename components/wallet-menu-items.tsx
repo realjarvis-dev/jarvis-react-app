@@ -50,7 +50,7 @@ export function WalletMenuItems() {
         const solanaWalletToDelegate = solanaWallets.find((wallet) => wallet.walletClientType === 'privy');
         setSolanaWalletToDelegate(solanaWalletToDelegate);
     }
-  }, [solanaReady])
+  }, [solanaReady, solanaWallets])
 
   useEffect(() => {
     if (evmReady) {
@@ -59,7 +59,7 @@ export function WalletMenuItems() {
       // console.log('evmWalletToDelegate', evmWalletToDelegate)
       setEvmWalletToDelegate(evmWalletToDelegate);
     }
-  }, [evmReady])
+  }, [evmReady, evmWallets])
 
   useEffect(() => {
     if (!userReady) return;
