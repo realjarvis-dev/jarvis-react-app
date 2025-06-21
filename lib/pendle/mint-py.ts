@@ -2,8 +2,7 @@ import { approvePendleTokens, executeTransaction } from '@/lib/privy/utils';
 import { callSDK } from './call-sdk';
 import { MintPyData } from './types';
 
-// Chain ID for Ethereum mainnet
-const CHAIN_ID = 1;
+
 
 /**
  * Get Pendle mint PY data using Pendle SDK (simplified approach with Privy)
@@ -20,7 +19,7 @@ export async function getPendleMintPyData(
   tokenIn: string,
   amountIn: string,
   slippage: number = 0.01,
-  chainId: number = CHAIN_ID,
+  chainId: number = 1,
   userWalletAddress: string
 ) {
   const res = await callSDK<MintPyData>(`/v1/sdk/${chainId}/mint`, {
@@ -54,7 +53,7 @@ export async function executePendleMintPy(
   tokenIn: string,
   amountIn: string,
   slippage: number = 0.01,
-  chainId: number = CHAIN_ID,
+  chainId: number = 1,
   isDemo: boolean = false,
   userWalletAddress: string
 ) {
@@ -125,7 +124,7 @@ export async function getMintPyQuote(
   tokenIn: string,
   amountIn: string,
   slippage: number = 0.01,
-  chainId: number = CHAIN_ID,
+  chainId: number = 1,
   userWalletAddress: string
 ) {
   const mintResult = await getPendleMintPyData(

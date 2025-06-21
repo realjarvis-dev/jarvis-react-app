@@ -347,7 +347,8 @@ export const pendleOpportunitiesTool = tool({
     const networkContext = context?.networkContext;
     
     try {
-      const markets = await getPendleMarkets()
+      const chainId = networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID
+      const markets = await getPendleMarkets('active', chainId)
 
       // Convert percentage inputs to decimals if they are provided
       let decimal_apy_gte = undefined
@@ -435,7 +436,7 @@ export const pendleQuoteTool = tool({
       const { resolvedTokenAddress, resolvedMarketName } = await resolveTokenAddress(
         tokenAddressOrName, 
         token_type, 
-        chainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID
+        networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID
       );
             
       const swapConfig = await prepareSwapConfiguration(
@@ -455,7 +456,7 @@ export const pendleQuoteTool = tool({
         swapConfig.amountInWei,
         PENDLE_CONFIG.DEFAULT_SLIPPAGE,
         PENDLE_CONFIG.ENABLE_AGGREGATOR,
-        PENDLE_CONFIG.DEFAULT_CHAIN_ID,
+        networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID,
         user_wallet_address
       );
 
@@ -583,7 +584,7 @@ export const pendleSwapTool = tool({
       const { resolvedTokenAddress, resolvedMarketName } = await resolveTokenAddress(
         token_address, 
         token_type, 
-        chainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID
+        chainId || networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID
       );
       
       // Prepare swap configuration using helper function
