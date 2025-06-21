@@ -325,10 +325,21 @@ async function postTweetReply(tweetId: string, message: string) {
 async function replyToTweet(tweetId: string, message: string) {
   try {
     const maxLength = 280;
-    const truncatedMessage = message.length > maxLength 
-      ? message.substring(0, maxLength - 3) + '...'
-      : message;
+    
+    if (message.length <= maxLength) {
+      const result = await postTweetReply(tweetId, message);
+      
+      if (result.success === false) {
+        console.log(`Could not reply to tweet ${tweetId}: ${result.reason}`);
+        return;
+      }
+      
+      console.log(`Successfully replied to tweet ${tweetId} with ID: ${result.data?.id}`);
+      return;
+    }
 
+    const truncatedMessage = truncateAtWordBoundary(message, maxLength - 3) + '...';
+    
     const result = await postTweetReply(tweetId, truncatedMessage);
     
     if (result.success === false) {
@@ -336,8 +347,23 @@ async function replyToTweet(tweetId: string, message: string) {
       return;
     }
     
-    console.log(`Successfully replied to tweet ${tweetId} with ID: ${result.data?.id}`);
+    console.log(`Successfully replied to tweet ${tweetId} with ID: ${result.data?.id} (truncated from ${message.length} to ${truncatedMessage.length} chars)`);
   } catch (error) {
     console.error('Error replying to tweet:', error);
   }
+}
+
+function truncateAtWordBoundary(text: string, maxLength: number): string {
+  if (text.length <= maxLength) {
+    return text;
+  }
+  
+  const truncated = text.substring(0, maxLength);
+  const lastSpaceIndex = truncated.lastIndexOf(' ');
+  
+  if (lastSpaceIndex > maxLength * 0.7) {
+    return truncated.substring(0, lastSpaceIndex);
+  }
+  
+  return truncated;
 }

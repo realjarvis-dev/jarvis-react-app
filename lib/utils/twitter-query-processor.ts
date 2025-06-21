@@ -6,8 +6,12 @@ export async function processTwitterQuery(
   userId: string
 ): Promise<string> {
   try {
+    const twitterOptimizedQuery = `${query}
+
+TWITTER RESPONSE: Provide a concise, crypto-native response in under 200 characters. Use emojis, focus on key insights only. Avoid lengthy explanations or multiple paragraphs.`;
+
     const researcherResult = researcher({
-      messages: [{ role: 'user', content: query }],
+      messages: [{ role: 'user', content: twitterOptimizedQuery }],
       model: 'openai:gpt-4o-mini',
       allowWeb3Tools: 'false',
       userEvmWallet: undefined,
@@ -18,7 +22,7 @@ export async function processTwitterQuery(
 
     const result = await streamText({
       ...researcherResult,
-      maxTokens: 500,
+      maxTokens: 150,
     });
 
     let fullText = '';
@@ -37,9 +41,12 @@ export async function processTwitterQuery(
 function formatTwitterResponse(result: string): string {
   const maxLength = 250;
   
-  let cryptoResponse = result;
+  let cryptoResponse = result.trim();
   
   cryptoResponse = cryptoResponse
+    .replace(/^(Here's|Here are|Based on|According to|The|This|It appears that|It seems that)\s*/gi, '')
+    .replace(/\s+(currently|right now|at the moment|as of now)\s+/gi, ' ')
+    .replace(/\s+(you should know|it's important to note|keep in mind)\s+/gi, ' ')
     .replace(/\bBitcoin\b/gi, 'Bitcoin 🟠')
     .replace(/\bETH\b/gi, 'ETH 💎')
     .replace(/\bEthereum\b/gi, 'Ethereum 💎')
@@ -47,13 +54,29 @@ function formatTwitterResponse(result: string): string {
     .replace(/\bincrease\b/gi, 'pump 🚀')
     .replace(/\bdecrease\b/gi, 'dump 📉')
     .replace(/\bhigh\b/gi, 'ATH 🔥')
-    .replace(/\blow\b/gi, 'bottom 🩸');
+    .replace(/\blow\b/gi, 'bottom 🩸')
+    .replace(/\s+/g, ' ');
   
   if (!cryptoResponse.startsWith('GM') && !cryptoResponse.startsWith('🚀')) {
     cryptoResponse = '🚀 ' + cryptoResponse;
   }
   
   return cryptoResponse.length > maxLength 
-    ? cryptoResponse.substring(0, maxLength - 3) + '...'
+    ? truncateAtWordBoundary(cryptoResponse, maxLength - 3) + '...'
     : cryptoResponse;
+}
+
+function truncateAtWordBoundary(text: string, maxLength: number): string {
+  if (text.length <= maxLength) {
+    return text;
+  }
+  
+  const truncated = text.substring(0, maxLength);
+  const lastSpaceIndex = truncated.lastIndexOf(' ');
+  
+  if (lastSpaceIndex > maxLength * 0.7) {
+    return truncated.substring(0, lastSpaceIndex);
+  }
+  
+  return truncated;
 }
