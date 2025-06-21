@@ -1,51 +1,57 @@
 const fetch = require('node-fetch');
 
-async function testTwitterWebhook() {
-  const webhookUrl = 'http://localhost:3001/api/twitter-webhook';
-  
-  const mockTwitterPayload = {
-    tweet_create_events: [
-      {
-        id_str: '1234567890',
-        text: '@JarvisCryptoAI What is the current price of Bitcoin?',
-        user: {
-          id_str: '987654321',
-          screen_name: 'testuser'
-        },
-        entities: {
-          user_mentions: [
-            {
-              screen_name: 'JarvisCryptoAI',
-              id_str: '123456789'
-            }
-          ]
-        }
-      }
-    ]
-  };
+const testActions = [
+  { action: 'status' },
+  { action: 'start' },
+  { action: 'check' },
+  { action: 'stop' }
+];
 
+async function testMentionPolling() {
   try {
-    console.log('Testing Twitter webhook endpoint...');
-    const response = await fetch(webhookUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(mockTwitterPayload)
-    });
-
-    const result = await response.json();
-    console.log('Response status:', response.status);
-    console.log('Response body:', result);
+    console.log('Testing Twitter mention polling endpoint...');
     
-    if (response.status === 200) {
-      console.log('✅ Webhook endpoint test passed!');
-    } else {
-      console.log('❌ Webhook endpoint test failed!');
+    for (const testAction of testActions) {
+      console.log(`\n--- Testing ${testAction.action} action ---`);
+      
+      let url = 'http://localhost:3000/api/twitter-webhook';
+      let method = 'GET';
+      let body = null;
+      
+      if (testAction.action === 'check') {
+        method = 'POST';
+        body = JSON.stringify(testAction);
+      } else {
+        url += `?action=${testAction.action}`;
+      }
+      
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body
+      });
+
+      const result = await response.json();
+      console.log('Response status:', response.status);
+      console.log('Response body:', result);
+      
+      if (response.ok) {
+        console.log(`✅ ${testAction.action} test successful!`);
+      } else {
+        console.log(`❌ ${testAction.action} test failed!`);
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
   } catch (error) {
-    console.error('Test error:', error.message);
+    console.error('❌ Error testing mention polling:', error);
   }
 }
 
-testTwitterWebhook();
+console.log('Starting Twitter mention polling tests...\n');
+
+testMentionPolling().then(() => {
+  console.log('\nAll tests completed!');
+});
