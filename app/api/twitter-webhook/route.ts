@@ -234,12 +234,7 @@ async function postTweetReply(tweetId: string, message: string) {
     oauth_version: '1.0'
   };
 
-  const requestParams: Record<string, string> = {
-    text: message,
-    reply: JSON.stringify({ in_reply_to_tweet_id: tweetId })
-  };
-
-  const allParams: Record<string, string> = { ...oauthParams, ...requestParams };
+  const allParams: Record<string, string> = { ...oauthParams };
   const sortedParams = Object.keys(allParams).sort().map(key => `${key}=${encodeURIComponent(allParams[key])}`).join('&');
   
   const baseString = `POST&${encodeURIComponent(url)}&${encodeURIComponent(sortedParams)}`;
