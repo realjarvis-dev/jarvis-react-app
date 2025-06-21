@@ -321,7 +321,7 @@ async function formatSwapOutput(
 
 export const pendleOpportunitiesTool = tool({
   description:
-    'Get Pendle yield opportunities on Ethereum. This tool automatically renders UI.',
+    'Get Pendle yield opportunities. This tool automatically renders UI.',
   parameters: z.object({
     max_results: z
       .number()
@@ -346,8 +346,13 @@ export const pendleOpportunitiesTool = tool({
     const { max_results, apy_gte, apy_lte } = params;
     const networkContext = context?.networkContext;
     
+    if (!networkContext?.selectedChainId) {
+      throw new Error('Network context with selectedChainId is required');
+    }
+    
+    const chainId = networkContext.selectedChainId;
+    
     try {
-      const chainId = networkContext?.selectedChainId!
       const markets = await getPendleMarkets('active', chainId)
 
       // Convert percentage inputs to decimals if they are provided
