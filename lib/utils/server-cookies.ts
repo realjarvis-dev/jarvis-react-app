@@ -14,7 +14,7 @@ export async function getServerSideUIState(): Promise<ServerSideUIState> {
   const cookieStore = await cookies()
   
   const searchModeCookie = cookieStore.get('search-mode')?.value
-  const searchMode = searchModeCookie !== null ? searchModeCookie === 'true' : true
+  const searchMode = searchModeCookie != null ? searchModeCookie === 'true' : true
   
   let selectedModel: Model | null = null
   const selectedModelCookie = cookieStore.get('selectedModel')?.value
@@ -28,7 +28,7 @@ export async function getServerSideUIState(): Promise<ServerSideUIState> {
   
   const selectedChain = (cookieStore.get(USER_SELECTED_NETWORK_COOKIE_KEY)?.value as ChainType) || 'ethereum'
   const demoModeCookie = cookieStore.get(USER_DEMO_MODE_COOKIE_KEY)?.value
-  const isDemoMode = demoModeCookie !== null ? demoModeCookie === 'true' : true
+  const isDemoMode = demoModeCookie != null ? demoModeCookie === 'true' : true
   
   return {
     searchMode,
