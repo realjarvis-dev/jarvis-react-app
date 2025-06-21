@@ -4,7 +4,8 @@ import {
   fetchMentions, 
   processMention, 
   getLastProcessedMentionId, 
-  setLastProcessedMentionId 
+  setLastProcessedMentionId,
+  hasRepliedToMention
 } from '@/lib/utils/twitter-mention-handler';
 
 let pollingInterval: NodeJS.Timeout | null = null;

@@ -38,12 +38,26 @@ let lastRateLimitReset: number = 0;
 let lastMentionProcessTime: number = 0;
 const MENTION_PROCESSING_DELAY = 5000; // 5 seconds between mentions
 
+let repliedMentions: Set<string> = new Set();
+
 export function getLastProcessedMentionId(): string | null {
   return lastProcessedMentionId;
 }
 
 export function setLastProcessedMentionId(id: string): void {
   lastProcessedMentionId = id;
+}
+
+export function hasRepliedToMention(mentionId: string): boolean {
+  return repliedMentions.has(mentionId);
+}
+
+export function markMentionAsReplied(mentionId: string): void {
+  repliedMentions.add(mentionId);
+  if (repliedMentions.size > 1000) {
+    const mentionsArray = Array.from(repliedMentions);
+    repliedMentions = new Set(mentionsArray.slice(-500)); // Keep last 500
+  }
 }
 
 async function sleep(ms: number): Promise<void> {
@@ -62,16 +76,16 @@ async function handleRateLimit(response: Response, operation: string): Promise<b
   if (response.status === 429) {
     const resetTime = response.headers.get('x-rate-limit-reset');
     const remainingRequests = response.headers.get('x-rate-limit-remaining');
-    
+
     console.log(`Rate limit hit for ${operation}. Remaining: ${remainingRequests}, Reset: ${resetTime}`);
-    
+
     if (resetTime) {
       const resetTimestamp = parseInt(resetTime) * 1000;
       const waitTime = Math.max(resetTimestamp - Date.now(), 60000); // Wait at least 1 minute
       console.log(`Waiting ${Math.round(waitTime / 1000)}s for rate limit reset...`);
-      
+
       const maxWaitTime = operation === 'postTweetReply' ? 20 * 60 * 1000 : 15 * 60 * 1000;
-      
+
       if (waitTime <= maxWaitTime) {
         setRateLimitReset(resetTimestamp);
         await sleep(waitTime);
@@ -130,14 +144,14 @@ export async function getJarvisUserId(): Promise<string> {
 
       const errorData = await response.text();
       console.error(`Failed to get user ID: ${response.status} - ${errorData}`);
-      
+
       if (retryCount === maxRetries - 1) {
         throw new Error(`Failed to get user ID after ${maxRetries} attempts: ${response.status} - ${errorData}`);
       }
-      
+
       retryCount++;
       await sleep(2000 * retryCount); // Exponential backoff
-      
+
     } catch (error) {
       if (retryCount === maxRetries - 1) {
         throw error;
@@ -157,7 +171,7 @@ export async function fetchMentions(userId: string): Promise<TwitterMentionsResp
   }
 
   let url = `https://api.twitter.com/2/users/${userId}/mentions?tweet.fields=created_at,author_id,public_metrics&expansions=author_id&user.fields=username,name&max_results=10`;
-  
+
   if (lastProcessedMentionId) {
     url += `&since_id=${lastProcessedMentionId}`;
   }
@@ -185,14 +199,14 @@ export async function fetchMentions(userId: string): Promise<TwitterMentionsResp
 
       const errorData = await response.text();
       console.error(`Twitter API error: ${response.status} - ${errorData}`);
-      
+
       if (retryCount === maxRetries - 1) {
         throw new Error(`Twitter API error after ${maxRetries} attempts: ${response.status} - ${errorData}`);
       }
-      
+
       retryCount++;
       await sleep(2000 * retryCount); // Exponential backoff
-      
+
     } catch (error) {
       if (retryCount === maxRetries - 1) {
         throw error;
@@ -207,6 +221,14 @@ export async function fetchMentions(userId: string): Promise<TwitterMentionsResp
 
 export async function processMention(mention: TwitterMention, users: TwitterUser[]) {
   try {
+    const author = users.find(user => user.id === mention.author_id);
+    const authorUsername = author?.username || 'unknown';
+
+    if (hasRepliedToMention(mention.id)) {
+      console.log(`Skipping mention ${mention.id} from @${authorUsername} - already replied`);
+      return;
+    }
+
     const now = Date.now();
     const timeSinceLastProcess = now - lastMentionProcessTime;
     if (timeSinceLastProcess < MENTION_PROCESSING_DELAY) {
@@ -216,11 +238,8 @@ export async function processMention(mention: TwitterMention, users: TwitterUser
     }
     lastMentionProcessTime = Date.now();
 
-    const author = users.find(user => user.id === mention.author_id);
-    const authorUsername = author?.username || 'unknown';
-    
     console.log(`Processing mention from @${authorUsername}: "${mention.text}"`);
-    
+
     let botUserId: string | null = cachedUserId;
     if (!botUserId) {
       try {
@@ -229,7 +248,7 @@ export async function processMention(mention: TwitterMention, users: TwitterUser
         console.warn('Could not verify bot user ID due to rate limiting, continuing with mention processing');
       }
     }
-    
+
     if (botUserId && mention.author_id === botUserId) {
       console.log('Skipping own mention');
       return;
@@ -245,18 +264,20 @@ export async function processMention(mention: TwitterMention, users: TwitterUser
         mention.id,
         `GM @${authorUsername}! 🚀 Drop your crypto research question after tagging @JarvisCryptoAI and I'll alpha you up! 📈`
       );
+      markMentionAsReplied(mention.id);
       return;
     }
 
     const response = await processTwitterQuery(query, mention.author_id);
-    
+
     await replyToTweet(mention.id, `@${authorUsername} ${response}`);
-    
+    markMentionAsReplied(mention.id);
+
   } catch (error) {
     console.error('Error processing mention:', error);
     const author = users.find(user => user.id === mention.author_id);
     const authorUsername = author?.username || 'unknown';
-    
+
     const errorMessage = error instanceof Error ? error.message : String(error);
     if (!errorMessage.includes('429') && !errorMessage.includes('rate limit')) {
       try {
@@ -264,6 +285,7 @@ export async function processMention(mention: TwitterMention, users: TwitterUser
           mention.id,
           `@${authorUsername} Sorry, I encountered an error processing your request. Please try again later.`
         );
+        markMentionAsReplied(mention.id);
       } catch (replyError) {
         console.log(`Could not send error reply due to rate limiting for mention ${mention.id}`);
       }
@@ -278,7 +300,7 @@ async function postTweetReply(tweetId: string, message: string) {
   const apiSecret = process.env.TWITTER_API_SECRET;
   const accessToken = process.env.TWITTER_ACCESS_TOKEN;
   const accessTokenSecret = process.env.TWITTER_ACCESS_TOKEN_SECRET;
-  
+
   if (!apiKey || !apiSecret || !accessToken || !accessTokenSecret) {
     console.log('Twitter OAuth credentials not configured for posting replies. Mention detected but cannot reply.');
     console.log('To enable replies, set TWITTER_API_KEY, TWITTER_API_SECRET, TWITTER_ACCESS_TOKEN, and TWITTER_ACCESS_TOKEN_SECRET');
@@ -287,7 +309,7 @@ async function postTweetReply(tweetId: string, message: string) {
 
   const crypto = require('crypto');
   const url = 'https://api.twitter.com/2/tweets';
-  
+
   let retryCount = 0;
   const maxRetries = 3; // Increased retries for better reliability
 
@@ -304,13 +326,13 @@ async function postTweetReply(tweetId: string, message: string) {
 
       const allParams: Record<string, string> = { ...oauthParams };
       const sortedParams = Object.keys(allParams).sort().map(key => `${key}=${encodeURIComponent(allParams[key])}`).join('&');
-      
+
       const baseString = `POST&${encodeURIComponent(url)}&${encodeURIComponent(sortedParams)}`;
       const signingKey = `${encodeURIComponent(apiSecret)}&${encodeURIComponent(accessTokenSecret)}`;
       const signature = crypto.createHmac('sha1', signingKey).update(baseString).digest('base64');
-      
+
       oauthParams.oauth_signature = signature;
-      
+
       const authHeader = 'OAuth ' + Object.keys(oauthParams).sort().map(key => `${key}="${encodeURIComponent(oauthParams[key])}"`).join(', ');
 
       const requestBody = {
@@ -341,7 +363,7 @@ async function postTweetReply(tweetId: string, message: string) {
       const errorData = await response.text();
       console.log(`Twitter API error: ${response.status} - ${errorData}`);
       return { success: false, reason: `API error: ${response.status}` };
-      
+
     } catch (error) {
       console.error('Error posting tweet reply:', error);
       if (retryCount === maxRetries - 1) {
@@ -358,28 +380,28 @@ async function postTweetReply(tweetId: string, message: string) {
 async function replyToTweet(tweetId: string, message: string) {
   try {
     const maxLength = 280;
-    
+
     if (message.length <= maxLength) {
       const result = await postTweetReply(tweetId, message);
-      
+
       if (result.success === false) {
         console.log(`Could not reply to tweet ${tweetId}: ${result.reason}`);
         return;
       }
-      
+
       console.log(`Successfully replied to tweet ${tweetId} with ID: ${result.data?.id}`);
       return;
     }
 
     const truncatedMessage = truncateAtWordBoundary(message, maxLength - 3) + '...';
-    
+
     const result = await postTweetReply(tweetId, truncatedMessage);
-    
+
     if (result.success === false) {
       console.log(`Could not reply to tweet ${tweetId}: ${result.reason}`);
       return;
     }
-    
+
     console.log(`Successfully replied to tweet ${tweetId} with ID: ${result.data?.id} (truncated from ${message.length} to ${truncatedMessage.length} chars)`);
   } catch (error) {
     console.error('Error replying to tweet:', error);
@@ -390,13 +412,13 @@ function truncateAtWordBoundary(text: string, maxLength: number): string {
   if (text.length <= maxLength) {
     return text;
   }
-  
+
   const truncated = text.substring(0, maxLength);
   const lastSpaceIndex = truncated.lastIndexOf(' ');
-  
+
   if (lastSpaceIndex > maxLength * 0.7) {
     return truncated.substring(0, lastSpaceIndex);
   }
-  
+
   return truncated;
 }
