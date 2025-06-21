@@ -1,5 +1,30 @@
+import { getJarvisUserId, fetchMentions, processMention, setLastProcessedMentionId } from './twitter-mention-handler';
+
 let isInitialized = false;
 let pollingInterval: NodeJS.Timeout | null = null;
+
+async function checkMentionsDirectly() {
+  try {
+    const userId = await getJarvisUserId();
+    const mentions = await fetchMentions(userId);
+    
+    if (mentions.data && mentions.data.length > 0) {
+      console.log(`Found ${mentions.data.length} new mentions`);
+      
+      for (const mention of mentions.data) {
+        await processMention(mention, mentions.includes?.users || []);
+      }
+      
+      if (mentions.meta?.newest_id) {
+        setLastProcessedMentionId(mentions.meta.newest_id);
+      }
+    } else {
+      console.log('No new mentions found');
+    }
+  } catch (error) {
+    console.error('Error checking mentions:', error);
+  }
+}
 
 async function startMentionPolling() {
   if (pollingInterval) {
@@ -9,34 +34,16 @@ async function startMentionPolling() {
 
   console.log('Starting Twitter mention polling...');
   
-  const baseUrl = process.env.NODE_ENV === 'production' 
-    ? process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'
-    : 'http://localhost:3000';
-  
   // Start polling immediately, then every 15 minutes
   try {
-    const response = await fetch(`${baseUrl}/api/twitter-webhook`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'check' })
-    });
-    if (!response.ok) {
-      console.error('Failed to check mentions:', await response.text());
-    }
+    await checkMentionsDirectly();
   } catch (error) {
     console.error('Error checking mentions:', error);
   }
   
   pollingInterval = setInterval(async () => {
     try {
-      const response = await fetch(`${baseUrl}/api/twitter-webhook`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'check' })
-      });
-      if (!response.ok) {
-        console.error('Failed to check mentions:', await response.text());
-      }
+      await checkMentionsDirectly();
     } catch (error) {
       console.error('Error during scheduled mention check:', error);
     }
