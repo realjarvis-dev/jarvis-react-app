@@ -430,7 +430,12 @@ export const pendleQuoteTool = tool({
       direction
     } = params;
     const networkContext = context?.networkContext;
-    const chainId = networkContext?.selectedChainId!;
+    
+    if (!networkContext?.selectedChainId) {
+      throw new Error('Network context with selectedChainId is required');
+    }
+    
+    const chainId = networkContext.selectedChainId;
     
     try {
       const { resolvedTokenAddress, resolvedMarketName } = await resolveTokenAddress(
@@ -565,8 +570,12 @@ export const pendleSwapTool = tool({
     let displayTokenIn, displayTokenOut;
     try {
 
-      const chainId = networkContext?.selectedChainId
-      const isDemo = networkContext!.isDemo
+      if (!networkContext?.selectedChainId) {
+        throw new Error('Network context with selectedChainId is required');
+      }
+      
+      const chainId = networkContext.selectedChainId;
+      const isDemo = networkContext.isDemo;
 
       console.log('===== PENDLE SWAP TOOL DEBUG =====');
       console.log('Input parameters:', {
@@ -584,7 +593,7 @@ export const pendleSwapTool = tool({
       const { resolvedTokenAddress, resolvedMarketName } = await resolveTokenAddress(
         token_address, 
         token_type, 
-        networkContext?.selectedChainId!
+        chainId
       );
       
       // Prepare swap configuration using helper function
@@ -615,7 +624,7 @@ export const pendleSwapTool = tool({
         token_type
       );
 
-      const explorerLink = getConfigByChainId(chainId!, isDemo).scanLink
+      const explorerLink = getConfigByChainId(chainId, isDemo).scanLink
       const explorerLinkWithHash = explorerLink?.startsWith('http') 
         ? `${explorerLink}/tx/${result.hash}`
         : `https://${explorerLink}/tx/${result.hash}`
@@ -704,11 +713,16 @@ export const pendleRedeemQuoteTool = tool({
       slippage = PENDLE_CONFIG.DEFAULT_SLIPPAGE
     } = params;
     const networkContext = context?.networkContext;
-    const chainId = networkContext?.selectedChainId!;
+    
+    if (!networkContext?.selectedChainId) {
+      throw new Error('Network context with selectedChainId is required');
+    }
+    
+    const chainId = networkContext.selectedChainId;
 
     try {
       // Find the market using PT address to get all required addresses
-      const foundMarket = await findMarketByTokenAddress(pt_address, 'pt', networkContext?.selectedChainId!);
+      const foundMarket = await findMarketByTokenAddress(pt_address, 'pt', chainId);
       const ytAddress = foundMarket.yt;
       const syAddress = foundMarket.sy;
       const marketName = foundMarket.name;
@@ -864,11 +878,16 @@ export const pendleMintQuoteTool = tool({
       slippage = PENDLE_CONFIG.DEFAULT_SLIPPAGE
     } = params;
     const networkContext = context?.networkContext;
-    const chainId = networkContext?.selectedChainId!;
+    
+    if (!networkContext?.selectedChainId) {
+      throw new Error('Network context with selectedChainId is required');
+    }
+    
+    const chainId = networkContext.selectedChainId;
 
     try {
       // Find the market using PT address to get all required addresses
-      const foundMarket = await findMarketByTokenAddress(pt_address, 'pt', networkContext?.selectedChainId!);
+      const foundMarket = await findMarketByTokenAddress(pt_address, 'pt', chainId);
       const ytAddress = foundMarket.yt;
       const syAddress = foundMarket.sy;
       const marketName = foundMarket.name;
@@ -1032,11 +1051,16 @@ export const pendleRedeemTool = tool({
     } = params;
     const networkContext = context?.networkContext;
     const isDemo = networkContext?.isDemo;
-    const chainId = networkContext?.selectedChainId!;
+    
+    if (!networkContext?.selectedChainId) {
+      throw new Error('Network context with selectedChainId is required');
+    }
+    
+    const chainId = networkContext.selectedChainId;
 
     try {
       // Find the market using PT address to get all required addresses
-      const foundMarket = await findMarketByTokenAddress(pt_address, 'pt', networkContext?.selectedChainId!);
+      const foundMarket = await findMarketByTokenAddress(pt_address, 'pt', chainId);
       const ytAddress = foundMarket.yt;
       const syAddress = foundMarket.sy;
       const marketName = foundMarket.name;
@@ -1185,11 +1209,16 @@ export const pendleMintTool = tool({
     } = params;
     const networkContext = context?.networkContext;
     const isDemo = networkContext?.isDemo;
-    const chainId = networkContext?.selectedChainId!;
+    
+    if (!networkContext?.selectedChainId) {
+      throw new Error('Network context with selectedChainId is required');
+    }
+    
+    const chainId = networkContext.selectedChainId;
 
     try {
       // Find the market using PT address to get all required addresses
-      const foundMarket = await findMarketByTokenAddress(pt_address, 'pt', networkContext?.selectedChainId!);
+      const foundMarket = await findMarketByTokenAddress(pt_address, 'pt', chainId);
       const ytAddress = foundMarket.yt;
       const syAddress = foundMarket.sy;
       const marketName = foundMarket.name;
