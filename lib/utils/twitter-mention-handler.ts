@@ -33,6 +33,8 @@ interface TwitterMentionsResponse {
 }
 
 let lastProcessedMentionId: string | null = null;
+let cachedUserId: string | null = null;
+let lastRateLimitReset: number = 0;
 
 export function getLastProcessedMentionId(): string | null {
   return lastProcessedMentionId;
@@ -42,8 +44,41 @@ export function setLastProcessedMentionId(id: string): void {
   lastProcessedMentionId = id;
 }
 
+async function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function handleRateLimit(response: Response, operation: string): Promise<boolean> {
+  if (response.status === 429) {
+    const resetTime = response.headers.get('x-rate-limit-reset');
+    const remainingRequests = response.headers.get('x-rate-limit-remaining');
+    
+    console.log(`Rate limit hit for ${operation}. Remaining: ${remainingRequests}, Reset: ${resetTime}`);
+    
+    if (resetTime) {
+      const resetTimestamp = parseInt(resetTime) * 1000;
+      const waitTime = Math.max(resetTimestamp - Date.now(), 60000); // Wait at least 1 minute
+      console.log(`Waiting ${Math.round(waitTime / 1000)}s for rate limit reset...`);
+      
+      if (waitTime <= 15 * 60 * 1000) {
+        await sleep(waitTime);
+        return true; // Indicate we should retry
+      }
+    } else {
+      console.log('No reset time provided, waiting 5 minutes...');
+      await sleep(5 * 60 * 1000);
+      return true;
+    }
+  }
+  return false; // Don't retry
+}
+
 export async function getJarvisUserId(): Promise<string> {
-  const cachedUserId = process.env.TWITTER_USER_ID;
+  const envUserId = process.env.TWITTER_USER_ID;
+  if (envUserId) {
+    return envUserId;
+  }
+
   if (cachedUserId) {
     return cachedUserId;
   }
@@ -53,20 +88,49 @@ export async function getJarvisUserId(): Promise<string> {
     throw new Error('TWITTER_API_BEARER_TOKEN environment variable is not set');
   }
 
-  const response = await fetch('https://api.twitter.com/2/users/by/username/JarvisCryptoAI', {
-    headers: {
-      'Authorization': `Bearer ${bearerToken}`,
-      'Content-Type': 'application/json',
-    },
-  });
+  let retryCount = 0;
+  const maxRetries = 3;
 
-  if (!response.ok) {
-    const errorData = await response.text();
-    throw new Error(`Failed to get user ID: ${response.status} - ${errorData}`);
+  while (retryCount < maxRetries) {
+    try {
+      const response = await fetch('https://api.twitter.com/2/users/by/username/JarvisCryptoAI', {
+        headers: {
+          'Authorization': `Bearer ${bearerToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        cachedUserId = data.data.id; // Cache the result
+        return cachedUserId!; // We know it's not null here
+      }
+
+      if (await handleRateLimit(response, 'getJarvisUserId')) {
+        retryCount++;
+        continue;
+      }
+
+      const errorData = await response.text();
+      console.error(`Failed to get user ID: ${response.status} - ${errorData}`);
+      
+      if (retryCount === maxRetries - 1) {
+        throw new Error(`Failed to get user ID after ${maxRetries} attempts: ${response.status} - ${errorData}`);
+      }
+      
+      retryCount++;
+      await sleep(2000 * retryCount); // Exponential backoff
+      
+    } catch (error) {
+      if (retryCount === maxRetries - 1) {
+        throw error;
+      }
+      retryCount++;
+      await sleep(2000 * retryCount);
+    }
   }
 
-  const data = await response.json();
-  return data.data.id;
+  throw new Error('Failed to get user ID after all retries');
 }
 
 export async function fetchMentions(userId: string): Promise<TwitterMentionsResponse> {
@@ -81,19 +145,47 @@ export async function fetchMentions(userId: string): Promise<TwitterMentionsResp
     url += `&since_id=${lastProcessedMentionId}`;
   }
 
-  const response = await fetch(url, {
-    headers: {
-      'Authorization': `Bearer ${bearerToken}`,
-      'Content-Type': 'application/json',
-    },
-  });
+  let retryCount = 0;
+  const maxRetries = 3;
 
-  if (!response.ok) {
-    const errorData = await response.text();
-    throw new Error(`Twitter API error: ${response.status} - ${errorData}`);
+  while (retryCount < maxRetries) {
+    try {
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${bearerToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        return await response.json();
+      }
+
+      if (await handleRateLimit(response, 'fetchMentions')) {
+        retryCount++;
+        continue;
+      }
+
+      const errorData = await response.text();
+      console.error(`Twitter API error: ${response.status} - ${errorData}`);
+      
+      if (retryCount === maxRetries - 1) {
+        throw new Error(`Twitter API error after ${maxRetries} attempts: ${response.status} - ${errorData}`);
+      }
+      
+      retryCount++;
+      await sleep(2000 * retryCount); // Exponential backoff
+      
+    } catch (error) {
+      if (retryCount === maxRetries - 1) {
+        throw error;
+      }
+      retryCount++;
+      await sleep(2000 * retryCount);
+    }
   }
 
-  return await response.json();
+  throw new Error('Failed to fetch mentions after all retries');
 }
 
 export async function processMention(mention: TwitterMention, users: TwitterUser[]) {
@@ -103,10 +195,15 @@ export async function processMention(mention: TwitterMention, users: TwitterUser
     
     console.log(`Processing mention from @${authorUsername}: "${mention.text}"`);
     
-    const botUserId = await getJarvisUserId();
-    if (mention.author_id === botUserId) {
-      console.log('Skipping own mention');
-      return;
+    let botUserId: string | null = null;
+    try {
+      botUserId = await getJarvisUserId();
+      if (mention.author_id === botUserId) {
+        console.log('Skipping own mention');
+        return;
+      }
+    } catch (error) {
+      console.warn('Could not verify bot user ID due to rate limiting, continuing with mention processing');
     }
 
     const query = mention.text
@@ -130,10 +227,16 @@ export async function processMention(mention: TwitterMention, users: TwitterUser
     console.error('Error processing mention:', error);
     const author = users.find(user => user.id === mention.author_id);
     const authorUsername = author?.username || 'unknown';
-    await replyToTweet(
-      mention.id,
-      `@${authorUsername} Sorry, I encountered an error processing your request. Please try again later.`
-    );
+    
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (!errorMessage.includes('429')) {
+      await replyToTweet(
+        mention.id,
+        `@${authorUsername} Sorry, I encountered an error processing your request. Please try again later.`
+      );
+    } else {
+      console.log(`Skipping error reply due to rate limiting for mention ${mention.id}`);
+    }
   }
 }
 
@@ -152,49 +255,71 @@ async function postTweetReply(tweetId: string, message: string) {
   const crypto = require('crypto');
   const url = 'https://api.twitter.com/2/tweets';
   
-  const oauthParams: Record<string, string> = {
-    oauth_consumer_key: apiKey,
-    oauth_token: accessToken,
-    oauth_signature_method: 'HMAC-SHA1',
-    oauth_timestamp: Math.floor(Date.now() / 1000).toString(),
-    oauth_nonce: crypto.randomBytes(16).toString('hex'),
-    oauth_version: '1.0'
-  };
+  let retryCount = 0;
+  const maxRetries = 2; // Fewer retries for posting to avoid spam
 
-  const allParams: Record<string, string> = { ...oauthParams };
-  const sortedParams = Object.keys(allParams).sort().map(key => `${key}=${encodeURIComponent(allParams[key])}`).join('&');
-  
-  const baseString = `POST&${encodeURIComponent(url)}&${encodeURIComponent(sortedParams)}`;
-  const signingKey = `${encodeURIComponent(apiSecret)}&${encodeURIComponent(accessTokenSecret)}`;
-  const signature = crypto.createHmac('sha1', signingKey).update(baseString).digest('base64');
-  
-  oauthParams.oauth_signature = signature;
-  
-  const authHeader = 'OAuth ' + Object.keys(oauthParams).sort().map(key => `${key}="${encodeURIComponent(oauthParams[key])}"`).join(', ');
+  while (retryCount < maxRetries) {
+    try {
+      const oauthParams: Record<string, string> = {
+        oauth_consumer_key: apiKey,
+        oauth_token: accessToken,
+        oauth_signature_method: 'HMAC-SHA1',
+        oauth_timestamp: Math.floor(Date.now() / 1000).toString(),
+        oauth_nonce: crypto.randomBytes(16).toString('hex'),
+        oauth_version: '1.0'
+      };
 
-  const requestBody = {
-    text: message,
-    reply: {
-      in_reply_to_tweet_id: tweetId
+      const allParams: Record<string, string> = { ...oauthParams };
+      const sortedParams = Object.keys(allParams).sort().map(key => `${key}=${encodeURIComponent(allParams[key])}`).join('&');
+      
+      const baseString = `POST&${encodeURIComponent(url)}&${encodeURIComponent(sortedParams)}`;
+      const signingKey = `${encodeURIComponent(apiSecret)}&${encodeURIComponent(accessTokenSecret)}`;
+      const signature = crypto.createHmac('sha1', signingKey).update(baseString).digest('base64');
+      
+      oauthParams.oauth_signature = signature;
+      
+      const authHeader = 'OAuth ' + Object.keys(oauthParams).sort().map(key => `${key}="${encodeURIComponent(oauthParams[key])}"`).join(', ');
+
+      const requestBody = {
+        text: message,
+        reply: {
+          in_reply_to_tweet_id: tweetId
+        }
+      };
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': authHeader,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (response.ok) {
+        return await response.json();
+      }
+
+      if (await handleRateLimit(response, 'postTweetReply')) {
+        retryCount++;
+        continue;
+      }
+
+      const errorData = await response.text();
+      console.log(`Twitter API error: ${response.status} - ${errorData}`);
+      return { success: false, reason: `API error: ${response.status}` };
+      
+    } catch (error) {
+      console.error('Error posting tweet reply:', error);
+      if (retryCount === maxRetries - 1) {
+        return { success: false, reason: 'Network error' };
+      }
+      retryCount++;
+      await sleep(2000 * retryCount);
     }
-  };
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Authorization': authHeader,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(requestBody)
-  });
-
-  if (!response.ok) {
-    const errorData = await response.text();
-    console.log(`Twitter API error: ${response.status} - ${errorData}`);
-    return { success: false, reason: `API error: ${response.status}` };
   }
 
-  return await response.json();
+  return { success: false, reason: 'Failed after all retries' };
 }
 
 async function replyToTweet(tweetId: string, message: string) {
