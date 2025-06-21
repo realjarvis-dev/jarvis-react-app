@@ -58,7 +58,7 @@ export const privyTransferTool = tool({
         const nativeTokenDecimal = networkContext.config.nativeAsset.decimals
         // convert amount to wei
         const amountInWei = parseUnits(amount.toString(), nativeTokenDecimal)
-        const chainId = networkContext?.selectedChainId || 1
+        const chainId = networkContext.selectedChainId
         const tx = await executeTransaction(
           {
             from: evmWallet.address,

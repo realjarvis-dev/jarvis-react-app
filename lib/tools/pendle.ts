@@ -126,7 +126,7 @@ interface ToolContext {
  * @returns The found market object
  * @throws Error if no market is found with the given token address
  */
-async function findMarketByTokenAddress(tokenAddress: string, tokenType: 'pt' | 'yt' | 'sy', chainId: number = 1) {
+async function findMarketByTokenAddress(tokenAddress: string, tokenType: 'pt' | 'yt' | 'sy', chainId: number) {
   if (!tokenAddress) {
     throw new Error('Token address must be provided');
   }
@@ -347,7 +347,7 @@ export const pendleOpportunitiesTool = tool({
     const networkContext = context?.networkContext;
     
     try {
-      const chainId = networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID
+      const chainId = networkContext?.selectedChainId!
       const markets = await getPendleMarkets('active', chainId)
 
       // Convert percentage inputs to decimals if they are provided
@@ -430,13 +430,13 @@ export const pendleQuoteTool = tool({
       direction
     } = params;
     const networkContext = context?.networkContext;
-    const chainId = networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID;
+    const chainId = networkContext?.selectedChainId!;
     
     try {
       const { resolvedTokenAddress, resolvedMarketName } = await resolveTokenAddress(
         tokenAddressOrName, 
         token_type, 
-        networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID
+        networkContext?.selectedChainId!
       );
             
       const swapConfig = await prepareSwapConfiguration(
@@ -456,7 +456,7 @@ export const pendleQuoteTool = tool({
         swapConfig.amountInWei,
         PENDLE_CONFIG.DEFAULT_SLIPPAGE,
         PENDLE_CONFIG.ENABLE_AGGREGATOR,
-        networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID,
+        networkContext?.selectedChainId!,
         user_wallet_address
       );
 
@@ -584,7 +584,7 @@ export const pendleSwapTool = tool({
       const { resolvedTokenAddress, resolvedMarketName } = await resolveTokenAddress(
         token_address, 
         token_type, 
-        chainId || networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID
+        networkContext?.selectedChainId!
       );
       
       // Prepare swap configuration using helper function
@@ -704,11 +704,11 @@ export const pendleRedeemQuoteTool = tool({
       slippage = PENDLE_CONFIG.DEFAULT_SLIPPAGE
     } = params;
     const networkContext = context?.networkContext;
-    const chainId = networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID;
+    const chainId = networkContext?.selectedChainId!;
 
     try {
       // Find the market using PT address to get all required addresses
-      const foundMarket = await findMarketByTokenAddress(pt_address, 'pt');
+      const foundMarket = await findMarketByTokenAddress(pt_address, 'pt', networkContext?.selectedChainId!);
       const ytAddress = foundMarket.yt;
       const syAddress = foundMarket.sy;
       const marketName = foundMarket.name;
@@ -864,11 +864,11 @@ export const pendleMintQuoteTool = tool({
       slippage = PENDLE_CONFIG.DEFAULT_SLIPPAGE
     } = params;
     const networkContext = context?.networkContext;
-    const chainId = networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID;
+    const chainId = networkContext?.selectedChainId!;
 
     try {
       // Find the market using PT address to get all required addresses
-      const foundMarket = await findMarketByTokenAddress(pt_address, 'pt');
+      const foundMarket = await findMarketByTokenAddress(pt_address, 'pt', networkContext?.selectedChainId!);
       const ytAddress = foundMarket.yt;
       const syAddress = foundMarket.sy;
       const marketName = foundMarket.name;
@@ -1032,11 +1032,11 @@ export const pendleRedeemTool = tool({
     } = params;
     const networkContext = context?.networkContext;
     const isDemo = networkContext?.isDemo;
-    const chainId = networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID;
+    const chainId = networkContext?.selectedChainId!;
 
     try {
       // Find the market using PT address to get all required addresses
-      const foundMarket = await findMarketByTokenAddress(pt_address, 'pt');
+      const foundMarket = await findMarketByTokenAddress(pt_address, 'pt', networkContext?.selectedChainId!);
       const ytAddress = foundMarket.yt;
       const syAddress = foundMarket.sy;
       const marketName = foundMarket.name;
@@ -1185,11 +1185,11 @@ export const pendleMintTool = tool({
     } = params;
     const networkContext = context?.networkContext;
     const isDemo = networkContext?.isDemo;
-    const chainId = networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID;
+    const chainId = networkContext?.selectedChainId!;
 
     try {
       // Find the market using PT address to get all required addresses
-      const foundMarket = await findMarketByTokenAddress(pt_address, 'pt');
+      const foundMarket = await findMarketByTokenAddress(pt_address, 'pt', networkContext?.selectedChainId!);
       const ytAddress = foundMarket.yt;
       const syAddress = foundMarket.sy;
       const marketName = foundMarket.name;

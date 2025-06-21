@@ -19,7 +19,7 @@ export async function getPendleRedeemPyData(
   amountIn: string,
   tokenOut: string,
   slippage: number = 0.01,
-  chainId: number = 1,
+  chainId: number,
   userWalletAddress: string
 ) {
   const res = await callSDK<RedeemPyData>(`/v1/sdk/${chainId}/redeem`, {
@@ -52,7 +52,7 @@ export async function executePendleRedeemPy(
   amountIn: string,
   tokenOut: string,
   slippage: number = 0.01,
-  chainId: number = 1,
+  chainId: number,
   isDemo: boolean = false,
   userWalletAddress: string
 ) {
@@ -123,7 +123,7 @@ export async function getRedeemPyQuote(
   amountIn: string,
   tokenOut: string,
   slippage: number = 0.01,
-  chainId: number = 1,
+  chainId: number,
   userWalletAddress: string
 ) {
   const redeemResult = await getPendleRedeemPyData(

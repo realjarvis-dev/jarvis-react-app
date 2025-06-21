@@ -49,7 +49,8 @@ export async function getSwapTransactionFromPendle(
   tokenIn: string,
   tokenOut: string,
   amountIn: string,
-  slippage: number = 0.01
+  slippage: number = 0.01,
+  chainId: number
 ): Promise<any> {
   try {
     console.log(`Using market: ${marketAddress}`)
@@ -61,7 +62,7 @@ export async function getSwapTransactionFromPendle(
     }
 
     const RECEIVER = evmWalletAddress
-    const chainId = 1
+
 
     console.log(`Wallet address: ${RECEIVER}`)
     console.log(`Slippage: ${slippage}`)
@@ -127,7 +128,7 @@ export async function getSwapTransactionFromPendle(
 //  */
 // export async function executeSwapTransaction(
 //   txData: TransactionRequest,
-//   chainId: number = 1,
+//   chainId: number,
 //   gasOptions?: {
 //     estimateGas: boolean
 //     gasLimit?: `0x${string}`
@@ -199,7 +200,7 @@ export async function getSwapTransactionFromPendle(
 //     let estimateGas = gasOptions?.estimateGas !== false // Default to true if not specified or explicitly true
 //     if (isDemo) {
 //       estimateGas = false
-//       chainId = 1
+//       chainId = networkContext?.selectedChainId!
 //     }
 //     if (estimateGas) {
 //       // Gas estimation
@@ -316,7 +317,7 @@ export async function getRedeemTransactionFromPendle(
   ytAddress: string,
   amountIn: string,
   slippage: number = 0.01,
-  chainId: number = 1,
+  chainId: number,
   enableAggregator: boolean = true
 ): Promise<any> {
   try {
@@ -369,10 +370,10 @@ export async function getRedeemTransactionFromPendle(
  * @returns Promise with transaction data
  */
 export async function getRedeemInterestsAndRewardsTransactionFromPendle(
+  chainId: number,
   sysAddresses?: string[],
   ytsAddresses?: string[],
-  marketsAddresses?: string[],
-  chainId: number = 1
+  marketsAddresses?: string[]
 ): Promise<any> {
   try {
     console.log('===== GET PENDLE REDEEM REWARDS TRANSACTION =====');
@@ -444,7 +445,7 @@ export async function executeRedeemTransaction(
   ytAddress: string,
   amountIn: string,
   slippage: number = 0.01,
-  chainId: number = 1,
+  chainId: number,
   enableAggregator: boolean = true,
   isDemo: boolean = false,
   ptAddress?: string
@@ -514,7 +515,7 @@ export async function executeRedeemTransaction(
           }
         } else {
           // Find the corresponding PT token for the given YT token using market data
-          const markets = await getPendleMarkets('all');
+          const markets = await getPendleMarkets('all', chainId);
           
           const market = markets.find(m => m.yt.toLowerCase() === ytAddress.toLowerCase());
           
@@ -591,10 +592,10 @@ export async function executeRedeemTransaction(
  * @returns Promise with transaction status and hash
  */
 export async function executeRedeemInterestsAndRewardsTransaction(
+  chainId: number,
   sysAddresses?: string[],
   ytsAddresses?: string[],
   marketsAddresses?: string[],
-  chainId: number = 1,
   isDemo: boolean = false
 ): Promise<{ status: string; hash?: string; message?: string }> {
   try {
@@ -618,10 +619,10 @@ export async function executeRedeemInterestsAndRewardsTransaction(
     // Get transaction data
     console.log('Getting transaction data...');
     const txData = await getRedeemInterestsAndRewardsTransactionFromPendle(
+      chainId,
       sysAddresses,
       ytsAddresses,
-      marketsAddresses,
-      chainId
+      marketsAddresses
     )
 
     if (!txData) {

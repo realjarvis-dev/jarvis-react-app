@@ -21,7 +21,7 @@ const ERC20_ABI = [
 
 export async function getERC20Details(
   tokenAddress: string,
-  chainId: number = 1
+  chainId: number
 ): Promise<{ decimals: number; symbol: string; name: string }> {
   try {
     const provider = new ethers.JsonRpcProvider(
@@ -55,7 +55,7 @@ export async function erc20Transfer(
   toAddress: string,
   amount: string,
   userAddress: string,
-  chainId: number = 1,
+  chainId: number,
   isDemo: boolean = false
 ): Promise<{ status: string; hash?: string; message?: string }> {
   const provider = new ethers.JsonRpcProvider(
@@ -112,7 +112,7 @@ export async function erc20Approval(
   spenderAddress: string,
   amount: string,
   userAddress: string,
-  chainId: number = 1,
+  chainId: number,
   isDemo: boolean
 ): Promise<{ status: string; hash?: string; message?: string }> {
   // default to use the TEST_RPC_URL in env
@@ -264,7 +264,6 @@ export async function signTransaction(
 
   if (isDemo) {
     estimateGas = false
-    chainId = 1
   }
 
   if (estimateGas) {
@@ -493,7 +492,7 @@ export async function approvePendleTokens(
     const { getPendleMarkets } = await import('../pendle/api');
     
     // Get all markets
-    const markets = await getPendleMarkets('all');
+    const markets = await getPendleMarkets('all', chainId);
     
     // Find the market containing the reference token
     let foundMarket;
@@ -634,7 +633,7 @@ export async function approvePendleTokensBruteForce(
     const { getPendleMarkets } = await import('../pendle/api');
     
     // Get all markets
-    const markets = await getPendleMarkets('all');
+    const markets = await getPendleMarkets('all', chainId);
     
     // Search through all markets to find the token
     let foundToken = false;

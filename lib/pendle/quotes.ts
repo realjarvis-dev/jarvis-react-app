@@ -41,10 +41,10 @@ const BASE_URL = 'https://api-v2.pendle.finance/core/v1'
 export async function getQuote(
   market: SimplifiedPendleMarket | string,
   token: string,
+  chainId: number,
   marketName?: string,
   amountIn: string = "1",
-  direction: 'ethToToken' | 'tokenToEth' = 'ethToToken',
-  chainId: number = 1
+  direction: 'ethToToken' | 'tokenToEth' = 'ethToToken'
 ): Promise<FormattedQuote> {
   try {
     // Handle both market object and market address string

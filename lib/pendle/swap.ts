@@ -24,7 +24,7 @@ export async function getPendleSwapTokensData(
   amountIn: string,
   slippage: number = 0.01,
   enableAggregator: boolean = true,
-  chainId: number = 1,
+  chainId: number,
   userWalletAddress: string
 ) {
 
@@ -64,7 +64,7 @@ export async function executePendleSwap(
   amountIn: string,
   slippage: number = 0.01,
   enableAggregator: boolean = true,
-  chainId: number = 1,
+  chainId: number,
   isDemo: boolean = false,
   userWalletAddress: string,
   tokenType: 'pt' | 'yt' = 'pt'
@@ -148,7 +148,7 @@ export async function getSwapQuote(
   amountIn: string,
   slippage: number = 0.01,
   enableAggregator: boolean = true,
-  chainId: number = 1,
+  chainId: number,
   userWalletAddress: string
 ) {
   

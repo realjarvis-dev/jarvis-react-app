@@ -19,7 +19,7 @@ export async function getPendleMintPyData(
   tokenIn: string,
   amountIn: string,
   slippage: number = 0.01,
-  chainId: number = 1,
+  chainId: number,
   userWalletAddress: string
 ) {
   const res = await callSDK<MintPyData>(`/v1/sdk/${chainId}/mint`, {
@@ -53,7 +53,7 @@ export async function executePendleMintPy(
   tokenIn: string,
   amountIn: string,
   slippage: number = 0.01,
-  chainId: number = 1,
+  chainId: number,
   isDemo: boolean = false,
   userWalletAddress: string
 ) {
@@ -124,7 +124,7 @@ export async function getMintPyQuote(
   tokenIn: string,
   amountIn: string,
   slippage: number = 0.01,
-  chainId: number = 1,
+  chainId: number,
   userWalletAddress: string
 ) {
   const mintResult = await getPendleMintPyData(

@@ -21,7 +21,7 @@ const cachedAxios = setupCache(axios, {
  * @param chainId - The chain ID to fetch markets for
  * @returns Promise<PendleResponse>
  */
-export async function fetchPendleMarkets(chainId: number = 1): Promise<PendleResponse> {
+export async function fetchPendleMarkets(chainId: number): Promise<PendleResponse> {
   try {
     const response = await cachedAxios.get(
       `${BASE_URL}/v1/${chainId}/markets/active`,
@@ -46,7 +46,7 @@ export async function fetchPendleMarkets(chainId: number = 1): Promise<PendleRes
  * @param chainId - The chain ID to fetch markets for
  * @returns Promise<PendleResponse>
  */
-export async function fetchInactivePendleMarkets(chainId: number = 1): Promise<PendleResponse> {
+export async function fetchInactivePendleMarkets(chainId: number): Promise<PendleResponse> {
   try {
     const response = await cachedAxios.get(
       `${BASE_URL}/v1/${chainId}/markets/inactive`,
@@ -112,7 +112,7 @@ export function processPendleMarkets(
  */
 export async function getPendleMarkets(
   filter: 'active' | 'inactive' | 'all' = 'active',
-  chainId: number = 1
+  chainId: number
 ): Promise<SimplifiedPendleMarket[]> {
   if (filter === 'active') {
     const activeResponse = await fetchPendleMarkets(chainId)
@@ -135,7 +135,7 @@ export async function getPendleMarkets(
   }
 }
 
-export async function getListPendleAddress(chainId: number = 1) {
+export async function getListPendleAddress(chainId: number) {
   const markets = await getPendleMarkets('active', chainId)
   markets.sort((a, b) => b.impliedApy - a.impliedApy)
   console.log(markets)
