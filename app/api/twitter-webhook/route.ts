@@ -211,24 +211,56 @@ async function processMention(mention: TwitterMention, users: TwitterUser[]) {
 
 
 async function postTweetReply(tweetId: string, message: string) {
-  const bearerToken = process.env.TWITTER_API_BEARER_TOKEN;
-  if (!bearerToken) {
-    throw new Error('TWITTER_API_BEARER_TOKEN environment variable is not set');
-  }
+  const apiKey = process.env.TWITTER_API_KEY;
+  const apiSecret = process.env.TWITTER_API_SECRET;
+  const accessToken = process.env.TWITTER_ACCESS_TOKEN;
+  const accessTokenSecret = process.env.TWITTER_ACCESS_TOKEN_SECRET;
   
+  if (!apiKey || !apiSecret || !accessToken || !accessTokenSecret) {
+    console.log('Twitter OAuth credentials not configured for posting replies. Mention detected but cannot reply.');
+    console.log('To enable replies, set TWITTER_API_KEY, TWITTER_API_SECRET, TWITTER_ACCESS_TOKEN, and TWITTER_ACCESS_TOKEN_SECRET');
+    return { success: false, reason: 'OAuth credentials not configured' };
+  }
+
+  const crypto = require('crypto');
   const url = 'https://api.twitter.com/2/tweets';
   
+  const oauthParams: Record<string, string> = {
+    oauth_consumer_key: apiKey,
+    oauth_token: accessToken,
+    oauth_signature_method: 'HMAC-SHA1',
+    oauth_timestamp: Math.floor(Date.now() / 1000).toString(),
+    oauth_nonce: crypto.randomBytes(16).toString('hex'),
+    oauth_version: '1.0'
+  };
+
+  const requestParams: Record<string, string> = {
+    text: message,
+    reply: JSON.stringify({ in_reply_to_tweet_id: tweetId })
+  };
+
+  const allParams: Record<string, string> = { ...oauthParams, ...requestParams };
+  const sortedParams = Object.keys(allParams).sort().map(key => `${key}=${encodeURIComponent(allParams[key])}`).join('&');
+  
+  const baseString = `POST&${encodeURIComponent(url)}&${encodeURIComponent(sortedParams)}`;
+  const signingKey = `${encodeURIComponent(apiSecret)}&${encodeURIComponent(accessTokenSecret)}`;
+  const signature = crypto.createHmac('sha1', signingKey).update(baseString).digest('base64');
+  
+  oauthParams.oauth_signature = signature;
+  
+  const authHeader = 'OAuth ' + Object.keys(oauthParams).sort().map(key => `${key}="${encodeURIComponent(oauthParams[key])}"`).join(', ');
+
   const requestBody = {
     text: message,
     reply: {
       in_reply_to_tweet_id: tweetId
     }
   };
-  
+
   const response = await fetch(url, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${bearerToken}`,
+      'Authorization': authHeader,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(requestBody)
@@ -236,7 +268,8 @@ async function postTweetReply(tweetId: string, message: string) {
 
   if (!response.ok) {
     const errorData = await response.text();
-    throw new Error(`Twitter API error: ${response.status} - ${errorData}`);
+    console.log(`Twitter API error: ${response.status} - ${errorData}`);
+    return { success: false, reason: `API error: ${response.status}` };
   }
 
   return await response.json();
@@ -253,10 +286,14 @@ async function replyToTweet(tweetId: string, message: string) {
 
     const result = await postTweetReply(tweetId, truncatedMessage);
     
+    if (result.success === false) {
+      console.log(`Could not reply to tweet ${tweetId}: ${result.reason}`);
+      return;
+    }
+    
     console.log(`Successfully replied to tweet ${tweetId} with ID: ${result.data?.id}`);
   } catch (error) {
     console.error('Error replying to tweet:', error);
-    throw error;
   }
 }
 
