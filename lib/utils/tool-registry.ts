@@ -6,15 +6,16 @@ import { kodiakBaultProfitabilityTool, kodiakCompoundBaultTool, kodiakDepositToo
 import { bridgeExecuteTool, bridgeQuoteTool } from '../tools/lifi-bridge'
 import { marketChartTool } from '../tools/market-chart'
 import { pendleMintQuoteTool, pendleMintTool, pendleOpportunitiesTool, pendleQuoteTool, pendleRedeemQuoteTool, pendleRedeemTool, pendleSwapTool } from '../tools/pendle'
+import { pendleZapInExecuteTool, pendleZapInQuoteTool } from '../tools/pendle-liquidity'
+import { pendleZapOutExecuteTool, pendleZapOutQuoteTool } from '../tools/pendle-remove-liquidity'
 import { privyTransferTool } from '../tools/privy-transfer'
 import { createQuestionTool } from '../tools/question'
 import { retrieveTool } from '../tools/retrieve'
 import { createSearchTool } from '../tools/search'
+import { strategyExecutorTool, strategyOrchestratorTool } from '../tools/strategy-orchestrator'
 import { createVideoSearchTool } from '../tools/video-search'
 import { fundWalletTool, initialWalletRewardTool, walletBalanceTool } from '../tools/wallet'
 import { NetworkContext, ToolContext } from '../types/context'
-import { pendleZapInQuoteTool, pendleZapInExecuteTool } from '../tools/pendle-liquidity'
-import { pendleZapOutExecuteTool, pendleZapOutQuoteTool } from '../tools/pendle-remove-liquidity'
 
 
 
@@ -526,7 +527,31 @@ export function createToolRegistry(model: string): ToolRegistry {
     supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'sonic', 'berachain', 'optimism', 'mantle', 'demo']
   })
 
+  registry.registerTool({
+    name: 'strategy_orchestrator',
+    description: strategyOrchestratorTool.description || 'Analyze user investment goals and generate multi-step DeFi execution plans using available tools',
+    schema: strategyOrchestratorTool.parameters,
+    execute: async (params, context) => strategyOrchestratorTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.STRATEGY,
+    supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'berachain', 'optimism', 'mantle', 'sonic']
+  })
 
+  registry.registerTool({
+    name: 'strategy_executor',
+    description: strategyExecutorTool.description || 'Execute a multi-step DeFi strategy with automatic transaction confirmation waits between steps',
+    schema: strategyExecutorTool.parameters,
+    execute: async (params, context) => strategyExecutorTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.STRATEGY,
+    supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'berachain', 'optimism', 'mantle', 'sonic']
+  })
 
   return registry
 }
