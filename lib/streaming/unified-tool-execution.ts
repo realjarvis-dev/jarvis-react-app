@@ -239,14 +239,19 @@ async function executeManualToolCall(
   
   for (const availableTool of availableTools) {
     const tool = registry.getTool(availableTool)
-    if (!tool) continue
+    if (!tool || !tool.schema) continue
     
-    toolCall = parseToolCallXml(toolSelectionResponse.text, tool.schema)
-    toolName = toolCall.tool
-    toolParams = toolCall.parameters
-    
-    if (toolName && toolName !== '') {
-      break
+    try {
+      toolCall = parseToolCallXml(toolSelectionResponse.text, tool.schema)
+      toolName = toolCall.tool
+      toolParams = toolCall.parameters
+      
+      if (toolName && toolName !== '') {
+        break
+      }
+    } catch (error) {
+      console.warn(`Failed to parse tool call for ${availableTool}:`, error)
+      continue
     }
   }
 

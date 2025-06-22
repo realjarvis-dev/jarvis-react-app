@@ -34,6 +34,30 @@ const createToolList = (
   return toolList
 }
 
+const createPlanningToolList = (
+  toolNames: string[],
+  registry: any,
+  networkContext?: NetworkContext
+): Record<string, any> => {
+  const toolList: Record<string, any> = {}
+  for (const toolName of toolNames) {
+    const toolDef = registry.getTool(toolName)
+    if (toolDef && toolDef.description) {
+      // Create a proper Zod schema for planning tools with only reasoning parameter
+      const { z } = require('zod')
+      const planningSchema = z.object({
+        reasoning: z.string().describe('Explain why this tool should be used and what you expect it to accomplish')
+      })
+      
+      toolList[toolName] = {
+        description: toolDef.description,
+        parameters: planningSchema
+      }
+    }
+  }
+  return toolList
+}
+
 const get_system_prompt = (
   searchMode: boolean,
   supportedTools: string[],
@@ -446,7 +470,7 @@ Network Context:
           networkContext
         )
       : registry.getSupportedToolNames('openai:o3')
-    const o3_tool_lst = createToolList(
+    const o3_tool_lst = createPlanningToolList(
       o3Tools,
       registry,
       networkContext,
@@ -458,9 +482,9 @@ Network Context:
 
     let prompt = `${
       model === 'openai:o3' || model === 'anthropic:claude-opus-4-20250514'
-        ? O3_SYSTEM_PROMPT
+        ? O3_SYSTEM_PROMPT + '\n\nIMPORTANT: You are a PLANNING model. When you use tools, you are only indicating what should be done, not actually executing anything. Provide clear reasoning for each tool you suggest using.'
         : model === 'openai:o3-mini'
-        ? O3_MINI_SYSTEM_PROMPT
+        ? O3_MINI_SYSTEM_PROMPT + '\n\nIMPORTANT: You are a PLANNING model. When you use tools, you are only indicating what should be done, not actually executing anything. Provide clear reasoning for each tool you suggest using.'
         : get_system_prompt(
             searchMode,
             supportedTools,
