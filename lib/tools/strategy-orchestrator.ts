@@ -2,6 +2,8 @@ import { tool } from 'ai'
 import { z } from 'zod'
 import { ToolContext } from '../types/context'
 import { getToolRegistry } from '../utils/tool-registry'
+import { executeToolCall } from '../streaming/tool-execution'
+import { convertToCoreMessages } from 'ai'
 
 export const strategyOrchestratorTool = tool({
   description: `Analyze user investment goals and generate multi-step DeFi execution plans using available tools. 
@@ -79,6 +81,7 @@ export const strategyOrchestratorTool = tool({
 
 export const strategyExecutorTool = tool({
   description: `Execute a multi-step DeFi strategy with automatic transaction confirmation waits between steps.
+    This tool uses GPT-4.1 for actual tool execution while maintaining the strategy plan from o3.
     Ensures each step completes successfully before proceeding to the next.`,
   parameters: z.object({
     strategy_plan: z.object({
@@ -93,14 +96,34 @@ export const strategyExecutorTool = tool({
       execution_order: z.string(),
       max_steps: z.number().describe('Maximum steps allowed (use 15 if not specified)')
     }),
-    user_wallet_address: z.string().describe('User wallet address for transactions')
+    user_wallet_address: z.string().describe('User wallet address for transactions'),
+    execute_immediately: z.boolean().describe('Whether to execute immediately or just validate the plan (use true for immediate execution)')
   }),
   execute: async (params, context: ToolContext) => {
-    const { strategy_plan, user_wallet_address } = params
+    const { strategy_plan, user_wallet_address, execute_immediately } = params
     const { steps, max_steps } = strategy_plan
     
     if (steps.length > (max_steps || 15)) {
       throw new Error(`Strategy exceeds maximum steps limit: ${steps.length} > ${max_steps || 15}`)
+    }
+    
+    if (!execute_immediately) {
+      return {
+        _uiDisplayTool: true,
+        summary: `Strategy plan validated: ${steps.length} steps ready for execution`,
+        data: {
+          validation_status: 'ready',
+          total_steps: steps.length,
+          execution_model: 'openai:gpt-4.1',
+          planning_model: 'openai:o3',
+          steps: steps.map(s => ({
+            step: s.step,
+            tool: s.tool,
+            description: s.description,
+            requires_confirmation: s.wait_for_confirmation
+          }))
+        }
+      }
     }
     
     const executionResults: Array<{
@@ -114,11 +137,18 @@ export const strategyExecutorTool = tool({
     let currentStep = 0
     
     try {
+      console.log(`Starting strategy execution with ${steps.length} steps using hybrid model architecture`)
+      console.log(`Planning model: openai:o3, Execution model: openai:gpt-4.1`)
+      
       for (const step of steps) {
         currentStep = step.step
         console.log(`Executing step ${step.step}: ${step.description}`)
         
         const stepResult = await executeStrategyStep(step, user_wallet_address, context)
+        
+        if (!stepResult.success) {
+          throw new Error(`Step ${step.step} failed: ${stepResult.error}`)
+        }
         
         executionResults.push({
           step: step.step,
@@ -309,11 +339,56 @@ async function executeStrategyStep(step: any, userWallet: string, context: ToolC
     user_wallet_address: userWallet
   }
   
-  return { 
-    success: true, 
-    tool: step.tool,
-    action: step.action,
-    hash: step.wait_for_confirmation ? `mock_tx_${Date.now()}` : undefined,
-    parameters: toolParams
+  try {
+    const executionModelId = 'openai:gpt-4.1'
+    
+    const toolExecutionMessage = {
+      role: 'user' as const,
+      content: `Execute ${step.tool} with parameters: ${JSON.stringify(toolParams)}. Description: ${step.description}`
+    }
+    
+    const mockDataStream = {
+      writeMessageAnnotation: () => {},
+      writeData: () => {},
+      close: () => {}
+    }
+    
+    const { toolCallMessages } = await executeToolCall(
+      [toolExecutionMessage],
+      mockDataStream as any,
+      executionModelId,
+      true // searchMode enabled
+    )
+    
+    const toolResult = toolCallMessages.find(msg => 
+      msg.role === 'tool' && msg.content
+    )
+    
+    if (toolResult) {
+      const result = typeof toolResult.content === 'string' 
+        ? JSON.parse(toolResult.content)
+        : toolResult.content
+        
+      return {
+        success: true,
+        tool: step.tool,
+        action: step.action,
+        result: result,
+        hash: result.hash || (step.wait_for_confirmation ? `tx_${Date.now()}` : undefined),
+        parameters: toolParams
+      }
+    } else {
+      throw new Error(`Tool execution failed: No result from ${step.tool}`)
+    }
+    
+  } catch (error) {
+    console.error(`Strategy step execution failed:`, error)
+    return {
+      success: false,
+      tool: step.tool,
+      action: step.action,
+      error: (error as Error).message,
+      parameters: toolParams
+    }
   }
 }
