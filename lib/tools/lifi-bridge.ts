@@ -43,15 +43,13 @@ const bridgeQuoteTool = tool({
       ),
     slippage: z
       .string()
-      .default('0.005')
       .describe(
-        'The slippage tolerance for the transaction, 0.005 represents 0.5% slippage. Default to 0.005'
+        'The slippage tolerance for the transaction, 0.005 represents 0.5% slippage. Use "0.005" for default'
       ),
     recipient: z
       .string()
-      .optional()
       .describe(
-        "The address to send the bridged tokens to. Default to user's wallet address"
+        "The address to send the bridged tokens to. Use empty string to default to user's wallet address"
       ),
     // diable for now
     // enableAutoFuel: z.boolean().describe('Whether to auto fuel the destination chain when the native balance is low, default to true')
@@ -128,15 +126,13 @@ const bridgeExecuteTool = tool({
       ),
     slippage: z
       .string()
-      .default('0.005')
       .describe(
-        'The slippage tolerance for the transaction, 0.005 represents 0.5% slippage. Default to 0.005'
+        'The slippage tolerance for the transaction, 0.005 represents 0.5% slippage. Use "0.005" for default'
       ),
     recipient: z
       .string()
-      .optional()
       .describe(
-        "The address to send the bridged tokens to. Default to user's wallet address"
+        "The address to send the bridged tokens to. Use empty string to default to user's wallet address"
       ),
     // autoFuel: z.boolean().describe('Whether to auto fuel the destination chain, decision made by quote tool')
   }),

@@ -62,8 +62,8 @@ export class ToolRegistry {
     })
 
     this.modelCapabilities.set('openai:o3-mini', {
-      supportedCategories: [ToolCategory.WEB, ToolCategory.UTILITY],
-      maxSteps: 5
+      supportedCategories: [ToolCategory.WEB, ToolCategory.WEB3, ToolCategory.UTILITY, ToolCategory.STRATEGY],
+      maxSteps: 15
     })
   }
 

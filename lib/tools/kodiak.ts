@@ -87,54 +87,45 @@ export const kodiakOpportunitiesTool = tool({
   parameters: z.object({
     apr_gte: z
       .number()
-      .optional()
       .describe(
-        'Minimum APR in percentage (e.g., 7 for 7%). Filters for APR >= value. Optional.'
+        'Minimum APR in percentage (e.g., 7 for 7%). Filters for APR >= value. Use 0 for no minimum filter.'
       ),
     apr_lte: z
       .number()
-      .optional()
       .describe(
-        'Maximum APR in percentage (e.g., 10 for 10%). Filters for APR <= value. Optional.'
+        'Maximum APR in percentage (e.g., 100 for 100%). Filters for APR <= value. Use 100 for no maximum filter.'
       ),
     bault_apr_gte: z
       .number()
-      .optional()
       .describe(
-        'Minimum Bault APR in percentage (e.g., 50 for 50%). Filters islands with baults having APR >= value. Optional.'
+        'Minimum Bault APR in percentage (e.g., 50 for 50%). Filters islands with baults having APR >= value. Use 0 for no minimum filter.'
       ),
     bault_apr_lte: z
       .number()
-      .optional()
       .describe(
-        'Maximum Bault APR in percentage (e.g., 100 for 100%). Filters islands with baults having APR <= value. Optional.'
+        'Maximum Bault APR in percentage (e.g., 200 for 200%). Filters islands with baults having APR <= value. Use 200 for no maximum filter.'
       ),
     bault_tvl_gte: z
       .number()
-      .optional()
       .describe(
-        'Minimum Bault TVL in USD (e.g., 10000 for $10,000). Filters islands with baults having TVL >= value. Optional.'
+        'Minimum Bault TVL in USD (e.g., 10000 for $10,000). Filters islands with baults having TVL >= value. Use 0 for no minimum filter.'
       ),
     bault_tvl_lte: z
       .number()
-      .optional()
       .describe(
-        'Maximum Bault TVL in USD (e.g., 100000 for $100,000). Filters islands with baults having TVL <= value. Optional.'
+        'Maximum Bault TVL in USD (e.g., 1000000 for $1,000,000). Filters islands with baults having TVL <= value. Use 1000000 for no maximum filter.'
       ),
     sort_by: z
       .enum(['apr', 'tvl', 'bault_apr'])
-      .default('apr')
-      .describe('Field to sort by: "apr", "tvl", or "bault_apr" (default: "tvl")'),
+      .describe('Field to sort by: "apr", "tvl", or "bault_apr" (default behavior: "tvl")'),
     max_results: z
       .number()
       .min(1)
       .max(50)
-      .default(10)
-      .describe('Number of opportunities to return (default 10)'),
+      .describe('Number of opportunities to return (default behavior: 10)'),
     bault_filter: z
       .enum(['only', 'exclude', 'include'])
-      .optional()
-      .describe('Filter islands by bault status: "only" (only show islands with baults), "exclude" (hide islands with baults), or "include" (show all islands, default). Note: If any bault_apr_* or bault_tvl_* filters are used, this is automatically set to "only".')
+      .describe('Filter islands by bault status: "only" (only show islands with baults), "exclude" (hide islands with baults), or "include" (show all islands). Use "include" for default behavior. Note: If any bault_apr_* or bault_tvl_* filters are used, this is automatically set to "only".')
   }),
   execute: async (params, context: ToolContext) => {
     const { 
@@ -889,4 +880,4 @@ export const kodiakCompoundBaultTool = tool({
       };
     }
   }
-}) 
+})  

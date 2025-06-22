@@ -47,10 +47,9 @@ const tokenDecimalMap: Record<string, number> = {
 const parameters = z.object({
   tokenInSymbol: z
     .string()
-    .default('ETH')
     .describe(`Symbol of the input token (e.g., "ETH", "USDC"). Available tokens: ${JSON.stringify(
         Object.keys(tokenAddressMap)
-      )}. Notify user if the token is not available.`),
+      )}. Notify user if the token is not available. Use "ETH" if not specified.`),
   tokenOutSymbol: z
     .string()
     .describe(
@@ -67,13 +66,11 @@ const parameters = z.object({
     .number()
     .min(0.001)
     .max(0.1)
-    .default(0.01)
-    .describe('Maximum acceptable slippage (default: 0.01, which is 1%).'),
+    .describe('Maximum acceptable slippage (use 0.01 for 1% if not specified).'),
   chainId: z
     .number()
-    .default(1)
     .describe(
-      'The chain ID for the transaction (default: 1 for Ethereum Mainnet).'
+      'The chain ID for the transaction (use 1 for Ethereum Mainnet if not specified).'
     )
 })
 

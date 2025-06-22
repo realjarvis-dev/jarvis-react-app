@@ -11,7 +11,7 @@ export const strategyOrchestratorTool = tool({
     available_capital: z.string().describe('Amount of capital available for the strategy'),
     risk_tolerance: z.enum(['low', 'medium', 'high']).describe('User risk tolerance level'),
     time_horizon: z.enum(['short', 'medium', 'long']).describe('Investment time horizon'),
-    preferred_protocols: z.array(z.string()).optional().describe('Preferred DeFi protocols to use')
+    preferred_protocols: z.array(z.string()).describe('Preferred DeFi protocols to use (use empty array if no preference)')
   }),
   execute: async (params, context: ToolContext) => {
     const { investment_goal, available_capital, risk_tolerance, time_horizon, preferred_protocols } = params
@@ -88,10 +88,10 @@ export const strategyExecutorTool = tool({
         tool: z.string(),
         description: z.string(),
         wait_for_confirmation: z.boolean(),
-        parameters: z.record(z.any()).optional()
+        parameters: z.record(z.any()).describe('Tool parameters (use empty object if none)')
       })),
       execution_order: z.string(),
-      max_steps: z.number().optional()
+      max_steps: z.number().describe('Maximum steps allowed (use 15 if not specified)')
     }),
     user_wallet_address: z.string().describe('User wallet address for transactions')
   }),

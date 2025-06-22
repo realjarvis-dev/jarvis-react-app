@@ -17,11 +17,9 @@ export const marketChartTool = tool({
     days: z.number()
       .min(1)
       .max(365)
-      .default(7)
-      .describe('Number of days of historical data to fetch (default: 7, max: 365)'),
+      .describe('Number of days of historical data to fetch (use 7 for default, max: 365)'),
     currency: z.string()
-      .default('usd')
-      .describe('Target currency for price data (default: "usd")')
+      .describe('Target currency for price data (use "usd" for default)')
   }),
   execute: async (params, context?: ToolContext) => {
     const { coin_id, days = 7, currency = 'usd' } = params;
@@ -68,4 +66,4 @@ export const marketChartTool = tool({
       }
     }
   }
-}) 
+})  

@@ -345,19 +345,16 @@ export const pendleOpportunitiesTool = tool({
       .number()
       .min(PENDLE_CONFIG.MIN_OPPORTUNITIES)
       .max(PENDLE_CONFIG.MAX_OPPORTUNITIES)
-      .default(PENDLE_CONFIG.DEFAULT_OPPORTUNITIES)
       .describe(`Number of opportunities to return (default ${PENDLE_CONFIG.DEFAULT_OPPORTUNITIES})`),
     apy_gte: z
       .number()
-      .optional()
       .describe(
-        'Minimum APY in percentage (e.g., 7 for 7%). Filters for APY >= value/100. Optional.'
+        'Minimum APY in percentage (e.g., 7 for 7%). Filters for APY >= value/100. Use 0 for no minimum filter.'
       ),
     apy_lte: z
       .number()
-      .optional()
       .describe(
-        'Maximum APY in percentage (e.g., 10 for 10%). Filters for APY <= value/100. Optional.'
+        'Maximum APY in percentage (e.g., 100 for 100%). Filters for APY <= value/100. Use 100 for no maximum filter.'
       )
   }),
   execute: async (params, context: ToolContext) => {
@@ -373,22 +370,15 @@ export const pendleOpportunitiesTool = tool({
     try {
       const markets = await getPendleMarkets('active', chainId)
 
-      // Convert percentage inputs to decimals if they are provided
-      let decimal_apy_gte = undefined
-      if (typeof apy_gte === 'number') {
-        decimal_apy_gte = apy_gte / 100
-      }
-
-      let decimal_apy_lte = undefined
-      if (typeof apy_lte === 'number') {
-        decimal_apy_lte = apy_lte / 100
-      }
+      // Convert percentage inputs to decimals and apply filters
+      const decimal_apy_gte = apy_gte / 100
+      const decimal_apy_lte = apy_lte / 100
 
       let filtered = markets
-      if (decimal_apy_gte !== undefined)
-        filtered = filtered.filter(o => o.impliedApy >= decimal_apy_gte!)
-      if (decimal_apy_lte !== undefined)
-        filtered = filtered.filter(o => o.impliedApy <= decimal_apy_lte!)
+      if (apy_gte > 0)
+        filtered = filtered.filter(o => o.impliedApy >= decimal_apy_gte)
+      if (apy_lte < 100)
+        filtered = filtered.filter(o => o.impliedApy <= decimal_apy_lte)
       filtered.sort((a, b) => b.impliedApy - a.impliedApy)
       const results = filtered.slice(0, max_results)
       
@@ -425,8 +415,7 @@ export const pendleQuoteTool = tool({
     user_wallet_address: z.string().describe('The address of the user\'s EVM wallet.'),
     market_name: z
       .string()
-      .optional()
-      .describe('The name of the market (optional, will be auto-determined if not provided)'),
+      .describe('The name of the market (will be auto-determined if not provided, use empty string if unknown)'),
     amount_in_human: z
       .string()
       .describe(
@@ -434,14 +423,12 @@ export const pendleQuoteTool = tool({
     ),
     token_type: z
       .enum(['pt', 'yt'])
-      .default('pt')
       .describe(
-        'The token type - "pt" for Principal Token or "yt" for Yield Token. Default to pt as only pt trading is available now.'
+        'The token type - "pt" for Principal Token or "yt" for Yield Token. Use "pt" as default since only pt trading is available now.'
       ),
     direction: z
       .enum(['ethToToken', 'tokenToEth'])
-      .default('ethToToken')
-      .describe('Direction of the swap - from ETH to token or from token to ETH')
+      .describe('Direction of the swap - from ETH to token or from token to ETH. Use "ethToToken" as default.')
   }),
   execute: async (params, context: ToolContext) => {
     const {
@@ -545,8 +532,7 @@ export const pendleSwapTool = tool({
     user_wallet_address: z.string().describe('The address of the user\'s EVM wallet.'),
     direction: z
       .enum(['ethToToken', 'tokenToEth'])
-      .default('ethToToken')
-      .describe('Direction of the swap - from ETH to token or from token to ETH'),
+      .describe('Direction of the swap - from ETH to token or from token to ETH. Use "ethToToken" as default.'),
     token_type: z
       .enum(['pt', 'yt'])
       .describe(
@@ -567,12 +553,10 @@ export const pendleSwapTool = tool({
       .number()
       .min(PENDLE_CONFIG.MIN_SLIPPAGE)
       .max(PENDLE_CONFIG.MAX_SLIPPAGE)
-      .default(PENDLE_CONFIG.DEFAULT_SLIPPAGE)
-      .describe(`Maximum acceptable slippage (default: ${PENDLE_CONFIG.DEFAULT_SLIPPAGE}, which is ${PENDLE_CONFIG.DEFAULT_SLIPPAGE * 100}%).`),
+      .describe(`Maximum acceptable slippage (use ${PENDLE_CONFIG.DEFAULT_SLIPPAGE} as default, which is ${PENDLE_CONFIG.DEFAULT_SLIPPAGE * 100}%).`),
     market_name: z
       .string()
-      .optional()
-      .describe('The name of the market (e.g. "rswETH"). Used for display purposes.')
+      .describe('The name of the market (e.g. "rswETH"). Used for display purposes. Use empty string if unknown.')
   }),
   execute: async (params, context: ToolContext) => {
     let {
@@ -723,8 +707,7 @@ export const pendleRedeemQuoteTool = tool({
       .number()
       .min(PENDLE_CONFIG.MIN_SLIPPAGE)
       .max(PENDLE_CONFIG.MAX_SLIPPAGE)
-      .default(PENDLE_CONFIG.DEFAULT_SLIPPAGE)
-      .describe(`Maximum acceptable slippage (default: ${PENDLE_CONFIG.DEFAULT_SLIPPAGE}, which is ${PENDLE_CONFIG.DEFAULT_SLIPPAGE * 100}%)`)
+      .describe(`Maximum acceptable slippage (use ${PENDLE_CONFIG.DEFAULT_SLIPPAGE} as default, which is ${PENDLE_CONFIG.DEFAULT_SLIPPAGE * 100}%)`)
   }),
   execute: async (params, context: ToolContext) => {
     const {
@@ -888,8 +871,7 @@ export const pendleMintQuoteTool = tool({
       .number()
       .min(PENDLE_CONFIG.MIN_SLIPPAGE)
       .max(PENDLE_CONFIG.MAX_SLIPPAGE)
-      .default(PENDLE_CONFIG.DEFAULT_SLIPPAGE)
-      .describe(`Maximum acceptable slippage (default: ${PENDLE_CONFIG.DEFAULT_SLIPPAGE}, which is ${PENDLE_CONFIG.DEFAULT_SLIPPAGE * 100}%)`)
+      .describe(`Maximum acceptable slippage (use ${PENDLE_CONFIG.DEFAULT_SLIPPAGE} as default, which is ${PENDLE_CONFIG.DEFAULT_SLIPPAGE * 100}%)`)
   }),
   execute: async (params, context: ToolContext) => {
     const {
@@ -1060,8 +1042,7 @@ export const pendleRedeemTool = tool({
       .number()
       .min(PENDLE_CONFIG.MIN_SLIPPAGE)
       .max(PENDLE_CONFIG.MAX_SLIPPAGE)
-      .default(PENDLE_CONFIG.DEFAULT_SLIPPAGE)
-      .describe(`Maximum acceptable slippage (default: ${PENDLE_CONFIG.DEFAULT_SLIPPAGE}, which is ${PENDLE_CONFIG.DEFAULT_SLIPPAGE * 100}%)`)
+      .describe(`Maximum acceptable slippage (use ${PENDLE_CONFIG.DEFAULT_SLIPPAGE} as default, which is ${PENDLE_CONFIG.DEFAULT_SLIPPAGE * 100}%)`)
   }),
   execute: async (params, context: ToolContext) => {
     const {
@@ -1218,8 +1199,7 @@ export const pendleMintTool = tool({
       .number()
       .min(PENDLE_CONFIG.MIN_SLIPPAGE)
       .max(PENDLE_CONFIG.MAX_SLIPPAGE)
-      .default(PENDLE_CONFIG.DEFAULT_SLIPPAGE)
-      .describe(`Maximum acceptable slippage (default: ${PENDLE_CONFIG.DEFAULT_SLIPPAGE}, which is ${PENDLE_CONFIG.DEFAULT_SLIPPAGE * 100}%)`)
+      .describe(`Maximum acceptable slippage (use ${PENDLE_CONFIG.DEFAULT_SLIPPAGE} as default, which is ${PENDLE_CONFIG.DEFAULT_SLIPPAGE * 100}%)`)
   }),
   execute: async (params, context: ToolContext) => {
     const {

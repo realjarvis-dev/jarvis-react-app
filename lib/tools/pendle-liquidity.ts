@@ -22,16 +22,14 @@ export const pendleZapInQuoteTool = tool({
       .describe('The name of the market to add liquidity to. '),
     marketAddress: z
       .string()
-      .optional()
       .describe(
-        'The address of the market to add liquidity to. If not provided, the market will be fetched from the list of market using the market name.'
+        'The address of the market to add liquidity to. Use empty string if not provided, the market will be fetched from the list of market using the market name.'
       ),
     tokenInName: z.string().describe('The name of the input token'),
     tokenInAddress: z
       .string()
-      .optional()
       .describe(
-        "The address of the input token. If not provided, the token will be fetched from user's wallet using the token name."
+        "The address of the input token. Use empty string if not provided, the token will be fetched from user's wallet using the token name."
       ),
     tokenInType: z
       .enum(['sy', 'yt', 'pt', 'other'])
@@ -41,9 +39,8 @@ export const pendleZapInQuoteTool = tool({
       .describe('The amount of the input token. in human readable format'),
     slippage: z
       .number()
-      .default(0.01)
       .describe(
-        'The slippage tolerance for the transaction. 0.01 for 1% slippage. Default to 0.01'
+        'The slippage tolerance for the transaction. 0.01 for 1% slippage. Use 0.01 as default'
       ),
     zeroPriceImpact: z
       .boolean()
@@ -236,9 +233,8 @@ export const pendleZapInExecuteTool = tool({
     amountIn: z.string().describe('The amount of the input token'),
     slippage: z
       .number()
-      .default(0.01)
       .describe(
-        'The slippage tolerance for the transaction. 0.01 for 1% slippage. Default to 0.01'
+        'The slippage tolerance for the transaction. 0.01 for 1% slippage. Use 0.01 as default'
       ),
     zeroPriceImpact: z
       .boolean()

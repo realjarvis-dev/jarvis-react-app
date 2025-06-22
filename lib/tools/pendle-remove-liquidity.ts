@@ -23,9 +23,8 @@ export const pendleZapOutQuoteTool = tool({
       .describe('The name of the market (pool) to remove liquidity from.'),
     marketAddress: z
       .string()
-      .optional()
       .describe(
-        'The address of the market to remove liquidity from. If not provided, the market will be fetched from the list of market using the market name.'
+        'The address of the market to remove liquidity from. Use empty string if not provided, the market will be fetched from the list of market using the market name.'
       ),
     tokenOutType: z.enum(["sy", "pt", "underlying", "other"]).describe("The type of the output token. Usually it's other token, except user ask for the sy, pt, or underlying asset of the market"),
     tokenOutName: z
@@ -33,9 +32,8 @@ export const pendleZapOutQuoteTool = tool({
       .describe('The name or the symbol of the output token'),
     tokenOutAddress: z
       .string()
-      .optional()
       .describe(
-        'The address of the output token. If not provided, the token will be fetched from the list of token using the token name.'
+        'The address of the output token. Use empty string if not provided, the token will be fetched from the list of token using the token name.'
       ),
     amountLpIn: z
       .string()
