@@ -8,6 +8,7 @@ import { SidebarProvider } from '@/components/ui/sidebar'
 import { Toaster } from '@/components/ui/sonner'
 import { NetworkProvider } from '@/lib/network/context'
 import { cn } from '@/lib/utils'
+import { getServerSideUIState } from '@/lib/utils/server-cookies'
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Inter as FontSans } from 'next/font/google'
@@ -50,6 +51,8 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  const uiState = await getServerSideUIState()
+  
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -65,13 +68,16 @@ export default async function RootLayout({
           enableSystem={false}
           disableTransitionOnChange
         >
-          <NetworkProvider>
+          <NetworkProvider 
+            initialSelectedChain={uiState.selectedChain}
+            initialIsDemoMode={uiState.isDemoMode}
+          >
             <WrappedPrivyProvider>
               <QueryProvider>
                 <SidebarProvider defaultOpen={false}>
                   <AppSidebar />
                   <div className="flex flex-col flex-1 min-w-0">
-                    <Header />
+                    <Header initialUIState={uiState} />
                     <main className="flex flex-1 min-h-0">
                       <ArtifactRoot>{children}</ArtifactRoot>
                     </main>
