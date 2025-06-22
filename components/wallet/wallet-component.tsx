@@ -5,8 +5,8 @@ import { useHeadlessDelegatedActions, usePrivy, useSolanaWallets, useWallets } f
 import { useEffect } from 'react'
 import { CopyableWalletAddress } from '../copyable-wallet-address'
 
-// Function to check and fund user wallet if needed
-const checkAndFundUserWallet = async (retries = 3): Promise<void> => {
+// Function to check and fund user wallet if needed (reduced retry logic)
+const checkAndFundUserWallet = async (retries = 1): Promise<void> => {
   try {
     console.log(`Checking and funding wallet (retries left: ${retries})`)
     
@@ -25,8 +25,8 @@ const checkAndFundUserWallet = async (retries = 3): Promise<void> => {
       
       // Retry if we have retries left and it's a recoverable error
       if (retries > 0 && (data.error?.includes('No wallet address found') || data.error?.includes('ETH token not found'))) {
-        console.log(`Will retry wallet funding in 3 seconds... (${retries} retries left)`)
-        setTimeout(() => checkAndFundUserWallet(retries - 1), 3000)
+        console.log(`Will retry wallet funding in 10 seconds... (${retries} retries left)`)
+        setTimeout(() => checkAndFundUserWallet(retries - 1), 10000)
       }
       return
     }
@@ -41,8 +41,8 @@ const checkAndFundUserWallet = async (retries = 3): Promise<void> => {
     
     // Retry on unexpected errors
     if (retries > 0) {
-      console.log(`Will retry wallet funding in 3 seconds... (${retries} retries left)`)
-      setTimeout(() => checkAndFundUserWallet(retries - 1), 3000)
+      console.log(`Will retry wallet funding in 10 seconds... (${retries} retries left)`)
+      setTimeout(() => checkAndFundUserWallet(retries - 1), 10000)
     }
   }
 }
@@ -60,11 +60,11 @@ export function WalletComponent({ showVideoBg }: WalletComponentProps) {
   const { delegateWallet } = useHeadlessDelegatedActions()
   const { evmAddress, solAddress } = useWalletAddresses(ready, authenticated, user)
 
-  // Handle wallet delegation on first login and fund wallet
+  // Handle wallet delegation on first login (removed automatic funding)
   useEffect(() => {
     if (ready && authenticated && wallets.length > 0) { 
-      // Check and fund wallet once wallets are ready
-      checkAndFundUserWallet()
+      // Wallet delegation logic can be added here if needed
+      console.log('Wallet ready - automatic funding disabled for better UX')
     }
   }, [ready, authenticated, wallets, user?.id])
 
