@@ -2,6 +2,7 @@ import axios from 'axios'
 import { ethers } from 'ethers'
 import { getUserEvmWalletAddress } from '../privy/client'
 import { SimplifiedPendleMarket } from '../types/pendle'
+import { getConfigByChainId } from '../network/config'
 
 // Define the quote response type from the API
 export interface SwapQuoteResponse {
@@ -41,10 +42,10 @@ const BASE_URL = 'https://api-v2.pendle.finance/core/v1'
 export async function getQuote(
   market: SimplifiedPendleMarket | string,
   token: string,
+  chainId: number,
   marketName?: string,
   amountIn: string = "1",
-  direction: 'ethToToken' | 'tokenToEth' = 'ethToToken',
-  chainId: number = 1
+  direction: 'ethToToken' | 'tokenToEth' = 'ethToToken'
 ): Promise<FormattedQuote> {
   try {
     // Handle both market object and market address string
@@ -114,9 +115,12 @@ export async function getQuote(
     const outputAmountBigInt = BigInt(amountOut);
     const outputDecimalAmount = ethers.formatUnits(outputAmountBigInt, 18);
     
+    const networkConfig = getConfigByChainId(chainId, false);
+    const nativeTokenSymbol = networkConfig.nativeAsset.symbol;
+    
     // Set token names based on direction
-    const inputToken = direction === 'ethToToken' ? "ETH" : displayName;
-    const outputToken = direction === 'ethToToken' ? displayName : "ETH";
+    const inputToken = direction === 'ethToToken' ? nativeTokenSymbol : displayName;
+    const outputToken = direction === 'ethToToken' ? displayName : nativeTokenSymbol;
     
     // Calculate exchange rates
     const inputAmountFloat = parseFloat(amountIn);

@@ -20,7 +20,7 @@ export function useWalletAddresses(ready: boolean, authenticated: boolean, user?
       evmAddress: evm?.address ?? '',
       solAddress: sol?.address ?? ''
     }
-  }, [user?.linkedAccounts, ready, authenticated])
+  }, [user, ready, authenticated])
 
   return { evmAddress, solAddress }
 }

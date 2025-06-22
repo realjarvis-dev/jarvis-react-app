@@ -11,6 +11,91 @@ import { executePendleSwap, getSwapQuote } from '../pendle/swap'
 import { getERC20Details } from '../privy/utils'
 import { NetworkContext } from '../types/context'
 
+async function resolveTokenAddress(
+  tokenAddressOrName: string, 
+  token_type: string, 
+  chainId: number
+): Promise<{ resolvedTokenAddress: string; resolvedMarketName?: string }> {
+  let resolvedTokenAddress = tokenAddressOrName;
+  let resolvedMarketName: string | undefined;
+  
+  const isAddress = /^0x[a-fA-F0-9]{40}$/.test(tokenAddressOrName);
+  
+  if (!isAddress) {
+    const { TokenMatcher } = await import('../token-matcher/fuzzy-token-matcher');
+    const tokenMatcher = new TokenMatcher(chainId);
+    const matches = tokenMatcher.match(tokenAddressOrName, 5);
+    
+    const pendleMatches = matches.filter(token => {
+      const symbol = token.symbol.toLowerCase();
+      const name = token.name.toLowerCase();
+      const query = tokenAddressOrName.toLowerCase().replace(/\s+/g, '');
+      
+      const isCorrectType = token_type === 'pt' ? symbol.includes('pt-') : symbol.includes('yt-');
+      
+      const matchesQuery = symbol.includes(query) || 
+                          name.includes(query) ||
+                          (query.includes('solvbtc') && (symbol.includes('xsolvbtc') || name.includes('xsolvbtc'))) ||
+                          (query.includes('sena') && (symbol.includes('sena') || name.includes('sena'))) ||
+                          (query.includes('eusde') && (symbol.includes('eusde') || name.includes('eusde'))) ||
+                          symbol.replace(/[^a-z0-9]/g, '').includes(query.replace(/[^a-z0-9]/g, '')) ||
+                          name.replace(/[^a-z0-9]/g, '').includes(query.replace(/[^a-z0-9]/g, '')) ||
+                          (() => {
+                            if (query.endsWith('pt') || query.endsWith('yt')) {
+                              const baseQuery = query.slice(0, -2);
+                              return baseQuery && (symbol.includes(baseQuery) || name.includes(baseQuery));
+                            }
+                            
+                            const baseQuery = query.replace(/^(pt|yt)/, '').replace(/(pt|yt)$/, '');
+                            if (baseQuery && baseQuery !== query) {
+                              const baseSymbol = symbol.replace(/^pt-/, '').replace(/^yt-/, '').split('-')[0];
+                              const baseName = name.replace(/^(pt|yt)\s+/, '').split(' ')[0].toLowerCase();
+                              return baseSymbol.includes(baseQuery) || baseName.includes(baseQuery);
+                            }
+                            
+                            return false;
+                          })();
+      
+      return isCorrectType && matchesQuery;
+    });
+    
+    if (pendleMatches.length > 0) {
+      resolvedTokenAddress = pendleMatches[0].address;
+      resolvedMarketName = pendleMatches[0].name.replace(/^(PT|YT)\s+/, '');
+    } else {
+      const { pendleTokenMatcher } = await import('../token-matcher/pendle-token-matcher');
+      const allPendleTokens = pendleTokenMatcher.getAllTokensForChain(chainId);
+      
+      const similarTokens = allPendleTokens
+        .filter(token => {
+          const symbol = token.symbol.toLowerCase();
+          const isCorrectType = token_type === 'pt' ? symbol.includes('pt-') : symbol.includes('yt-');
+          
+          const query = tokenAddressOrName.toLowerCase().replace(/\s+/g, '');
+          const tokenName = token.name.toLowerCase();
+          const tokenSymbol = symbol;
+          
+          return isCorrectType && (
+            tokenName.includes(query.substring(0, 4)) ||
+            tokenSymbol.includes(query.substring(0, 4)) ||
+            query.includes(tokenName.substring(3, 7)) ||
+            query.includes(tokenSymbol.substring(3, 7))
+          );
+        })
+        .slice(0, 3)
+        .map(token => token.name.replace(/^(PT|YT)\s+/, ''))
+        .join(', ');
+      
+      const suggestion = similarTokens 
+        ? `Could not find a Pendle ${token_type.toUpperCase()} token matching "${tokenAddressOrName}" on chain ${chainId}. Did you mean one of these: ${similarTokens}? Please provide a valid token address or try a different token name.`
+        : `Could not find a Pendle ${token_type.toUpperCase()} token matching "${tokenAddressOrName}" on chain ${chainId}. Please provide a valid token address or try a different token name.`;
+      
+      throw new Error(suggestion);
+    }
+  }
+  
+  return { resolvedTokenAddress, resolvedMarketName };
+}
 
 const PENDLE_CONFIG = {
   // Ethereum Address Constants
@@ -56,7 +141,7 @@ interface ToolContext {
  * @returns The found market object
  * @throws Error if no market is found with the given token address
  */
-async function findMarketByTokenAddress(tokenAddress: string, tokenType: 'pt' | 'yt' | 'sy', chainId: number = 1) {
+async function findMarketByTokenAddress(tokenAddress: string, tokenType: 'pt' | 'yt' | 'sy', chainId: number) {
   if (!tokenAddress) {
     throw new Error('Token address must be provided');
   }
@@ -126,6 +211,9 @@ async function prepareSwapTokens(
   const tokenSymbol = marketName || foundMarket.name;
   const fullTokenName = `${tokenType.toUpperCase()} ${tokenSymbol}`;
 
+  const networkConfig = getConfigByChainId(chainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID, false);
+  const nativeTokenSymbol = networkConfig.nativeAsset.symbol;
+
   // Determine tokenIn, tokenOut
   let tokenIn: string;
   let tokenOut: string;
@@ -135,13 +223,13 @@ async function prepareSwapTokens(
   if (direction === 'ethToToken') {
     tokenIn = PENDLE_CONFIG.ETH_ADDRESS_PENDLE;
     tokenOut = tokenAddress;
-    inputToken = PENDLE_CONFIG.ETH_SYMBOL;
+    inputToken = nativeTokenSymbol;
     outputToken = fullTokenName;
   } else {
     tokenIn = tokenAddress;
     tokenOut = PENDLE_CONFIG.ETH_ADDRESS_PENDLE;
     inputToken = fullTokenName;
-    outputToken = PENDLE_CONFIG.ETH_SYMBOL;
+    outputToken = nativeTokenSymbol;
   }
 
   return {
@@ -251,7 +339,7 @@ async function formatSwapOutput(
 
 export const pendleOpportunitiesTool = tool({
   description:
-    'Get Pendle yield opportunities on Ethereum. This tool automatically renders UI.',
+    'Get Pendle yield opportunities. This tool automatically renders UI.',
   parameters: z.object({
     max_results: z
       .number()
@@ -276,8 +364,14 @@ export const pendleOpportunitiesTool = tool({
     const { max_results, apy_gte, apy_lte } = params;
     const networkContext = context?.networkContext;
     
+    if (!networkContext?.selectedChainId) {
+      throw new Error('Network context with selectedChainId is required');
+    }
+    
+    const chainId = networkContext.selectedChainId;
+    
     try {
-      const markets = await getPendleMarkets()
+      const markets = await getPendleMarkets('active', chainId)
 
       // Convert percentage inputs to decimals if they are provided
       let decimal_apy_gte = undefined
@@ -359,78 +453,26 @@ export const pendleQuoteTool = tool({
       direction
     } = params;
     const networkContext = context?.networkContext;
-    const chainId = networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID;
+    
+    if (!networkContext?.selectedChainId) {
+      throw new Error('Network context with selectedChainId is required');
+    }
+    
+    const chainId = networkContext.selectedChainId;
     
     try {
-      let resolvedTokenAddress = tokenAddressOrName;
-      let resolvedMarketName = market_name;
-      
-      const isAddress = /^0x[a-fA-F0-9]{40}$/.test(tokenAddressOrName);
-      
-      if (!isAddress) {
-        const { TokenMatcher } = await import('../token-matcher/fuzzy-token-matcher');
-        const tokenMatcher = new TokenMatcher(chainId);
-        const matches = tokenMatcher.match(tokenAddressOrName, 5);
-        
-        const pendleMatches = matches.filter(token => {
-          const symbol = token.symbol.toLowerCase();
-          const name = token.name.toLowerCase();
-          const query = tokenAddressOrName.toLowerCase().replace(/\s+/g, '');
-          
-          const isCorrectType = token_type === 'pt' ? symbol.includes('pt-') : symbol.includes('yt-');
-          
-          const matchesQuery = symbol.includes(query) || 
-                              name.includes(query) ||
-                              (query.includes('solvbtc') && (symbol.includes('xsolvbtc') || name.includes('xsolvbtc'))) ||
-                              (query.includes('sena') && (symbol.includes('sena') || name.includes('sena'))) ||
-                              (query.includes('eusde') && (symbol.includes('eusde') || name.includes('eusde'))) ||
-                              symbol.replace(/[^a-z0-9]/g, '').includes(query.replace(/[^a-z0-9]/g, '')) ||
-                              name.replace(/[^a-z0-9]/g, '').includes(query.replace(/[^a-z0-9]/g, ''));
-          
-          return isCorrectType && matchesQuery;
-        });
-        
-        if (pendleMatches.length > 0) {
-          resolvedTokenAddress = pendleMatches[0].address;
-          resolvedMarketName = resolvedMarketName || pendleMatches[0].name.replace(/^(PT|YT)\s+/, '');
-        } else {
-          const { pendleTokenMatcher } = await import('../token-matcher/pendle-token-matcher');
-          const allPendleTokens = pendleTokenMatcher.getAllTokensForChain(chainId);
-          
-          const similarTokens = allPendleTokens
-            .filter(token => {
-              const symbol = token.symbol.toLowerCase();
-              const isCorrectType = token_type === 'pt' ? symbol.includes('pt-') : symbol.includes('yt-');
-              
-              const query = tokenAddressOrName.toLowerCase().replace(/\s+/g, '');
-              const tokenName = token.name.toLowerCase();
-              const tokenSymbol = symbol;
-              
-              return isCorrectType && (
-                tokenName.includes(query.substring(0, 4)) || // Match first 4 chars
-                tokenSymbol.includes(query.substring(0, 4)) ||
-                query.includes(tokenName.substring(3, 7)) || // Skip PT-/YT- prefix
-                query.includes(tokenSymbol.substring(3, 7))
-              );
-            })
-            .slice(0, 3)
-            .map(token => token.name.replace(/^(PT|YT)\s+/, ''))
-            .join(', ');
-          
-          const suggestion = similarTokens 
-            ? `Could not find a Pendle ${token_type.toUpperCase()} token matching "${tokenAddressOrName}" on chain ${chainId}. Did you mean one of these: ${similarTokens}? Please provide a valid token address or try a different token name.`
-            : `Could not find a Pendle ${token_type.toUpperCase()} token matching "${tokenAddressOrName}" on chain ${chainId}. Please provide a valid token address or try a different token name.`;
-          
-          throw new Error(suggestion);
-        }
-      }
+      const { resolvedTokenAddress, resolvedMarketName } = await resolveTokenAddress(
+        tokenAddressOrName, 
+        token_type, 
+        networkContext?.selectedChainId!
+      );
             
       const swapConfig = await prepareSwapConfiguration(
         resolvedTokenAddress,
         token_type,
         direction,
         amount_in_human,
-        resolvedMarketName,
+        resolvedMarketName || market_name,
         chainId
       );
       
@@ -442,7 +484,7 @@ export const pendleQuoteTool = tool({
         swapConfig.amountInWei,
         PENDLE_CONFIG.DEFAULT_SLIPPAGE,
         PENDLE_CONFIG.ENABLE_AGGREGATOR,
-        PENDLE_CONFIG.DEFAULT_CHAIN_ID,
+        networkContext?.selectedChainId!,
         user_wallet_address
       );
 
@@ -551,8 +593,12 @@ export const pendleSwapTool = tool({
     let displayTokenIn, displayTokenOut;
     try {
 
-      const chainId = networkContext?.selectedChainId
-      const isDemo = networkContext!.isDemo
+      if (!networkContext?.selectedChainId) {
+        throw new Error('Network context with selectedChainId is required');
+      }
+      
+      const chainId = networkContext.selectedChainId;
+      const isDemo = networkContext.isDemo;
 
       console.log('===== PENDLE SWAP TOOL DEBUG =====');
       console.log('Input parameters:', {
@@ -567,13 +613,19 @@ export const pendleSwapTool = tool({
         throw new Error('Token address must be provided');
       }
       
+      const { resolvedTokenAddress, resolvedMarketName } = await resolveTokenAddress(
+        token_address, 
+        token_type, 
+        chainId
+      );
+      
       // Prepare swap configuration using helper function
       const swapConfig = await prepareSwapConfiguration(
-        token_address,
+        resolvedTokenAddress,
         token_type,
         direction,
         amount_in_human,
-        market_name,
+        resolvedMarketName || market_name,
         chainId
       );
       
@@ -595,7 +647,7 @@ export const pendleSwapTool = tool({
         token_type
       );
 
-      const explorerLink = getConfigByChainId(chainId!, isDemo).scanLink
+      const explorerLink = getConfigByChainId(chainId, isDemo).scanLink
       const explorerLinkWithHash = explorerLink?.startsWith('http') 
         ? `${explorerLink}/tx/${result.hash}`
         : `https://${explorerLink}/tx/${result.hash}`
@@ -684,11 +736,16 @@ export const pendleRedeemQuoteTool = tool({
       slippage = PENDLE_CONFIG.DEFAULT_SLIPPAGE
     } = params;
     const networkContext = context?.networkContext;
-    const chainId = networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID;
+    
+    if (!networkContext?.selectedChainId) {
+      throw new Error('Network context with selectedChainId is required');
+    }
+    
+    const chainId = networkContext.selectedChainId;
 
     try {
       // Find the market using PT address to get all required addresses
-      const foundMarket = await findMarketByTokenAddress(pt_address, 'pt');
+      const foundMarket = await findMarketByTokenAddress(pt_address, 'pt', chainId);
       const ytAddress = foundMarket.yt;
       const syAddress = foundMarket.sy;
       const marketName = foundMarket.name;
@@ -844,11 +901,16 @@ export const pendleMintQuoteTool = tool({
       slippage = PENDLE_CONFIG.DEFAULT_SLIPPAGE
     } = params;
     const networkContext = context?.networkContext;
-    const chainId = networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID;
+    
+    if (!networkContext?.selectedChainId) {
+      throw new Error('Network context with selectedChainId is required');
+    }
+    
+    const chainId = networkContext.selectedChainId;
 
     try {
       // Find the market using PT address to get all required addresses
-      const foundMarket = await findMarketByTokenAddress(pt_address, 'pt');
+      const foundMarket = await findMarketByTokenAddress(pt_address, 'pt', chainId);
       const ytAddress = foundMarket.yt;
       const syAddress = foundMarket.sy;
       const marketName = foundMarket.name;
@@ -1012,11 +1074,16 @@ export const pendleRedeemTool = tool({
     } = params;
     const networkContext = context?.networkContext;
     const isDemo = networkContext?.isDemo;
-    const chainId = networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID;
+    
+    if (!networkContext?.selectedChainId) {
+      throw new Error('Network context with selectedChainId is required');
+    }
+    
+    const chainId = networkContext.selectedChainId;
 
     try {
       // Find the market using PT address to get all required addresses
-      const foundMarket = await findMarketByTokenAddress(pt_address, 'pt');
+      const foundMarket = await findMarketByTokenAddress(pt_address, 'pt', chainId);
       const ytAddress = foundMarket.yt;
       const syAddress = foundMarket.sy;
       const marketName = foundMarket.name;
@@ -1165,11 +1232,16 @@ export const pendleMintTool = tool({
     } = params;
     const networkContext = context?.networkContext;
     const isDemo = networkContext?.isDemo;
-    const chainId = networkContext?.selectedChainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID;
+    
+    if (!networkContext?.selectedChainId) {
+      throw new Error('Network context with selectedChainId is required');
+    }
+    
+    const chainId = networkContext.selectedChainId;
 
     try {
       // Find the market using PT address to get all required addresses
-      const foundMarket = await findMarketByTokenAddress(pt_address, 'pt');
+      const foundMarket = await findMarketByTokenAddress(pt_address, 'pt', chainId);
       const ytAddress = foundMarket.yt;
       const syAddress = foundMarket.sy;
       const marketName = foundMarket.name;

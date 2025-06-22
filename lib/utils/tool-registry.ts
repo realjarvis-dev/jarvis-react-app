@@ -177,7 +177,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism', 'unichain', 'bnbSmartChain', 'sonic']
+    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism', 'unichain', 'bsc', 'sonic']
   })
   
   registry.registerTool({
@@ -237,7 +237,7 @@ export function createToolRegistry(model: string): ToolRegistry {
   
   registry.registerTool({
     name: 'pendle_opportunities',
-    description: 'Get Pendle yield opportunities on Ethereum',
+    description: 'Get Pendle yield opportunities',
     schema: pendleOpportunitiesTool.parameters,
     execute: async (params, context) => pendleOpportunitiesTool.execute(params, {
       toolCallId: context?.toolCallId || 'unknown',
@@ -245,7 +245,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'demo']
+    supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'sonic', 'berachain', 'optimism', 'mantle', 'demo']
   })
   
   registry.registerTool({
@@ -258,7 +258,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'demo']
+    supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'sonic', 'berachain', 'optimism', 'mantle', 'demo']
   })
   
   registry.registerTool({
@@ -271,7 +271,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'demo']
+    supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'sonic', 'berachain', 'optimism', 'mantle', 'demo']
   })
   
   registry.registerTool({
@@ -284,7 +284,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'demo']
+    supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'sonic', 'berachain', 'optimism', 'mantle', 'demo']
   })
   
   registry.registerTool({
@@ -297,7 +297,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'demo']
+    supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'sonic', 'berachain', 'optimism', 'mantle', 'demo']
   })
   
   registry.registerTool({
@@ -310,7 +310,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'demo']
+    supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'sonic', 'berachain', 'optimism', 'mantle', 'demo']
   })
   
   registry.registerTool({
@@ -323,7 +323,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'demo']
+    supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'sonic', 'berachain', 'optimism', 'mantle', 'demo']
   })
   
   registry.registerTool({
@@ -336,7 +336,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism', 'unichain', 'bnbSmartChain', 'sonic']
+    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism', 'unichain', 'bsc', 'sonic']
   })
   
   registry.registerTool({
@@ -349,7 +349,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism', 'unichain', 'bnbSmartChain', 'sonic']
+    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism', 'unichain', 'bsc', 'sonic']
   })
   
   registry.registerTool({
@@ -430,7 +430,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism', 'unichain', 'bnbSmartChain', 'sonic']
+    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism', 'unichain', 'bsc', 'sonic']
   })
 
   registry.registerTool({
@@ -443,7 +443,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism', 'unichain', 'bnbSmartChain', 'sonic']
+    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism', 'unichain', 'bsc', 'sonic']
   })
 
   
@@ -470,7 +470,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'demo']
+    supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'sonic', 'berachain', 'optimism', 'mantle', 'demo']
   })
 
   registry.registerTool({
@@ -483,7 +483,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'demo']
+    supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'sonic', 'berachain', 'optimism', 'mantle', 'demo']
   })
   registry.registerTool({
     name: 'pendle_zap_out_quote',
@@ -495,7 +495,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'demo']
+    supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'sonic', 'berachain', 'optimism', 'mantle', 'demo']
   })
 
   registry.registerTool({
@@ -508,7 +508,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'demo']
+    supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'sonic', 'berachain', 'optimism', 'mantle', 'demo']
   })
 
   

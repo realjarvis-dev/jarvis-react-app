@@ -31,8 +31,8 @@ export const unichainConfig: NetworkConfig = {
 }
 
 export const bnbSmartChainConfig: NetworkConfig = {
-  id: 'bnbSmartChain' as const,
-  displayName: 'BNB Smart Chain',
+  id: 'bsc' as const,
+  displayName: 'BSC',
   chainId: 56,
   rpcUrl: 'https://bnb-mainnet.g.alchemy.com/v2/yIRJoLX9TId7oSWYdnflKgthIy59m-vr',
   scanLink: 'bscscan.com',
@@ -120,6 +120,18 @@ export const optimismConfig: NetworkConfig = {
   nativeAsset: { name: 'Ether', symbol: 'ETH', decimals: 18 }
 }
 
+export const mantleConfig: NetworkConfig = {
+  id: 'mantle' as const,
+  displayName: 'Mantle',
+  chainId: 5000,
+  rpcUrl: 'https://rpc.mantle.xyz',
+  scanLink: 'mantlescan.xyz',
+  isDemo: false,
+  alchemyNetwork: Network.ETH_MAINNET,
+  icon: '/icons/chains/mantle.png',
+  nativeAsset: { name: 'Mantle', symbol: 'MNT', decimals: 18 }
+}
+
 /**
  * A mapping of all available production/main network configurations.
  * The keys of this object are used to generate the `ChainType`.
@@ -133,8 +145,9 @@ export const allNetworkConfigs = {
   polygon: polygonConfig,
   optimism: optimismConfig,
   unichain: unichainConfig,
-  bnbSmartChain: bnbSmartChainConfig,
-  sonic: sonicConfig
+  bsc: bnbSmartChainConfig,
+  sonic: sonicConfig,
+  mantle: mantleConfig
 } as const
 
 /**

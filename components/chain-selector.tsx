@@ -5,6 +5,7 @@ import { useNetwork } from '@/lib/network/context'
 import type { NetworkConfig } from '@/lib/network/types'
 import { cn } from '@/lib/utils'
 import { ChevronDown } from 'lucide-react'
+import Image from 'next/image'
 import { useState } from 'react'
 import { Button } from './ui/button'
 import {
@@ -54,7 +55,7 @@ export function ChainSelector() {
             <div className="flex items-center gap-2">
               {selectedOption?.icon && (
                 <span className="flex items-center">
-                  <img
+                  <Image
                     src={selectedOption.icon}
                     width={20}
                     height={20}
@@ -81,7 +82,7 @@ export function ChainSelector() {
                 {selectedOption.displayName}
                 {selectedOption.icon && (
                   <span className="ml-2">
-                    <img
+                    <Image
                       src={selectedOption.icon}
                       width={20}
                       height={20}
@@ -114,7 +115,7 @@ export function ChainSelector() {
           >
             {option.icon && (
               <span className="mr-2 flex items-center">
-                <img
+                <Image
                   src={option.icon}
                   width={20}
                   height={20}

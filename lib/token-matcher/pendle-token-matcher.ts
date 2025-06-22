@@ -57,12 +57,12 @@ export class PendleTokenMatcher {
     }
   }
 
-  public findTokenByAddress(tokenAddress: string, chainId: number = 1): PendleToken | null {
+  public findTokenByAddress(tokenAddress: string, chainId: number): PendleToken | null {
     const key = `${chainId}-${tokenAddress.toLowerCase()}`
     return this.tokensByAddress.get(key) || null
   }
 
-  public findMarketByTokenAddress(tokenAddress: string, tokenType: 'pt' | 'yt' | 'sy', chainId: number = 1): PendleMarketInfo | null {
+  public findMarketByTokenAddress(tokenAddress: string, tokenType: 'pt' | 'yt' | 'sy', chainId: number): PendleMarketInfo | null {
     const token = this.findTokenByAddress(tokenAddress, chainId)
     if (!token) return null
     
