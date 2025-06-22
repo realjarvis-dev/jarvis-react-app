@@ -7,13 +7,13 @@ import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { Button } from './ui/button'
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
 } from './ui/dialog'
 import { Spinner } from './ui/spinner'
 
@@ -26,35 +26,25 @@ export function ChatShare({ chatId, className }: ChatShareProps) {
   const [open, setOpen] = useState(false)
   const [pending, startTransition] = useTransition()
   const { copyToClipboard } = useCopyToClipboard({ timeout: 1000 })
-  const [shareUrl, setShareUrl] = useState('')
 
-  const handleShare = async () => {
-    startTransition(() => {
-      setOpen(true)
-    })
-    const result = await shareChat(chatId)
-    if (!result) {
-      toast.error('Failed to share chat')
-      return
-    }
+  const handleShareAndCopy = async () => {
+    startTransition(async () => {
+      const result = await shareChat(chatId)
+      if (!result) {
+        toast.error('Failed to share chat')
+        return
+      }
 
-    if (!result.sharePath) {
-      toast.error('Could not copy link to clipboard')
-      return
-    }
+      if (!result.sharePath) {
+        toast.error('Could not copy link to clipboard')
+        return
+      }
 
-    const url = new URL(result.sharePath, window.location.href)
-    setShareUrl(url.toString())
-  }
-
-  const handleCopy = () => {
-    if (shareUrl) {
-      copyToClipboard(shareUrl)
+      const url = new URL(result.sharePath, window.location.href)
+      copyToClipboard(url.toString())
       toast.success('Link copied to clipboard')
       setOpen(false)
-    } else {
-      toast.error('No link to copy')
-    }
+    })
   }
 
   return (
@@ -83,16 +73,9 @@ export function ChatShare({ chatId, className }: ChatShareProps) {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="items-center">
-            {!shareUrl && (
-              <Button onClick={handleShare} disabled={pending} size="sm">
-                {pending ? <Spinner /> : 'Get link'}
-              </Button>
-            )}
-            {shareUrl && (
-              <Button onClick={handleCopy} disabled={pending} size="sm">
-                {'Copy link'}
-              </Button>
-            )}
+            <Button onClick={handleShareAndCopy} disabled={pending} size="sm">
+              {pending ? <Spinner /> : 'Copy link'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
