@@ -120,6 +120,18 @@ export const optimismConfig: NetworkConfig = {
   nativeAsset: { name: 'Ether', symbol: 'ETH', decimals: 18 }
 }
 
+export const mantleConfig: NetworkConfig = {
+  id: 'mantle' as const,
+  displayName: 'Mantle',
+  chainId: 5000,
+  rpcUrl: 'https://rpc.mantle.xyz',
+  scanLink: 'mantlescan.xyz',
+  isDemo: false,
+  alchemyNetwork: Network.ETH_MAINNET,
+  icon: '/icons/chains/mantle.svg',
+  nativeAsset: { name: 'Mantle', symbol: 'MNT', decimals: 18 }
+}
+
 /**
  * A mapping of all available production/main network configurations.
  * The keys of this object are used to generate the `ChainType`.
@@ -134,7 +146,8 @@ export const allNetworkConfigs = {
   optimism: optimismConfig,
   unichain: unichainConfig,
   bsc: bnbSmartChainConfig,
-  sonic: sonicConfig
+  sonic: sonicConfig,
+  mantle: mantleConfig
 } as const
 
 /**
