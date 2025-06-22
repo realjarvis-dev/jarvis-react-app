@@ -382,8 +382,9 @@ export function ChatPanel({
     ready,
     user,
     delegateWallet,
-    solanaWallets
-  ]) // Added missing dependencies
+    solanaWallets,
+    evmWallets
+  ])
 
   useEffect(() => {
     setMounted(true)

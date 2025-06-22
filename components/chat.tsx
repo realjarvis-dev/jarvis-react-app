@@ -73,7 +73,7 @@ export function Chat({
         }
       })()
     }
-  }, [user?.id, ready, authenticated, anonId, setAnonId])
+  }, [user, ready, authenticated, anonId, setAnonId])
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
@@ -122,7 +122,7 @@ export function Chat({
 
   useEffect(() => {
     setMessages(savedMessages)
-  }, [id])
+  }, [id, savedMessages, setMessages])
 
   const checkTrialLimit = (
     limitReachCallback: () => void,

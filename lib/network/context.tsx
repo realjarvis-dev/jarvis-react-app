@@ -99,7 +99,7 @@ export function NetworkProvider({ children }: NetworkProviderProps) {
     if (selectedChain !== chainToSet) {
       setSelectedChainInternal(chainToSet)
     }
-  }, [mounted]) // Run once after mount to initialize from cookies
+  }, [mounted, isDemoMode, selectedChain]) // Run once after mount to initialize from cookies
 
   // Effect to update selectedChain cookie when selectedChain changes, AFTER mount
   useEffect(() => {
