@@ -17,6 +17,14 @@ interface TwitterUser {
   id: string;
   username: string;
   name: string;
+  public_metrics?: {
+    followers_count: number;
+    following_count: number;
+    tweet_count: number;
+    listed_count: number;
+  };
+  created_at?: string;
+  verified?: boolean;
 }
 
 interface TwitterMentionsResponse {
@@ -173,7 +181,7 @@ export async function fetchMentions(userId: string): Promise<TwitterMentionsResp
   const cutoffTime = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const startTime = cutoffTime.toISOString();
 
-  let url = `https://api.twitter.com/2/users/${userId}/mentions?tweet.fields=created_at,author_id,public_metrics&expansions=author_id&user.fields=username,name&max_results=10&start_time=${startTime}`;
+  let url = `https://api.twitter.com/2/users/${userId}/mentions?tweet.fields=created_at,author_id,public_metrics&expansions=author_id&user.fields=username,name,public_metrics,created_at,verified&max_results=10&start_time=${startTime}`;
 
   if (lastProcessedMentionId) {
     url += `&since_id=${lastProcessedMentionId}`;
@@ -222,6 +230,44 @@ export async function fetchMentions(userId: string): Promise<TwitterMentionsResp
   throw new Error('Failed to fetch mentions after all retries');
 }
 
+function shouldFilterMention(mention: TwitterMention, author: TwitterUser | undefined): { shouldFilter: boolean; reason: string } {
+  if (!author) {
+    return { shouldFilter: true, reason: 'Author not found' };
+  }
+
+  if (author.created_at) {
+    const accountAge = Date.now() - new Date(author.created_at).getTime();
+    const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+    if (accountAge < sevenDaysMs) {
+      return { shouldFilter: true, reason: `Account too new (${Math.round(accountAge / (24 * 60 * 60 * 1000))} days old)` };
+    }
+  }
+
+  if (author.public_metrics && author.public_metrics.followers_count < 5) {
+    return { shouldFilter: true, reason: `Too few followers (${author.public_metrics.followers_count})` };
+  }
+
+  const mentionCount = (mention.text.match(/@\w+/g) || []).length;
+  if (mentionCount > 3) {
+    return { shouldFilter: true, reason: `Too many mentions (${mentionCount})` };
+  }
+
+  const spamKeywords = [
+    'check out', 'follow me', 'dm me', 'link in bio', 'check my profile',
+    'follow for follow', 'f4f', 'follow back', 'check this out',
+    'visit my page', 'click link', 'see my bio', 'promotion', 'giveaway'
+  ];
+  
+  const lowerText = mention.text.toLowerCase();
+  for (const keyword of spamKeywords) {
+    if (lowerText.includes(keyword)) {
+      return { shouldFilter: true, reason: `Contains spam keyword: "${keyword}"` };
+    }
+  }
+
+  return { shouldFilter: false, reason: '' };
+}
+
 export async function processMention(mention: TwitterMention, users: TwitterUser[]) {
   try {
     const author = users.find(user => user.id === mention.author_id);
@@ -231,6 +277,22 @@ export async function processMention(mention: TwitterMention, users: TwitterUser
       console.log(`Skipping mention ${mention.id} from @${authorUsername} - already replied`);
       return;
     }
+
+    const filterResult = shouldFilterMention(mention, author);
+    if (filterResult.shouldFilter) {
+      console.log(`🚫 Filtered mention ${mention.id} from @${authorUsername}: ${filterResult.reason}`);
+      console.log(`   Tweet: "${mention.text.substring(0, 100)}${mention.text.length > 100 ? '...' : ''}"`);
+      markMentionAsReplied(mention.id); // Mark as processed to avoid reprocessing
+      return;
+    }
+
+    console.log(`✅ Processing genuine mention from @${authorUsername} (${author?.public_metrics?.followers_count || 'unknown'} followers)`);
+    console.log(`   Account age: ${author?.created_at ? Math.round((Date.now() - new Date(author.created_at).getTime()) / (24 * 60 * 60 * 1000)) : 'unknown'} days`);
+    console.log(`   Verified: ${author?.verified || false}`);
+    console.log(`   Tweet: "${mention.text}"`);
+    console.log(`   Engagement: ${mention.public_metrics.like_count} likes, ${mention.public_metrics.retweet_count} retweets`);
+    console.log(`   Mentions count: ${(mention.text.match(/@\w+/g) || []).length}`);
+    console.log('---');
 
     const now = Date.now();
     const timeSinceLastProcess = now - lastMentionProcessTime;
