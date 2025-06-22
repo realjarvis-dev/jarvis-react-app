@@ -196,6 +196,9 @@ async function prepareSwapTokens(
   const tokenSymbol = marketName || foundMarket.name;
   const fullTokenName = `${tokenType.toUpperCase()} ${tokenSymbol}`;
 
+  const networkConfig = getConfigByChainId(chainId || PENDLE_CONFIG.DEFAULT_CHAIN_ID, false);
+  const nativeTokenSymbol = networkConfig.nativeAsset.symbol;
+
   // Determine tokenIn, tokenOut
   let tokenIn: string;
   let tokenOut: string;
@@ -205,13 +208,13 @@ async function prepareSwapTokens(
   if (direction === 'ethToToken') {
     tokenIn = PENDLE_CONFIG.ETH_ADDRESS_PENDLE;
     tokenOut = tokenAddress;
-    inputToken = PENDLE_CONFIG.ETH_SYMBOL;
+    inputToken = nativeTokenSymbol;
     outputToken = fullTokenName;
   } else {
     tokenIn = tokenAddress;
     tokenOut = PENDLE_CONFIG.ETH_ADDRESS_PENDLE;
     inputToken = fullTokenName;
-    outputToken = PENDLE_CONFIG.ETH_SYMBOL;
+    outputToken = nativeTokenSymbol;
   }
 
   return {
