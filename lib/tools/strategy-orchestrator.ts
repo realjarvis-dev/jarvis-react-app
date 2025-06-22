@@ -91,7 +91,7 @@ export const strategyExecutorTool = tool({
         tool: z.string(),
         description: z.string(),
         wait_for_confirmation: z.boolean(),
-        parameters: z.record(z.any()).describe('Tool parameters (use empty object if none)')
+        parameters: z.record(z.string(), z.unknown()).describe('Tool parameters (use empty object if none)')
       })),
       execution_order: z.string(),
       max_steps: z.number().describe('Maximum steps allowed (use 15 if not specified)')
