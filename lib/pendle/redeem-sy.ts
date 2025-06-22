@@ -3,7 +3,6 @@ import { callSDK } from './call-sdk';
 import { RedeemSyData } from './types';
 
 
-
 /**
  * Get Pendle redeem SY data using Pendle SDK
  * @param syAddress The SY (Standardized Yield) address
