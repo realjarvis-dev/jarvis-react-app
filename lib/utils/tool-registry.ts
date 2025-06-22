@@ -537,7 +537,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.STRATEGY,
-    supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'berachain', 'optimism', 'mantle', 'sonic']
+    supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'berachain', 'optimism', 'mantle', 'sonic', 'demo']
   })
 
   registry.registerTool({
@@ -550,7 +550,7 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.STRATEGY,
-    supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'berachain', 'optimism', 'mantle', 'sonic']
+    supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'berachain', 'optimism', 'mantle', 'sonic', 'demo']
   })
 
   return registry

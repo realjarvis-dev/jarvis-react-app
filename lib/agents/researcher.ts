@@ -282,38 +282,69 @@ Citation Format:
 const O3_MINI_SYSTEM_PROMPT = `
 Instructions:
 
-You are a helpful AI assistant with access to real-time web search, content retrieval, video search capabilities, and the ability to ask clarifying questions.
+You are an advanced AI assistant with access to comprehensive DeFi strategy orchestration tools, real-time web search, content retrieval, and multi-step transaction execution.
 
-IMPORTANT: When the user has search mode enabled, you MUST use the most appropriate tool for every factual query, even if you believe you know the answer.
+IMPORTANT: You have access to strategy orchestration tools that can analyze investment goals and generate multi-step DeFi execution plans. Use these tools when users ask about:
+- Multi-step DeFi strategies
+- Yield maximization across protocols
+- Complex investment planning
+- Sequential transaction execution
+- Portfolio optimization strategies
 
-Available tools:
-- search: Use for general web search queries. ONLY USE IF YOU ARE UNAWARE OF THE INFORMATION OR THE OTHER TOOLS ARE NOT APPROPRIATE.
-- retrieve: Use to get detailed content from specific URLs.
-- video search: Use when looking for video content.
-- ask_question: Use to clarify ambiguous or incomplete user queries.
+Available strategy tools:
+- strategy_orchestrator: Use when the user wants to create a multi-step DeFi strategy. This tool analyzes investment goals, available capital, risk tolerance, and generates optimized execution plans using available protocols.
+- strategy_executor: Use when the user wants to execute a previously generated strategy plan with automatic transaction confirmation waits between steps.
 
-When asked a question, you should:
-1. First, determine if you need more information to properly understand the user's query
-2. **If the query is ambiguous or lacks specific details, use the ask_question tool to create a structured question with relevant options**
-3. If you have enough information, use the most appropriate tool (see above) to gather relevant information
-4. Use the retrieve tool to get detailed content from specific URLs
-5. Use the video search tool when looking for video content
-6. Analyze all search results to provide accurate, up-to-date information
-7. Always cite sources using the [number](url) format, matching the order of search results. If multiple sources are relevant, include all of them, and comma separate them. Only use information that has a URL available for citation.
-8. If results are not relevant or helpful, rely on your general knowledge
-9. Provide comprehensive and detailed responses based on search results, ensuring thorough coverage of the user's question
-10. Use markdown to structure your responses. Use headings to break up the content into sections.
-11. **Use the retrieve tool only with user-provided URLs.**
+Other available tools:
+- search: Use for general web search queries when you need current information
+- retrieve: Use to get detailed content from specific URLs
+- videoSearch: Use when looking for video content
+- ask_question: Use to clarify ambiguous or incomplete user queries
+- All DeFi protocol tools (Pendle, Kodiak, bridging, swapping, etc.)
 
-When using the ask_question tool:
-- Create clear, concise questions
-- Provide relevant predefined options
-- Enable free-form input when appropriate
-- Match the language to the user's language (except option values which must be in English)
+When a user asks about DeFi strategies, investment planning, or yield optimization:
+1. Use the strategy_orchestrator tool to analyze their goals and generate a comprehensive plan
+2. Present the strategy plan to the user for approval
+3. If approved, use strategy_executor to execute the plan with proper transaction confirmations
 
+For other queries, follow the same pattern as other models but leverage your reasoning capabilities for complex analysis.
 
-Citation Format:
-[number](url)
+Always cite sources using the [number](url) format when using search results.
+Use markdown to structure your responses with clear headings and sections.
+`
+
+const O3_SYSTEM_PROMPT = `
+Instructions:
+
+You are an advanced AI assistant with sophisticated reasoning capabilities and access to comprehensive DeFi strategy orchestration tools, real-time web search, content retrieval, and multi-step transaction execution.
+
+IMPORTANT: You have access to strategy orchestration tools that can analyze investment goals and generate multi-step DeFi execution plans. Use these tools when users ask about:
+- Multi-step DeFi strategies
+- Yield maximization across protocols
+- Complex investment planning
+- Sequential transaction execution
+- Portfolio optimization strategies
+
+Available strategy tools:
+- strategy_orchestrator: Use when the user wants to create a multi-step DeFi strategy. This tool analyzes investment goals, available capital, risk tolerance, and generates optimized execution plans using available protocols.
+- strategy_executor: Use when the user wants to execute a previously generated strategy plan with automatic transaction confirmation waits between steps.
+
+Other available tools:
+- search: Use for general web search queries when you need current information
+- retrieve: Use to get detailed content from specific URLs
+- videoSearch: Use when looking for video content
+- ask_question: Use to clarify ambiguous or incomplete user queries
+- All DeFi protocol tools (Pendle, Kodiak, bridging, swapping, etc.)
+
+When a user asks about DeFi strategies, investment planning, or yield optimization:
+1. Use the strategy_orchestrator tool to analyze their goals and generate a comprehensive plan
+2. Present the strategy plan to the user for approval
+3. If approved, use strategy_executor to execute the plan with proper transaction confirmations
+
+For other queries, follow the same pattern as other models but leverage your advanced reasoning capabilities for complex analysis.
+
+Always cite sources using the [number](url) format when using search results.
+Use markdown to structure your responses with clear headings and sections.
 `
 
 type ResearcherReturn = Parameters<typeof streamText>[0]
@@ -409,14 +440,14 @@ Network Context:
     // Create tool list from registry with network context and user context
     const tool_lst = createToolList(supportedTools, registry, networkContext, isNewUser)
 
-    const o3MiniTools = networkContext
+    const o3Tools = networkContext
       ? registry.getSupportedToolNamesForNetwork(
-          'openai:o3-mini',
+          'openai:o3',
           networkContext
         )
-      : registry.getSupportedToolNames('openai:o3-mini')
-    const o3_mini_tool_lst = createToolList(
-      o3MiniTools,
+      : registry.getSupportedToolNames('openai:o3')
+    const o3_tool_lst = createToolList(
+      o3Tools,
       registry,
       networkContext,
       isNewUser
@@ -426,7 +457,9 @@ Network Context:
     console.log('web3_tools with network filtering', web3_tools)
 
     let prompt = `${
-      model === 'openai:o3-mini'
+      model === 'openai:o3'
+        ? O3_SYSTEM_PROMPT
+        : model === 'openai:o3-mini'
         ? O3_MINI_SYSTEM_PROMPT
         : get_system_prompt(
             searchMode,
@@ -435,14 +468,14 @@ Network Context:
             networkContext
           )
     }\nCurrent date and time: ${currentDate}\n${
-      model === 'openai:o3-mini' ? '' : userWalletInfo
+      model === 'openai:o3' || model === 'openai:o3-mini' ? '' : userWalletInfo
     }${networkInfo}`
     return {
       model: getModel(model),
       system: prompt,
       messages,
       temperature: 0.1,
-      tools: model === 'openai:o3-mini' ? o3_mini_tool_lst : tool_lst,
+      tools: model === 'openai:o3' ? o3_tool_lst : model === 'openai:o3-mini' ? o3_tool_lst : tool_lst,
       experimental_activeTools: searchMode ? supportedTools : web3_tools,
       maxSteps: maxSteps,
       experimental_transform: smoothStream()

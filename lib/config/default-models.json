@@ -33,6 +33,14 @@
       "toolCallType": "native"
     },
     {
+      "id": "o3",
+      "name": "o3",
+      "provider": "OpenAI",
+      "providerId": "openai",
+      "enabled": true,
+      "toolCallType": "native"
+    },
+    {
       "id": "gpt-4o",
       "name": "GPT-4o",
       "provider": "OpenAI",
