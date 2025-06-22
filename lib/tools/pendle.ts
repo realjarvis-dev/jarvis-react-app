@@ -345,19 +345,16 @@ export const pendleOpportunitiesTool = tool({
       .number()
       .min(PENDLE_CONFIG.MIN_OPPORTUNITIES)
       .max(PENDLE_CONFIG.MAX_OPPORTUNITIES)
-      .optional()
       .default(PENDLE_CONFIG.DEFAULT_OPPORTUNITIES)
       .describe(`Number of opportunities to return (default ${PENDLE_CONFIG.DEFAULT_OPPORTUNITIES})`),
     apy_gte: z
       .number()
-      .optional()
       .default(0)
       .describe(
         'Minimum APY in percentage (e.g., 7 for 7%). Filters for APY >= value/100. Use 0 for no minimum filter.'
       ),
     apy_lte: z
       .number()
-      .optional()
       .default(100)
       .describe(
         'Maximum APY in percentage (e.g., 100 for 100%). Filters for APY <= value/100. Use 100 for no maximum filter.'
