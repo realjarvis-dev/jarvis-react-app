@@ -13,7 +13,8 @@ export async function executeToolCall(
   coreMessages: CoreMessage[],
   dataStream: DataStreamWriter,
   model: string,
-  searchMode: boolean
+  searchMode: boolean,
+  isNewUser?: boolean
 ): Promise<ToolExecutionResult> {
-  return await unifiedExecuteToolCall(coreMessages, dataStream, model, searchMode)
+  return await unifiedExecuteToolCall(coreMessages, dataStream, model, searchMode, isNewUser)
 }
