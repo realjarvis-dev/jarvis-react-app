@@ -457,7 +457,7 @@ Network Context:
     console.log('web3_tools with network filtering', web3_tools)
 
     let prompt = `${
-      model === 'openai:o3'
+      model === 'openai:o3' || model === 'anthropic:claude-opus-4-20250514'
         ? O3_SYSTEM_PROMPT
         : model === 'openai:o3-mini'
         ? O3_MINI_SYSTEM_PROMPT
@@ -468,14 +468,14 @@ Network Context:
             networkContext
           )
     }\nCurrent date and time: ${currentDate}\n${
-      model === 'openai:o3' || model === 'openai:o3-mini' ? '' : userWalletInfo
+      model === 'openai:o3' || model === 'openai:o3-mini' || model === 'anthropic:claude-opus-4-20250514' ? '' : userWalletInfo
     }${networkInfo}`
     return {
       model: getModel(model),
       system: prompt,
       messages,
       temperature: 0.1,
-      tools: model === 'openai:o3' ? o3_tool_lst : model === 'openai:o3-mini' ? o3_tool_lst : tool_lst,
+      tools: model === 'openai:o3' || model === 'anthropic:claude-opus-4-20250514' ? o3_tool_lst : model === 'openai:o3-mini' ? o3_tool_lst : tool_lst,
       experimental_activeTools: searchMode ? supportedTools : web3_tools,
       maxSteps: maxSteps,
       experimental_transform: smoothStream()

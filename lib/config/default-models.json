@@ -81,6 +81,15 @@
       "toolCallType": "native"
     },
     {
+      "id": "claude-opus-4-20250514",
+      "name": "Claude Opus 4",
+      "provider": "Anthropic",
+      "providerId": "anthropic",
+      "enabled": true,
+      "toolCallType": "manual",
+      "toolCallModel": "gpt-4.1"
+    },
+    {
       "id": "<AZURE_DEPLOYMENT_NAME>",
       "name": "<AZURE_DEPLOYMENT_NAME>",
       "provider": "Azure",

@@ -4,6 +4,14 @@ import { ToolContext } from '../types/context'
 import { getToolRegistry } from '../utils/tool-registry'
 import { executeToolCall } from '../streaming/tool-execution'
 import { convertToCoreMessages } from 'ai'
+import { getModel, isReasoningModel } from '../utils/registry'
+
+function getReasoningModelForPlanning(): string {
+  const claudeOpus4 = 'anthropic:claude-opus-4-20250514'
+  const openaiO3 = 'openai:o3'
+  
+  return claudeOpus4
+}
 
 export const strategyOrchestratorTool = tool({
   description: `Analyze user investment goals and generate multi-step DeFi execution plans using available tools. 
@@ -24,10 +32,11 @@ export const strategyOrchestratorTool = tool({
     }
     
     try {
-      const registry = getToolRegistry('openai:o3')
+      const reasoningModel = getReasoningModelForPlanning()
+      const registry = getToolRegistry(reasoningModel)
       const availableTools = networkContext 
-        ? registry.getSupportedToolNamesForNetwork('openai:o3', networkContext)
-        : registry.getSupportedToolNames('openai:o3')
+        ? registry.getSupportedToolNamesForNetwork(reasoningModel, networkContext)
+        : registry.getSupportedToolNames(reasoningModel)
       
       const quoteTools = availableTools.filter(tool => tool.includes('quote'))
       const executionTools = availableTools.filter(tool => 
@@ -55,7 +64,7 @@ export const strategyOrchestratorTool = tool({
         steps: strategySteps,
         estimated_profit: estimatedProfit,
         execution_order: 'sequential_with_confirmation',
-        max_steps: registry.getMaxSteps('openai:o3', true),
+        max_steps: registry.getMaxSteps(reasoningModel, true),
         created_at: new Date().toISOString()
       }
       
@@ -115,7 +124,7 @@ export const strategyExecutorTool = tool({
           validation_status: 'ready',
           total_steps: steps.length,
           execution_model: 'openai:gpt-4.1',
-          planning_model: 'openai:o3',
+          planning_model: getReasoningModelForPlanning(),
           steps: steps.map(s => ({
             step: s.step,
             tool: s.tool,
@@ -138,7 +147,7 @@ export const strategyExecutorTool = tool({
     
     try {
       console.log(`Starting strategy execution with ${steps.length} steps using hybrid model architecture`)
-      console.log(`Planning model: openai:o3, Execution model: openai:gpt-4.1`)
+      console.log(`Planning model: ${getReasoningModelForPlanning()}, Execution model: openai:gpt-4.1`)
       
       for (const step of steps) {
         currentStep = step.step
