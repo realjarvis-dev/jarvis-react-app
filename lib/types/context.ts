@@ -19,4 +19,5 @@ export interface NetworkContext {
     toolCallId?: string
     messages?: any[]
     networkContext?: NetworkContext
+    isNewUser?: boolean
   }
