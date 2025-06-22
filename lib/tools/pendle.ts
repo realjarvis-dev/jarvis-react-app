@@ -39,7 +39,22 @@ async function resolveTokenAddress(
                           (query.includes('sena') && (symbol.includes('sena') || name.includes('sena'))) ||
                           (query.includes('eusde') && (symbol.includes('eusde') || name.includes('eusde'))) ||
                           symbol.replace(/[^a-z0-9]/g, '').includes(query.replace(/[^a-z0-9]/g, '')) ||
-                          name.replace(/[^a-z0-9]/g, '').includes(query.replace(/[^a-z0-9]/g, ''));
+                          name.replace(/[^a-z0-9]/g, '').includes(query.replace(/[^a-z0-9]/g, '')) ||
+                          (() => {
+                            if (query.endsWith('pt') || query.endsWith('yt')) {
+                              const baseQuery = query.slice(0, -2);
+                              return baseQuery && (symbol.includes(baseQuery) || name.includes(baseQuery));
+                            }
+                            
+                            const baseQuery = query.replace(/^(pt|yt)/, '').replace(/(pt|yt)$/, '');
+                            if (baseQuery && baseQuery !== query) {
+                              const baseSymbol = symbol.replace(/^pt-/, '').replace(/^yt-/, '').split('-')[0];
+                              const baseName = name.replace(/^(pt|yt)\s+/, '').split(' ')[0].toLowerCase();
+                              return baseSymbol.includes(baseQuery) || baseName.includes(baseQuery);
+                            }
+                            
+                            return false;
+                          })();
       
       return isCorrectType && matchesQuery;
     });

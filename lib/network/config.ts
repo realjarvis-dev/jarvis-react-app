@@ -128,7 +128,7 @@ export const mantleConfig: NetworkConfig = {
   scanLink: 'mantlescan.xyz',
   isDemo: false,
   alchemyNetwork: Network.ETH_MAINNET,
-  icon: '/icons/chains/mantle.svg',
+  icon: '/icons/chains/mantle.png',
   nativeAsset: { name: 'Mantle', symbol: 'MNT', decimals: 18 }
 }
 
