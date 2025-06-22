@@ -15,7 +15,7 @@ import { BaseStreamConfig } from './types'
 export function createManualToolStreamResponse(config: BaseStreamConfig) {
   return createDataStreamResponse({
     execute: async (dataStream: DataStreamWriter) => {
-      const { messages, model, chatId, searchMode, userId } = config
+      const { messages, model, chatId, searchMode, userId, isNewUser } = config
       const modelId = `${model.providerId}:${model.id}`
       let toolCallModelId = model.toolCallModel
         ? `${model.providerId}:${model.toolCallModel}`

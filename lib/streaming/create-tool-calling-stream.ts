@@ -27,7 +27,7 @@ function containsAskQuestionTool(message: CoreMessage) {
 export function createToolCallingStreamResponse(config: BaseStreamConfig) {
   return createDataStreamResponse({
     execute: async (dataStream: DataStreamWriter) => {
-      const { messages, model, chatId, searchMode, userId, allowWeb3Tools } = config
+      const { messages, model, chatId, searchMode, userId, allowWeb3Tools, isNewUser } = config
       const modelId = `${model.providerId}:${model.id}`
 
       try {
@@ -44,7 +44,8 @@ export function createToolCallingStreamResponse(config: BaseStreamConfig) {
           userEvmWallet: config.userEvmWallet,
           userSolWallet: config.userSolWallet,
           allowWeb3Tools,
-          networkContext: config.networkContext
+          networkContext: config.networkContext,
+          isNewUser: config.isNewUser
         })
 
         // console.log('researcherConfig', researcherConfig)

@@ -14,6 +14,7 @@ interface ToolContext {
   toolCallId?: string
   messages?: any[]
   networkContext?: NetworkContext
+  isNewUser?: boolean
 }
 
 export const walletBalanceTool = tool({
@@ -106,6 +107,7 @@ export const fundWalletTool = tool({
   execute: async (params, context: ToolContext) => {
     const { wallet_address } = params;
     const networkContext = context?.networkContext;
+    const isNewUser = context?.isNewUser;
     
     if (!networkContext) {
       return {
@@ -119,11 +121,10 @@ export const fundWalletTool = tool({
     }
     
     try {
-      // Check if we're in demo mode using the isDemo property from the NetworkContext
       const isDemo = networkContext.isDemo;
       
-      // Call the funding function
-      const result = await fundUserWallet(wallet_address, isDemo, false);
+      const shouldUseInitialReward = isNewUser === true;
+      const result = await fundUserWallet(wallet_address, isDemo, shouldUseInitialReward);
       
       // Check for error in the result
       if ('error' in result) {
@@ -139,15 +140,22 @@ export const fundWalletTool = tool({
       const userId = await getUserId()
       balanceChangePub(userId, [networkContext.config.id], isDemo || true)
 
+      const fundingAmount = shouldUseInitialReward ? INITIAL_REWARD_AMOUNT : REQUESTED_FUNDING_AMOUNT;
+      const isInitialReward = shouldUseInitialReward;
+      
       return {
         _uiDisplayTool: true,
-        summary: `Successfully funded wallet with ${REQUESTED_FUNDING_AMOUNT} ETH`,
+        summary: isInitialReward 
+          ? `Congrats, you have been rewarded ${INITIAL_REWARD_AMOUNT} ETH on demo net!`
+          : `Successfully funded wallet with ${REQUESTED_FUNDING_AMOUNT} ETH`,
         data: {
           success: true,
-          message: `Successfully funded wallet with ${REQUESTED_FUNDING_AMOUNT} ETH`,
-          amount: `${REQUESTED_FUNDING_AMOUNT} ETH`,
+          message: isInitialReward 
+            ? `Congrats, you have been rewarded ${INITIAL_REWARD_AMOUNT} ETH on demo net!`
+            : `Successfully funded wallet with ${REQUESTED_FUNDING_AMOUNT} ETH`,
+          amount: `${fundingAmount} ETH`,
           wallet: wallet_address,
-          is_initial_reward: false
+          is_initial_reward: isInitialReward
         }
       };
     } catch (error) {
@@ -174,6 +182,7 @@ export const initialWalletRewardTool = tool({
   execute: async (params, context: ToolContext) => {
     const { wallet_address } = params;
     const networkContext = context?.networkContext;
+    const isNewUser = context?.isNewUser;
     
     if (!networkContext) {
       return {
@@ -274,4 +283,4 @@ export async function fundUserWallet(
       error: `Failed to fund wallet: ${error instanceof Error ? error.message : String(error)}`
     };
   }
-}        
+}                

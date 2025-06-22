@@ -52,9 +52,16 @@ export async function POST(request: Request) {
     }
 
     let authenticated = false
+    let isNewUser = false
     try {
-      await getUser()
+      const user = await getUser()
       authenticated = true
+      
+      const created = new Date(user.createdAt)
+      const now = new Date()
+      isNewUser = now.getTime() - created.getTime() < 120_000
+      
+      console.log(`User created at: ${created.toISOString()}, isNewUser: ${isNewUser}`)
     } catch (error) {
       console.log('User not logged in')
     }
@@ -94,7 +101,8 @@ export async function POST(request: Request) {
           userEvmWallet,
           userSolWallet,
           allowWeb3Tools,
-          networkContext
+          networkContext,
+          isNewUser
         })
       : createManualToolStreamResponse({
           messages,
@@ -105,7 +113,8 @@ export async function POST(request: Request) {
           userEvmWallet,
           userSolWallet,
           allowWeb3Tools,
-          networkContext
+          networkContext,
+          isNewUser
         })
   } catch (error) {
     console.error('API route error:', error)

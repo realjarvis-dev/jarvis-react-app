@@ -161,7 +161,8 @@ async function executeNativeToolCall(
         parameters: tool.schema,
         execute: (params: any, context?: any) => tool.execute!(params, {
           ...context,
-          networkContext: defaultNetworkContext
+          networkContext: defaultNetworkContext,
+          isNewUser: false
         })
       }
     }
@@ -289,7 +290,7 @@ async function executeManualToolCall(
       try {
         toolResults = await tool.execute(
           toolParams,
-          { toolCallId, messages: [], networkContext: defaultNetworkContext }
+          { toolCallId, messages: [], networkContext: defaultNetworkContext, isNewUser: false }
         )
         
         toolResultCache.storeResult(toolName, toolParams, toolResults)
