@@ -63,7 +63,6 @@ export async function getSwapTransactionFromPendle(
 
     const RECEIVER = evmWalletAddress
 
-
     console.log(`Wallet address: ${RECEIVER}`)
     console.log(`Slippage: ${slippage}`)
 

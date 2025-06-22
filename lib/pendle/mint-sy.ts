@@ -3,7 +3,6 @@ import { callSDK } from './call-sdk';
 import { MintSyData } from './types';
 
 
-
 /**
  * Get Pendle mint SY data using Pendle SDK
  * @param syAddress The SY (Standardized Yield) address
