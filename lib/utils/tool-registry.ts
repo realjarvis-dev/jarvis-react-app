@@ -454,7 +454,8 @@ export function createToolRegistry(model: string): ToolRegistry {
     execute: async (params, context) => fundWalletTool.execute(params, {
       toolCallId: context?.toolCallId || 'unknown',
       messages: context?.messages || [],
-      networkContext: context?.networkContext!
+      networkContext: context?.networkContext!,
+      isNewUser: context?.isNewUser
     } as any),
     category: ToolCategory.WEB3,
     supportedNetworks: ['demo']
@@ -467,7 +468,8 @@ export function createToolRegistry(model: string): ToolRegistry {
     execute: async (params, context) => initialWalletRewardTool.execute(params, {
       toolCallId: context?.toolCallId || 'unknown',
       messages: context?.messages || [],
-      networkContext: context?.networkContext!
+      networkContext: context?.networkContext!,
+      isNewUser: context?.isNewUser
     } as any),
     category: ToolCategory.WEB3,
     supportedNetworks: ['demo']
