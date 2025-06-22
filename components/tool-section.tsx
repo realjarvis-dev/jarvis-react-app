@@ -264,6 +264,7 @@ export function ToolSection({
     case 'get_gas_price':
       return <GetGasPriceSection tool={tool} />
     case 'fund_wallet':
+    case 'initial_wallet_reward':
       return (
         <WalletFundingSection
           tool={tool}

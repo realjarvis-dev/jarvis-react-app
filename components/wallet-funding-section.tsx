@@ -14,6 +14,7 @@ interface WalletFundingToolResult {
   message: string
   amount?: string
   wallet?: string
+  is_initial_reward?: boolean
 }
 
 interface WalletFundingSectionProps {
@@ -74,7 +75,7 @@ export function WalletFundingSection({
     if (tool.state === 'call') {
       return 'Funding wallet...'
     } else if (result?.success) {
-      return 'Wallet funded successfully'
+      return result.is_initial_reward ? 'Initial reward granted!' : 'Wallet funded successfully'
     } else if (errorMessage) {
       return 'Funding failed'
     }
@@ -85,14 +86,16 @@ export function WalletFundingSection({
     if (tool.state === 'call') {
       return <Badge variant="secondary">Processing</Badge>
     } else if (result?.success) {
-      return <Badge variant="default" className="bg-green-100 text-green-800">Success</Badge>
+      return result.is_initial_reward 
+        ? <Badge variant="default" className="bg-yellow-100 text-yellow-800">🎉 Reward</Badge>
+        : <Badge variant="default" className="bg-green-100 text-green-800">Success</Badge>
     } else if (errorMessage) {
       return <Badge variant="destructive">Failed</Badge>
     }
     return <Badge variant="outline">Ready</Badge>
   }
 
-  const title = 'Demo Wallet Funding'
+  const title = result?.is_initial_reward ? 'Welcome Reward!' : 'Demo Wallet Funding'
 
   return (
     <CollapsibleMessage
@@ -115,7 +118,10 @@ export function WalletFundingSection({
             {title}
           </CardTitle>
           <CardDescription>
-            Fund your demo wallet with ETH for testing DeFi operations
+            {result?.is_initial_reward 
+              ? 'Congratulations! You received your initial demo wallet reward'
+              : 'Fund your demo wallet with ETH for testing DeFi operations'
+            }
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -137,17 +143,20 @@ export function WalletFundingSection({
 
           {result?.success && (
             <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm text-green-600">
+              <div className={`flex items-center gap-2 text-sm ${result.is_initial_reward ? 'text-yellow-600' : 'text-green-600'}`}>
                 <CheckCircle className="h-4 w-4" />
-                Wallet funded successfully!
+                {result.is_initial_reward ? 'Congrats, you have been rewarded 1 ETH on demo net!' : 'Wallet funded successfully!'}
               </div>
               {result.amount && (
                 <div className="text-sm">
-                  <span className="font-medium">Amount funded:</span> {result.amount}
+                  <span className="font-medium">{result.is_initial_reward ? 'Reward amount:' : 'Amount funded:'}</span> {result.amount}
                 </div>
               )}
               <div className="text-sm text-muted-foreground">
-                Your wallet now has sufficient balance for DeFi operations.
+                {result.is_initial_reward 
+                  ? 'Welcome to Jarvis! Your wallet is now ready for DeFi adventures.'
+                  : 'Your wallet now has sufficient balance for DeFi operations.'
+                }
               </div>
             </div>
           )}
@@ -170,7 +179,7 @@ export function WalletFundingSection({
           {!result && !errorMessage && tool.state !== 'call' && (
             <div className="text-sm text-muted-foreground">
               This tool allows you to fund your wallet with ETH in Demo mode. 
-              Use this when you need funds for DeFi transactions.
+              New users get 1 ETH initial reward, existing users get 0.1 ETH incremental funding.
             </div>
           )}
         </CardContent>

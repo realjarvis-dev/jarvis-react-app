@@ -11,7 +11,7 @@ import { createQuestionTool } from '../tools/question'
 import { retrieveTool } from '../tools/retrieve'
 import { createSearchTool } from '../tools/search'
 import { createVideoSearchTool } from '../tools/video-search'
-import { fundWalletTool, walletBalanceTool } from '../tools/wallet'
+import { fundWalletTool, initialWalletRewardTool, walletBalanceTool } from '../tools/wallet'
 import { NetworkContext, ToolContext } from '../types/context'
 import { pendleZapInQuoteTool, pendleZapInExecuteTool } from '../tools/pendle-liquidity'
 import { pendleZapOutExecuteTool, pendleZapOutQuoteTool } from '../tools/pendle-remove-liquidity'
@@ -452,6 +452,19 @@ export function createToolRegistry(model: string): ToolRegistry {
     description: 'Fund a wallet with ETH (only available in Demo mode)',
     schema: fundWalletTool.parameters,
     execute: async (params, context) => fundWalletTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3,
+    supportedNetworks: ['demo']
+  })
+
+  registry.registerTool({
+    name: 'initial_wallet_reward',
+    description: 'Grant initial wallet reward of 1 ETH to new users (only available in Demo mode)',
+    schema: initialWalletRewardTool.parameters,
+    execute: async (params, context) => initialWalletRewardTool.execute(params, {
       toolCallId: context?.toolCallId || 'unknown',
       messages: context?.messages || [],
       networkContext: context?.networkContext!

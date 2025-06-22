@@ -4,7 +4,7 @@ import { NetworkContext } from '../types/context'
 import { TENDERLY_DEMO_CONFIG } from '../network/config'
 import { getWalletBalances } from '../utils/wallet'
 
-import { addBalanceVnet, ethToWei, REQUESTED_FUNDING_AMOUNT, TenderlyRpcResponse } from '../tenderly/fund'
+import { addBalanceVnet, ethToWei, REQUESTED_FUNDING_AMOUNT, INITIAL_REWARD_AMOUNT, TenderlyRpcResponse } from '../tenderly/fund'
 import { addBalanceAnvilFork } from '../anvil-fork/fund'
 import { TransactionResponse } from 'ethers'
 import { balanceChangePub } from '../pubsub/balance-change-pub'
@@ -123,7 +123,7 @@ export const fundWalletTool = tool({
       const isDemo = networkContext.isDemo;
       
       // Call the funding function
-      const result = await fundUserWallet(wallet_address, isDemo);
+      const result = await fundUserWallet(wallet_address, isDemo, false);
       
       // Check for error in the result
       if ('error' in result) {
@@ -141,12 +141,13 @@ export const fundWalletTool = tool({
 
       return {
         _uiDisplayTool: true,
-        summary: `Successfully funded wallet with 0.1 ETH`,
+        summary: `Successfully funded wallet with ${REQUESTED_FUNDING_AMOUNT} ETH`,
         data: {
           success: true,
-          message: 'Successfully funded wallet with 0.1 ETH',
-          amount: '0.1 ETH',
-          wallet: wallet_address
+          message: `Successfully funded wallet with ${REQUESTED_FUNDING_AMOUNT} ETH`,
+          amount: `${REQUESTED_FUNDING_AMOUNT} ETH`,
+          wallet: wallet_address,
+          is_initial_reward: false
         }
       };
     } catch (error) {
@@ -164,17 +165,88 @@ export const fundWalletTool = tool({
   }
 })
 
+export const initialWalletRewardTool = tool({
+  description: `Grant initial wallet reward of ${INITIAL_REWARD_AMOUNT} ETH to new users (only works in Demo mode)`,
+  parameters: z.object({
+    wallet_address: z.string()
+      .describe('EVM wallet address to reward with 1 ETH initial funding')
+  }),
+  execute: async (params, context: ToolContext) => {
+    const { wallet_address } = params;
+    const networkContext = context?.networkContext;
+    
+    if (!networkContext) {
+      return {
+        _uiDisplayTool: true,
+        summary: 'Cannot grant reward: Missing network context',
+        data: {
+          success: false,
+          message: 'Missing network context. Cannot determine if in demo mode.'
+        }
+      };
+    }
+    
+    try {
+      // Check if we're in demo mode using the isDemo property from the NetworkContext
+      const isDemo = networkContext.isDemo;
+      
+      // Call the funding function with new user flag
+      const result = await fundUserWallet(wallet_address, isDemo, true);
+      
+      // Check for error in the result
+      if ('error' in result) {
+        return {
+          _uiDisplayTool: true,
+          summary: `Initial reward failed: ${result.error}`,
+          data: {
+            success: false,
+            message: result.error
+          }
+        };
+      }
+      const userId = await getUserId()
+      balanceChangePub(userId, [networkContext.config.id], isDemo || true)
+
+      return {
+        _uiDisplayTool: true,
+        summary: `Congrats, you have been rewarded ${INITIAL_REWARD_AMOUNT} ETH on demo net!`,
+        data: {
+          success: true,
+          message: `Congrats, you have been rewarded ${INITIAL_REWARD_AMOUNT} ETH on demo net!`,
+          amount: `${INITIAL_REWARD_AMOUNT} ETH`,
+          wallet: wallet_address,
+          is_initial_reward: true
+        }
+      };
+    } catch (error) {
+      console.error('Error in initial wallet reward tool:', error);
+      
+      return {
+        _uiDisplayTool: true,
+        summary: 'Error granting initial reward',
+        data: {
+          success: false,
+          message: `Failed to grant initial reward: ${error instanceof Error ? error.message : String(error)}`
+        }
+      };
+    }
+  }
+})
+
 /**
- * Tool for the agent to fund a user's wallet with 0.1 ETH
+ * Tool for the agent to fund a user's wallet
  * This function only works in Demo VNet environment
+ * New users get 1 ETH initial reward, existing users get 0.1 ETH incremental funding
  * 
  * @param walletAddress - The wallet address to fund
  * @param isDemo - Whether the current network is in demo mode
+ * @param isNewUser - Whether this is a new user (gets 1 ETH) or existing user (gets 0.1 ETH)
  * @returns Promise with the RPC response or an error
  */
 export async function fundUserWallet(
   walletAddress: string,
-  isDemo: boolean
+  isDemo: boolean,
+  isNewUser: boolean = false
 ): Promise<TenderlyRpcResponse | TransactionResponse | { error: string }> {
   // Check if we're in Demo VNet
   if (!isDemo) {
@@ -184,8 +256,11 @@ export async function fundUserWallet(
   }
 
   try {
-    // Convert requested funding amount to wei in hex format
-    const fundAmount = ethToWei(REQUESTED_FUNDING_AMOUNT.toString());
+    const fundingAmount = isNewUser ? INITIAL_REWARD_AMOUNT : REQUESTED_FUNDING_AMOUNT;
+    const fundAmount = ethToWei(fundingAmount.toString());
+    
+    console.log(`Funding wallet ${walletAddress} with ${fundingAmount} ETH (${isNewUser ? 'initial reward' : 'incremental funding'})`);
+    
     let result;
     if (process.env.NEXT_PUBLIC_TEST_NET_ENV === "development" && TENDERLY_DEMO_CONFIG.rpcUrl.includes('tenderly')) {
       result = await addBalanceVnet([walletAddress], fundAmount);
@@ -199,4 +274,4 @@ export async function fundUserWallet(
       error: `Failed to fund wallet: ${error instanceof Error ? error.message : String(error)}`
     };
   }
-}  
+}        
