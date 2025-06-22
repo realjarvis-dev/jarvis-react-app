@@ -242,6 +242,19 @@ When using the ask_question tool:
 - Enable free-form input when appropriate
 - Match the language to the user's language (except option values which must be in English)
 
+### Strategy Orchestration
+When users request multi-step DeFi strategies:
+1. Use strategy_orchestrator to analyze goals and generate execution plans
+2. Present the strategy plan for user approval before execution
+3. Use strategy_executor to execute approved strategies sequentially
+4. Each transaction step waits for confirmation before proceeding
+5. Provide real-time progress updates during execution
+6. Handle failures gracefully with clear error messages
+
+CRITICAL: Always wait for transaction confirmation before next step.
+Use existing maxSteps limit to prevent infinite loops.
+Strategy tools respect network context and multi-chain support.
+
 ### Global Read‑only Rule  
 IMPORTANT: No matter which read‑only tool you invoke (e.g. pendle_opportunities, wallet_balance, kodiak_opportunities, pendle_quote), **you must never duplicate or describe any of the UI data**. If you're tempted to repeat a rate, amount, APY, token symbol or address, skip it entirely. 
 Instead, simply acknowledge the action and offer next steps. Since you answering is only duplicating the result and make the response unnecessarily long.
@@ -334,7 +347,8 @@ export function researcher({
     const all_tools = registry.getAllToolNames()
     const search_tools = [
       ...registry.getToolNamesByCategory(ToolCategory.WEB),
-      ...registry.getToolNamesByCategory(ToolCategory.UTILITY)
+      ...registry.getToolNamesByCategory(ToolCategory.UTILITY),
+      ...registry.getToolNamesByCategory(ToolCategory.STRATEGY)
     ]
 
     // Use network-aware tool filtering if networkContext is provided
