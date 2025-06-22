@@ -10,12 +10,12 @@ import { cookies } from 'next/headers'
 export const maxDuration = 30
 
 const DEFAULT_MODEL: Model = {
-  id: 'o3-mini',
-  name: 'o3 mini',
-  provider: 'OpenAI',
-  providerId: 'openai',
+  id: 'claude-opus-4-20250514',
+  name: 'Claude Opus 4',
+  provider: 'Anthropic',
+  providerId: 'anthropic',
   enabled: true,
-  toolCallType: 'native'
+  toolCallType: 'manual'
 }
 
 export async function POST(request: Request) {
