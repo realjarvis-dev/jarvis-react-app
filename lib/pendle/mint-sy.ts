@@ -2,8 +2,6 @@ import { approvePendleTokens, executeTransaction } from '@/lib/privy/utils';
 import { callSDK } from './call-sdk';
 import { MintSyData } from './types';
 
-// Chain ID for Ethereum mainnet
-const CHAIN_ID = 1;
 
 /**
  * Get Pendle mint SY data using Pendle SDK
@@ -20,7 +18,7 @@ export async function getPendleMintSyData(
   tokenIn: string,
   amountIn: string,
   slippage: number = 0.01,
-  chainId: number = CHAIN_ID,
+  chainId: number,
   userWalletAddress: string
 ) {
   const res = await callSDK<MintSyData>(`/v1/sdk/${chainId}/mint-sy`, {
@@ -54,7 +52,7 @@ export async function executePendleMintSy(
   tokenIn: string,
   amountIn: string,
   slippage: number = 0.01,
-  chainId: number = CHAIN_ID,
+  chainId: number,
   isDemo: boolean = false,
   userWalletAddress: string
 ) {
@@ -125,7 +123,7 @@ export async function getMintSyQuote(
   tokenIn: string,
   amountIn: string,
   slippage: number = 0.01,
-  chainId: number = CHAIN_ID,
+  chainId: number,
   userWalletAddress: string
 ) {
   const mintResult = await getPendleMintSyData(

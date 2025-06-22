@@ -211,8 +211,8 @@ export function GenericSwapCard({
     result?.success && result.transaction_hash
       ? result.transaction_hash
       : undefined
-  const chainId = args?.chainId || result?.swap_details?.chain_id || 1 // Default to Ethereum mainnet
-  const { isDemoMode } = useNetwork()
+  const { isDemoMode, activeNetwork } = useNetwork()
+  const chainId = args?.chainId || result?.swap_details?.chain_id || activeNetwork.chainId
   const etherscanBaseUrl = `https://${getConfigByChainId(chainId, isDemoMode).scanLink}`
 
   // Pending UI

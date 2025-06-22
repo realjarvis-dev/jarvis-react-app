@@ -79,7 +79,7 @@ export const pendleZapInQuoteTool = tool({
       }
       let market = null
       if (!marketAddress) {
-        const markets = await getPendleMarkets()
+        const markets = await getPendleMarkets('active', chainId)
         market = markets.find(
           market => market.name.toLowerCase() === marketName.toLowerCase()
         )
@@ -103,7 +103,7 @@ export const pendleZapInQuoteTool = tool({
             active: true
           }
         } else {
-          const markets = await getPendleMarkets()
+          const markets = await getPendleMarkets('active', chainId)
           market = markets.find(
             market =>
               market.address.toLowerCase() ===

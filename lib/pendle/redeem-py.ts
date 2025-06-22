@@ -2,8 +2,7 @@ import { approvePendleTokens, executeTransaction } from '@/lib/privy/utils';
 import { callSDK } from './call-sdk';
 import { RedeemPyData } from './types';
 
-// Chain ID for Ethereum mainnet
-const CHAIN_ID = 1;
+
 
 /**
  * Get Pendle redeem PY data using Pendle SDK (simplified approach with Privy)
@@ -20,7 +19,7 @@ export async function getPendleRedeemPyData(
   amountIn: string,
   tokenOut: string,
   slippage: number = 0.01,
-  chainId: number = CHAIN_ID,
+  chainId: number,
   userWalletAddress: string
 ) {
   const res = await callSDK<RedeemPyData>(`/v1/sdk/${chainId}/redeem`, {
@@ -53,7 +52,7 @@ export async function executePendleRedeemPy(
   amountIn: string,
   tokenOut: string,
   slippage: number = 0.01,
-  chainId: number = CHAIN_ID,
+  chainId: number,
   isDemo: boolean = false,
   userWalletAddress: string
 ) {
@@ -124,7 +123,7 @@ export async function getRedeemPyQuote(
   amountIn: string,
   tokenOut: string,
   slippage: number = 0.01,
-  chainId: number = CHAIN_ID,
+  chainId: number,
   userWalletAddress: string
 ) {
   const redeemResult = await getPendleRedeemPyData(

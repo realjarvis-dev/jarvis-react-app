@@ -2,8 +2,6 @@ import { approvePendleTokens, executeTransaction } from '@/lib/privy/utils';
 import { callSDK } from './call-sdk';
 import { SwapData } from './types';
 
-// Chain ID for Ethereum mainnet
-const CHAIN_ID = 1;
 
 // Native ETH is represented by the zero address in the Pendle API
 const ETH_ADDRESS = '0x0000000000000000000000000000000000000000';
@@ -27,7 +25,7 @@ export async function getPendleSwapTokensData(
   amountIn: string,
   slippage: number = 0.01,
   enableAggregator: boolean = true,
-  chainId: number = CHAIN_ID,
+  chainId: number,
   userWalletAddress: string
 ) {
 
@@ -67,7 +65,7 @@ export async function executePendleSwap(
   amountIn: string,
   slippage: number = 0.01,
   enableAggregator: boolean = true,
-  chainId: number = CHAIN_ID,
+  chainId: number,
   isDemo: boolean = false,
   userWalletAddress: string,
   tokenType: 'pt' | 'yt' = 'pt'
@@ -151,7 +149,7 @@ export async function getSwapQuote(
   amountIn: string,
   slippage: number = 0.01,
   enableAggregator: boolean = true,
-  chainId: number = CHAIN_ID,
+  chainId: number,
   userWalletAddress: string
 ) {
   

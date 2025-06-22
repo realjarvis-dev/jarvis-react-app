@@ -120,7 +120,8 @@ async function discoverTokens(
 
 // Main function to get all token balances
 export async function getWalletBalances(
-  walletAddressParam?: string
+  walletAddressParam?: string,
+  chainId: number = 1
 ): Promise<WalletBalanceResult> {
   // Use provided wallet address or environment variable
   const walletAddress = walletAddressParam || (await getUserEvmWalletAddress())
@@ -153,7 +154,7 @@ export async function getWalletBalances(
     let tokenData = allTokenDataArrays.flat()
 
     // Get Pendle markets data
-    const pendleMarkets = await getPendleMarkets('all')
+    const pendleMarkets = await getPendleMarkets('all', chainId)
 
     // Add Pendle market names to tokens that are Pendle markets
     tokenData = tokenData.map(token => {

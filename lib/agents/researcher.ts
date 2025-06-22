@@ -49,7 +49,7 @@ const get_system_prompt = (
 
     // Define tool descriptions with network context
     const toolDescMap: Record<string, string> = {
-      pendle_opportunities: `- pendle_opportunities: Use when the user asks about Pendle yield opportunities, DeFi yields, or APY/yield farming on Ethereum. This tool returns a list of current Pendle opportunities with APY and liquidity information.`,
+      pendle_opportunities: `- pendle_opportunities: Use when the user asks about Pendle yield opportunities, DeFi yields, or APY/yield farming. This tool returns a list of current Pendle opportunities with APY and liquidity information.`,
       pendle_quote: `- pendle_quote: Use when the user wants to know the conversion rate between ETH and a specific Pendle market token (PT or YT) in either direction. Accepts either token address or token name (e.g. "sENA PT", "PT-sENA-25SEP2025"). This tool can quote both ETH-to-token and token-to-ETH rates.`,
       pendle_swap: `- pendle_swap: Use when the user wants to execute a swap between ETH and a Pendle market token (PT or YT) in either direction. This tool handles the actual transaction execution and requires slippage tolerance and user wallet address.`,
       pendle_mint: `- pendle_mint: Use when the user wants to mint Pendle tokens. Supports minting PT+YT tokens from underlying or SY tokens, or minting SY tokens from underlying tokens. Takes PT address and automatically determines all required token addresses.`,

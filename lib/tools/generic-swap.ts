@@ -85,17 +85,16 @@ export const genericSwapTool = tool({
     `,
   parameters: parameters,
   execute: async (params, context: ToolContext) => {
+    const networkContext = context?.networkContext;
+    
     const {
       tokenInSymbol,
       tokenOutSymbol,
       amountInHuman,
-      slippage = 0.01,
-      chainId = 1
+      slippage = 0.01
     } = params;
-    
-    const networkContext = context?.networkContext;
-    // Use chainId from networkContext if available, otherwise use the parameter
-    const effectiveChainId = networkContext?.selectedChainId || chainId;
+    // Use chainId from networkContext
+    const effectiveChainId = networkContext!.selectedChainId;
     const isDemo = networkContext!.isDemo
     const tokenOutAddress = tokenAddressMap[tokenOutSymbol].toLowerCase()
     const tokenInAddress = tokenAddressMap[tokenInSymbol].toLowerCase()

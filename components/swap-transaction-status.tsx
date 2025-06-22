@@ -17,10 +17,11 @@ export function SwapTransactionStatus({
   status,
   txHash,
   tokenName,
-  chainId=1
+  chainId
 }: SwapTransactionStatusProps) {
-  const { isDemoMode } = useNetwork()
-  const etherscanBaseUrl = `https://${getConfigByChainId(chainId, isDemoMode).scanLink}`
+  const { isDemoMode, activeNetwork } = useNetwork()
+  const effectiveChainId = chainId || activeNetwork.chainId
+  const etherscanBaseUrl = `https://${getConfigByChainId(effectiveChainId, isDemoMode).scanLink}`
 
   
   // Get appropriate color based on status
@@ -96,4 +97,4 @@ export function SwapTransactionStatus({
       )} */}
     </div>
   )
-} 
+}    
