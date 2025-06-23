@@ -32,6 +32,7 @@ export function MarketPulse() {
   const [isLoading, setIsLoading] = useState(true)
   const scrollRef = useRef<HTMLDivElement>(null)
   const animationRef = useRef<number>()
+  const fetchingRef = useRef(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -46,6 +47,9 @@ export function MarketPulse() {
     }
 
     async function fetchTrendingCoins() {
+      if (fetchingRef.current) return
+      fetchingRef.current = true
+      
       try {
         setIsLoading(true)
         const response = await fetch(url, options)
@@ -72,6 +76,8 @@ export function MarketPulse() {
         console.error('Error fetching trending coins:', err)
         setCoins([])
         setIsLoading(false)
+      } finally {
+        fetchingRef.current = false
       }
     }
 
