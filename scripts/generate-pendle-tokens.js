@@ -1,16 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 
-const attachmentPaths = {
-  "1": "/home/ubuntu/attachments/731d79dc-e6d7-42cc-8896-08f042acaee0/pendle_1.json",
-  "56": "/home/ubuntu/attachments/dcac7723-e450-410d-b9d9-3946aae01534/pendle_56.json", 
-  "42161": "/home/ubuntu/attachments/8a39ffc7-7e6e-49fa-9482-f413c3f97ad8/pendle_42161.json",
-  "5000": "/home/ubuntu/attachments/372b48ae-5ac1-4945-8be5-e739eaaa4405/pendle_5000.json",
-  "8453": "/home/ubuntu/attachments/fc85709e-5c77-4311-b639-6510cadcb7b9/pendle_8453.json",
-  "80094": "/home/ubuntu/attachments/9f81ca1a-074a-4b84-bc91-8268c39c34b8/pendle_80094.json",
-  "146": "/home/ubuntu/attachments/01dea965-af2f-483b-a268-a2255ee6e99f/pendle_146.json"
-};
-
 function cleanAddress(address) {
   if (typeof address !== 'string') return address;
   return address.startsWith('1-') ? address.substring(2) : 
@@ -30,20 +20,26 @@ function formatExpiry(expiry) {
   const year = date.getFullYear();
   return `${day}${month}${year}`;
 }
+const baseUrl = 'https://api-v2.pendle.finance/core'
 
-function generateTokens() {
+async function generateTokens() {
   const allTokens = {};
   
   for (const [chainId, filePath] of Object.entries(attachmentPaths)) {
     allTokens[chainId] = [];
     
     try {
-      if (!fs.existsSync(filePath)) {
-        console.log(`File not found: ${filePath}`);
-        continue;
-      }
+      // if (!fs.existsSync(filePath)) {
+      //   console.log(`File not found: ${filePath}`);
+      //   continue;
+      // }
+      //
+      const response = await fetch(`${baseUrl}/v1/${chainId}/markets/active`)
+      const data = await response.json()
+
+      console.log(data)
       
-      const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      // const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
       
       for (const market of data.markets) {
         const expiryFormatted = formatExpiry(market.expiry);
