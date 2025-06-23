@@ -1,4 +1,4 @@
-name: Daily Pendle Tokens Update
+name: Daily Inactive Pendle Tokens Update
 
 # run at 00:30 UTC every day (adjust as needed)
 on:
@@ -21,14 +21,14 @@ jobs:
           node-version: 18
 
       - name: Generate Pendle tokens list
-        run: node scripts/generate-pendle-tokens.js
+        run: node scripts/generate-inactive-pendle-tokens.js
 
       - name: Commit & Push changes
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: "chore: daily update of Pendle tokens list"
           file_pattern: |
-            lib/token-matcher/config/pendle/tokens.ts
+            lib/token-matcher/config/pendle/inactive-tokens.ts
           branch: main
           commit_user_name: github-actions
           commit_user_email: actions@github.com
