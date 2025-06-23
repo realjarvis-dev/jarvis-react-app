@@ -6,6 +6,7 @@ import { executeToolCall } from '../streaming/tool-execution'
 import { convertToCoreMessages } from 'ai'
 import { getModel, isReasoningModel } from '../utils/registry'
 import { getStrategyOrchestratorSchemaForModel, getStrategyExecutorSchemaForModel } from '../schema/strategy'
+import Ajv from 'ajv'
 
 function getReasoningModelForPlanning(): string {
   const claudeOpus4 = 'anthropic:claude-opus-4-20250514'
@@ -342,10 +343,28 @@ async function executeStrategyStep(step: any, userWallet: string, context: ToolC
   
   try {
     const executionModelId = 'openai:gpt-4.1'
+    const registry = getToolRegistry(executionModelId)
+    
+    const tool = registry.getTool(step.tool)
+    if (!tool) {
+      throw new Error(`Tool ${step.tool} not found in registry`)
+    }
+    
+    if (tool.schema) {
+      const ajv = new Ajv()
+      const validate = ajv.compile(tool.schema)
+      const valid = validate(toolParams)
+      if (!valid) {
+        console.error('Schema validation failed:', validate.errors)
+        throw new Error(`Invalid parameters for ${step.tool}: ${JSON.stringify(validate.errors)}`)
+      }
+    }
+    
+    const description = tool.description?.slice(0, 1024) || ''
     
     const toolExecutionMessage = {
       role: 'user' as const,
-      content: `Execute ${step.tool} with parameters: ${JSON.stringify(toolParams)}. Description: ${step.description}`
+      content: `Execute the ${step.tool} tool with the following parameters: ${JSON.stringify(toolParams)}. This is step ${step.step}: ${step.description}`
     }
     
     const mockDataStream = {
@@ -395,4 +414,4 @@ async function executeStrategyStep(step: any, userWallet: string, context: ToolC
 }
 
 export const strategyOrchestratorTool = createStrategyOrchestratorTool('anthropic:claude-opus-4-20250514')
-export const strategyExecutorTool = createStrategyExecutorTool('anthropic:claude-opus-4-20250514')
+export const strategyExecutorTool = createStrategyExecutorTool('openai:gpt-4.1')
