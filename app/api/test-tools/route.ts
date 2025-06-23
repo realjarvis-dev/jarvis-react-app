@@ -1,52 +1,58 @@
 import { berachainConfig, TENDERLY_DEMO_CONFIG } from '@/lib/network/config'
+import { getUserEvmWalletAddress } from '@/lib/privy/client'
 import { NetworkContext } from '@/lib/types/context'
 import { createToolRegistry } from '@/lib/utils/tool-registry'
 import { NextRequest, NextResponse } from 'next/server'
 
-// Test configurations for different tools and networks
-const TOOL_TEST_CONFIGS = {
-  // Ethereum-based tools (using demo net)
-  ethereum: {
-    pendle_opportunities: {
-      max_results: 7,
-      apy_gte: 1,
-      apy_lte: 15
+// Global variable to store user address
+let USER_ADDRESS: string | undefined = undefined
+
+// Function to get test configurations with dynamic user address
+function getTestConfigs() {
+  return {
+    // Ethereum-based tools (using demo net)
+    ethereum: {
+      pendle_opportunities: {
+        max_results: 7,
+        apy_gte: 1,
+        apy_lte: 15
+      },
+      pendle_quote: {
+        token_address: 'PT-sENA-25SEP2025',
+        user_wallet_address: USER_ADDRESS || '0x742d35Cc6634C0532925a3b8D0e5e1eD86a16FEe', // Use dynamic user address
+        amount_in_human: '1',
+        token_type: 'pt',
+        direction: 'ethToToken'
+      },
+      // Add more ethereum-based tools here as needed
     },
-    pendle_quote: {
-      token_address: 'PT-sENA-25SEP2025',
-      user_wallet_address: '0x742d35Cc6634C0532925a3b8D0e5e1eD86a16FEe', // Example wallet
-      amount_in_human: '1',
-      token_type: 'pt',
-      direction: 'ethToToken'
-    },
-    // Add more ethereum-based tools here as needed
-  },
-  
-  // Berachain-based tools (using mainnet)
-  berachain: {
-    kodiak_opportunities: {
-      // apr_gte: undefined (not passed)
-      // apr_lte: undefined (not passed)  
-      // bault_apr_gte: undefined (not passed)
-      // bault_apr_lte: undefined (not passed)
-      // bault_tvl_gte: undefined (not passed)
-      // bault_tvl_lte: undefined (not passed)
-      sort_by: 'apr',
-      max_results: 15,
-      bault_filter: 'only'
-    },
-    kodiak_bault_profitability: {
-      bault_addresses: [
-        '0x05bfda2b7c528cd946356c263ee9c7d847ee05ea',
-        '0xd0d4e446e033040a8394c6f2005e67feddd76bc1',
-        '0xd3fa0b46977a0e512c970a3451080fcd846b5e12'
-      ],
-      slippage_bps: 100,
-      min_profit_percentage: 5
-    },
-    // Add more berachain-based tools here as needed
-  }
-} as const
+    
+    // Berachain-based tools (using mainnet)
+    berachain: {
+      kodiak_opportunities: {
+        // apr_gte: undefined (not passed)
+        // apr_lte: undefined (not passed)  
+        // bault_apr_gte: undefined (not passed)
+        // bault_apr_lte: undefined (not passed)
+        // bault_tvl_gte: undefined (not passed)
+        // bault_tvl_lte: undefined (not passed)
+        sort_by: 'apr',
+        max_results: 15,
+        bault_filter: 'only'
+      },
+      kodiak_bault_profitability: {
+        bault_addresses: [
+            '0x05bfda2b7c528cd946356c263ee9c7d847ee05ea',
+            '0xd0d4e446e033040a8394c6f2005e67feddd76bc1',
+            '0xd3fa0b46977a0e512c970a3451080fcd846b5e12'
+          ],
+        slippage_bps: 100,
+        min_profit_percentage: 5
+      },
+      // Add more berachain-based tools here as needed
+    }
+  } as const
+}
 
 // Tool to network mapping
 const TOOL_NETWORK_MAPPING = {
@@ -83,11 +89,22 @@ export async function GET(request: NextRequest) {
   const networkType = searchParams.get('network') // 'demo' or 'mainnet'
   
   try {
+    // Get user address from Privy at the start
+    try {
+      USER_ADDRESS = await getUserEvmWalletAddress()
+      console.log('Retrieved user address:', USER_ADDRESS)
+    } catch (error) {
+      console.warn('Failed to get user address from Privy:', error)
+      // Use fallback address for testing if user not authenticated
+      USER_ADDRESS = '0x742d35Cc6634C0532925a3b8D0e5e1eD86a16FEe'
+      console.log('Using fallback user address:', USER_ADDRESS)
+    }
+
     if (!toolName) {
       // Return list of available tools for testing
       const availableTests = {
-        ethereum_demo: Object.keys(TOOL_TEST_CONFIGS.ethereum),
-        berachain_mainnet: Object.keys(TOOL_TEST_CONFIGS.berachain)
+        ethereum_demo: Object.keys(getTestConfigs().ethereum),
+        berachain_mainnet: Object.keys(getTestConfigs().berachain)
       }
       
       return NextResponse.json({
@@ -116,9 +133,10 @@ export async function GET(request: NextRequest) {
         selectedChainId: TENDERLY_DEMO_CONFIG.chainId,
         isDemo: true,
         rpcUrl: TENDERLY_DEMO_CONFIG.rpcUrl,
-        config: TENDERLY_DEMO_CONFIG
+        config: TENDERLY_DEMO_CONFIG,
+        userAddress: USER_ADDRESS
       }
-      testConfig = TOOL_TEST_CONFIGS.ethereum[toolName as keyof typeof TOOL_TEST_CONFIGS.ethereum]
+      testConfig = getTestConfigs().ethereum[toolName as keyof ReturnType<typeof getTestConfigs>['ethereum']]
     } else if (toolNetworkType === 'berachain') {
       // Use berachain mainnet for berachain tools  
       networkContext = {
@@ -126,9 +144,10 @@ export async function GET(request: NextRequest) {
         selectedChainId: berachainConfig.chainId,
         isDemo: false,
         rpcUrl: berachainConfig.rpcUrl,
-        config: berachainConfig
+        config: berachainConfig,
+        userAddress: USER_ADDRESS
       }
-      testConfig = TOOL_TEST_CONFIGS.berachain[toolName as keyof typeof TOOL_TEST_CONFIGS.berachain]
+      testConfig = getTestConfigs().berachain[toolName as keyof ReturnType<typeof getTestConfigs>['berachain']]
     } else {
       return NextResponse.json({
         error: `Unsupported network type: ${toolNetworkType}`
@@ -189,6 +208,17 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Get user address from Privy at the start
+    try {
+      USER_ADDRESS = await getUserEvmWalletAddress()
+      console.log('Retrieved user address:', USER_ADDRESS)
+    } catch (error) {
+      console.warn('Failed to get user address from Privy:', error)
+      // Use fallback address for testing if user not authenticated
+      USER_ADDRESS = '0x742d35Cc6634C0532925a3b8D0e5e1eD86a16FEe'
+      console.log('Using fallback user address:', USER_ADDRESS)
+    }
+
     const body = await request.json()
     const { toolName, customConfig, networkType } = body
     
@@ -215,7 +245,8 @@ export async function POST(request: NextRequest) {
         selectedChainId: TENDERLY_DEMO_CONFIG.chainId,
         isDemo: true,
         rpcUrl: TENDERLY_DEMO_CONFIG.rpcUrl,
-        config: TENDERLY_DEMO_CONFIG
+        config: TENDERLY_DEMO_CONFIG,
+        userAddress: USER_ADDRESS
       }
     } else if (toolNetworkType === 'berachain') {
       networkContext = {
@@ -223,7 +254,8 @@ export async function POST(request: NextRequest) {
         selectedChainId: berachainConfig.chainId,
         isDemo: false,
         rpcUrl: berachainConfig.rpcUrl,
-        config: berachainConfig
+        config: berachainConfig,
+        userAddress: USER_ADDRESS
       }
     } else {
       return NextResponse.json({
@@ -244,8 +276,8 @@ export async function POST(request: NextRequest) {
     // Use custom config or fall back to default test config
     const testConfig = customConfig || 
       (toolNetworkType === 'ethereum' ? 
-        TOOL_TEST_CONFIGS.ethereum[toolName as keyof typeof TOOL_TEST_CONFIGS.ethereum] :
-        TOOL_TEST_CONFIGS.berachain[toolName as keyof typeof TOOL_TEST_CONFIGS.berachain])
+        getTestConfigs().ethereum[toolName as keyof ReturnType<typeof getTestConfigs>['ethereum']] :
+        getTestConfigs().berachain[toolName as keyof ReturnType<typeof getTestConfigs>['berachain']])
     
     if (!testConfig) {
       return NextResponse.json({
