@@ -1,13 +1,12 @@
-import { berachainConfig, TENDERLY_DEMO_CONFIG } from '@/lib/network/config'
-import { getUserEvmWalletAddress } from '@/lib/privy/client'
-import { NetworkContext } from '@/lib/types/context'
-import { createToolRegistry } from '@/lib/utils/tool-registry'
-import { NextRequest, NextResponse } from 'next/server'
+import { berachainConfig, TENDERLY_DEMO_CONFIG } from '@/lib/network/config';
+import { NetworkContext } from '@/lib/types/context';
+import { createToolRegistry } from '@/lib/utils/tool-registry';
+import { NextRequest, NextResponse } from 'next/server';
 
-// Global variable to store user address
-let USER_ADDRESS: string | undefined = undefined
+// Static sample wallet address for testing framework
+const STATIC_SAMPLE_ADDRESS = '0x742d35Cc6634C0532925a3b8D0e5e1eD86a16FEe';
 
-// Function to get test configurations with dynamic user address
+// Function to get test configurations with static user address
 function getTestConfigs() {
   return {
     // Ethereum-based tools (using demo net)
@@ -19,7 +18,7 @@ function getTestConfigs() {
       },
       pendle_quote: {
         token_address: 'PT-sENA-25SEP2025',
-        user_wallet_address: USER_ADDRESS || '0x742d35Cc6634C0532925a3b8D0e5e1eD86a16FEe', // Use dynamic user address
+        user_wallet_address: STATIC_SAMPLE_ADDRESS, // Use static address
         amount_in_human: '1',
         token_type: 'pt',
         direction: 'ethToToken'
@@ -89,17 +88,6 @@ export async function GET(request: NextRequest) {
   const networkType = searchParams.get('network') // 'demo' or 'mainnet'
   
   try {
-    // Get user address from Privy at the start
-    try {
-      USER_ADDRESS = await getUserEvmWalletAddress()
-      console.log('Retrieved user address:', USER_ADDRESS)
-    } catch (error) {
-      console.warn('Failed to get user address from Privy:', error)
-      // Use fallback address for testing if user not authenticated
-      USER_ADDRESS = '0x742d35Cc6634C0532925a3b8D0e5e1eD86a16FEe'
-      console.log('Using fallback user address:', USER_ADDRESS)
-    }
-
     if (!toolName) {
       // Return list of available tools for testing
       const availableTests = {
@@ -133,8 +121,7 @@ export async function GET(request: NextRequest) {
         selectedChainId: TENDERLY_DEMO_CONFIG.chainId,
         isDemo: true,
         rpcUrl: TENDERLY_DEMO_CONFIG.rpcUrl,
-        config: TENDERLY_DEMO_CONFIG,
-        userAddress: USER_ADDRESS
+        config: TENDERLY_DEMO_CONFIG
       }
       testConfig = getTestConfigs().ethereum[toolName as keyof ReturnType<typeof getTestConfigs>['ethereum']]
     } else if (toolNetworkType === 'berachain') {
@@ -144,8 +131,7 @@ export async function GET(request: NextRequest) {
         selectedChainId: berachainConfig.chainId,
         isDemo: false,
         rpcUrl: berachainConfig.rpcUrl,
-        config: berachainConfig,
-        userAddress: USER_ADDRESS
+        config: berachainConfig
       }
       testConfig = getTestConfigs().berachain[toolName as keyof ReturnType<typeof getTestConfigs>['berachain']]
     } else {
@@ -208,17 +194,6 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    // Get user address from Privy at the start
-    try {
-      USER_ADDRESS = await getUserEvmWalletAddress()
-      console.log('Retrieved user address:', USER_ADDRESS)
-    } catch (error) {
-      console.warn('Failed to get user address from Privy:', error)
-      // Use fallback address for testing if user not authenticated
-      USER_ADDRESS = '0x742d35Cc6634C0532925a3b8D0e5e1eD86a16FEe'
-      console.log('Using fallback user address:', USER_ADDRESS)
-    }
-
     const body = await request.json()
     const { toolName, customConfig, networkType } = body
     
@@ -245,8 +220,7 @@ export async function POST(request: NextRequest) {
         selectedChainId: TENDERLY_DEMO_CONFIG.chainId,
         isDemo: true,
         rpcUrl: TENDERLY_DEMO_CONFIG.rpcUrl,
-        config: TENDERLY_DEMO_CONFIG,
-        userAddress: USER_ADDRESS
+        config: TENDERLY_DEMO_CONFIG
       }
     } else if (toolNetworkType === 'berachain') {
       networkContext = {
@@ -254,8 +228,7 @@ export async function POST(request: NextRequest) {
         selectedChainId: berachainConfig.chainId,
         isDemo: false,
         rpcUrl: berachainConfig.rpcUrl,
-        config: berachainConfig,
-        userAddress: USER_ADDRESS
+        config: berachainConfig
       }
     } else {
       return NextResponse.json({
@@ -316,4 +289,4 @@ export async function POST(request: NextRequest) {
       error: error.message || 'Failed to execute custom tool test'
     }, { status: 500 })
   }
-} 
+}
