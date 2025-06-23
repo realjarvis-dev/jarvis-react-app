@@ -9,8 +9,12 @@ import {
   useState
 } from 'react'
 import { allNetworkConfigs, getActiveNetworkConfig } from './config' // Updated import path
-import { ChainType, NetworkConfig } from './types' // Updated import path
-import { USER_SELECTED_NETWORK_COOKIE_KEY, USER_DEMO_MODE_COOKIE_KEY } from './types'
+import {
+  ChainType,
+  NetworkConfig,
+  USER_DEMO_MODE_COOKIE_KEY,
+  USER_SELECTED_NETWORK_COOKIE_KEY
+} from './types' // Updated import path
 // const USER_SELECTED_NETWORK_COOKIE_KEY = 'user_selected_network'
 // const USER_DEMO_MODE_COOKIE_KEY = 'user_demo_mode' // New cookie key for demo mode
 
@@ -52,18 +56,15 @@ const NetworkContext = createContext<NetworkContextType | undefined>(undefined)
 
 interface NetworkProviderProps {
   children: ReactNode
-  initialSelectedChain?: ChainType
-  initialIsDemoMode?: boolean
+  // serverInitialSelectedChain?: ChainType // Removed prop
 }
 
-export function NetworkProvider({ 
-  children, 
-  initialSelectedChain, 
-  initialIsDemoMode 
-}: NetworkProviderProps) {
+export function NetworkProvider({ children }: NetworkProviderProps) {
   const [mounted, setMounted] = useState(false)
-  const [isDemoMode, setIsDemoModeInternal] = useState(initialIsDemoMode ?? true)
-  const [selectedChain, setSelectedChainInternal] = useState<ChainType>(initialSelectedChain ?? 'ethereum')
+  // Initialize isDemoMode to a fixed default. Client will update after mount.
+  const [isDemoMode, setIsDemoModeInternal] = useState(false)
+  const [selectedChain, setSelectedChainInternal] =
+    useState<ChainType>('ethereum')
 
   const allChainTypes = Object.keys(allNetworkConfigs) as ChainType[]
 
@@ -71,38 +72,38 @@ export function NetworkProvider({
     setMounted(true)
   }, []) // Runs once to set mounted to true on the client
 
-  // Effect to initialize states from cookies, AFTER mount - only if no initial values provided
+  // Effect to initialize states from cookies, AFTER mount
   useEffect(() => {
     if (!mounted) return
-    
-    if (initialSelectedChain === undefined || initialIsDemoMode === undefined) {
-      const networkCookieValue = getCookie(USER_SELECTED_NETWORK_COOKIE_KEY) as ChainType | null
-      const demoCookieValue = getCookie(USER_DEMO_MODE_COOKIE_KEY)
-      
-      if (initialSelectedChain === undefined && networkCookieValue) {
-        let chainToSet = networkCookieValue
-        // Adjust chainToSet based on demo mode
-        if (isDemoMode && chainToSet !== 'ethereum') {
-          chainToSet = 'ethereum'
-        }
-        if (selectedChain !== chainToSet) {
-          setSelectedChainInternal(chainToSet)
-        }
-      }
-      
-      if (initialIsDemoMode === undefined) {
-        let demoModeToSet = true // Default if cookie not set or invalid
-        if (demoCookieValue === 'true') {
-          demoModeToSet = true
-        } else if (demoCookieValue === 'false') {
-          demoModeToSet = false
-        }
-        if (isDemoMode !== demoModeToSet) {
-          setIsDemoModeInternal(demoModeToSet)
-        }
-      }
+
+    // Initialize selectedChain from cookie
+    const networkCookieValue = getCookie(
+      USER_SELECTED_NETWORK_COOKIE_KEY
+    ) as ChainType | null
+    let chainToSet = networkCookieValue || 'ethereum'
+
+    // Initialize isDemoMode from cookie
+    const demoCookieValue = getCookie(USER_DEMO_MODE_COOKIE_KEY)
+    let demoModeToSet = true // Default if cookie not set or invalid
+    if (demoCookieValue === 'true') {
+      demoModeToSet = true
+    } else if (demoCookieValue === 'false') {
+      demoModeToSet = false
     }
-  }, [mounted, initialSelectedChain, initialIsDemoMode, isDemoMode, selectedChain])
+    // Only update if the internal state is different from the cookie-derived state
+    if (isDemoMode !== demoModeToSet) {
+      setIsDemoModeInternal(demoModeToSet)
+    }
+
+    // Adjust chainToSet based on the (potentially updated) demoModeToSet
+    if (demoModeToSet && chainToSet !== 'ethereum') {
+      chainToSet = 'ethereum'
+    }
+
+    if (selectedChain !== chainToSet) {
+      setSelectedChainInternal(chainToSet)
+    }
+  }, [mounted]) // Only depend on mounted, not on the state variables being updated
 
   // Effect to update selectedChain cookie when selectedChain changes, AFTER mount
   useEffect(() => {

@@ -1,7 +1,6 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import { ServerSideUIState } from '@/lib/utils/server-cookies'
 import { usePrivy } from '@privy-io/react-auth'
 import { Message } from 'ai'
 import { ArrowUp, ChevronDown, MessageCirclePlus, Square } from 'lucide-react'
@@ -180,7 +179,6 @@ interface ChatPanelProps {
   isAutoScroll: boolean
   onVideoBgChange?: (isVideoActive: boolean) => void // Kept for potential Header integration via RootLayout
   chatId?: string // Chat ID for sharing functionality
-  initialUIState?: ServerSideUIState
 }
 
 export function ChatPanel({
@@ -195,8 +193,7 @@ export function ChatPanel({
   append,
   isAutoScroll,
   onVideoBgChange, // Destructure this prop
-  chatId,
-  initialUIState
+  chatId
 }: ChatPanelProps) {
   const [mounted, setMounted] = useState(false)
   const router = useRouter()
@@ -455,7 +452,7 @@ export function ChatPanel({
                 )}
               >
                 <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto hide-scrollbar">
-                  <SearchModeToggle initialSearchMode={initialUIState?.searchMode} />
+                  <SearchModeToggle />
                   <WithTooltip tooltipText="Enter Demo Mode: no gas, no losses, just learning. Demo network is refreshed every 7 days.">
                     <DemoToggle />
                   </WithTooltip>

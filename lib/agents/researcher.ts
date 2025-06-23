@@ -7,7 +7,8 @@ import { getToolRegistry, ToolCategory } from '../utils/tool-registry'
 const createToolList = (
   toolNames: string[],
   registry: any,
-  networkContext?: NetworkContext
+  networkContext?: NetworkContext,
+  isNewUser?: boolean
 ): Record<string, any> => {
   const toolList: Record<string, any> = {}
   for (const toolName of toolNames) {
@@ -19,7 +20,8 @@ const createToolList = (
         execute: (params: any, context?: any) =>
           toolDef.execute!(params, {
             ...context,
-            networkContext
+            networkContext,
+            isNewUser
           })
       }
     } else if (toolDef) {
@@ -310,7 +312,8 @@ export function researcher({
   userEvmWallet,
   userSolWallet,
   allowWeb3Tools,
-  networkContext
+  networkContext,
+  isNewUser
 }: {
   messages: CoreMessage[]
   model: string
@@ -319,6 +322,7 @@ export function researcher({
   userSolWallet: WalletWithMetadata | undefined
   allowWeb3Tools: string
   networkContext?: NetworkContext
+  isNewUser?: boolean
 }): ResearcherReturn {
   // console.log('searchMode', searchMode)
   // console.log('networkContext', networkContext)
@@ -388,8 +392,8 @@ Network Context:
 `
     }
 
-    // Create tool list from registry with network context
-    const tool_lst = createToolList(supportedTools, registry, networkContext)
+    // Create tool list from registry with network context and user context
+    const tool_lst = createToolList(supportedTools, registry, networkContext, isNewUser)
 
     const o3MiniTools = networkContext
       ? registry.getSupportedToolNamesForNetwork(
@@ -400,7 +404,8 @@ Network Context:
     const o3_mini_tool_lst = createToolList(
       o3MiniTools,
       registry,
-      networkContext
+      networkContext,
+      isNewUser
     )
 
     console.log('supportedTools with network filtering', supportedTools)

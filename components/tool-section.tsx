@@ -23,6 +23,7 @@ import { SwapTransactionCard } from './swap-transaction-card'
 import { TransferSection } from './transfer-section'
 import { VideoSearchSection } from './video-search-section'
 import { WalletBalanceSection } from './wallet-balance-section'
+import { WalletFundingSection } from './wallet-funding-section'
 
 interface ToolSectionProps {
   tool: ToolInvocation
@@ -262,6 +263,15 @@ export function ToolSection({
       )
     case 'get_gas_price':
       return <GetGasPriceSection tool={tool} />
+    case 'fund_wallet':
+    case 'initial_wallet_reward':
+      return (
+        <WalletFundingSection
+          tool={tool}
+          isOpen={isOpen}
+          onOpenChange={onOpenChange}
+        />
+      )
     default:
       return null
   }

@@ -13,4 +13,5 @@ export interface BaseStreamConfig {
   userSolWallet: WalletWithMetadata | undefined
   allowWeb3Tools: string
   networkContext?: NetworkContext
+  isNewUser?: boolean
 }

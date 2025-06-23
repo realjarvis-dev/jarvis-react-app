@@ -2,7 +2,6 @@ import { Chat } from '@/components/chat'
 import { getChat } from '@/lib/actions/chat'
 import { isPrivyUserId, privy } from '@/lib/privy/client'
 import { convertToUIMessages } from '@/lib/utils'
-import { getServerSideUIState } from '@/lib/utils/server-cookies'
 import { cookies, headers } from 'next/headers'
 import { notFound, redirect } from 'next/navigation'
 export const maxDuration = 60
@@ -37,7 +36,6 @@ export default async function SearchPage(props: {
   params: Promise<{ id: string }>
 }) {
   const cookiesList = await cookies()
-  const uiState = await getServerSideUIState()
   // console.log(
   //   'Privy token from cookies:',
   //   cookiesList.get('privy-token')?.value
@@ -80,5 +78,5 @@ export default async function SearchPage(props: {
     notFound()
   }
 
-  return <Chat id={id} savedMessages={messages} initialUIState={uiState} />
+  return <Chat id={id} savedMessages={messages} />
 }

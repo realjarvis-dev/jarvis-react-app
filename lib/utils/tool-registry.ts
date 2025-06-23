@@ -11,7 +11,7 @@ import { createQuestionTool } from '../tools/question'
 import { retrieveTool } from '../tools/retrieve'
 import { createSearchTool } from '../tools/search'
 import { createVideoSearchTool } from '../tools/video-search'
-import { fundWalletTool, walletBalanceTool } from '../tools/wallet'
+import { fundWalletTool, initialWalletRewardTool, walletBalanceTool } from '../tools/wallet'
 import { NetworkContext, ToolContext } from '../types/context'
 import { pendleZapInQuoteTool, pendleZapInExecuteTool } from '../tools/pendle-liquidity'
 import { pendleZapOutExecuteTool, pendleZapOutQuoteTool } from '../tools/pendle-remove-liquidity'
@@ -59,7 +59,7 @@ export class ToolRegistry {
       supportedCategories: [ToolCategory.WEB, ToolCategory.WEB3, ToolCategory.UTILITY],
       maxSteps: 10
     })
-    
+
     this.modelCapabilities.set('openai:o3-mini', {
       supportedCategories: [ToolCategory.WEB, ToolCategory.UTILITY],
       maxSteps: 5
@@ -162,7 +162,7 @@ export class ToolRegistry {
  */
 export function createToolRegistry(model: string): ToolRegistry {
   const registry = new ToolRegistry()
-  
+
   const searchTool = createSearchTool(model)
   const videoSearchTool = createVideoSearchTool(model)
   const askQuestionTool = createQuestionTool(model)
@@ -179,62 +179,62 @@ export function createToolRegistry(model: string): ToolRegistry {
     category: ToolCategory.WEB3,
     supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism', 'unichain', 'bsc', 'sonic']
   })
-  
+
   registry.registerTool({
     name: 'search',
     description: 'Search the web for information',
     schema: searchSchema,
-    execute: async (params, context) => searchTool.execute(params, { 
-      toolCallId: context?.toolCallId || 'unknown', 
+    execute: async (params, context) => searchTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
       messages: context?.messages || [],
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB
   })
-  
+
   registry.registerTool({
     name: 'retrieve',
     description: 'Get detailed content from specific URLs',
     schema: retrieveTool.parameters,
-    execute: async (params, context) => retrieveTool.execute(params, { 
-      toolCallId: context?.toolCallId || 'unknown', 
+    execute: async (params, context) => retrieveTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
       messages: context?.messages || [],
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB
   })
-  
+
   registry.registerTool({
     name: 'videoSearch',
     description: 'Search for video content',
     schema: videoSearchTool.parameters,
-    execute: async (params, context) => videoSearchTool.execute(params, { 
-      toolCallId: context?.toolCallId || 'unknown', 
+    execute: async (params, context) => videoSearchTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
       messages: context?.messages || [],
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB
   })
-  
+
   registry.registerTool({
     name: 'ask_question',
     description: 'Ask clarifying questions to the user',
     schema: askQuestionTool.parameters,
     category: ToolCategory.UTILITY
   })
-  
+
   registry.registerTool({
     name: 'market_chart',
     description: 'Fetch and display cryptocurrency market chart data',
     schema: marketChartTool.parameters,
-    execute: async (params, context) => marketChartTool.execute(params, { 
-      toolCallId: context?.toolCallId || 'unknown', 
+    execute: async (params, context) => marketChartTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
       messages: context?.messages || [],
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB
   })
-  
+
   registry.registerTool({
     name: 'pendle_opportunities',
     description: 'Get Pendle yield opportunities',
@@ -247,7 +247,7 @@ export function createToolRegistry(model: string): ToolRegistry {
     category: ToolCategory.WEB3,
     supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'sonic', 'berachain', 'optimism', 'mantle', 'demo']
   })
-  
+
   registry.registerTool({
     name: 'pendle_quote',
     description: 'Get a quote for swapping ETH to a Pendle token',
@@ -260,7 +260,7 @@ export function createToolRegistry(model: string): ToolRegistry {
     category: ToolCategory.WEB3,
     supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'sonic', 'berachain', 'optimism', 'mantle', 'demo']
   })
-  
+
   registry.registerTool({
     name: 'pendle_swap',
     description: pendleSwapTool.description || '',
@@ -273,7 +273,7 @@ export function createToolRegistry(model: string): ToolRegistry {
     category: ToolCategory.WEB3,
     supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'sonic', 'berachain', 'optimism', 'mantle', 'demo']
   })
-  
+
   registry.registerTool({
     name: 'pendle_redeem',
     description: pendleRedeemTool.description || '',
@@ -286,7 +286,7 @@ export function createToolRegistry(model: string): ToolRegistry {
     category: ToolCategory.WEB3,
     supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'sonic', 'berachain', 'optimism', 'mantle', 'demo']
   })
-  
+
   registry.registerTool({
     name: 'pendle_mint',
     description: pendleMintTool.description || '',
@@ -299,7 +299,7 @@ export function createToolRegistry(model: string): ToolRegistry {
     category: ToolCategory.WEB3,
     supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'sonic', 'berachain', 'optimism', 'mantle', 'demo']
   })
-  
+
   registry.registerTool({
     name: 'pendle_redeem_quote',
     description: pendleRedeemQuoteTool.description || '',
@@ -312,7 +312,7 @@ export function createToolRegistry(model: string): ToolRegistry {
     category: ToolCategory.WEB3,
     supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'sonic', 'berachain', 'optimism', 'mantle', 'demo']
   })
-  
+
   registry.registerTool({
     name: 'pendle_mint_quote',
     description: pendleMintQuoteTool.description || '',
@@ -325,7 +325,7 @@ export function createToolRegistry(model: string): ToolRegistry {
     category: ToolCategory.WEB3,
     supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'sonic', 'berachain', 'optimism', 'mantle', 'demo']
   })
-  
+
   registry.registerTool({
     name: 'wallet_balance',
     description: 'Get wallet balance information',
@@ -338,7 +338,7 @@ export function createToolRegistry(model: string): ToolRegistry {
     category: ToolCategory.WEB3,
     supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism', 'unichain', 'bsc', 'sonic']
   })
-  
+
   registry.registerTool({
     name: 'privy_transfer',
     description: privyTransferTool.description || '',
@@ -351,7 +351,7 @@ export function createToolRegistry(model: string): ToolRegistry {
     category: ToolCategory.WEB3,
     supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism', 'unichain', 'bsc', 'sonic']
   })
-  
+
   registry.registerTool({
     name: 'kodiak_opportunities',
     description: 'Get Kodiak Island yield opportunities on Berachain',
@@ -364,7 +364,7 @@ export function createToolRegistry(model: string): ToolRegistry {
     category: ToolCategory.WEB3,
     supportedNetworks: ['berachain']
   })
-  
+
   registry.registerTool({
     name: 'kodiak_deposit',
     description: 'Deposit a single token into a Kodiak Island yield opportunity on Berachain',
@@ -377,7 +377,7 @@ export function createToolRegistry(model: string): ToolRegistry {
     category: ToolCategory.WEB3,
     supportedNetworks: ['berachain']
   })
-  
+
 
   registry.registerTool({
     name: 'kodiak_bault_profitability',
@@ -391,7 +391,7 @@ export function createToolRegistry(model: string): ToolRegistry {
     category: ToolCategory.WEB3,
     supportedNetworks: ['berachain']
   })
-  
+
   registry.registerTool({
     name: 'kodiak_compound_bault',
     description: 'Compound a profitable Kodiak Bault using the BountyHelper contract',
@@ -424,7 +424,7 @@ export function createToolRegistry(model: string): ToolRegistry {
     name: 'lifi_bridge_quote',
     description: bridgeQuoteTool.description || '',
     schema: bridgeQuoteTool.parameters,
-    execute: async (params, context) => bridgeQuoteTool.execute(params, { 
+    execute: async (params, context) => bridgeQuoteTool.execute(params, {
       toolCallId: context?.toolCallId || 'unknown',
       messages: context?.messages || [],
       networkContext: context?.networkContext!
@@ -437,8 +437,8 @@ export function createToolRegistry(model: string): ToolRegistry {
     name: 'lifi_bridge_execute',
     description: bridgeExecuteTool.description || '',
     schema: bridgeExecuteTool.parameters,
-    execute: async (params, context) => bridgeExecuteTool.execute(params, { 
-      toolCallId: context?.toolCallId || 'unknown', 
+    execute: async (params, context) => bridgeExecuteTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
       messages: context?.messages || [],
       networkContext: context?.networkContext!
     } as any),
@@ -446,7 +446,7 @@ export function createToolRegistry(model: string): ToolRegistry {
     supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism', 'unichain', 'bsc', 'sonic']
   })
 
-  
+
   registry.registerTool({
     name: 'fund_wallet',
     description: 'Fund a wallet with ETH (only available in Demo mode)',
@@ -454,7 +454,22 @@ export function createToolRegistry(model: string): ToolRegistry {
     execute: async (params, context) => fundWalletTool.execute(params, {
       toolCallId: context?.toolCallId || 'unknown',
       messages: context?.messages || [],
-      networkContext: context?.networkContext!
+      networkContext: context?.networkContext!,
+      isNewUser: context?.isNewUser
+    } as any),
+    category: ToolCategory.WEB3,
+    supportedNetworks: ['demo']
+  })
+
+  registry.registerTool({
+    name: 'initial_wallet_reward',
+    description: 'Grant initial wallet reward of 1 ETH to new users (only available in Demo mode)',
+    schema: initialWalletRewardTool.parameters,
+    execute: async (params, context) => initialWalletRewardTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!,
+      isNewUser: context?.isNewUser
     } as any),
     category: ToolCategory.WEB3,
     supportedNetworks: ['demo']
@@ -511,7 +526,7 @@ export function createToolRegistry(model: string): ToolRegistry {
     supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'sonic', 'berachain', 'optimism', 'mantle', 'demo']
   })
 
-  
+
 
   return registry
 }

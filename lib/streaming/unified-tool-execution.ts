@@ -123,7 +123,8 @@ export async function executeToolCall(
   coreMessages: CoreMessage[],
   dataStream: DataStreamWriter,
   model: string,
-  searchMode: boolean
+  searchMode: boolean,
+  isNewUser?: boolean
 ): Promise<ToolExecutionResult> {
   if (!searchMode) {
     return { toolCallDataAnnotation: null, toolCallMessages: [] }
@@ -134,9 +135,9 @@ export async function executeToolCall(
   const useNativeToolCalling = isToolCallSupported(model)
   
   if (useNativeToolCalling) {
-    return executeNativeToolCall(coreMessages, dataStream, model, registry)
+    return executeNativeToolCall(coreMessages, dataStream, model, registry, isNewUser)
   } else {
-    return executeManualToolCall(coreMessages, dataStream, model, registry)
+    return executeManualToolCall(coreMessages, dataStream, model, registry, isNewUser)
   }
 }
 
@@ -147,7 +148,8 @@ async function executeNativeToolCall(
   coreMessages: CoreMessage[],
   dataStream: DataStreamWriter,
   model: string,
-  registry: ToolRegistry
+  registry: ToolRegistry,
+  isNewUser?: boolean
 ): Promise<ToolExecutionResult> {
   const availableTools = registry.getSupportedToolNames(model)
   const toolDefinitions: Record<string, any> = {}
@@ -161,7 +163,8 @@ async function executeNativeToolCall(
         parameters: tool.schema,
         execute: (params: any, context?: any) => tool.execute!(params, {
           ...context,
-          networkContext: defaultNetworkContext
+          networkContext: defaultNetworkContext,
+          isNewUser: isNewUser || false
         })
       }
     }
@@ -172,7 +175,7 @@ async function executeNativeToolCall(
     const toolCallId = `call_${generateId()}`
     
     // In a complete implementation, this would use the AI SDK's native tool calling
-    return executeManualToolCall(coreMessages, dataStream, model, registry)
+    return executeManualToolCall(coreMessages, dataStream, model, registry, isNewUser)
   } catch (error) {
     console.error('Error in native tool calling:', error)
     return { toolCallDataAnnotation: null, toolCallMessages: [] }
@@ -186,7 +189,8 @@ async function executeManualToolCall(
   coreMessages: CoreMessage[],
   dataStream: DataStreamWriter,
   model: string,
-  registry: ToolRegistry
+  registry: ToolRegistry,
+  isNewUser?: boolean
 ): Promise<ToolExecutionResult> {
   const availableTools = registry.getSupportedToolNames(model)
   
@@ -289,7 +293,7 @@ async function executeManualToolCall(
       try {
         toolResults = await tool.execute(
           toolParams,
-          { toolCallId, messages: [], networkContext: defaultNetworkContext }
+          { toolCallId, messages: [], networkContext: defaultNetworkContext, isNewUser: isNewUser || false }
         )
         
         toolResultCache.storeResult(toolName, toolParams, toolResults)

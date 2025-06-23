@@ -2,7 +2,6 @@
 
 import { useSidebar } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
-import { ServerSideUIState } from '@/lib/utils/server-cookies'
 import {
   useHeadlessDelegatedActions,
   useLogin,
@@ -14,16 +13,11 @@ import {
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 import GuestMenu from './guest-menu'
-
 import UserMenu from './user-menu'
 import WelcomePopup from './welcome-popup'
 import WalletMenu from './wallet-menu'
 
-interface HeaderProps {
-  initialUIState?: ServerSideUIState
-}
-
-export const Header: React.FC<HeaderProps> = ({ initialUIState }) => {
+export const Header: React.FC = () => {
   const { open } = useSidebar()
   const { authenticated, ready } = usePrivy()
   const router = useRouter()
@@ -91,7 +85,7 @@ export const Header: React.FC<HeaderProps> = ({ initialUIState }) => {
 
       <div className="flex items-center gap-2">
         {ready && authenticated && <WalletMenu />}
-        {ready && authenticated ? <UserMenu initialUIState={initialUIState} /> : <GuestMenu login={login} />}
+        {ready && authenticated ? <UserMenu /> : <GuestMenu login={login} />}
       </div>
     </header>
   )
