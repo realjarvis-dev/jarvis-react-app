@@ -66,7 +66,7 @@ export function WalletComponent({ showVideoBg }: WalletComponentProps) {
       // Wallet delegation logic can be added here if needed
       console.log('Wallet ready - automatic funding disabled for better UX')
     }
-  }, [ready, authenticated, wallets, user?.id])
+  }, [ready, authenticated, wallets])
 
   // If not authenticated, show login button
   if (!authenticated) {
