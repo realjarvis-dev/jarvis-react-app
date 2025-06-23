@@ -27,9 +27,7 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: "chore: daily update of Lifi chain and tokens list"
-          file_pattern: |
-            lib/token-matcher/config/lifi/chains.ts
-            lib/token-matcher/config/lifi/tokens.ts
+          file_pattern: lib/token-matcher/config/lifi/chains.ts lib/token-matcher/config/lifi/tokens.ts
           branch: feat/pendle_token_cron_job
           commit_user_name: github-actions
           commit_user_email: actions@github.com
