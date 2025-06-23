@@ -33,9 +33,4 @@ jobs:
           commit_user_name: github-actions
           commit_user_email: actions@github.com
           
-      - name: Push changes to dev
-        run: |
-          git fetch origin dev
-          git checkout dev
-          git merge --ff-only main
-          git push origin dev
+

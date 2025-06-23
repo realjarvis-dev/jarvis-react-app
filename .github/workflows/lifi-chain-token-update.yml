@@ -28,13 +28,7 @@ jobs:
         with:
           commit_message: "chore: daily update of Lifi chain and tokens list"
           file_pattern: lib/token-matcher/config/lifi/chains.ts lib/token-matcher/config/lifi/tokens.ts
-          branch: feat/pendle_token_cron_job
+          branch: main
           commit_user_name: github-actions
           commit_user_email: actions@github.com
           
-      # - name: Push changes to dev
-      #   run: |
-      #     git fetch origin dev
-      #     git checkout dev
-      #     git merge --ff-only main
-      #     git push origin dev
