@@ -31,6 +31,7 @@ export function Chat({
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const { user, ready, authenticated } = usePrivy()
   const [headers, setHeaders] = useState<Record<string, string>>({})
+  const [isSaving, setIsSaving] = useState(false)
   const [anonId, setAnonId] = useLocalStorage('anonUserId', {
     defaultValue: ''
   })
@@ -98,22 +99,26 @@ export function Chat({
     },
     headers,
     onFinish: () => {
+      setIsSaving(true)
       router.replace(`/search/${id}`)
       startTransition(() => {
         router.refresh()
+        setIsSaving(false)
       })
     },
     onError: error => {
       toast.error(`Error in chat: ${error.message}`)
+      setIsSaving(false)
     },
     sendExtraMessageFields: false,
     experimental_throttle: 100
   })
 
   const isLoading = status === 'submitted' || status === 'streaming'
+  const isProcessing = isLoading || isSaving
 
   const { anchorRef, isAutoScroll } = useAutoScroll({
-    isLoading,
+    isLoading: isProcessing,
     dependency: messages.length,
     isStreaming: () => status === 'streaming',
     scrollContainer: scrollContainerRef,
@@ -262,7 +267,7 @@ export function Chat({
         messages={messages}
         data={data}
         onQuerySelect={isReadOnly ? undefined : onQuerySelect}
-        isLoading={isLoading}
+        isLoading={isProcessing}
         chatId={id}
         addToolResult={isReadOnly ? undefined : addToolResult}
         anchorRef={anchorRef}
@@ -275,7 +280,7 @@ export function Chat({
           input={input}
           handleInputChange={handleInputChange}
           handleSubmit={onSubmit}
-          isLoading={isLoading}
+          isLoading={isProcessing}
           messages={messages}
           setMessages={setMessages}
           stop={stop}
