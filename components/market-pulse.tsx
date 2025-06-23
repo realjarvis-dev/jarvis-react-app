@@ -75,7 +75,7 @@ export function MarketPulse() {
     }, 10 * 60000) // fetch every 10 minutes
 
     const handleVisibilityChange = () => {
-      if (!document.hidden && coins.length === 0) {
+      if (!document.hidden) {
         fetchTrendingCoins()
       }
     }
@@ -86,7 +86,7 @@ export function MarketPulse() {
       clearInterval(interval)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, [coins.length])
+  }, [])
 
   useEffect(() => {
     const scrollContainer = scrollRef.current
