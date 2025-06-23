@@ -9,8 +9,12 @@ import {
   useState
 } from 'react'
 import { allNetworkConfigs, getActiveNetworkConfig } from './config' // Updated import path
-import { ChainType, NetworkConfig } from './types' // Updated import path
-import { USER_SELECTED_NETWORK_COOKIE_KEY, USER_DEMO_MODE_COOKIE_KEY } from './types'
+import {
+  ChainType,
+  NetworkConfig,
+  USER_DEMO_MODE_COOKIE_KEY,
+  USER_SELECTED_NETWORK_COOKIE_KEY
+} from './types' // Updated import path
 // const USER_SELECTED_NETWORK_COOKIE_KEY = 'user_selected_network'
 // const USER_DEMO_MODE_COOKIE_KEY = 'user_demo_mode' // New cookie key for demo mode
 
@@ -99,7 +103,7 @@ export function NetworkProvider({ children }: NetworkProviderProps) {
     if (selectedChain !== chainToSet) {
       setSelectedChainInternal(chainToSet)
     }
-  }, [mounted, isDemoMode, selectedChain]) // Run once after mount to initialize from cookies
+  }, [mounted]) // Only depend on mounted, not on the state variables being updated
 
   // Effect to update selectedChain cookie when selectedChain changes, AFTER mount
   useEffect(() => {
