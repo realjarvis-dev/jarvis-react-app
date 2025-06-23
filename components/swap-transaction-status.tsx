@@ -2,9 +2,6 @@
 
 import { cn } from '@/lib/utils'
 import { CheckCircle, Clock, XCircle } from 'lucide-react'
-import { getConfigByChainId } from '@/lib/network/config'
-import { useNetwork } from '@/lib/network/context'
-
 
 interface SwapTransactionStatusProps {
   status: 'preparing' | 'building' | 'signing' | 'broadcasting' | 'confirming' | 'confirmed' | 'failed'
@@ -19,11 +16,7 @@ export function SwapTransactionStatus({
   tokenName,
   chainId
 }: SwapTransactionStatusProps) {
-  const { isDemoMode, activeNetwork } = useNetwork()
-  const effectiveChainId = chainId || activeNetwork.chainId
-  const etherscanBaseUrl = `https://${getConfigByChainId(effectiveChainId, isDemoMode).scanLink}`
 
-  
   // Get appropriate color based on status
   const getStatusColor = () => {
     switch (status) {
@@ -83,18 +76,6 @@ export function SwapTransactionStatus({
         {getStatusIcon()}
         <span>{getStatusText()}</span>
       </div>
-      
-      {/* Show TX hash if available and confirmed */}
-      {/* {txHash && status === 'confirmed' && (
-        <a 
-          href={`${etherscanBaseUrl}/tx/${txHash}`} 
-          target="_blank" 
-          rel="noreferrer"
-          className="text-xs ml-2 font-medium text-blue-600 dark:text-blue-400 hover:underline"
-        >
-          View transaction
-        </a>
-      )} */}
     </div>
   )
 }    
