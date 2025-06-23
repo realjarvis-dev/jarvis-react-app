@@ -20,11 +20,8 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install dependencies
-        run: bun install
-
       - name: Generate Pendle tokens list
-        run: bun run generate:pendle-tokens
+        run: node scripts/generate-pendle-tokens.js
 
       - name: Commit & Push changes
         uses: stefanzweifel/git-auto-commit-action@v4
