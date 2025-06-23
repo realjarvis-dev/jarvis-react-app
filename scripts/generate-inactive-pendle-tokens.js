@@ -43,7 +43,7 @@ async function generateTokens() {
       //   continue;
       // }
       //
-      const response = await fetch(`${baseUrl}/v1/${chainId}/markets/active`)
+      const response = await fetch(`${baseUrl}/v1/${chainId}/markets/inactive`)
       const data = await response.json()
 
       console.log(data)
@@ -100,7 +100,8 @@ async function generateTokens() {
     }
   }
   
-  const output = `export interface PendleToken {
+  const output = `
+export interface PendleToken {
   chainId: number
   address: string
   symbol: string
@@ -111,11 +112,10 @@ async function generateTokens() {
   expiry: string
   underlyingAsset: string
 }
-
-export const pendleTokensByChain: Record<string, PendleToken[]> = ${JSON.stringify(allTokens, null, 2)};
+export const pendleInactiveTokensByChain: Record<string, PendleToken[]> = ${JSON.stringify(allTokens, null, 2)};
 `;
   
-  const outputPath = path.join(__dirname, '../lib/token-matcher/config/pendle/tokens.ts');
+  const outputPath = path.join(__dirname, '../lib/token-matcher/config/pendle/inactive-tokens.ts');
   fs.writeFileSync(outputPath, output);
   console.log(`Generated tokens file: ${outputPath}`);
   

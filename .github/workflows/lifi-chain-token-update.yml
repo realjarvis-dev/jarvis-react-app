@@ -1,0 +1,43 @@
+name: Daily Lifi Chain and Tokens Update
+
+# run at 00:30 UTC every day (adjust as needed)
+on:
+  schedule:
+    - cron: '30 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  update-tokens:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true  # so GitHub token is available to push
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Generate Pendle tokens list
+        run: node scripts/generate-lifi-chain.js && node scripts/generate-lifi-tokens.js
+
+      - name: Commit & Push changes
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "chore: daily update of Lifi chain and tokens list"
+          file_pattern: lib/token-matcher/config/lifi/chains.ts lib/token-matcher/config/lifi/tokens.ts
+          branch: main
+          commit_user_name: github-actions
+          commit_user_email: actions@github.com
+          
+      - name: Merge main into dev
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin dev
+          git checkout dev
+          git merge main --ff-only
+          git push origin dev
