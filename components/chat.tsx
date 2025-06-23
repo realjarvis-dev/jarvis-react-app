@@ -3,7 +3,6 @@
 import { CHAT_ID } from '@/lib/constants'
 import { useAutoScroll } from '@/lib/hooks/use-auto-scroll'
 import { cn } from '@/lib/utils'
-import { ServerSideUIState } from '@/lib/utils/server-cookies'
 import { useChat } from '@ai-sdk/react'
 import { getAccessToken, usePrivy } from '@privy-io/react-auth'
 import { ChatRequestOptions } from 'ai'
@@ -22,25 +21,23 @@ export function Chat({
   id,
   savedMessages = [],
   query,
-  isReadOnly = false,
-  initialUIState
+  isReadOnly = false
 }: {
   id: string
   savedMessages?: Message[]
   query?: string
   isReadOnly?: boolean
-  initialUIState?: ServerSideUIState
 }) {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const { user, ready, authenticated } = usePrivy()
   const [headers, setHeaders] = useState<Record<string, string>>({})
+  const [isSaving, setIsSaving] = useState(false)
   const [anonId, setAnonId] = useLocalStorage('anonUserId', {
     defaultValue: ''
   })
   const [anonTrial, setAnonTrial] = useLocalStorage('anonTrial', {
     defaultValue: MAX_TRIALS
   })
-  const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
     if (!ready) return
@@ -77,7 +74,7 @@ export function Chat({
         }
       })()
     }
-  }, [user, ready, authenticated, anonId, setAnonId])
+  }, [user?.id, ready, authenticated, anonId, setAnonId])
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
@@ -130,7 +127,7 @@ export function Chat({
 
   useEffect(() => {
     setMessages(savedMessages)
-  }, [id, savedMessages, setMessages])
+  }, [id])
 
   const checkTrialLimit = (
     limitReachCallback: () => void,
@@ -165,6 +162,7 @@ export function Chat({
       return
     }
     if (!authenticated) {
+      // check trial limit, execute callback if limit reached
       checkTrialLimit(
         () => {
           toast.error('No trials left – please log in!')
@@ -239,6 +237,7 @@ export function Chat({
       return
     }
     if (!authenticated) {
+      // check trial limit, execute callback if limit reached
       checkTrialLimit(
         () => {
           toast.error('No trials left – please log in!')
@@ -252,6 +251,7 @@ export function Chat({
       return
     }
 
+    // has to keep it for authenticated users
     sendMessage()
   }
 
@@ -267,7 +267,7 @@ export function Chat({
         messages={messages}
         data={data}
         onQuerySelect={isReadOnly ? undefined : onQuerySelect}
-        isLoading={isLoading}
+        isLoading={isProcessing}
         chatId={id}
         addToolResult={isReadOnly ? undefined : addToolResult}
         anchorRef={anchorRef}
@@ -288,7 +288,6 @@ export function Chat({
           append={append}
           isAutoScroll={isAutoScroll}
           chatId={id}
-          initialUIState={initialUIState}
         />
       )}
       {isReadOnly && (

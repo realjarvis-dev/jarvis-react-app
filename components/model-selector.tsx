@@ -33,28 +33,25 @@ function groupModelsByProvider(models: Model[]) {
 
 interface ModelSelectorProps {
   models: Model[]
-  initialSelectedModel?: Model | null
 }
 
-export function ModelSelector({ models, initialSelectedModel }: ModelSelectorProps) {
+export function ModelSelector({ models }: ModelSelectorProps) {
   const [open, setOpen] = useState(false)
   const [value, setValue] = useState('')
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    if (initialSelectedModel) {
-      setValue(createModelId(initialSelectedModel))
-    } else {
-      const savedModel = getCookie('selectedModel')
-      if (savedModel) {
-        try {
-          const model = JSON.parse(savedModel) as Model
-          setValue(createModelId(model))
-        } catch (e) {
-          console.error('Failed to parse saved model:', e)
-        }
+    setMounted(true)
+    const savedModel = getCookie('selectedModel')
+    if (savedModel) {
+      try {
+        const model = JSON.parse(savedModel) as Model
+        setValue(createModelId(model))
+      } catch (e) {
+        console.error('Failed to parse saved model:', e)
       }
     }
-  }, [initialSelectedModel])
+  }, [])
 
   const handleModelSelect = (id: string) => {
     const newValue = id === value ? '' : id
@@ -84,7 +81,7 @@ export function ModelSelector({ models, initialSelectedModel }: ModelSelectorPro
           aria-expanded={open}
           className="text-sm rounded-full shadow-none focus:ring-0"
         >
-          {selectedModel ? (
+          {mounted && selectedModel ? (
             <div className="flex items-center space-x-1">
               <Image
                 src={`/providers/logos/${selectedModel.providerId}.svg`}

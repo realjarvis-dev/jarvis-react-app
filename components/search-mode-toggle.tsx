@@ -6,28 +6,41 @@ import { Globe } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Toggle } from './ui/toggle'
 
-interface SearchModeToggleProps {
-  initialSearchMode?: boolean
-}
-
-export function SearchModeToggle({ initialSearchMode }: SearchModeToggleProps) {
-  const [isSearchMode, setIsSearchMode] = useState(initialSearchMode ?? false)
+export function SearchModeToggle() {
+  const [isSearchMode, setIsSearchMode] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    if (initialSearchMode === undefined) {
-      const savedMode = getCookie('search-mode')
-      if (savedMode !== null) {
-        setIsSearchMode(savedMode === 'true')
-      } else {
-        setCookie('search-mode', 'true')
-        setIsSearchMode(true)
-      }
+    setMounted(true)
+    const savedMode = getCookie('search-mode')
+    if (savedMode !== null) {
+      setIsSearchMode(savedMode === 'true')
+    } else {
+      setCookie('search-mode', 'true')
+      setIsSearchMode(true)
     }
-  }, [initialSearchMode])
+  }, [])
 
   const handleSearchModeChange = (pressed: boolean) => {
     setIsSearchMode(pressed)
     setCookie('search-mode', pressed.toString())
+  }
+
+  if (!mounted) {
+    return (
+      <Toggle
+        aria-label="Toggle search mode"
+        variant="outline"
+        className={cn(
+          'gap-1 px-3 border border-input text-muted-foreground bg-background',
+          'hover:bg-accent hover:text-accent-foreground rounded-full',
+          'h-8 sm:h-10'
+        )}
+      >
+        <Globe className="size-4" />
+        <span className="text-xs">Search</span>
+      </Toggle>
+    )
   }
 
   return (
