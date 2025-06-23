@@ -3,7 +3,6 @@
 import { CHAT_ID } from '@/lib/constants'
 import { useAutoScroll } from '@/lib/hooks/use-auto-scroll'
 import { cn } from '@/lib/utils'
-import { ServerSideUIState } from '@/lib/utils/server-cookies'
 import { useChat } from '@ai-sdk/react'
 import { getAccessToken, usePrivy } from '@privy-io/react-auth'
 import { ChatRequestOptions } from 'ai'
@@ -22,14 +21,12 @@ export function Chat({
   id,
   savedMessages = [],
   query,
-  isReadOnly = false,
-  initialUIState
+  isReadOnly = false
 }: {
   id: string
   savedMessages?: Message[]
   query?: string
   isReadOnly?: boolean
-  initialUIState?: ServerSideUIState
 }) {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const { user, ready, authenticated } = usePrivy()
@@ -288,7 +285,6 @@ export function Chat({
           append={append}
           isAutoScroll={isAutoScroll}
           chatId={id}
-          initialUIState={initialUIState}
         />
       )}
       {isReadOnly && (

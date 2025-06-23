@@ -11,7 +11,6 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
-import { ServerSideUIState } from '@/lib/utils/server-cookies'
 import { usePrivy } from '@privy-io/react-auth'
 import { Link2, LogOut, Settings2, Wallet } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -20,11 +19,7 @@ import { Button } from './ui/button'
 import { WalletMenuItems } from './wallet-menu-items'
 
 
-interface UserMenuProps {
-  initialUIState?: ServerSideUIState
-}
-
-export default function UserMenu({ initialUIState }: UserMenuProps) {
+export default function UserMenu() {
   const { authenticated, ready, user, logout } = usePrivy()
   const router = useRouter()
   const userName =
