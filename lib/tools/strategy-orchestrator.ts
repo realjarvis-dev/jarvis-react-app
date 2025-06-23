@@ -5,6 +5,7 @@ import { getToolRegistry } from '../utils/tool-registry'
 import { executeToolCall } from '../streaming/tool-execution'
 import { convertToCoreMessages } from 'ai'
 import { getModel, isReasoningModel } from '../utils/registry'
+import { getStrategyOrchestratorSchemaForModel, getStrategyExecutorSchemaForModel } from '../schema/strategy'
 
 function getReasoningModelForPlanning(): string {
   const claudeOpus4 = 'anthropic:claude-opus-4-20250514'
@@ -13,17 +14,12 @@ function getReasoningModelForPlanning(): string {
   return claudeOpus4
 }
 
-export const strategyOrchestratorTool = tool({
-  description: `Analyze user investment goals and generate multi-step DeFi execution plans using available tools. 
-    This tool uses advanced reasoning to create optimized strategies that chain multiple protocol operations.`,
-  parameters: z.object({
-    investment_goal: z.string().describe('User investment objective (e.g., "maximize yield", "minimize risk")'),
-    available_capital: z.string().describe('Amount of capital available for the strategy'),
-    risk_tolerance: z.enum(['low', 'medium', 'high']).describe('User risk tolerance level'),
-    time_horizon: z.enum(['short', 'medium', 'long']).describe('Investment time horizon'),
-    preferred_protocols: z.array(z.string()).describe('Preferred DeFi protocols to use (use empty array if no preference)')
-  }),
-  execute: async (params, context: ToolContext) => {
+export function createStrategyOrchestratorTool(fullModel: string) {
+  return tool({
+    description: `Analyze user investment goals and generate multi-step DeFi execution plans using available tools. 
+      This tool uses advanced reasoning to create optimized strategies that chain multiple protocol operations.`,
+    parameters: getStrategyOrchestratorSchemaForModel(fullModel),
+    execute: async (params, context: ToolContext) => {
     const { investment_goal, available_capital, risk_tolerance, time_horizon, preferred_protocols } = params
     const networkContext = context?.networkContext
     
@@ -42,6 +38,8 @@ export const strategyOrchestratorTool = tool({
       const executionTools = availableTools.filter(tool => 
         tool.includes('swap') || tool.includes('mint') || tool.includes('redeem') || tool.includes('compound')
       )
+      
+      console.log('Strategy orchestrator parameters:', { investment_goal, available_capital, risk_tolerance })
       
       const strategySteps = await generateStrategySteps(
         investment_goal, 
@@ -86,29 +84,16 @@ export const strategyOrchestratorTool = tool({
       }
     }
   }
-})
+  })
+}
 
-export const strategyExecutorTool = tool({
-  description: `Execute a multi-step DeFi strategy with automatic transaction confirmation waits between steps.
-    This tool uses GPT-4.1 for actual tool execution while maintaining the strategy plan from o3.
-    Ensures each step completes successfully before proceeding to the next.`,
-  parameters: z.object({
-    strategy_plan: z.object({
-      steps: z.array(z.object({
-        step: z.number(),
-        action: z.string(),
-        tool: z.string(),
-        description: z.string(),
-        wait_for_confirmation: z.boolean(),
-        parameters: z.record(z.string(), z.string()).optional().describe('Tool parameters (use empty object if none)')
-      })),
-      execution_order: z.string(),
-      max_steps: z.number().describe('Maximum steps allowed (use 15 if not specified)')
-    }),
-    user_wallet_address: z.string().describe('User wallet address for transactions'),
-    execute_immediately: z.boolean().describe('Whether to execute immediately or just validate the plan (use true for immediate execution)')
-  }),
-  execute: async (params, context: ToolContext) => {
+export function createStrategyExecutorTool(fullModel: string) {
+  return tool({
+    description: `Execute a multi-step DeFi strategy with automatic transaction confirmation waits between steps.
+      This tool uses GPT-4.1 for actual tool execution while maintaining the strategy plan from o3.
+      Ensures each step completes successfully before proceeding to the next.`,
+    parameters: getStrategyExecutorSchemaForModel(fullModel),
+    execute: async (params, context: ToolContext) => {
     const { strategy_plan, user_wallet_address, execute_immediately } = params
     const { steps, max_steps } = strategy_plan
     
@@ -125,7 +110,7 @@ export const strategyExecutorTool = tool({
           total_steps: steps.length,
           execution_model: 'openai:gpt-4.1',
           planning_model: getReasoningModelForPlanning(),
-          steps: steps.map(s => ({
+          steps: steps.map((s: any) => ({
             step: s.step,
             tool: s.tool,
             description: s.description,
@@ -205,7 +190,8 @@ export const strategyExecutorTool = tool({
       }
     }
   }
-})
+  })
+}
 
 async function generateStrategySteps(
   goal: string, 
@@ -223,6 +209,12 @@ async function generateStrategySteps(
     wait_for_confirmation: boolean;
     parameters?: Record<string, any>;
   }> = []
+  
+  if (!goal || typeof goal !== 'string') {
+    console.error('Invalid goal parameter:', goal)
+    throw new Error('Goal parameter is required and must be a string')
+  }
+  
   const goalLower = goal.toLowerCase()
   
   if (goalLower.includes('yield') || goalLower.includes('maximize')) {
@@ -401,3 +393,6 @@ async function executeStrategyStep(step: any, userWallet: string, context: ToolC
     }
   }
 }
+
+export const strategyOrchestratorTool = createStrategyOrchestratorTool('anthropic:claude-opus-4-20250514')
+export const strategyExecutorTool = createStrategyExecutorTool('anthropic:claude-opus-4-20250514')

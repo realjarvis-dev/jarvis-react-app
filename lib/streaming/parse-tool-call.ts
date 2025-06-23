@@ -46,24 +46,36 @@ export function parseToolCallXml<T>(
     }
 
     // Parse parameters using the provided schema
-    const parameters = schema.parse({
-      ...rawParameters,
-      // Convert comma-separated strings to arrays for array fields with default empty arrays
-      include_domains:
-        rawParameters.include_domains
-          ?.split(',')
-          .map(d => d.trim())
-          .filter(Boolean) ?? [],
-      exclude_domains:
-        rawParameters.exclude_domains
-          ?.split(',')
-          .map(d => d.trim())
-          .filter(Boolean) ?? [],
-      // Convert string to number for numeric fields
-      max_results: rawParameters.max_results
-        ? parseInt(rawParameters.max_results, 10)
-        : undefined
-    })
+    const processedParameters: Record<string, any> = { ...rawParameters }
+    
+    if (rawParameters.include_domains) {
+      processedParameters.include_domains = rawParameters.include_domains
+        .split(',')
+        .map(d => d.trim())
+        .filter(Boolean)
+    }
+    if (rawParameters.exclude_domains) {
+      processedParameters.exclude_domains = rawParameters.exclude_domains
+        .split(',')
+        .map(d => d.trim())
+        .filter(Boolean)
+    }
+    if (rawParameters.max_results) {
+      processedParameters.max_results = parseInt(rawParameters.max_results, 10)
+    }
+    
+    if (rawParameters.preferred_protocols) {
+      try {
+        processedParameters.preferred_protocols = JSON.parse(rawParameters.preferred_protocols)
+      } catch {
+        processedParameters.preferred_protocols = rawParameters.preferred_protocols
+          .split(',')
+          .map(p => p.trim())
+          .filter(Boolean)
+      }
+    }
+    
+    const parameters = schema.parse(processedParameters)
 
     return { tool, parameters }
   } catch (error) {
