@@ -35,47 +35,56 @@ export function MarketPulse() {
   const router = useRouter()
 
   useEffect(() => {
+    const abortController = new AbortController()
     const url = '/api/market-pulse'
     const options = {
       method: 'GET',
       headers: {
         accept: 'application/json',
       },
+      signal: abortController.signal
     }
 
     async function fetchTrendingCoins() {
       try {
         setIsLoading(true)
         const response = await fetch(url, options)
+        
+        if (abortController.signal.aborted) {
+          return
+        }
+        
         const json = await response.json()
 
         if (json.error || !json.coins || !Array.isArray(json.coins)) {
           console.error('Error fetching trending coins:', json.error || 'Invalid response format')
-          setCoins([]) // Clear coins on error
-          setIsLoading(false) // Stop loading on error
+          setCoins([])
+          setIsLoading(false)
           return
         }
 
-        // The API now returns processed data directly
         setCoins(json.coins)
         setIsLoading(false)
       } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') {
+          return
+        }
         console.error('Error fetching trending coins:', err)
-        setCoins([]) // Clear coins on error
-        setIsLoading(false) // Stop loading on error
+        setCoins([])
+        setIsLoading(false)
       }
     }
 
     fetchTrendingCoins()
     
     const interval = setInterval(() => {
-      if (!document.hidden) {
+      if (!document.hidden && !abortController.signal.aborted) {
         fetchTrendingCoins()
       }
-    }, 10 * 60000) // fetch every 10 minutes
+    }, 10 * 60000)
 
     const handleVisibilityChange = () => {
-      if (!document.hidden) {
+      if (!document.hidden && !abortController.signal.aborted) {
         fetchTrendingCoins()
       }
     }
@@ -83,6 +92,7 @@ export function MarketPulse() {
     document.addEventListener('visibilitychange', handleVisibilityChange)
 
     return () => {
+      abortController.abort()
       clearInterval(interval)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
