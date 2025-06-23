@@ -17,12 +17,19 @@ export const strictStrategyOrchestratorSchema = z.object({
 })
 
 export function getStrategyOrchestratorSchemaForModel(fullModel: string) {
+  console.log('Debug - getStrategyOrchestratorSchemaForModel called with:', fullModel)
   const [provider, modelName] = fullModel?.split(':') ?? []
+  console.log('Debug - provider:', provider, 'modelName:', modelName)
   const useStrictSchema =
     ((provider === 'openai' || provider === 'azure') && modelName?.startsWith('o')) ||
     (provider === 'anthropic' && modelName?.includes('claude-opus-4'))
+  console.log('Debug - useStrictSchema:', useStrictSchema)
   
-  return useStrictSchema ? strictStrategyOrchestratorSchema : strategyOrchestratorSchema
+  const selectedSchema = useStrictSchema ? strictStrategyOrchestratorSchema : strategyOrchestratorSchema
+  console.log('Debug - selectedSchema shape keys:', selectedSchema instanceof z.ZodObject ? Object.keys(selectedSchema.shape) : 'Not ZodObject')
+  console.log('Debug - selectedSchema:', selectedSchema)
+  
+  return selectedSchema
 }
 
 export const strategyExecutorSchema = z.object({
