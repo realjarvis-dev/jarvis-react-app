@@ -556,11 +556,12 @@ export function createToolRegistry(model: string): ToolRegistry {
   return registry
 }
 
-let toolRegistryInstance: ToolRegistry | null = null
+const toolRegistryInstances: Map<string, ToolRegistry> = new Map()
 
 export function getToolRegistry(model: string): ToolRegistry {
-  if (!toolRegistryInstance) {
-    toolRegistryInstance = createToolRegistry(model)
+  if (!toolRegistryInstances.has(model)) {
+    console.log(`Creating new tool registry for model: ${model}`)
+    toolRegistryInstances.set(model, createToolRegistry(model))
   }
-  return toolRegistryInstance
+  return toolRegistryInstances.get(model)!
 }

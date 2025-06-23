@@ -17,7 +17,9 @@ export const strictStrategyOrchestratorSchema = z.object({
 })
 
 export function getStrategyOrchestratorSchemaForModel(fullModel: string) {
+  console.log('=== SCHEMA SELECTION DEBUG START ===')
   console.log('Debug - getStrategyOrchestratorSchemaForModel called with:', fullModel)
+  console.log('Debug - typeof fullModel:', typeof fullModel)
   const [provider, modelName] = fullModel?.split(':') ?? []
   console.log('Debug - provider:', provider, 'modelName:', modelName)
   const useStrictSchema =
@@ -26,8 +28,13 @@ export function getStrategyOrchestratorSchemaForModel(fullModel: string) {
   console.log('Debug - useStrictSchema:', useStrictSchema)
   
   const selectedSchema = useStrictSchema ? strictStrategyOrchestratorSchema : strategyOrchestratorSchema
-  console.log('Debug - selectedSchema shape keys:', selectedSchema instanceof z.ZodObject ? Object.keys(selectedSchema.shape) : 'Not ZodObject')
-  console.log('Debug - selectedSchema:', selectedSchema)
+  console.log('Debug - selectedSchema instanceof z.ZodObject:', selectedSchema instanceof z.ZodObject)
+  console.log('Debug - selectedSchema._def:', selectedSchema._def)
+  console.log('Debug - selectedSchema.shape:', selectedSchema.shape)
+  console.log('Debug - Object.keys(selectedSchema.shape):', Object.keys(selectedSchema.shape || {}))
+  console.log('Debug - strategyOrchestratorSchema.shape:', strategyOrchestratorSchema.shape)
+  console.log('Debug - Object.keys(strategyOrchestratorSchema.shape):', Object.keys(strategyOrchestratorSchema.shape || {}))
+  console.log('=== SCHEMA SELECTION DEBUG END ===')
   
   return selectedSchema
 }
