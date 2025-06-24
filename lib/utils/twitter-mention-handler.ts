@@ -277,6 +277,10 @@ export async function processMention(mention: TwitterMention, users: TwitterUser
       console.log(`Skipping mention ${mention.id} from @${authorUsername} - already replied`);
       return;
     }
+    if (authorUsername === 'JarvisCryptoAI') {
+      console.log(`Skipping mention ${mention.id} from @${authorUsername} - it's the bot itself`);
+      return;
+    }
 
     const filterResult = shouldFilterMention(mention, author);
     if (filterResult.shouldFilter) {
