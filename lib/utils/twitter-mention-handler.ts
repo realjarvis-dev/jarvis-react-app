@@ -386,10 +386,12 @@ async function postTweetReply(tweetId: string, message: string) {
 
       const authHeader = 'OAuth ' + Object.keys(oauthParams).sort().map(key => `${key}="${encodeURIComponent(oauthParams[key])}"`).join(', ');
 
+      const botUserId = await getJarvisUserId();
       const requestBody = {
         text: message,
         reply: {
-          in_reply_to_tweet_id: tweetId
+          in_reply_to_tweet_id: tweetId,
+          exclude_reply_user_ids: [botUserId]
         }
       };
 
