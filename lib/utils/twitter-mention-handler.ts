@@ -44,7 +44,7 @@ let lastProcessedMentionId: string | null = null;
 let cachedUserId: string | null = null;
 let lastRateLimitReset: number = 0;
 let lastMentionProcessTime: number = 0;
-const MENTION_PROCESSING_DELAY = 5000; // 5 seconds between mentions
+const MENTION_PROCESSING_DELAY = 2000; // 2 seconds between mentions (optimized for 10 mentions/15min limit)
 
 let repliedMentions: Set<string> = new Set();
 let botTweetIds: Set<string> = new Set();
@@ -260,9 +260,9 @@ export async function processMention(mention: TwitterMention, users: TwitterUser
     console.log('---');
 
     const now = Date.now();
-    recentReplies = recentReplies.filter(time => now - time < 60000); // Last minute
-    if (recentReplies.length > 5) {
-      console.log('Circuit breaker: Too many recent replies, pausing');
+    recentReplies = recentReplies.filter(time => now - time < 900000); // Last 15 minutes
+    if (recentReplies.length >= 10) {
+      console.log('Circuit breaker: Reached mention processing limit (10/15min), pausing');
       return;
     }
 
