@@ -74,9 +74,9 @@ async function checkMentions() {
     if (mentions.data && mentions.data.length > 0) {
       console.log(`Found ${mentions.data.length} new mentions`);
       
-      const mentionsToProcess = mentions.data.slice(0, 3);
-      if (mentions.data.length > 3) {
-        console.log(`Rate limiting: processing first 3 of ${mentions.data.length} mentions to avoid API limits`);
+      const mentionsToProcess = mentions.data.slice(0, 10);
+      if (mentions.data.length > 10) {
+        console.log(`Rate limiting: processing first 10 of ${mentions.data.length} mentions to stay within API limits (10 mentions/15min)`);
       }
       
       for (const mention of mentionsToProcess) {
