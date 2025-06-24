@@ -131,10 +131,7 @@ export async function fetchMentions(userId: string): Promise<TwitterMentionsResp
     throw new Error('TWITTER_API_BEARER_TOKEN environment variable is not set');
   }
 
-  const cutoffTime = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const startTime = cutoffTime.toISOString();
-
-  let url = `https://api.twitter.com/2/users/${userId}/mentions?tweet.fields=created_at,author_id,public_metrics&expansions=author_id&user.fields=username,name,public_metrics,created_at,verified&max_results=10&start_time=${startTime}`;
+  let url = `https://api.twitter.com/2/users/${userId}/mentions?tweet.fields=created_at,author_id,public_metrics&expansions=author_id&user.fields=username,name,public_metrics,created_at,verified&max_results=10`;
 
   if (lastProcessedMentionId) {
     url += `&since_id=${lastProcessedMentionId}`;
@@ -181,6 +178,57 @@ export async function fetchMentions(userId: string): Promise<TwitterMentionsResp
   }
 
   throw new Error('Failed to fetch mentions after all retries');
+}
+
+export async function fetchRecentMentionsForInitialization(userId: string): Promise<TwitterMentionsResponse> {
+  const bearerToken = process.env.TWITTER_API_BEARER_TOKEN;
+  if (!bearerToken) {
+    throw new Error('TWITTER_API_BEARER_TOKEN environment variable is not set');
+  }
+
+  const url = `https://api.twitter.com/2/users/${userId}/mentions?tweet.fields=created_at,author_id,public_metrics&expansions=author_id&user.fields=username,name,public_metrics,created_at,verified&max_results=5`;
+
+  let retryCount = 0;
+  const maxRetries = 3;
+
+  while (retryCount < maxRetries) {
+    try {
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${bearerToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        return await response.json();
+      }
+
+      if (await handleRateLimit(response, 'fetchRecentMentionsForInitialization')) {
+        retryCount++;
+        continue;
+      }
+
+      const errorData = await response.text();
+      console.error(`Twitter API error during initialization: ${response.status} - ${errorData}`);
+
+      if (retryCount === maxRetries - 1) {
+        throw new Error(`Twitter API error during initialization after ${maxRetries} attempts: ${response.status} - ${errorData}`);
+      }
+
+      retryCount++;
+      await sleep(2000 * retryCount); // Exponential backoff
+
+    } catch (error) {
+      if (retryCount === maxRetries - 1) {
+        throw error;
+      }
+      retryCount++;
+      await sleep(2000 * retryCount);
+    }
+  }
+
+  throw new Error('Failed to fetch recent mentions for initialization after all retries');
 }
 
 function shouldFilterMention(mention: TwitterMention, author: TwitterUser | undefined): { shouldFilter: boolean; reason: string } {
