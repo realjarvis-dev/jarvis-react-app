@@ -80,7 +80,8 @@ const get_system_prompt = (
       lifi_bridge_execute: `- lifi_bridge_execute: Use when user wants to swap between two arbitrary tokens to execute the transaction.`,
       kodiak_bault_profitability: `- kodiak_bault_profitability: Use when the user wants to check the profitability of Kodiak Baults for compounding on Berachain. This tool analyzes profitability metrics for specified Baults.`,
       kodiak_compound_bault: `- kodiak_compound_bault: Use when the user wants to compound a profitable Kodiak Bault. This tool executes a transaction to claim BGT rewards using the BountyHelper contract (zero-capital compounding).`,
-      fund_wallet: `- fund_wallet: Use when the user requests their wallet to be funded with ETH in demo mode. Only works in the Demo environment.`
+      fund_wallet: `- fund_wallet: Use when the user requests their wallet to be funded with ETH in demo mode. Only works in the Demo environment.`,
+      yield_optimization_workflow: `- yield_optimization_workflow: Use when the user wants to execute a complete automated yield optimization strategy using Pendle PT hold + YT sell approach on ${getNetworkName()} network.`
     }
 
     // Only include descriptions for supported tools
@@ -189,7 +190,8 @@ const get_system_prompt = (
       'kodiak_deposit',
       'kodiak_compound_vault',
       'swap_execute',
-      'fund_wallet'
+      'fund_wallet',
+      'yield_optimization_workflow'
     ]
       .filter(tool => supportedTools.includes(tool))
       .map(tool => writeToolsDescriptions[tool])

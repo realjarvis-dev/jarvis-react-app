@@ -6,6 +6,7 @@ import { kodiakBaultProfitabilityTool, kodiakCompoundBaultTool, kodiakDepositToo
 import { bridgeExecuteTool, bridgeQuoteTool } from '../tools/lifi-bridge'
 import { marketChartTool } from '../tools/market-chart'
 import { pendleMintQuoteTool, pendleMintTool, pendleOpportunitiesTool, pendleQuoteTool, pendleRedeemQuoteTool, pendleRedeemTool, pendleSwapTool } from '../tools/pendle'
+import { yieldOptimizationWorkflowTool } from '../tools/yield-optimization-workflow'
 import { privyTransferTool } from '../tools/privy-transfer'
 import { createQuestionTool } from '../tools/question'
 import { retrieveTool } from '../tools/retrieve'
@@ -526,7 +527,18 @@ export function createToolRegistry(model: string): ToolRegistry {
     supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'sonic', 'berachain', 'optimism', 'mantle', 'demo']
   })
 
-
+  registry.registerTool({
+    name: 'yield_optimization_workflow',
+    description: 'Execute complete yield optimization workflow automatically using Pendle PT hold + YT sell strategy',
+    schema: yieldOptimizationWorkflowTool.parameters,
+    execute: async (params, context) => yieldOptimizationWorkflowTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3,
+    supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'sonic', 'berachain', 'optimism', 'mantle', 'demo']
+  })
 
   return registry
 }
