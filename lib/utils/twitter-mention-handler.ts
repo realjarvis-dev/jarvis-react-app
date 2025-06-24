@@ -47,6 +47,8 @@ let lastMentionProcessTime: number = 0;
 const MENTION_PROCESSING_DELAY = 5000; // 5 seconds between mentions
 
 let repliedMentions: Set<string> = new Set();
+let botTweetIds: Set<string> = new Set();
+let recentReplies: number[] = [];
 
 export function getLastProcessedMentionId(): string | null {
   return lastProcessedMentionId;
@@ -113,63 +115,14 @@ async function handleRateLimit(response: Response, operation: string): Promise<b
 }
 
 export async function getJarvisUserId(): Promise<string> {
+  const KNOWN_BOT_USER_ID = '1930617094195798016';
+  
   const envUserId = process.env.TWITTER_USER_ID;
   if (envUserId) {
     return envUserId;
   }
 
-  if (cachedUserId) {
-    return cachedUserId;
-  }
-
-  const bearerToken = process.env.TWITTER_API_BEARER_TOKEN;
-  if (!bearerToken) {
-    throw new Error('TWITTER_API_BEARER_TOKEN environment variable is not set');
-  }
-
-  let retryCount = 0;
-  const maxRetries = 3;
-
-  while (retryCount < maxRetries) {
-    try {
-      const response = await fetch('https://api.twitter.com/2/users/by/username/JarvisCryptoAI', {
-        headers: {
-          'Authorization': `Bearer ${bearerToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        cachedUserId = data.data.id; // Cache the result
-        return cachedUserId!; // We know it's not null here
-      }
-
-      if (await handleRateLimit(response, 'getJarvisUserId')) {
-        retryCount++;
-        continue;
-      }
-
-      const errorData = await response.text();
-      console.error(`Failed to get user ID: ${response.status} - ${errorData}`);
-
-      if (retryCount === maxRetries - 1) {
-        throw new Error(`Failed to get user ID after ${maxRetries} attempts: ${response.status} - ${errorData}`);
-      }
-
-      retryCount++;
-      await sleep(2000 * retryCount); // Exponential backoff
-
-    } catch (error) {
-      if (retryCount === maxRetries - 1) {
-        throw error;
-      }
-      retryCount++;
-      await sleep(2000 * retryCount);
-    }
-  }
-
-  throw new Error('Failed to get user ID after all retries');
+  return KNOWN_BOT_USER_ID;
 }
 
 export async function fetchMentions(userId: string): Promise<TwitterMentionsResponse> {
@@ -235,6 +188,14 @@ function shouldFilterMention(mention: TwitterMention, author: TwitterUser | unde
     return { shouldFilter: true, reason: 'Author not found' };
   }
 
+  const isBotReply = mention.text.includes('@') &&   
+                    mention.text.match(/^@\w+\s+/) && // Starts with @username  
+                    (mention.text.includes('🚀') || mention.text.includes('📊') || mention.text.includes('📈')); // Contains bot emojis
+  
+  if (isBotReply) {
+    return { shouldFilter: true, reason: 'Potential bot reply based on content pattern' };
+  }
+
   if (author.created_at) {
     const accountAge = Date.now() - new Date(author.created_at).getTime();
     const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
@@ -277,6 +238,10 @@ export async function processMention(mention: TwitterMention, users: TwitterUser
       console.log(`Skipping mention ${mention.id} from @${authorUsername} - already replied`);
       return;
     }
+    if (authorUsername === 'JarvisCryptoAI') {
+      console.log(`Skipping mention ${mention.id} from @${authorUsername} - it's the bot itself`);
+      return;
+    }
 
     const filterResult = shouldFilterMention(mention, author);
     if (filterResult.shouldFilter) {
@@ -295,6 +260,17 @@ export async function processMention(mention: TwitterMention, users: TwitterUser
     console.log('---');
 
     const now = Date.now();
+    recentReplies = recentReplies.filter(time => now - time < 60000); // Last minute
+    if (recentReplies.length > 5) {
+      console.log('Circuit breaker: Too many recent replies, pausing');
+      return;
+    }
+
+    if (botTweetIds.has(mention.id)) {
+      console.log('Skipping own tweet');
+      return;
+    }
+
     const timeSinceLastProcess = now - lastMentionProcessTime;
     if (timeSinceLastProcess < MENTION_PROCESSING_DELAY) {
       const waitTime = MENTION_PROCESSING_DELAY - timeSinceLastProcess;
@@ -305,19 +281,20 @@ export async function processMention(mention: TwitterMention, users: TwitterUser
 
     console.log(`Processing mention from @${authorUsername}: "${mention.text}"`);
 
-    let botUserId: string | null = cachedUserId;
-    if (!botUserId) {
-      try {
-        botUserId = await getJarvisUserId();
-      } catch (error) {
-        console.warn('Could not verify bot user ID due to rate limiting, continuing with mention processing');
-      }
+    let botUserId: string;
+    try {
+      botUserId = await getJarvisUserId();
+    } catch (error) {
+      console.warn('Could not verify bot user ID, skipping mention processing to prevent recursive loops');
+      return; // Exit instead of continuing
     }
 
-    if (botUserId && mention.author_id === botUserId) {
-      console.log('Skipping own mention');
+    if (mention.author_id === botUserId) {
+      console.log('Skipping own mention - author ID matches bot ID');
       return;
     }
+
+    recentReplies.push(now);
 
     const query = mention.text
       .replace(/@jarviscryptoai\s*/gi, '')
@@ -335,7 +312,16 @@ export async function processMention(mention: TwitterMention, users: TwitterUser
 
     const response = await processTwitterQuery(query, mention.author_id);
 
-    await replyToTweet(mention.id, `@${authorUsername} ${response}`);
+    const result = await replyToTweet(mention.id, `@${authorUsername} ${response}`);
+    
+    if (result && result.data?.id) {
+      botTweetIds.add(result.data.id);
+      if (botTweetIds.size > 1000) {
+        const tweetIdsArray = Array.from(botTweetIds);
+        botTweetIds = new Set(tweetIdsArray.slice(-500));
+      }
+    }
+    
     markMentionAsReplied(mention.id);
 
   } catch (error) {
@@ -451,11 +437,11 @@ async function replyToTweet(tweetId: string, message: string) {
 
       if (result.success === false) {
         console.log(`Could not reply to tweet ${tweetId}: ${result.reason}`);
-        return;
+        return result;
       }
 
       console.log(`Successfully replied to tweet ${tweetId} with ID: ${result.data?.id}`);
-      return;
+      return result;
     }
 
     const truncatedMessage = truncateAtWordBoundary(message, maxLength - 3) + '...';
@@ -464,12 +450,14 @@ async function replyToTweet(tweetId: string, message: string) {
 
     if (result.success === false) {
       console.log(`Could not reply to tweet ${tweetId}: ${result.reason}`);
-      return;
+      return result;
     }
 
     console.log(`Successfully replied to tweet ${tweetId} with ID: ${result.data?.id} (truncated from ${message.length} to ${truncatedMessage.length} chars)`);
+    return result;
   } catch (error) {
     console.error('Error replying to tweet:', error);
+    return { success: false, reason: 'Exception occurred' };
   }
 }
 
