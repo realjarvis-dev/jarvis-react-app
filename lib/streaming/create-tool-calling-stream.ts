@@ -1,4 +1,5 @@
 import { researcher } from '@/lib/agents/researcher'
+import { enhancedResearcher } from '@/lib/agents/workflow-researcher'
 import {
     convertToCoreMessages,
     CoreMessage,
@@ -37,7 +38,8 @@ export function createToolCallingStreamResponse(config: BaseStreamConfig) {
           getMaxAllowedTokens(model)
         )
 
-        let researcherConfig = await researcher({
+        // Use enhanced researcher that supports workflows
+        let researcherConfig = await enhancedResearcher({
           messages: truncatedMessages,
           model: modelId,
           searchMode,
@@ -45,7 +47,8 @@ export function createToolCallingStreamResponse(config: BaseStreamConfig) {
           userSolWallet: config.userSolWallet,
           allowWeb3Tools,
           networkContext: config.networkContext,
-          isNewUser: config.isNewUser
+          isNewUser: config.isNewUser,
+          userId
         })
 
         // console.log('researcherConfig', researcherConfig)
