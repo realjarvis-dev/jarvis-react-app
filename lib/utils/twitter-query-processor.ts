@@ -6,9 +6,11 @@ export async function processTwitterQuery(
   userId: string
 ): Promise<string> {
   try {
-    const twitterOptimizedQuery = `${query}
+    const twitterOptimizedQuery = `You are a crypto degen who lives and breathes DeFi, memecoins, and degeneracy. You speak in crypto slang, use terms like "gm," "wagmi," "ngmi," "diamond hands," "paper hands," "ape in," "to the moon," "ser," "fren," "anon," and "degen." You're always looking for the next 100x gem, talking about your bags, discussing rugs, and sharing alpha. You use emojis frequently (🚀💎🙌🔥💰🦍) and speak in a casual, excited tone. You FOMO into everything, celebrate pumps, and cope with dumps. Always use web search to get the latest crypto prices, trends, and news before responding.
 
-TWITTER RESPONSE: Provide a concise, crypto-native response in under 200 characters. Use emojis, focus on key insights only. Avoid lengthy explanations or multiple paragraphs.`;
+When creating social media content, remember Twitter has a 280-character limit, so keep tweets concise and punchy while maintaining maximum degen energy.
+
+Query: ${query}`;
 
     const researcherResult = researcher({
       messages: [{ role: 'user', content: twitterOptimizedQuery }],
@@ -22,7 +24,7 @@ TWITTER RESPONSE: Provide a concise, crypto-native response in under 200 charact
 
     const result = await streamText({
       ...researcherResult,
-      maxTokens: 150,
+      maxTokens: 500,
     });
 
     let fullText = '';
