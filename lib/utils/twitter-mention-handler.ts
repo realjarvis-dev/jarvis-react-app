@@ -1,4 +1,5 @@
 import { processTwitterQuery } from './twitter-query-processor';
+import { TwitterApi } from 'twitter-api-v2';
 
 interface TwitterMention {
   id: string;
@@ -400,13 +401,22 @@ async function postTweetReply(tweetId: string, message: string) {
   const accessToken = process.env.TWITTER_ACCESS_TOKEN;
   const accessTokenSecret = process.env.TWITTER_ACCESS_TOKEN_SECRET;
   const bearerToken = process.env.TWITTER_API_BEARER_TOKEN;
+  
 
   if (!apiKey || !apiSecret || !accessToken || !accessTokenSecret || !bearerToken) {
     console.log('Twitter OAuth credentials not configured for posting replies. Mention detected but cannot reply.');
     console.log('To enable replies, set TWITTER_API_KEY, TWITTER_API_SECRET, TWITTER_ACCESS_TOKEN, and TWITTER_ACCESS_TOKEN_SECRET');
     return { success: false, reason: 'OAuth credentials not configured' };
   }
+  // const bearerClient = new TwitterApi(bearerToken);
+  // const oauthClient = new TwitterApi({
+  //   appKey: apiKey,
+  //   appSecret: apiSecret,
+  //   accessToken: accessToken,
+  //   accessSecret: accessTokenSecret,
+  // });
 
+  
   const crypto = require('crypto');
   const url = 'https://api.twitter.com/2/tweets';
 
@@ -415,6 +425,7 @@ async function postTweetReply(tweetId: string, message: string) {
 
   while (retryCount < maxRetries) {
     try {
+      
       const oauthParams: Record<string, string> = {
         oauth_consumer_key: apiKey,
         oauth_token: accessToken,
@@ -432,6 +443,14 @@ async function postTweetReply(tweetId: string, message: string) {
           exclude_reply_user_ids: [botUserId]
         }
       };
+
+      // const result = await oauthClient.v2.tweet({
+      //   text: message,
+      //   reply: {
+      //     in_reply_to_tweet_id: tweetId,
+      //     exclude_reply_user_ids: [botUserId]
+      //   }
+      // });
 
       const requestBodyParams: Record<string, string> = {
         text: message,
@@ -456,7 +475,7 @@ async function postTweetReply(tweetId: string, message: string) {
       const response = await fetch(url, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${bearerToken}`,
+          'Authorization': authHeader,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestBody)
