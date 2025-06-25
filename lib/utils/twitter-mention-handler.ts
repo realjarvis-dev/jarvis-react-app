@@ -409,12 +409,12 @@ async function postTweetReply(tweetId: string, message: string) {
     return { success: false, reason: 'OAuth credentials not configured' };
   }
   // const bearerClient = new TwitterApi(bearerToken);
-  // const oauthClient = new TwitterApi({
-  //   appKey: apiKey,
-  //   appSecret: apiSecret,
-  //   accessToken: accessToken,
-  //   accessSecret: accessTokenSecret,
-  // });
+  const oauthClient = new TwitterApi({
+    appKey: apiKey,
+    appSecret: apiSecret,
+    accessToken: accessToken,
+    accessSecret: accessTokenSecret,
+  });
 
   
   const crypto = require('crypto');
@@ -444,55 +444,76 @@ async function postTweetReply(tweetId: string, message: string) {
         }
       };
 
-      // const result = await oauthClient.v2.tweet({
+      try {
+      const { data } = await oauthClient.v2.tweet({
+        text: message,
+        reply: {
+          in_reply_to_tweet_id: tweetId,
+          exclude_reply_user_ids: [botUserId]
+        }
+      });
+      return {success: true, data};
+    }
+      
+      catch (error: any) {
+
+        console.error('Error posting tweet reply:', error);
+        if (error.data?.status === 429) {
+          if (await handleRateLimit(error, 'postTweetReply')) {
+            retryCount++;
+            continue;
+          }
+        }
+        const errorDetail = {
+          title: error.data?.title,
+          detail: error.data?.detail,
+          type: error.data?.type,
+          status: error.data?.status
+      }
+        return { success: false, reason: errorDetail };
+      }
+
+      // const requestBodyParams: Record<string, string> = {
       //   text: message,
-      //   reply: {
-      //     in_reply_to_tweet_id: tweetId,
-      //     exclude_reply_user_ids: [botUserId]
-      //   }
+      //   'reply.in_reply_to_tweet_id': tweetId,
+      //   'reply.exclude_reply_user_ids': botUserId
+      // };
+
+      // const allParams: Record<string, string> = {
+      //   ...oauthParams,
+      //   ...requestBodyParams
+      // };
+      // const sortedParams = Object.keys(allParams).sort().map(key => `${key}=${encodeURIComponent(allParams[key])}`).join('&');
+
+      // const baseString = `POST&${encodeURIComponent(url)}&${encodeURIComponent(sortedParams)}`;
+      // const signingKey = `${encodeURIComponent(apiSecret)}&${encodeURIComponent(accessTokenSecret)}`;
+      // const signature = crypto.createHmac('sha1', signingKey).update(baseString).digest('base64');
+
+      // oauthParams.oauth_signature = signature;
+
+      // const authHeader = 'OAuth ' + Object.keys(oauthParams).sort().map(key => `${key}="${encodeURIComponent(oauthParams[key])}"`).join(', ');
+
+      // const response = await fetch(url, {
+      //   method: 'POST',
+      //   headers: {
+      //     'Authorization': authHeader,
+      //     'Content-Type': 'application/json',
+      //   },
+      //   body: JSON.stringify(requestBody)
       // });
 
-      const requestBodyParams: Record<string, string> = {
-        text: message,
-        'reply.in_reply_to_tweet_id': tweetId,
-        'reply.exclude_reply_user_ids': botUserId
-      };
+      // if (response.ok) {
+      //   return await response.json();
+      // }
 
-      const allParams: Record<string, string> = {
-        ...oauthParams,
-        ...requestBodyParams
-      };
-      const sortedParams = Object.keys(allParams).sort().map(key => `${key}=${encodeURIComponent(allParams[key])}`).join('&');
+      // if (await handleRateLimit(response, 'postTweetReply')) {
+      //   retryCount++;
+      //   continue;
+      // }
 
-      const baseString = `POST&${encodeURIComponent(url)}&${encodeURIComponent(sortedParams)}`;
-      const signingKey = `${encodeURIComponent(apiSecret)}&${encodeURIComponent(accessTokenSecret)}`;
-      const signature = crypto.createHmac('sha1', signingKey).update(baseString).digest('base64');
-
-      oauthParams.oauth_signature = signature;
-
-      const authHeader = 'OAuth ' + Object.keys(oauthParams).sort().map(key => `${key}="${encodeURIComponent(oauthParams[key])}"`).join(', ');
-
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Authorization': authHeader,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody)
-      });
-
-      if (response.ok) {
-        return await response.json();
-      }
-
-      if (await handleRateLimit(response, 'postTweetReply')) {
-        retryCount++;
-        continue;
-      }
-
-      const errorData = await response.text();
-      console.log(`Twitter API error: ${response.status} - ${errorData}`);
-      return { success: false, reason: `API error: ${response.status}` };
+      // const errorData = await response.text();
+      // console.log(`Twitter API error: ${response.status} - ${errorData}`);
+      // return { success: false, reason: `API error: ${response.status}` };
 
     } catch (error) {
       console.error('Error posting tweet reply:', error);
