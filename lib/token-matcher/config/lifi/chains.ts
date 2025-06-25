@@ -304,6 +304,14 @@ export const chains = [
     "mainnet": true
   },
   {
+    "key": "etl",
+    "chainType": "EVM",
+    "name": "Etherlink",
+    "coin": "XTZ",
+    "id": 42793,
+    "mainnet": true
+  },
+  {
     "key": "wcc",
     "chainType": "EVM",
     "name": "World Chain",
