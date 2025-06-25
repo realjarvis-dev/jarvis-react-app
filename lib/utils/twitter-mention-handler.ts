@@ -423,7 +423,25 @@ async function postTweetReply(tweetId: string, message: string) {
         oauth_version: '1.0'
       };
 
-      const allParams: Record<string, string> = { ...oauthParams };
+      const botUserId = await getJarvisUserId();
+      const requestBody = {
+        text: message,
+        reply: {
+          in_reply_to_tweet_id: tweetId,
+          exclude_reply_user_ids: [botUserId]
+        }
+      };
+
+      const requestBodyParams: Record<string, string> = {
+        text: message,
+        'reply.in_reply_to_tweet_id': tweetId,
+        'reply.exclude_reply_user_ids': botUserId
+      };
+
+      const allParams: Record<string, string> = {
+        ...oauthParams,
+        ...requestBodyParams
+      };
       const sortedParams = Object.keys(allParams).sort().map(key => `${key}=${encodeURIComponent(allParams[key])}`).join('&');
 
       const baseString = `POST&${encodeURIComponent(url)}&${encodeURIComponent(sortedParams)}`;
@@ -433,15 +451,6 @@ async function postTweetReply(tweetId: string, message: string) {
       oauthParams.oauth_signature = signature;
 
       const authHeader = 'OAuth ' + Object.keys(oauthParams).sort().map(key => `${key}="${encodeURIComponent(oauthParams[key])}"`).join(', ');
-
-      const botUserId = await getJarvisUserId();
-      const requestBody = {
-        text: message,
-        reply: {
-          in_reply_to_tweet_id: tweetId,
-          exclude_reply_user_ids: [botUserId]
-        }
-      };
 
       const response = await fetch(url, {
         method: 'POST',
