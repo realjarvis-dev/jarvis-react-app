@@ -252,9 +252,9 @@ function shouldFilterMention(mention: TwitterMention, author: TwitterUser | unde
     }
   }
 
-  if (author.public_metrics && author.public_metrics.followers_count < 5) {
-    return { shouldFilter: true, reason: `Too few followers (${author.public_metrics.followers_count})` };
-  }
+  // if (author.public_metrics && author.public_metrics.followers_count < 5) {
+  //   return { shouldFilter: true, reason: `Too few followers (${author.public_metrics.followers_count})` };
+  // }
 
   const mentionCount = (mention.text.match(/@\w+/g) || []).length;
   if (mentionCount > 3) {
