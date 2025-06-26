@@ -21,12 +21,20 @@ const title = 'Jarvis'
 const description = 'Unifying Web3 with autonomous agent.'
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://jarvis-investment-agent.onrender.com'),
+  metadataBase: new URL('https://app.thejarvis.xyz'),
   title,
   description,
   openGraph: {
     title,
-    description
+    description,
+    images: [
+      {
+        url: '/opengraph-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Jarvis - Unifying Web3 with autonomous agent'
+      }
+    ]
   },
   twitter: {
     title,
