@@ -18,7 +18,7 @@ const fontSans = FontSans({
 })
 
 const title = 'Jarvis'
-const description = 'Autonomous AI that opens investing to all.'
+const description = 'Unifying Web3 with autonomous agent.'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://jarvis-investment-agent.onrender.com'),
