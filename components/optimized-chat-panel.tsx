@@ -456,7 +456,7 @@ export function ChatPanel({
                   <WithTooltip tooltipText="Enter Demo Mode: no gas, no losses, just learning. Demo network is refreshed every 7 days.">
                     <DemoToggle />
                   </WithTooltip>
-                    <ChainSelector />
+                  <ChainSelector />
                 </div>
                 <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                   {messages.length > 0 && (
@@ -500,6 +500,12 @@ export function ChatPanel({
                 </div>
               </div>
             </div>
+            {!showEmptyScreenContent && mounted && (
+              <div className="flex items-center justify-center p-2 sm:p-3 text-[10px] sm:text-xs text-center text-muted-foreground">
+                Jarvis is experimental. Always verify transaction details before
+                confirming.
+              </div>
+            )}
 
             {showEmptyScreenContent && mounted && (
               <div className="mt-2 overflow-hidden">
