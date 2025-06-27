@@ -2,19 +2,23 @@
 
 import { PrivyProvider } from '@privy-io/react-auth'
 import { useTheme } from 'next-themes'
-import {mainnet} from 'viem/chains';
+import { mainnet } from 'viem/chains';
 
 import {addRpcUrlOverrideToChain} from '@privy-io/chains';
+import { useNetwork } from '@/lib/network/context';
 
 
 
 export default function WrappedPrivyProvider({ children }: { children: React.ReactNode }) {
-  const mainnetOverride = addRpcUrlOverrideToChain(mainnet, "http://127.0.0.1:8545");
+
+  const { allNetworkConfigList } = useNetwork()
+  const supportedChains = Array.from(new Set(allNetworkConfigList.map(network => network.viemChain)))
+
   const { theme } = useTheme()
   return <PrivyProvider 
   appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID!}
   config={{
-  // "supportedChains": [mainnetOverride],
+  "supportedChains": supportedChains,
   "appearance": {
     "accentColor": "#6A6FF5",
     "theme": "light",

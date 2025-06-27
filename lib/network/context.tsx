@@ -48,6 +48,7 @@ interface NetworkContextType {
   isDemoMode: boolean
   allChainTypes: ChainType[]
   activeNetwork: NetworkConfig
+  allNetworkConfigList: NetworkConfig[]
   setSelectedChain: (chain: ChainType) => void
   setIsDemoMode: (enabled: boolean) => void
 }
@@ -136,12 +137,13 @@ export function NetworkProvider({ children }: NetworkProviderProps) {
   const wrappedSetIsDemoMode = (enabled: boolean) => {
     setIsDemoModeInternal(enabled)
   }
-
+  const allNetworkConfigList = Object.values(allNetworkConfigs)
   const value: NetworkContextType = {
     selectedChain,
     isDemoMode,
     activeNetwork,
     allChainTypes,
+    allNetworkConfigList,
     setSelectedChain: wrappedSetSelectedChain,
     setIsDemoMode: wrappedSetIsDemoMode
   }
