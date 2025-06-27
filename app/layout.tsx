@@ -26,13 +26,19 @@ export const metadata: Metadata = {
   description,
   openGraph: {
     title,
-    description
+    description,
+    images: [
+      '/opengraph-image.png?v=20250627-1'
+    ]
   },
   twitter: {
     title,
     description,
     card: 'summary_large_image',
-    creator: '@JarvisCryptoAI'
+    creator: '@JarvisCryptoAI',
+    images: [
+      '/opengraph-image.png?v=20250627-1'
+    ]
   }
 }
 
