@@ -16,6 +16,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import useIsMobile from '@/lib/hooks/use-is-mobile';
+import { useNetwork } from '@/lib/network/context';
 
 const desktopEvmText = 'Delegate EVM wallet'
 const desktopSolText = 'Delegate Sol wallet'
@@ -34,7 +35,7 @@ const mobileNoDelegationsText = 'No delegations'
 export function WalletMenuItems() {
   const { user, ready: userReady } = usePrivy()
   const isMobile = useIsMobile()
-  
+  const { activeNetwork } = useNetwork()
   const router = useRouter()
   const { wallets: solanaWallets, ready: solanaReady } = useSolanaWallets()
   const { delegateWallet, revokeWallets } = useHeadlessDelegatedActions();
@@ -44,6 +45,8 @@ export function WalletMenuItems() {
   const { wallets: evmWallets, ready: evmReady } = useWallets()
   const [evmWalletToDelegate, setEvmWalletToDelegate] = useState<ConnectedWallet | undefined>(undefined);
   const [evmWalletAlreadyDelegated, setEvmWalletAlreadyDelegated] = useState<boolean>(false);
+
+
 
   useEffect(() => {
     if (solanaReady) {
@@ -84,7 +87,7 @@ export function WalletMenuItems() {
   const { fundWallet }= useFundWallet();
   const handleFundWallet = async () => {
     if (!evmReady || !evmWalletToDelegate) return;
-    await fundWallet(evmWalletToDelegate.address);
+    await fundWallet(evmWalletToDelegate.address, {chain: activeNetwork.viemChain});
   }
 
   const handleDelegateEVMWallet = async () => {

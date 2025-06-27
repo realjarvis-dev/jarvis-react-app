@@ -3,7 +3,7 @@ import type { Network } from 'alchemy-sdk'
 // and config.ts might import types from this file, creating a potential cycle
 // for values, but not for types.
 import type { allNetworkConfigs } from './config'
-
+import type { Chain } from 'viem'
 export const USER_SELECTED_NETWORK_COOKIE_KEY = 'user_selected_network'
 export const USER_DEMO_MODE_COOKIE_KEY = 'user_demo_mode'
 
@@ -49,4 +49,5 @@ export interface NetworkConfig {
   /** Optional: Icon for the chain */
   readonly icon?: string // Added as per chain-selector.tsx's ChainIcons
   readonly disabled?: boolean // Added optional disabled field
+  readonly viemChain: Chain
 }
