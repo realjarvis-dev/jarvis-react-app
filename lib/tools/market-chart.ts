@@ -24,6 +24,7 @@ export const marketChartTool = tool({
       .describe('Target currency for price data (default: "usd")')
   }),
   execute: async (params, context?: ToolContext) => {
+    console.log("market_chart tool called", params)
     const { coin_id, days = 7, currency = 'usd' } = params;
     
     try {
