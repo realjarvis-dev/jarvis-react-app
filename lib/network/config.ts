@@ -1,5 +1,6 @@
 import { Network } from 'alchemy-sdk'
 import type { ChainType, NetworkConfig } from './types'
+import { base, mainnet, polygon, optimism, arbitrum, berachain, bsc, sonic, mantle, unichain } from 'viem/chains'
 
 // Individual network configurations
 // These objects must match the NetworkConfig interface from types.ts
@@ -15,7 +16,8 @@ export const ethereumConfig: NetworkConfig = {
   isDemo: false,
   alchemyNetwork: Network.ETH_MAINNET,
   icon: '/icons/chains/ethereum-eth.svg',
-  nativeAsset: { name: 'Ether', symbol: 'ETH', decimals: 18 }
+  nativeAsset: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+  viemChain: mainnet
 }
 
 export const unichainConfig: NetworkConfig = {
@@ -27,7 +29,8 @@ export const unichainConfig: NetworkConfig = {
   isDemo: false,
   alchemyNetwork: Network.UNICHAIN_MAINNET,
   icon: '/icons/chains/unichain.svg',
-  nativeAsset: { name: 'Ether', symbol: 'ETH', decimals: 18 }
+  nativeAsset: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+  viemChain: unichain
 }
 
 export const bnbSmartChainConfig: NetworkConfig = {
@@ -39,7 +42,8 @@ export const bnbSmartChainConfig: NetworkConfig = {
   isDemo: false,
   alchemyNetwork: Network.BNB_MAINNET,
   icon: 'https://altcoinsbox.com/wp-content/uploads/2023/01/bnb-chain-binance-smart-chain-logo.svg',
-  nativeAsset: { name: 'BNB', symbol: 'BNB', decimals: 18 }
+  nativeAsset: { name: 'BNB', symbol: 'BNB', decimals: 18 },
+  viemChain: bsc
 }
 
 export const sonicConfig: NetworkConfig = {
@@ -51,7 +55,8 @@ export const sonicConfig: NetworkConfig = {
   isDemo: false,
   alchemyNetwork: Network.SONIC_MAINNET,
   icon: '/icons/chains/sonic-light.svg',
-  nativeAsset: { name: 'S', symbol: 'S', decimals: 18 }
+  nativeAsset: { name: 'S', symbol: 'S', decimals: 18 },
+  viemChain: sonic
 }
 
 
@@ -65,7 +70,8 @@ export const berachainConfig: NetworkConfig = {
   scanLink: 'berascan.com',
   isDemo: false,
   icon: '/icons/chains/berachain.svg',
-  nativeAsset: { name: 'BERA Token', symbol: 'BERA', decimals: 18 }
+  nativeAsset: { name: 'BERA Token', symbol: 'BERA', decimals: 18 },
+  viemChain: berachain
 }
 
 export const baseConfig: NetworkConfig = {
@@ -78,7 +84,8 @@ export const baseConfig: NetworkConfig = {
   isDemo: false,
   alchemyNetwork: Network.BASE_MAINNET,
   icon: 'https://raw.githubusercontent.com/Aero25x/Cryptocurrencies-Logo/main/Base.svg',
-  nativeAsset: { name: 'Ether', symbol: 'ETH', decimals: 18 }
+  nativeAsset: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+  viemChain: base
 }
 
 export const arbitrumConfig: NetworkConfig = {
@@ -91,7 +98,8 @@ export const arbitrumConfig: NetworkConfig = {
   isDemo: false,
   alchemyNetwork: Network.ARB_MAINNET,
   icon: 'https://raw.githubusercontent.com/Aero25x/Cryptocurrencies-Logo/main/Arbitrum.svg',
-  nativeAsset: { name: 'Ether', symbol: 'ETH', decimals: 18 }
+  nativeAsset: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+  viemChain: arbitrum
 }
 
 export const polygonConfig: NetworkConfig = {
@@ -104,7 +112,8 @@ export const polygonConfig: NetworkConfig = {
   isDemo: false,
   alchemyNetwork: Network.MATIC_MAINNET,
   icon: 'https://upload.wikimedia.org/wikipedia/commons/2/21/Polygon_Icon.svg',
-  nativeAsset: { name: 'POL', symbol: 'POL', decimals: 18 }
+  nativeAsset: { name: 'POL', symbol: 'POL', decimals: 18 },
+  viemChain: polygon
 }
 
 export const optimismConfig: NetworkConfig = {
@@ -117,7 +126,8 @@ export const optimismConfig: NetworkConfig = {
   isDemo: false,
   alchemyNetwork: Network.OPT_MAINNET,
   icon: 'https://raw.githubusercontent.com/Aero25x/Cryptocurrencies-Logo/main/Optimism.svg',
-  nativeAsset: { name: 'Ether', symbol: 'ETH', decimals: 18 }
+  nativeAsset: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+  viemChain: optimism
 }
 
 export const mantleConfig: NetworkConfig = {
@@ -129,7 +139,8 @@ export const mantleConfig: NetworkConfig = {
   isDemo: false,
   alchemyNetwork: Network.ETH_MAINNET,
   icon: '/icons/chains/mantle.png',
-  nativeAsset: { name: 'Mantle', symbol: 'MNT', decimals: 18 }
+  nativeAsset: { name: 'Mantle', symbol: 'MNT', decimals: 18 },
+  viemChain: mantle
 }
 
 /**
@@ -169,7 +180,8 @@ export const TENDERLY_DEMO_CONFIG: NetworkConfig = {
   isDemo: true,
   alchemyNetwork: Network.ETH_MAINNET,
   icon: '/icons/chains/ethereum-eth.svg', // Use Ethereum icon for demo
-  nativeAsset: { name: 'Ether', symbol: 'ETH', decimals: 18 }
+  nativeAsset: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+  viemChain: mainnet
 }
 
 /**
