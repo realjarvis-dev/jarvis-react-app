@@ -1,6 +1,7 @@
 'use client'
 
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu'
+import {useFundWallet} from '@privy-io/react-auth';
 import { ArrowRightCircle, Unlink2, Wallet } from 'lucide-react'
 import {
     usePrivy,
@@ -80,6 +81,11 @@ export function WalletMenuItems() {
     console.log('Wallet details')
     router.push('/wallet')
   }
+  const { fundWallet }= useFundWallet();
+  const handleFundWallet = async () => {
+    if (!evmReady || !evmWalletToDelegate) return;
+    await fundWallet(evmWalletToDelegate.address);
+  }
 
   const handleDelegateEVMWallet = async () => {
     if (!evmWalletToDelegate || !evmReady || !userReady) return;
@@ -102,6 +108,10 @@ export function WalletMenuItems() {
 
   return (
     <>
+      <DropdownMenuItem onClick={handleFundWallet} disabled={!evmReady || !evmWalletToDelegate}>
+        <Wallet className="mr-2 h-4 w-4" />
+        <span>Fund Wallet</span>
+      </DropdownMenuItem>
       <DropdownMenuItem onClick={handleDelegateEVMWallet} disabled={evmWalletAlreadyDelegated || !evmReady || !userReady}>
         <ArrowRightCircle className="mr-2 h-4 w-4" />
         <span>{(isMobile ? (evmWalletAlreadyDelegated ? mobileEvmAlreadyDelegatedText : mobileEvmText) : (evmWalletAlreadyDelegated ? desktopEvmAlreadyDelegatedText : desktopEvmText))}</span>
