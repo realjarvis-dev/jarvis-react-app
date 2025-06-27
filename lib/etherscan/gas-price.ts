@@ -13,5 +13,3 @@ export async function getBeraProposedGasPrice(): Promise<BigInt> {
   const response = await axios.get(beraScanApiUrl + "?module=proxy&action=eth_gasPrice&apikey=" + process.env.BERASCAN_API_KEY)
   return hexToBigInt(response.data.result)
 }
-
-console.log(await getProposedGasPrice(56))

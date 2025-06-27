@@ -1,8 +1,8 @@
-import { researcher } from '@/lib/agents/researcher';
-import { streamText } from 'ai';
+import { researcher } from '@/lib/agents/researcher'
+import { streamText } from 'ai'
 
 export async function processTwitterQuery(
-  query: string, 
+  query: string,
   userId: string
 ): Promise<string> {
   try {
@@ -10,45 +10,50 @@ export async function processTwitterQuery(
 
 When creating social media content, remember Twitter has a 280-character limit, so keep tweets concise and punchy while maintaining maximum degen energy.
 
-Query: ${query}`;
+Query: ${query}`
 
     const researcherResult = researcher({
       messages: [{ role: 'user', content: twitterOptimizedQuery }],
       model: 'openai:gpt-4o-mini',
-      allowWeb3Tools: 'false',
+      allowWeb3Tools: 'readonly', // New value to indicate read-only web3 access
       userEvmWallet: undefined,
       userSolWallet: undefined,
       searchMode: true,
       networkContext: undefined
-    });
+    })
 
     const result = await streamText({
       ...researcherResult,
-      maxTokens: 500,
-    });
+      maxTokens: 500
+    })
 
-    let fullText = '';
+    let fullText = ''
     for await (const textPart of result.textStream) {
-      fullText += textPart;
+      fullText += textPart
     }
 
-    return formatTwitterResponse(fullText);
-    
+    return formatTwitterResponse(fullText)
   } catch (error) {
-    console.error('Error processing Twitter query:', error);
-    return 'Sorry, I encountered an error processing your investment research query. Please try again later.';
+    console.error('Error processing Twitter query:', error)
+    return 'Sorry, I encountered an error processing your investment research query. Please try again later.'
   }
 }
 
 function formatTwitterResponse(result: string): string {
-  const maxLength = 250;
-  
-  let cryptoResponse = result.trim();
-  
+  const maxLength = 250
+
+  let cryptoResponse = result.trim()
+
   cryptoResponse = cryptoResponse
-    .replace(/^(Here's|Here are|Based on|According to|The|This|It appears that|It seems that)\s*/gi, '')
+    .replace(
+      /^(Here's|Here are|Based on|According to|The|This|It appears that|It seems that)\s*/gi,
+      ''
+    )
     .replace(/\s+(currently|right now|at the moment|as of now)\s+/gi, ' ')
-    .replace(/\s+(you should know|it's important to note|keep in mind)\s+/gi, ' ')
+    .replace(
+      /\s+(you should know|it's important to note|keep in mind)\s+/gi,
+      ' '
+    )
     .replace(/\bBitcoin\b/gi, 'Bitcoin 🟠')
     .replace(/\bETH\b/gi, 'ETH 💎')
     .replace(/\bEthereum\b/gi, 'Ethereum 💎')
@@ -57,28 +62,28 @@ function formatTwitterResponse(result: string): string {
     .replace(/\bdecrease\b/gi, 'dump 📉')
     .replace(/\bhigh\b/gi, 'ATH 🔥')
     .replace(/\blow\b/gi, 'bottom 🩸')
-    .replace(/\s+/g, ' ');
-  
+    .replace(/\s+/g, ' ')
+
   if (!cryptoResponse.startsWith('GM') && !cryptoResponse.startsWith('🚀')) {
-    cryptoResponse = '🚀 ' + cryptoResponse;
+    cryptoResponse = '🚀 ' + cryptoResponse
   }
-  
-  return cryptoResponse.length > maxLength 
+
+  return cryptoResponse.length > maxLength
     ? truncateAtWordBoundary(cryptoResponse, maxLength - 3) + '...'
-    : cryptoResponse;
+    : cryptoResponse
 }
 
 function truncateAtWordBoundary(text: string, maxLength: number): string {
   if (text.length <= maxLength) {
-    return text;
+    return text
   }
-  
-  const truncated = text.substring(0, maxLength);
-  const lastSpaceIndex = truncated.lastIndexOf(' ');
-  
+
+  const truncated = text.substring(0, maxLength)
+  const lastSpaceIndex = truncated.lastIndexOf(' ')
+
   if (lastSpaceIndex > maxLength * 0.7) {
-    return truncated.substring(0, lastSpaceIndex);
+    return truncated.substring(0, lastSpaceIndex)
   }
-  
-  return truncated;
+
+  return truncated
 }

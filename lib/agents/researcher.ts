@@ -95,10 +95,15 @@ const get_system_prompt = (
 
   // Generate web3 tools list dynamically
   const generateWeb3ToolsList = () => {
-    const web3Tools = registry
-      .getToolNamesByCategory(ToolCategory.WEB3)
+    const web3ReadTools = registry
+      .getToolNamesByCategory(ToolCategory.WEB3_READ)
       .filter((tool: string) => supportedTools.includes(tool))
-    return web3Tools.length > 0 ? web3Tools.join('\n- ') : ''
+    const web3WriteTools = registry
+      .getToolNamesByCategory(ToolCategory.WEB3_WRITE)
+      .filter((tool: string) => supportedTools.includes(tool))
+
+    const allWeb3Tools = [...web3ReadTools, ...web3WriteTools]
+    return allWeb3Tools.length > 0 ? allWeb3Tools.join('\n- ') : ''
   }
 
   // Generate read-only tools section dynamically
@@ -344,7 +349,10 @@ export function researcher({
 
     const maxSteps = registry.getMaxSteps(model, searchMode)
 
-    let web3_tools = registry.getToolNamesByCategory(ToolCategory.WEB3)
+    let web3_tools = [
+      ...registry.getToolNamesByCategory(ToolCategory.WEB3_READ),
+      ...registry.getToolNamesByCategory(ToolCategory.WEB3_WRITE)
+    ]
 
     // Apply network filtering to web3 tools if networkContext is provided
     if (networkContext) {
@@ -361,22 +369,32 @@ export function researcher({
     if (allowWeb3Tools === 'false') {
       supportedTools = supportedTools.filter(tool => !web3_tools.includes(tool))
       web3_tools = []
+    } else if (allowWeb3Tools === 'readonly') {
+      // For Twitter agent and other read-only use cases, only allow WEB3_READ tools
+      const web3WriteTools = registry.getToolNamesByCategory(
+        ToolCategory.WEB3_WRITE
+      )
+      supportedTools = supportedTools.filter(
+        tool => !web3WriteTools.includes(tool)
+      )
+      web3_tools = web3_tools.filter(tool => !web3WriteTools.includes(tool))
     }
 
     let userWalletInfo
     if (userEvmWallet === undefined) {
-      userWalletInfo =
-        "The user is not logged in. Don't use any web3 tools. If the user wants to use web3 tools, ask them to login friendly"
+      userWalletInfo = ""
+      // userWalletInfo =
+      //   "The user is not logged in. Don't use any web3 write tools. If the user wants to use web3 write tools, ask them to login friendly"
     } else {
       userWalletInfo = `
 User EVM wallet address: ${userEvmWallet?.address}, delegated status: ${userEvmWallet?.delegated}
 You can only execute on behalf of the user if they have wallets and have delegated you access to their wallet.
 `
-// userWalletInfo = `
-// User EVM wallet address: ${userEvmWallet?.address}, delegated status: ${userEvmWallet?.delegated}
-// User Solana wallet address: ${userSolWallet?.address}, delegated status: ${userSolWallet?.delegated}
-// You can only execute on behalf of the user if they have wallets and have delegated you access to their wallet.
-// `
+      // userWalletInfo = `
+      // User EVM wallet address: ${userEvmWallet?.address}, delegated status: ${userEvmWallet?.delegated}
+      // User Solana wallet address: ${userSolWallet?.address}, delegated status: ${userSolWallet?.delegated}
+      // You can only execute on behalf of the user if they have wallets and have delegated you access to their wallet.
+      // `
     }
 
     // Add network context info to the prompt
@@ -393,7 +411,12 @@ Network Context:
     }
 
     // Create tool list from registry with network context and user context
-    const tool_lst = createToolList(supportedTools, registry, networkContext, isNewUser)
+    const tool_lst = createToolList(
+      supportedTools,
+      registry,
+      networkContext,
+      isNewUser
+    )
 
     const o3MiniTools = networkContext
       ? registry.getSupportedToolNamesForNetwork(
