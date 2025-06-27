@@ -16,7 +16,7 @@ Query: ${query}`
 
     const researcherResult = researcher({
       messages: [{ role: 'user', content: twitterOptimizedQuery }],
-      model: 'openai:gpt-4o-mini',
+      model: 'openai:gpt-4o',
       allowWeb3Tools: 'readonly', // New value to indicate read-only web3 access
       userEvmWallet: undefined,
       userSolWallet: undefined,
