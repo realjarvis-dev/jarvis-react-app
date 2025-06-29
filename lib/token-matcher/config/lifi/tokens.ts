@@ -429,13 +429,6 @@ export const tokensByChain = {
     },
     {
       "chainId": 1,
-      "address": "0x0C9c7712C83B3C70e7c5E11100D33D9401BdF9dd",
-      "symbol": "WOMBAT",
-      "name": "Wombat",
-      "decimals": 18
-    },
-    {
-      "chainId": 1,
       "address": "0x8eEF5a82E6Aa222a60F009ac18c24EE12dBf4b41",
       "symbol": "TXL",
       "name": "Tixl Token",
@@ -3904,13 +3897,6 @@ export const tokensByChain = {
       "address": "0x5218E472cFCFE0b64A064F055B43b4cdC9EfD3A6",
       "symbol": "eRSDL",
       "name": "Residual Token",
-      "decimals": 18
-    },
-    {
-      "chainId": 1,
-      "address": "0x4CF488387F035FF08c371515562CBa712f9015d4",
-      "symbol": "WPR",
-      "name": "WePower",
       "decimals": 18
     },
     {
@@ -17926,6 +17912,13 @@ export const tokensByChain = {
       "symbol": "PC",
       "name": "PentagonChain",
       "decimals": 18
+    },
+    {
+      "chainId": 1,
+      "address": "0xce8c60fd8390eFCc3Fc66A3f0bd64BEb969e750E",
+      "symbol": "aEthLidotETH",
+      "name": "Aave Ethereum Lido tETH",
+      "decimals": 18
     }
   ],
   "10": [
@@ -20362,13 +20355,6 @@ export const tokensByChain = {
     },
     {
       "chainId": 25,
-      "address": "0xfF9620d9F80F80056cbE4Bb84403a9E9C5174213",
-      "symbol": "YGG",
-      "name": "Yield Guild Games Token",
-      "decimals": 18
-    },
-    {
-      "chainId": 25,
       "address": "0x0dCb0CB0120d355CdE1ce56040be57Add0185BAa",
       "symbol": "AUTO",
       "name": "AUTOv2",
@@ -20491,13 +20477,6 @@ export const tokensByChain = {
       "address": "0x6B66fCB66Dba37F99876a15303b759c73fc54ed0",
       "symbol": "cHIBIKI",
       "name": "Hibiki.finance",
-      "decimals": 18
-    },
-    {
-      "chainId": 25,
-      "address": "0x6582C738660bf0701f05b04DcE3c4E5Fcfcda47a",
-      "symbol": "DUSD",
-      "name": "Darkness Dollar",
       "decimals": 18
     },
     {
@@ -24382,6 +24361,13 @@ export const tokensByChain = {
       "address": "0x2dfF88A56767223A5529eA5960Da7A3F5f766406",
       "symbol": "ID",
       "name": "SPACE ID",
+      "decimals": 18
+    },
+    {
+      "chainId": 56,
+      "address": "0x301AF3Eff0c904Dc5DdD06FAa808f653474F7FcC",
+      "symbol": "UNB",
+      "name": "Unbound",
       "decimals": 18
     },
     {
@@ -35727,13 +35713,6 @@ export const tokensByChain = {
     },
     {
       "chainId": 137,
-      "address": "0xB3886B3aAA6087B3d185dAeb89AC113D195b5Eb9",
-      "symbol": "ROBO",
-      "name": "RoboHero",
-      "decimals": 18
-    },
-    {
-      "chainId": 137,
       "address": "0xb5B8381B67248F832c7961bd265f021CD8D291A4",
       "symbol": "ZLW",
       "name": "ZELWIN",
@@ -37348,6 +37327,13 @@ export const tokensByChain = {
       "symbol": "AGIX",
       "name": "SingularityNET Token (PoS)",
       "decimals": 8
+    },
+    {
+      "chainId": 137,
+      "address": "0x0C9c7712C83B3C70e7c5E11100D33D9401BdF9dd",
+      "symbol": "WOMBAT",
+      "name": "Wombat",
+      "decimals": 18
     },
     {
       "chainId": 137,
@@ -39140,13 +39126,6 @@ export const tokensByChain = {
       "symbol": "MNT",
       "name": "Mynth",
       "decimals": 6
-    },
-    {
-      "chainId": 137,
-      "address": "0xb02eF03245fc7DF987BBd876768E6d441b7099B6",
-      "symbol": "JET",
-      "name": "Satoshi Airline",
-      "decimals": 8
     },
     {
       "chainId": 137,
@@ -41709,13 +41688,6 @@ export const tokensByChain = {
       "address": "0x21Ada0D2aC28C3A5Fa3cD2eE30882dA8812279B6",
       "symbol": "OATH",
       "name": "Oath Token",
-      "decimals": 18
-    },
-    {
-      "chainId": 250,
-      "address": "0x23cBC7C95a13071562af2C4Fb1Efa7a284d0543a",
-      "symbol": "fSWAMP",
-      "name": "fSWAMP Token",
       "decimals": 18
     },
     {
@@ -47914,6 +47886,13 @@ export const tokensByChain = {
     },
     {
       "chainId": 8453,
+      "address": "0x937a1cFAF0A3d9f5Dc4D0927F72ee5e3e5F82a00",
+      "symbol": "Cocoro",
+      "name": "Cocoro",
+      "decimals": 18
+    },
+    {
+      "chainId": 8453,
       "address": "0xC9d23ED2ADB0f551369946BD377f8644cE1ca5c4",
       "symbol": "HYPER",
       "name": "Hyperlane",
@@ -50785,13 +50764,6 @@ export const tokensByChain = {
     },
     {
       "chainId": 42161,
-      "address": "0x20547341E58fB558637FA15379C92e11F7b7F710",
-      "symbol": "MOZ",
-      "name": "Mozaic Token",
-      "decimals": 18
-    },
-    {
-      "chainId": 42161,
       "address": "0x1Dbc1809486460DcD189b8a15990bCa3272Ee04e",
       "symbol": "USDCx",
       "name": "Super USD Coin (Arb1)",
@@ -52969,6 +52941,13 @@ export const tokensByChain = {
     },
     {
       "chainId": 42161,
+      "address": "0xc608Dfb90A430Df79a8a1eDBC8be7f1A0Eb4E763",
+      "symbol": "fETH",
+      "name": "Fractional ETH",
+      "decimals": 18
+    },
+    {
+      "chainId": 42161,
       "address": "0x3A67Ca29DdF5eCf1844E811C43F27bD79F9EC310",
       "symbol": "APW",
       "name": "APWine Token",
@@ -53868,6 +53847,13 @@ export const tokensByChain = {
       "address": "0x61B79e67B96a63661c7E929DD1C0b10F0089D590",
       "symbol": "ARC",
       "name": "ARC",
+      "decimals": 18
+    },
+    {
+      "chainId": 42161,
+      "address": "0x50f47392BDA8c14eBeF3e443E1201B99Fad68Ab0",
+      "symbol": "BSJ",
+      "name": "BASENJI",
       "decimals": 18
     },
     {
@@ -57276,6 +57262,13 @@ export const tokensByChain = {
       "address": "0xC1d02E488a9Ce2481BFdcd797d5373Dd2E70a9C2",
       "symbol": "SHAKE",
       "name": "SHAKE token by SpaceSwap v2",
+      "decimals": 18
+    },
+    {
+      "chainId": 43114,
+      "address": "0xD4d026322C88C2d49942A75DfF920FCfbC5614C1",
+      "symbol": "DEP",
+      "name": "DEAPCOIN",
       "decimals": 18
     },
     {
