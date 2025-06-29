@@ -42,10 +42,20 @@ export async function fetchProtocols(): Promise<DeFiLlamaProtocol[]> {
  */
 export async function fetchYields(): Promise<DeFiLlamaYield[]> {
   try {
-    const response = await apiClient.get<{ data: DeFiLlamaYield[] }>('/yields')
-    return response.data.data || []
+    console.log('🔍 Fetching DeFiLlama yields from yields.llama.fi...')
+    // Use the correct yields API endpoint
+    const response = await axios.get<{ status: string, data: DeFiLlamaYield[] }>('https://yields.llama.fi/pools', {
+      timeout: TIMEOUT
+    })
+    console.log(`✅ Fetched ${response.data.data.length} yield pools from DeFiLlama`)
+    
+    // Limit to first 300 yield pools for performance
+    const limitedData = response.data.data.slice(0, 300)
+    console.log(`📊 Processing ${limitedData.length} yield pools (limited for performance)`)
+    
+    return limitedData
   } catch (error) {
-    console.error('Failed to fetch DeFiLlama yields:', error)
+    console.error('❌ Failed to fetch DeFiLlama yields:', error)
     throw new Error('Failed to fetch yields data')
   }
 }

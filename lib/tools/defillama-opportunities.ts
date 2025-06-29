@@ -23,9 +23,12 @@ export const defiOpportunitiesTool = tool({
       let yields: any[] = []
       if (includeYields) {
         try {
+          console.log('📈 Fetching yields data for opportunities analysis...')
           yields = await fetchYields()
+          console.log(`✅ Successfully fetched ${yields.length} yield pools`)
         } catch (error) {
-          console.warn('Failed to fetch yields data:', error)
+          console.warn('⚠️ Failed to fetch yields data, continuing without yields:', error)
+          // Continue without yields data - this is not critical for basic functionality
         }
       }
 
