@@ -95,63 +95,63 @@ export function getMomentum(protocol: DeFiLlamaProtocol): 'strong' | 'moderate' 
 }
 
 /**
- * Get category color for UI
+ * Get category color for UI - Professional consistent styling
  */
 export function getCategoryColor(category: string): string {
   const categoryColors: Record<string, string> = {
-    'Lending': 'bg-blue-100 text-blue-800',
-    'DEX': 'bg-green-100 text-green-800',
-    'Liquid Staking': 'bg-purple-100 text-purple-800',
-    'Restaking': 'bg-indigo-100 text-indigo-800',
-    'Yield': 'bg-yellow-100 text-yellow-800',
-    'CDP': 'bg-orange-100 text-orange-800',
-    'Bridge': 'bg-gray-100 text-gray-800',
-    'CEX': 'bg-red-100 text-red-800',
-    'Derivatives': 'bg-pink-100 text-pink-800',
-    'Synthetics': 'bg-cyan-100 text-cyan-800',
-    'Insurance': 'bg-emerald-100 text-emerald-800',
-    'Options': 'bg-violet-100 text-violet-800',
-    'Launchpad': 'bg-rose-100 text-rose-800',
-    'Gaming': 'bg-amber-100 text-amber-800',
-    'NFT': 'bg-fuchsia-100 text-fuchsia-800',
-    'Cross Chain': 'bg-teal-100 text-teal-800',
-    'Liquid Restaking': 'bg-slate-100 text-slate-800',
-    'RWA': 'bg-stone-100 text-stone-800',
-    'Basis Trading': 'bg-zinc-100 text-zinc-800'
+    'Lending': 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800',
+    'DEX': 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800',
+    'Liquid Staking': 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-800',
+    'Restaking': 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-300 dark:border-indigo-800',
+    'Yield': 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800',
+    'CDP': 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/50 dark:text-orange-300 dark:border-orange-800',
+    'Bridge': 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-950/50 dark:text-slate-300 dark:border-slate-800',
+    'CEX': 'bg-red-50 text-red-700 border-red-200 dark:bg-red-950/50 dark:text-red-300 dark:border-red-800',
+    'Derivatives': 'bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-950/50 dark:text-pink-300 dark:border-pink-800',
+    'Synthetics': 'bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-950/50 dark:text-cyan-300 dark:border-cyan-800',
+    'Insurance': 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/50 dark:text-teal-300 dark:border-teal-800',
+    'Options': 'bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-950/50 dark:text-violet-300 dark:border-violet-800',
+    'Launchpad': 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-800',
+    'Gaming': 'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-950/50 dark:text-yellow-300 dark:border-yellow-800',
+    'NFT': 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200 dark:bg-fuchsia-950/50 dark:text-fuchsia-300 dark:border-fuchsia-800',
+    'Cross Chain': 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/50 dark:text-sky-300 dark:border-sky-800',
+    'Liquid Restaking': 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-300 dark:border-indigo-800',
+    'RWA': 'bg-stone-50 text-stone-700 border-stone-200 dark:bg-stone-950/50 dark:text-stone-300 dark:border-stone-800',
+    'Basis Trading': 'bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-zinc-950/50 dark:text-zinc-300 dark:border-zinc-800'
   }
   
-  return categoryColors[category] || 'bg-gray-100 text-gray-800'
+  return categoryColors[category] || 'bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-950/50 dark:text-gray-300 dark:border-gray-800'
 }
 
 /**
- * Get risk color for UI
+ * Get risk color for UI - Professional consistent styling
  */
 export function getRiskColor(risk: 'low' | 'medium' | 'high'): string {
   switch (risk) {
     case 'low':
-      return 'bg-green-100 text-green-800'
+      return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800'
     case 'medium':
-      return 'bg-yellow-100 text-yellow-800'
+      return 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800'
     case 'high':
-      return 'bg-red-100 text-red-800'
+      return 'bg-red-50 text-red-700 border-red-200 dark:bg-red-950/50 dark:text-red-300 dark:border-red-800'
     default:
-      return 'bg-gray-100 text-gray-800'
+      return 'bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-950/50 dark:text-gray-300 dark:border-gray-800'
   }
 }
 
 /**
- * Get momentum color for UI
+ * Get momentum color for UI - Professional consistent styling
  */
 export function getMomentumColor(momentum: 'strong' | 'moderate' | 'weak'): string {
   switch (momentum) {
     case 'strong':
-      return 'bg-green-100 text-green-800'
+      return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800'
     case 'moderate':
-      return 'bg-blue-100 text-blue-800'
+      return 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800'
     case 'weak':
-      return 'bg-red-100 text-red-800'
+      return 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/50 dark:text-orange-300 dark:border-orange-800'
     default:
-      return 'bg-gray-100 text-gray-800'
+      return 'bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-950/50 dark:text-gray-300 dark:border-gray-800'
   }
 }
 
