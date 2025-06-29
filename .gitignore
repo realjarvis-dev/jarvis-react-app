@@ -38,4 +38,7 @@ next-env.d.ts
 # cursor
 .cursor/rules/private
 
+# claude code
+.claude/
+
 /lib/kodiak/docs
