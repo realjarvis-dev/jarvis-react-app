@@ -20,12 +20,16 @@ export const defiProtocolsTool = tool({
   }),
   execute: async ({ category, chain, minTvl, sortBy, view, limit }) => {
     try {
+      console.log('🚀 Starting DeFiLlama protocols tool execution...')
       const rawProtocols = await fetchProtocols()
+      console.log(`📊 Processing ${rawProtocols.length} raw protocols`)
       
       // Sanitize and filter out invalid protocols
       const protocols = rawProtocols
         .map(sanitizeProtocol)
         .filter((p): p is NonNullable<typeof p> => p !== null)
+      
+      console.log(`✨ Sanitized ${protocols.length} valid protocols`)
 
       let filteredProtocols
 
@@ -50,13 +54,15 @@ export const defiProtocolsTool = tool({
           filteredProtocols = getTopGainers(protocols, limit)
       }
 
+      console.log(`🎯 Filtered to ${filteredProtocols.length} protocols for view: ${view}`)
+
       const summary = view === 'top_gainers' 
         ? `Found ${filteredProtocols.length} top DeFi gainers over 7 days with TVL > $1M - follow the money flow!`
         : view === 'top_tvl'
         ? `Found ${filteredProtocols.length} top DeFi protocols by TVL - the biggest players in DeFi`
         : `Found ${filteredProtocols.length} DeFi protocols matching your criteria`
 
-      return {
+      const result = {
         _uiDisplayTool: true,
         summary,
         data: { 
@@ -66,6 +72,9 @@ export const defiProtocolsTool = tool({
           averageTvl: protocols.reduce((sum, p) => sum + p.tvl, 0) / protocols.length
         }
       }
+
+      console.log('✅ DeFiLlama protocols tool execution completed successfully')
+      return result
     } catch (error) {
       console.error('DeFiLlama protocols tool error:', error)
       return {

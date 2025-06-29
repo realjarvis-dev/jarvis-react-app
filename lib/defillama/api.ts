@@ -22,10 +22,17 @@ const apiClient = axios.create({
  */
 export async function fetchProtocols(): Promise<DeFiLlamaProtocol[]> {
   try {
+    console.log('🔍 Fetching DeFiLlama protocols...')
     const response = await apiClient.get<DeFiLlamaProtocol[]>('/protocols')
-    return response.data
+    console.log(`✅ Fetched ${response.data.length} protocols from DeFiLlama`)
+    
+    // Limit to first 500 protocols to avoid processing too much data
+    const limitedData = response.data.slice(0, 500)
+    console.log(`📊 Processing ${limitedData.length} protocols (limited for performance)`)
+    
+    return limitedData
   } catch (error) {
-    console.error('Failed to fetch DeFiLlama protocols:', error)
+    console.error('❌ Failed to fetch DeFiLlama protocols:', error)
     throw new Error('Failed to fetch protocols data')
   }
 }
