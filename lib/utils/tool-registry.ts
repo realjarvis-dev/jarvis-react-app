@@ -6,6 +6,9 @@ import { kodiakBaultProfitabilityTool, kodiakCompoundBaultTool, kodiakDepositToo
 import { bridgeExecuteTool, bridgeQuoteTool } from '../tools/lifi-bridge'
 import { marketChartTool } from '../tools/market-chart'
 import { pendleMintQuoteTool, pendleMintTool, pendleOpportunitiesTool, pendleQuoteTool, pendleRedeemQuoteTool, pendleRedeemTool, pendleSwapTool } from '../tools/pendle'
+import { defiProtocolsTool } from '../tools/defillama-protocols'
+import { defiYieldsTool } from '../tools/defillama-yields'
+import { defiOpportunitiesTool } from '../tools/defillama-opportunities'
 import { privyTransferTool } from '../tools/privy-transfer'
 import { createQuestionTool } from '../tools/question'
 import { retrieveTool } from '../tools/retrieve'
@@ -526,7 +529,42 @@ export function createToolRegistry(model: string): ToolRegistry {
     supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'sonic', 'berachain', 'optimism', 'mantle', 'demo']
   })
 
+  // DeFiLlama Tools
+  registry.registerTool({
+    name: 'defillama_protocols',
+    description: 'Get DeFi protocol data with TVL rankings, 7-day gainers, and filtering options for hunting opportunities',
+    schema: defiProtocolsTool.parameters,
+    execute: async (params, context) => defiProtocolsTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB
+  })
 
+  registry.registerTool({
+    name: 'defillama_yields',
+    description: 'Discover high-yield DeFi opportunities across different protocols and chains',
+    schema: defiYieldsTool.parameters,
+    execute: async (params, context) => defiYieldsTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB
+  })
+
+  registry.registerTool({
+    name: 'defillama_opportunities',
+    description: 'Hunt for DeFi opportunities by analyzing top-performing protocols with high TVL growth and momentum',
+    schema: defiOpportunitiesTool.parameters,
+    execute: async (params, context) => defiOpportunitiesTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB
+  })
 
   return registry
 }
