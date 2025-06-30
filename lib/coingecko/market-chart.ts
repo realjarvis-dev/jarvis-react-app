@@ -21,6 +21,7 @@ export interface ProcessedMarketData {
   coinId: string
   currency: string
   days: number
+  currentPrice: number
 }
 
 /**
@@ -37,7 +38,7 @@ export async function fetchMarketChart(
 ): Promise<MarketChartResponse> {
   const apiKey = process.env.COINGECKO_API_KEY
   const baseUrl = 'https://api.coingecko.com/api/v3'
-  
+
   const url = `${baseUrl}/coins/${coinId}/market_chart`
   const params = new URLSearchParams({
     vs_currency: currency,
@@ -49,7 +50,7 @@ export async function fetchMarketChart(
     const response = await fetch(`${url}?${params}`, {
       method: 'GET',
       headers: {
-        'Accept': 'application/json',
+        Accept: 'application/json',
         ...(apiKey && { 'x-cg-demo-api-key': apiKey })
       },
       // Add timeout for better error handling
@@ -57,11 +58,13 @@ export async function fetchMarketChart(
     })
 
     if (!response.ok) {
-      throw new Error(`CoinGecko API error: ${response.status} ${response.statusText}`)
+      throw new Error(
+        `CoinGecko API error: ${response.status} ${response.statusText}`
+      )
     }
 
     const data = await response.json()
-    
+
     // Validate response structure
     if (!data.prices || !data.market_caps || !data.total_volumes) {
       throw new Error('Invalid response format from CoinGecko API')
@@ -106,11 +109,15 @@ export function processMarketChartData(
     })
   }
 
+  // Extract current price from the most recent data point
+  const currentPrice = data.length > 0 ? data[data.length - 1].price : 0
+
   return {
     data,
     coinId,
     currency,
-    days
+    days,
+    currentPrice
   }
 }
 
@@ -170,4 +177,4 @@ export function formatLargeNumber(value: number): string {
   } else {
     return `$${value.toFixed(2)}`
   }
-} 
+}

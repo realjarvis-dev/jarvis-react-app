@@ -24,6 +24,11 @@ export const searchSchema = z.object({
     .optional()
     .describe(
       "A list of domains to specifically exclude from the search results. Default is None, which doesn't exclude any domains."
+    ),
+  freshness: z
+    .boolean()
+    .describe(
+      'Whether freshness is important. Use true when user are asking about any recent news or events.'
     )
 })
 
@@ -45,7 +50,10 @@ export const strictSearchSchema = z.object({
     .array(z.string())
     .describe(
       "A list of domains to specifically exclude from the search results. Default is None, which doesn't exclude any domains."
-    )
+    ),
+  freshness: z
+    .boolean()
+    .describe('Whether freshness is important. Use true when user are asking about any recent news or events.'),
 })
 
 /**

@@ -105,5 +105,3 @@ export const getGasPriceByChainId = async (chainId: number) => {
     throw error
   }
 }
-
-console.log(await getGasPriceByChainId(8453))
