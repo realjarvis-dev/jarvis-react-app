@@ -69,6 +69,7 @@ export function formatRewardToken(token: string): string {
     '0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2': 'MKR',
     '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599': 'WBTC',
     '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2': 'WETH',
+    '0xd533a949740bb3306d119cc777fa900ba034cd52': 'CRV', // The actual CRV token address
     '0x0000000000000000000000000000000000000000': 'ETH'
   }
 
