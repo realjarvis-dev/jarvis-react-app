@@ -1,6 +1,9 @@
 import { tool } from 'ai'
 import { z } from 'zod'
-import { fetchMarketChart, processMarketChartData } from '../coingecko/market-chart'
+import {
+  fetchMarketChart,
+  processMarketChartData
+} from '../coingecko/market-chart'
 import { NetworkContext } from '../types/context'
 
 interface ToolContext {
@@ -10,30 +13,43 @@ interface ToolContext {
 }
 
 export const marketChartTool = tool({
-  description: 'Fetch and display cryptocurrency market chart data from CoinGecko. This tool automatically renders a market chart UI with price history, statistics, and trends.',
+  description:
+    'Fetch and display cryptocurrency market chart data from CoinGecko. This tool automatically renders a market chart UI with price history, statistics, and trends.',
   parameters: z.object({
-    coin_id: z.string()
-      .describe('The CoinGecko coin ID (e.g., "bitcoin", "ethereum", "solana", "cardano")'),
-    days: z.number()
+    coin_id: z
+      .string()
+      .describe(
+        'The CoinGecko coin ID (e.g., "bitcoin", "ethereum", "solana", "cardano")'
+      ),
+    days: z
+      .number()
       .min(1)
       .max(365)
       .default(7)
-      .describe('Number of days of historical data to fetch (default: 7, max: 365)'),
-    currency: z.string()
+      .describe(
+        'Number of days of historical data to fetch (default: 7, max: 365)'
+      ),
+    currency: z
+      .string()
       .default('usd')
       .describe('Target currency for price data (default: "usd")')
   }),
   execute: async (params, context?: ToolContext) => {
-    console.log("market_chart tool called", params)
-    const { coin_id, days = 7, currency = 'usd' } = params;
-    
+    console.log('market_chart tool called', params)
+    const { coin_id, days = 7, currency = 'usd' } = params
+
     try {
       // Fetch raw market chart data from CoinGecko
       const rawData = await fetchMarketChart(coin_id, days, currency)
-      
+
       // Process the data into a more usable format
-      const processedData = processMarketChartData(rawData, coin_id, currency, days)
-      
+      const processedData = processMarketChartData(
+        rawData,
+        coin_id,
+        currency,
+        days
+      )
+
       // Return data in the format expected by the UI component
       const chartData = {
         success: true,
@@ -42,9 +58,10 @@ export const marketChartTool = tool({
         days: days,
         data_points: processedData.data.length,
         market_data: processedData.data,
+        current_price: processedData.currentPrice,
         complete_time: new Date().toISOString()
       }
-      
+
       return {
         _uiDisplayTool: true,
         summary: `Fetched ${days}-day market chart for ${coin_id}: ${processedData.data.length} data points`,
@@ -52,7 +69,7 @@ export const marketChartTool = tool({
       }
     } catch (error: any) {
       console.error('Error in market chart tool:', error)
-      
+
       // Return error data that the UI can display
       const errorData = {
         success: false,
@@ -61,12 +78,14 @@ export const marketChartTool = tool({
         currency,
         days
       }
-      
+
       return {
         _uiDisplayTool: true,
-        summary: `Error fetching market chart for ${coin_id}: ${error.message || 'Unknown error'}`,
+        summary: `Error fetching market chart for ${coin_id}: ${
+          error.message || 'Unknown error'
+        }`,
         data: errorData
       }
     }
   }
-}) 
+})
