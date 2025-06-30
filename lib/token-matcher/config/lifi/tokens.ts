@@ -1885,6 +1885,13 @@ export const tokensByChain = {
     },
     {
       "chainId": 1,
+      "address": "0x017429367D6E4f9FA7B673bDb2247887Bd9233e8",
+      "symbol": "GNAR",
+      "name": "Gnarcoin",
+      "decimals": 18
+    },
+    {
+      "chainId": 1,
       "address": "0x035dF12E0F3ac6671126525f1015E47D79dFEDDF",
       "symbol": "0xMR",
       "name": "0xMonero",
@@ -2585,13 +2592,6 @@ export const tokensByChain = {
     },
     {
       "chainId": 1,
-      "address": "0x67C5870b4A41D4Ebef24d2456547A03F1f3e094B",
-      "symbol": "G$",
-      "name": "GoodDollar",
-      "decimals": 2
-    },
-    {
-      "chainId": 1,
       "address": "0x5fefd7069a7D91d01f269DADE14526CCF3487810",
       "symbol": "aEtheBTC",
       "name": "Aave Ethereum eBTC",
@@ -3061,6 +3061,13 @@ export const tokensByChain = {
     },
     {
       "chainId": 1,
+      "address": "0x87761e886399EF8e1624cb0DB3230B075a322c88",
+      "symbol": "CBK",
+      "name": "CBK",
+      "decimals": 18
+    },
+    {
+      "chainId": 1,
       "address": "0x7d4B1d793239707445305D8d2456D2c735F6B25B",
       "symbol": "cBSN",
       "name": "BlockSwap Network [OLD]",
@@ -3316,6 +3323,13 @@ export const tokensByChain = {
       "address": "0x82a605D6D9114F4Ad6D5Ee461027477EeED31E34",
       "symbol": "SNSY",
       "name": "Sensay",
+      "decimals": 18
+    },
+    {
+      "chainId": 1,
+      "address": "0xF29992D7b589A0A6bD2de7Be29a97A6EB73EaF85",
+      "symbol": "DMST",
+      "name": "DMScript",
       "decimals": 18
     },
     {
@@ -10047,6 +10061,13 @@ export const tokensByChain = {
     },
     {
       "chainId": 1,
+      "address": "0xD1e64bcc904Cfdc19d0FABA155a9EdC69b4bcdAe",
+      "symbol": "PIKA",
+      "name": "Pikamoon",
+      "decimals": 9
+    },
+    {
+      "chainId": 1,
       "address": "0xbD9908b0Cdd50386F92efCC8e1d71766C2782Df0",
       "symbol": "RICE",
       "name": "DAOSquare",
@@ -11244,13 +11265,6 @@ export const tokensByChain = {
     },
     {
       "chainId": 1,
-      "address": "0x4E0fCa55a6C3A94720ded91153A27F60E26B9AA8",
-      "symbol": "BOOST",
-      "name": "Boost",
-      "decimals": 18
-    },
-    {
-      "chainId": 1,
       "address": "0x519C1001D550C0a1DaE7d1fC220f7d14c2A521BB",
       "symbol": "PSWAP",
       "name": "Polkaswap",
@@ -11681,13 +11695,6 @@ export const tokensByChain = {
       "address": "0x43b4FdFD4Ff969587185cDB6f0BD875c5Fc83f8c",
       "symbol": "alUSD3CRV-f",
       "name": "Curve.fi Factory USD Metapool: Alchemix USD",
-      "decimals": 18
-    },
-    {
-      "chainId": 1,
-      "address": "0xeb269732ab75A6fD61Ea60b06fE994cD32a83549",
-      "symbol": "USDx (dForce)",
-      "name": "dForce",
       "decimals": 18
     },
     {
@@ -12276,6 +12283,13 @@ export const tokensByChain = {
       "address": "0xac87d4Cbb82ce7F4bCF31dBDC0024306cfd3Ec5A",
       "symbol": "KEI",
       "name": "KEI Finance",
+      "decimals": 18
+    },
+    {
+      "chainId": 1,
+      "address": "0x38B0e3A59183814957D83dF2a97492AED1F003e2",
+      "symbol": "ANML",
+      "name": "Animal Concerts",
       "decimals": 18
     },
     {
@@ -12885,6 +12899,13 @@ export const tokensByChain = {
       "address": "0x6524B87960c2d573AE514fd4181777E7842435d4",
       "symbol": "BZN",
       "name": "Benzene",
+      "decimals": 18
+    },
+    {
+      "chainId": 1,
+      "address": "0x68E2e5c9DFF32419A108713f83274a4Fb5e194CA",
+      "symbol": "GLS",
+      "name": "Glacier Network",
       "decimals": 18
     },
     {
@@ -20879,6 +20900,13 @@ export const tokensByChain = {
     },
     {
       "chainId": 56,
+      "address": "0x06FDA0758c17416726f77Cb11305EAC94C074Ec0",
+      "symbol": "ANML",
+      "name": "Animal Concerts Token",
+      "decimals": 18
+    },
+    {
+      "chainId": 56,
       "address": "0x170C84E3b1D282f9628229836086716141995200",
       "symbol": "OP",
       "name": "Optimism",
@@ -28455,13 +28483,6 @@ export const tokensByChain = {
     },
     {
       "chainId": 100,
-      "address": "0x855888B91BA0A7d6ae9C801868211EAcF38b4019",
-      "symbol": "UBI",
-      "name": "Universal Basic Income on xDai",
-      "decimals": 18
-    },
-    {
-      "chainId": 100,
       "address": "0x8E7aB03cA7D17996b097D5866bFAA1e251c35c6a",
       "symbol": "DUCK",
       "name": "Unit Protocol on xDai",
@@ -30953,6 +30974,13 @@ export const tokensByChain = {
     },
     {
       "chainId": 137,
+      "address": "0x7Dd3D9E1868A7dA87509A601E7dbBf938c819a32",
+      "symbol": "VOX",
+      "name": "Vox.Finance (PoS)",
+      "decimals": 18
+    },
+    {
+      "chainId": 137,
       "address": "0x7E4c577ca35913af564ee2a24d882a4946Ec492B",
       "symbol": "MOONED",
       "name": "MoonEdge",
@@ -31397,6 +31425,13 @@ export const tokensByChain = {
       "address": "0xE21b9bDA4ECeF9e4652BC5C6863F731C2151Ef28",
       "symbol": "KTON",
       "name": "Darwinia Commitment Token (PoS)",
+      "decimals": 18
+    },
+    {
+      "chainId": 137,
+      "address": "0xF521D590Fb1e0b432fD0e020cdbD6c6397d652C2",
+      "symbol": "PAR",
+      "name": "Parachute (PoS)",
       "decimals": 18
     },
     {
@@ -32776,6 +32811,13 @@ export const tokensByChain = {
       "address": "0x7f426F6Dc648e50464a0392E60E1BB465a67E9cf",
       "symbol": "oAUTO",
       "name": "Orbit Bridge Polygon AUTOv2",
+      "decimals": 18
+    },
+    {
+      "chainId": 137,
+      "address": "0xD86b5923F3AD7b585eD81B448170ae026c65ae9a",
+      "symbol": "IRON",
+      "name": "IRON Stablecoin",
       "decimals": 18
     },
     {
@@ -37330,13 +37372,6 @@ export const tokensByChain = {
     },
     {
       "chainId": 137,
-      "address": "0x0C9c7712C83B3C70e7c5E11100D33D9401BdF9dd",
-      "symbol": "WOMBAT",
-      "name": "Wombat",
-      "decimals": 18
-    },
-    {
-      "chainId": 137,
       "address": "0x2297aEbD383787A160DD0d9F71508148769342E3",
       "symbol": "BTC.b",
       "name": "Bitcoin",
@@ -40669,6 +40704,13 @@ export const tokensByChain = {
     },
     {
       "chainId": 137,
+      "address": "0xFd55e4a6767fF7FfC0b8105262A8cDAabE7FBF3F",
+      "symbol": "PPY",
+      "name": "Patriot Pay",
+      "decimals": 18
+    },
+    {
+      "chainId": 137,
       "address": "0x8fa62D23FB6359c1e1685dBFa9B63eF27eCDb612",
       "symbol": "MCOIN",
       "name": "Mcoinv2",
@@ -40701,6 +40743,13 @@ export const tokensByChain = {
       "symbol": "wUSDR",
       "name": "Wrapped USDR",
       "decimals": 9
+    },
+    {
+      "chainId": 137,
+      "address": "0xb82A20B4522680951F11c94c54B8800c1C237693",
+      "symbol": "HONOR",
+      "name": "HONOR",
+      "decimals": 18
     },
     {
       "chainId": 137,
@@ -41688,6 +41737,13 @@ export const tokensByChain = {
       "address": "0x21Ada0D2aC28C3A5Fa3cD2eE30882dA8812279B6",
       "symbol": "OATH",
       "name": "Oath Token",
+      "decimals": 18
+    },
+    {
+      "chainId": 250,
+      "address": "0x23cBC7C95a13071562af2C4Fb1Efa7a284d0543a",
+      "symbol": "fSWAMP",
+      "name": "fSWAMP Token",
       "decimals": 18
     },
     {
@@ -42760,13 +42816,6 @@ export const tokensByChain = {
       "symbol": "FTMO",
       "name": "Fantom Oasis Token",
       "decimals": 18
-    },
-    {
-      "chainId": 250,
-      "address": "0xE04FA109051Aec310eD6a49E5d94a0272b3aB086",
-      "symbol": "SPANK",
-      "name": "Spank",
-      "decimals": 5
     },
     {
       "chainId": 250,
@@ -45007,6 +45056,13 @@ export const tokensByChain = {
     },
     {
       "chainId": 1285,
+      "address": "0xCb4a593ce512D78162C58384f0b2Fd6e802c2c47",
+      "symbol": "BEPRO",
+      "name": "BEPRO Network",
+      "decimals": 18
+    },
+    {
+      "chainId": 1285,
       "address": "0xbD90A6125a84E5C512129D622a75CDDE176aDE5E",
       "symbol": "RIB",
       "name": "RiverBoat",
@@ -45032,6 +45088,13 @@ export const tokensByChain = {
       "symbol": "WBTC(Multichain)",
       "name": "Wrapped BTC",
       "decimals": 8
+    },
+    {
+      "chainId": 1285,
+      "address": "0x965f84D915a9eFa2dD81b653e3AE736555d945f4",
+      "symbol": "FRAX(Multichain)",
+      "name": "Frax",
+      "decimals": 18
     },
     {
       "chainId": 1285,
@@ -46773,6 +46836,13 @@ export const tokensByChain = {
     },
     {
       "chainId": 8453,
+      "address": "0x18E692c03De43972Fe81058f322fa542Ae1A5E2c",
+      "symbol": "imgnAI",
+      "name": "Image Generation AI",
+      "decimals": 18
+    },
+    {
+      "chainId": 8453,
       "address": "0x820C137fa70C8691f0e44Dc420a5e53c168921Dc",
       "symbol": "USDS",
       "name": "USDS Stablecoin",
@@ -47627,6 +47697,13 @@ export const tokensByChain = {
     },
     {
       "chainId": 8453,
+      "address": "0xaA217128Adb6ee7Fb711d7d77Fa80F4012Afc758",
+      "symbol": "CHLOE",
+      "name": "Chloe by Virtuals",
+      "decimals": 18
+    },
+    {
+      "chainId": 8453,
       "address": "0x2f85d372Bef829e866f8917378Ff20A88E7FC403",
       "symbol": "$COOL",
       "name": "CoolCoin",
@@ -47956,6 +48033,13 @@ export const tokensByChain = {
     },
     {
       "chainId": 8453,
+      "address": "0x30193F81E7599429afd6B2b11b27d66C56A1DFe4",
+      "symbol": "101",
+      "name": "Crypto 101 by Virtuals",
+      "decimals": 18
+    },
+    {
+      "chainId": 8453,
       "address": "0xF1A7000000950C7ad8Aff13118Bb7aB561A448ee",
       "symbol": "FLAY",
       "name": "Flayer",
@@ -48001,6 +48085,13 @@ export const tokensByChain = {
       "address": "0xE031B0cD88Ca5d41D13Db188E4bfC6C0cFa3e5a2",
       "symbol": "NKMIND",
       "name": "Don PepeX",
+      "decimals": 18
+    },
+    {
+      "chainId": 8453,
+      "address": "0xe290816384416fb1dB9225e176b716346dB9f9fE",
+      "symbol": "9MM",
+      "name": "9mm",
       "decimals": 18
     },
     {
@@ -48407,13 +48498,6 @@ export const tokensByChain = {
       "address": "0xd7468c14ae76C3Fc308aEAdC223D5D1F71d3c171",
       "symbol": "LCX",
       "name": "LCX",
-      "decimals": 18
-    },
-    {
-      "chainId": 8453,
-      "address": "0xDFc09CF4563A65b14dd08A93bE4AD454be985c8C",
-      "symbol": "BERT",
-      "name": "Based Mert by Virtuals",
       "decimals": 18
     },
     {
@@ -50764,6 +50848,13 @@ export const tokensByChain = {
     },
     {
       "chainId": 42161,
+      "address": "0x20547341E58fB558637FA15379C92e11F7b7F710",
+      "symbol": "MOZ",
+      "name": "Mozaic Token",
+      "decimals": 18
+    },
+    {
+      "chainId": 42161,
       "address": "0x1Dbc1809486460DcD189b8a15990bCa3272Ee04e",
       "symbol": "USDCx",
       "name": "Super USD Coin (Arb1)",
@@ -52941,13 +53032,6 @@ export const tokensByChain = {
     },
     {
       "chainId": 42161,
-      "address": "0xc608Dfb90A430Df79a8a1eDBC8be7f1A0Eb4E763",
-      "symbol": "fETH",
-      "name": "Fractional ETH",
-      "decimals": 18
-    },
-    {
-      "chainId": 42161,
       "address": "0x3A67Ca29DdF5eCf1844E811C43F27bD79F9EC310",
       "symbol": "APW",
       "name": "APWine Token",
@@ -54541,6 +54625,13 @@ export const tokensByChain = {
       "symbol": "UOS",
       "name": "Ultra Token",
       "decimals": 4
+    },
+    {
+      "chainId": 42161,
+      "address": "0xD9711FF045dc0e3E1674a82495419EcFc23Bb9d1",
+      "symbol": "PIKA",
+      "name": "PIKAMOON",
+      "decimals": 9
     },
     {
       "chainId": 42161,
@@ -56800,6 +56891,13 @@ export const tokensByChain = {
       "address": "0xc3344870d52688874b06d844E0C36cc39FC727F6",
       "symbol": "ankrAVAX",
       "name": "Ankr Avalanche Reward Bearing Certificate",
+      "decimals": 18
+    },
+    {
+      "chainId": 43114,
+      "address": "0x1ECd47FF4d9598f89721A2866BFEb99505a413Ed",
+      "symbol": "AVME",
+      "name": "AVME",
       "decimals": 18
     },
     {
@@ -59493,6 +59591,13 @@ export const tokensByChain = {
       "address": "0x20fE91f17ec9080E3caC2d688b4EcB48C5aC3a9C",
       "symbol": "YES",
       "name": "YES Money",
+      "decimals": 18
+    },
+    {
+      "chainId": 81457,
+      "address": "0x75483179a38d21F3608E71bbEdE5EC1314F0067D",
+      "symbol": "NPTX",
+      "name": "NeptuneX",
       "decimals": 18
     },
     {
