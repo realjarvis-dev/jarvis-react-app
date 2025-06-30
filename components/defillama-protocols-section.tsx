@@ -34,13 +34,13 @@ export function DeFiLlamaProtocolsSection({
   const getHeaderText = () => {
     switch (view) {
       case 'top_gainers':
-        return '🔥 Top 7-Day Gainers'
+        return 'Top 7-Day Gainers'
       case 'top_tvl':
-        return '💰 Top Protocols by TVL'
+        return 'Top Protocols by TVL'
       case 'custom':
-        return '🎯 Custom Protocol Search'
+        return 'Custom Protocol Search'
       default:
-        return '📊 DeFi Protocols'
+        return 'DeFi Protocols'
     }
   }
 
@@ -99,12 +99,12 @@ export function DeFiLlamaProtocolsSection({
           {/* Summary Stats */}
           <div className="px-4 pt-4 pb-2">
             <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-              <span>📊 {protocols.length} protocols</span>
+              <span>{protocols.length} protocols</span>
               {result.totalProtocols && (
-                <span>🔍 {result.totalProtocols} total available</span>
+                <span>{result.totalProtocols} total available</span>
               )}
               {result.averageTvl && (
-                <span>💰 Avg TVL: ${(result.averageTvl / 1e9).toFixed(2)}B</span>
+                <span>Avg TVL: ${(result.averageTvl / 1e9).toFixed(2)}B</span>
               )}
             </div>
           </div>

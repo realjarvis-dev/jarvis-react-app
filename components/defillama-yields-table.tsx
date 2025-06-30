@@ -3,7 +3,6 @@
 import { Badge } from './ui/badge'
 import { Button } from './ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible'
 import { formatTVL, formatAPY, formatRewardToken } from '../lib/defillama/utils'
 import { ExternalLink, Shield, AlertTriangle, TrendingUp, ChevronDown, ChevronRight } from 'lucide-react'
 import { useState } from 'react'
@@ -28,71 +27,69 @@ function getChainColor(chain: string): string {
   return chainColors[chain] || 'text-gray-400'
 }
 
-function YieldRow({ yieldData, rank }: { yieldData: DeFiLlamaYield, rank: number }) {
+function YieldRow({ yieldData }: { yieldData: DeFiLlamaYield }) {
   const [isExpanded, setIsExpanded] = useState(false)
   const totalApy = yieldData.apy || (yieldData.apyBase || 0) + (yieldData.apyReward || 0)
   
   return (
-    <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
-      <CollapsibleTrigger asChild>
-        <TableRow className="border-b border-white/10 last:border-b-0 hover:bg-white/5 transition-colors cursor-pointer">
-          <TableCell className="p-3">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold">
-                {rank}
+    <>
+      <TableRow 
+        className="border-b border-white/10 last:border-b-0 hover:bg-white/5 transition-colors cursor-pointer"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <TableCell className="p-3">
+          <div className="flex items-center gap-2">
+            <div>
+              <div className="text-sm font-medium text-white">
+                {yieldData.project}
               </div>
-              <div>
-                <div className="text-sm font-medium text-white">
-                  {yieldData.project}
-                </div>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className={`text-xs ${getChainColor(yieldData.chain)}`}>
-                    {yieldData.chain}
+              <div className="flex items-center gap-2 mt-1">
+                <span className={`text-xs ${getChainColor(yieldData.chain)}`}>
+                  {yieldData.chain}
+                </span>
+                {yieldData.symbol && (
+                  <span className="text-xs text-gray-400">
+                    {yieldData.symbol}
                   </span>
-                  {yieldData.symbol && (
-                    <span className="text-xs text-gray-400">
-                      {yieldData.symbol}
-                    </span>
-                  )}
-                </div>
+                )}
               </div>
             </div>
-          </TableCell>
-          <TableCell className="text-right p-3 text-sm font-semibold">
-            {formatTVL(yieldData.tvlUsd)}
-          </TableCell>
-          <TableCell className="text-right p-3 text-sm font-semibold">
-            <span className="text-green-400">
-              {formatAPY(totalApy)}
-            </span>
-          </TableCell>
-          <TableCell className="text-right p-3 text-sm">
-            <div className="flex items-center justify-end gap-2">
-              {yieldData.stablecoin && (
-                <Badge variant="outline" className="h-5 px-2 text-xs border-emerald-500/50 text-emerald-400">
-                  <Shield className="w-3 h-3 mr-1" />
-                  Stable
-                </Badge>
-              )}
-              {yieldData.ilRisk && yieldData.ilRisk.toLowerCase() !== 'no' && (
-                <Badge variant="outline" className="h-5 px-2 text-xs border-amber-500/50 text-amber-400">
-                  <AlertTriangle className="w-3 h-3 mr-1" />
-                  IL Risk
-                </Badge>
-              )}
-            </div>
-          </TableCell>
-          <TableCell className="text-right p-3">
-            {isExpanded ? (
-              <ChevronDown className="w-4 h-4 text-gray-400" />
-            ) : (
-              <ChevronRight className="w-4 h-4 text-gray-400" />
+          </div>
+        </TableCell>
+        <TableCell className="text-right p-3 text-sm font-semibold">
+          {formatTVL(yieldData.tvlUsd)}
+        </TableCell>
+        <TableCell className="text-right p-3 text-sm font-semibold">
+          <span className="text-green-400">
+            {formatAPY(totalApy)}
+          </span>
+        </TableCell>
+        <TableCell className="text-right p-3 text-sm">
+          <div className="flex items-center justify-end gap-2">
+            {yieldData.stablecoin && (
+              <Badge variant="outline" className="h-5 px-2 text-xs border-emerald-500/50 text-emerald-400">
+                <Shield className="w-3 h-3 mr-1" />
+                Stable
+              </Badge>
             )}
-          </TableCell>
-        </TableRow>
-      </CollapsibleTrigger>
+            {yieldData.ilRisk && yieldData.ilRisk.toLowerCase() !== 'no' && (
+              <Badge variant="outline" className="h-5 px-2 text-xs border-amber-500/50 text-amber-400">
+                <AlertTriangle className="w-3 h-3 mr-1" />
+                IL Risk
+              </Badge>
+            )}
+          </div>
+        </TableCell>
+        <TableCell className="text-center p-3 w-16">
+          {isExpanded ? (
+            <ChevronDown className="w-4 h-4 text-gray-400 mx-auto" />
+          ) : (
+            <ChevronRight className="w-4 h-4 text-gray-400 mx-auto" />
+          )}
+        </TableCell>
+      </TableRow>
       
-      <CollapsibleContent asChild>
+      {isExpanded && (
         <TableRow className="border-b border-white/10">
           <TableCell colSpan={5} className="p-0">
             <div className="p-4 bg-black/20 border-t border-white/5">
@@ -177,8 +174,8 @@ function YieldRow({ yieldData, rank }: { yieldData: DeFiLlamaYield, rank: number
             </div>
           </TableCell>
         </TableRow>
-      </CollapsibleContent>
-    </Collapsible>
+      )}
+    </>
   )
 }
 
@@ -231,7 +228,7 @@ export function DeFiLlamaYieldsTable({ yields }: DeFiLlamaYieldsTableProps) {
               <TableHead className="p-3 font-normal text-sm text-blue-200/80 text-right">
                 Risk
               </TableHead>
-              <TableHead className="p-3 font-normal text-sm text-blue-200/80 text-right">
+              <TableHead className="p-3 font-normal text-sm text-blue-200/80 text-center w-16">
                 Details
               </TableHead>
             </TableRow>
@@ -241,7 +238,6 @@ export function DeFiLlamaYieldsTable({ yields }: DeFiLlamaYieldsTableProps) {
               <YieldRow 
                 key={`${yieldData.pool}-${yieldData.chain}`} 
                 yieldData={yieldData} 
-                rank={index + 1}
               />
             ))}
           </TableBody>

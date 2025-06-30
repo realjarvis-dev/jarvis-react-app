@@ -32,12 +32,13 @@ export const defiOpportunitiesTool = tool({
         }
       }
 
-      // Find top opportunities based on criteria
+      // Find top opportunities based on criteria (exclude CEX as they're not DeFi)
       const topOpportunities = protocols
         .filter(p => 
           p.tvl >= minTvl && 
           p.change_7d !== null && 
-          p.change_7d >= minGrowth
+          p.change_7d >= minGrowth &&
+          p.category.toLowerCase() !== 'cex'
         )
         .sort((a, b) => (b.change_7d || 0) - (a.change_7d || 0))
         .slice(0, limit)

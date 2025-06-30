@@ -3,7 +3,6 @@
 import { Badge } from './ui/badge'
 import { Button } from './ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible'
 import { formatTVL, formatPercentage, formatAPY, formatRewardToken, getCategoryColor } from '../lib/defillama/utils'
 import { ExternalLink, ChevronDown, ChevronRight, TrendingUp, Target, Shield, Zap, BarChart3, Percent } from 'lucide-react'
 import { useState } from 'react'
@@ -14,103 +13,100 @@ interface DeFiLlamaOpportunitiesTableProps {
   includeYields: boolean
 }
 
-function OpportunityRow({ opportunity, rank, includeYields }: { 
+function OpportunityRow({ opportunity, includeYields }: { 
   opportunity: DeFiOpportunity
-  rank: number
   includeYields: boolean 
 }) {
   const [isExpanded, setIsExpanded] = useState(false)
   const { protocol, opportunities: oppData } = opportunity
 
   return (
-    <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
-      <CollapsibleTrigger asChild>
-        <TableRow className="border-b border-white/10 last:border-b-0 hover:bg-white/5 transition-colors cursor-pointer">
-          <TableCell className="p-3">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-500 via-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
-                {rank}
-              </div>
-              {protocol.logo && (
-                <img 
-                  src={protocol.logo} 
-                  alt={protocol.name}
-                  className="w-6 h-6 rounded-full border border-white/20"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none'
-                  }}
-                />
-              )}
-              <div>
-                <div className="text-sm font-medium text-white">
-                  {protocol.name}
-                </div>
-                <div className="flex items-center gap-2 mt-1">
-                  <Badge 
-                    variant="outline" 
-                    className="h-4 px-1.5 text-xs border-blue-500/50 text-blue-400"
-                  >
-                    {protocol.category}
-                  </Badge>
-                  {includeYields && oppData.yieldOpportunities.length > 0 && (
-                    <Badge variant="outline" className="h-4 px-1.5 text-xs border-purple-500/50 text-purple-400">
-                      {oppData.yieldOpportunities.length} yield{oppData.yieldOpportunities.length > 1 ? 's' : ''}
-                    </Badge>
-                  )}
-                </div>
-              </div>
-            </div>
-          </TableCell>
-          <TableCell className="text-right p-3 text-sm font-semibold">
-            {formatTVL(protocol.tvl)}
-          </TableCell>
-          <TableCell className="text-right p-3 text-sm font-semibold">
-            <span className="text-emerald-400">
-              +{oppData.tvlGrowth.toFixed(1)}%
-            </span>
-          </TableCell>
-          <TableCell className="text-right p-3 text-sm">
-            <div className="flex items-center justify-end gap-2">
-              {oppData.riskLevel === 'low' && (
-                <Badge variant="outline" className="h-5 px-2 text-xs border-emerald-500/50 text-emerald-400">
-                  <Shield className="w-3 h-3 mr-1" />
-                  Low
-                </Badge>
-              )}
-              {oppData.riskLevel === 'medium' && (
-                <Badge variant="outline" className="h-5 px-2 text-xs border-yellow-500/50 text-yellow-400">
-                  Medium
-                </Badge>
-              )}
-              {oppData.riskLevel === 'high' && (
-                <Badge variant="outline" className="h-5 px-2 text-xs border-red-500/50 text-red-400">
-                  High
-                </Badge>
-              )}
-              <Badge 
-                variant="outline" 
-                className={`h-5 px-2 text-xs ${
-                  oppData.momentum === 'strong' ? 'border-emerald-500/50 text-emerald-400' :
-                  oppData.momentum === 'moderate' ? 'border-blue-500/50 text-blue-400' :
-                  'border-orange-500/50 text-orange-400'
-                }`}
-              >
-                <Zap className="w-3 h-3 mr-1" />
-                {oppData.momentum}
-              </Badge>
-            </div>
-          </TableCell>
-          <TableCell className="text-right p-3">
-            {isExpanded ? (
-              <ChevronDown className="w-4 h-4 text-gray-400" />
-            ) : (
-              <ChevronRight className="w-4 h-4 text-gray-400" />
+    <>
+      <TableRow 
+        className="border-b border-white/10 last:border-b-0 hover:bg-white/5 transition-colors cursor-pointer"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <TableCell className="p-3">
+          <div className="flex items-center gap-2">
+            {protocol.logo && (
+              <img 
+                src={protocol.logo} 
+                alt={protocol.name}
+                className="w-6 h-6 rounded-full border border-white/20"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none'
+                }}
+              />
             )}
-          </TableCell>
-        </TableRow>
-      </CollapsibleTrigger>
+            <div>
+              <div className="text-sm font-medium text-white">
+                {protocol.name}
+              </div>
+              <div className="flex items-center gap-2 mt-1">
+                <Badge 
+                  variant="outline" 
+                  className="h-4 px-1.5 text-xs border-blue-500/50 text-blue-400"
+                >
+                  {protocol.category}
+                </Badge>
+                {includeYields && oppData.yieldOpportunities.length > 0 && (
+                  <Badge variant="outline" className="h-4 px-1.5 text-xs border-purple-500/50 text-purple-400">
+                    {oppData.yieldOpportunities.length} yield{oppData.yieldOpportunities.length > 1 ? 's' : ''}
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </div>
+        </TableCell>
+        <TableCell className="text-right p-3 text-sm font-semibold">
+          {formatTVL(protocol.tvl)}
+        </TableCell>
+        <TableCell className="text-right p-3 text-sm font-semibold">
+          <span className="text-emerald-400">
+            +{oppData.tvlGrowth.toFixed(1)}%
+          </span>
+        </TableCell>
+        <TableCell className="text-right p-3 text-sm">
+          <div className="flex items-center justify-end gap-2">
+            {oppData.riskLevel === 'low' && (
+              <Badge variant="outline" className="h-5 px-2 text-xs border-emerald-500/50 text-emerald-400">
+                <Shield className="w-3 h-3 mr-1" />
+                Low
+              </Badge>
+            )}
+            {oppData.riskLevel === 'medium' && (
+              <Badge variant="outline" className="h-5 px-2 text-xs border-yellow-500/50 text-yellow-400">
+                Medium
+              </Badge>
+            )}
+            {oppData.riskLevel === 'high' && (
+              <Badge variant="outline" className="h-5 px-2 text-xs border-red-500/50 text-red-400">
+                High
+              </Badge>
+            )}
+            <Badge 
+              variant="outline" 
+              className={`h-5 px-2 text-xs ${
+                oppData.momentum === 'strong' ? 'border-emerald-500/50 text-emerald-400' :
+                oppData.momentum === 'moderate' ? 'border-blue-500/50 text-blue-400' :
+                'border-orange-500/50 text-orange-400'
+              }`}
+            >
+              <Zap className="w-3 h-3 mr-1" />
+              {oppData.momentum}
+            </Badge>
+          </div>
+        </TableCell>
+        <TableCell className="text-center p-3 w-16">
+          {isExpanded ? (
+            <ChevronDown className="w-4 h-4 text-gray-400 mx-auto" />
+          ) : (
+            <ChevronRight className="w-4 h-4 text-gray-400 mx-auto" />
+          )}
+        </TableCell>
+      </TableRow>
       
-      <CollapsibleContent asChild>
+      {isExpanded && (
         <TableRow className="border-b border-white/10">
           <TableCell colSpan={5} className="p-0">
             <div className="p-4 bg-black/20 border-t border-white/5">
@@ -288,8 +284,8 @@ function OpportunityRow({ opportunity, rank, includeYields }: {
             </div>
           </TableCell>
         </TableRow>
-      </CollapsibleContent>
-    </Collapsible>
+      )}
+    </>
   )
 }
 
@@ -336,13 +332,13 @@ export function DeFiLlamaOpportunitiesTable({ opportunities, includeYields }: De
               <TableHead className="p-3 font-normal text-sm text-blue-200/80 text-right">
                 TVL
               </TableHead>
-              <TableHead className="p-3 font-normal text-sm text-blue-200/80 text-right">
+              <TableHead className="p-3 font-normal text-sm text-blue-200/80 text-right whitespace-nowrap">
                 7d Growth
               </TableHead>
               <TableHead className="p-3 font-normal text-sm text-blue-200/80 text-right">
                 Risk & Momentum
               </TableHead>
-              <TableHead className="p-3 font-normal text-sm text-blue-200/80 text-right">
+              <TableHead className="p-3 font-normal text-sm text-blue-200/80 text-center w-16">
                 Details
               </TableHead>
             </TableRow>
@@ -352,7 +348,6 @@ export function DeFiLlamaOpportunitiesTable({ opportunities, includeYields }: De
               <OpportunityRow 
                 key={opportunity.protocol.id} 
                 opportunity={opportunity} 
-                rank={index + 1}
                 includeYields={includeYields}
               />
             ))}

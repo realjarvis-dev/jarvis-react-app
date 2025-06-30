@@ -39,7 +39,7 @@ export function DeFiLlamaYieldsSection({
     if (minApy) filters.push(`>${minApy}% APY`)
     if (stablecoin) filters.push('Stablecoins')
     
-    return filters.length > 0 ? `💰 Yield Opportunities • ${filters.join(' • ')}` : '💰 High Yield Opportunities'
+    return filters.length > 0 ? `Yield Opportunities • ${filters.join(' • ')}` : 'High Yield Opportunities'
   }
 
   const header = (
@@ -89,23 +89,23 @@ export function DeFiLlamaYieldsSection({
           <div className="px-4 pt-4 pb-2">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div>
-                <span className="text-muted-foreground">🎯 Opportunities</span>
+                <span className="text-muted-foreground">Opportunities</span>
                 <div className="font-semibold text-lg">{yields.length}</div>
               </div>
               <div>
-                <span className="text-muted-foreground">📊 Average APY</span>
+                <span className="text-muted-foreground">Average APY</span>
                 <div className="font-semibold text-lg text-green-600">
                   {statistics.averageApy ? `${statistics.averageApy.toFixed(1)}%` : 'N/A'}
                 </div>
               </div>
               <div>
-                <span className="text-muted-foreground">🚀 Highest APY</span>
+                <span className="text-muted-foreground">Highest APY</span>
                 <div className="font-semibold text-lg text-blue-600">
                   {statistics.highestApy ? `${statistics.highestApy.toFixed(1)}%` : 'N/A'}
                 </div>
               </div>
               <div>
-                <span className="text-muted-foreground">🔗 Chains</span>
+                <span className="text-muted-foreground">Chains</span>
                 <div className="font-semibold text-lg">{statistics.uniqueChains || 0}</div>
               </div>
             </div>

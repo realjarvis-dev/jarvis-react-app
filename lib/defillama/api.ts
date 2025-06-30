@@ -108,6 +108,9 @@ export function filterProtocols(
 ): DeFiLlamaProtocol[] {
   let filtered = [...protocols]
 
+  // Always exclude CEX as they're not DeFi
+  filtered = filtered.filter(p => p.category.toLowerCase() !== 'cex')
+
   // Apply filters
   if (filters.category) {
     filtered = filtered.filter(p => 
