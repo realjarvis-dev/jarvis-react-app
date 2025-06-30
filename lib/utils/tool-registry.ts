@@ -1,6 +1,8 @@
 import { ChainType } from '@/lib/network/types'
 import { z } from 'zod'
 import { searchSchema } from '../schema/search'
+import { defiProtocolsTool } from '../tools/defillama-protocols'
+import { defiYieldsTool } from '../tools/defillama-yields'
 import { getGasPriceTool } from '../tools/gas-price'
 import {
   kodiakBaultProfitabilityTool,
@@ -753,6 +755,33 @@ export function createToolRegistry(model: string): ToolRegistry {
       'demo'
     ]
   })
+
+
+  // DeFiLlama Tools
+  registry.registerTool({
+    name: 'defillama_protocols',
+    description: 'Get DeFi protocol data with TVL rankings, 7-day gainers, and filtering options for hunting opportunities',
+    schema: defiProtocolsTool.parameters,
+    execute: async (params, context) => defiProtocolsTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB
+  })
+
+  registry.registerTool({
+    name: 'defillama_yields',
+    description: 'Discover high-yield DeFi opportunities across different protocols and chains',
+    schema: defiYieldsTool.parameters,
+    execute: async (params, context) => defiYieldsTool.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB
+  })
+
 
   return registry
 }

@@ -67,9 +67,9 @@ export function ChatShare({ chatId, className }: ChatShareProps) {
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Share link to search result</DialogTitle>
+            <DialogTitle>Share link to Jarvis response</DialogTitle>
             <DialogDescription>
-              Anyone with the link will be able to view this search result.
+              Anyone with the link will be able to view this Jarvis response.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="items-center">
