@@ -4,7 +4,7 @@ import { Badge } from './ui/badge'
 import { Card, CardContent } from './ui/card'
 import { Button } from './ui/button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible'
-import { formatTVL, formatPercentage, formatAPY, getCategoryColor, getRiskColor, getRiskTextColor, getMomentumColor, getChangeColor } from '../lib/defillama/utils'
+import { formatTVL, formatPercentage, formatAPY, formatRewardToken, getCategoryColor, getRiskColor, getRiskTextColor, getMomentumColor, getChangeColor } from '../lib/defillama/utils'
 import { ExternalLink, ChevronDown, ChevronRight, TrendingUp, Target, Shield, Zap, BarChart3, Percent } from 'lucide-react'
 import { useState } from 'react'
 import type { DeFiOpportunity } from '../lib/defillama/types'
@@ -270,21 +270,56 @@ function OpportunityCard({ opportunity, rank, includeYields }: {
                   </h4>
                   <div className="space-y-3">
                     {oppData.yieldOpportunities.slice(0, 3).map((yieldData, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
-                        <div className="min-w-0">
-                          <div className="font-medium text-sm text-foreground">
-                            {yieldData.symbol || 'Unknown Pool'}
+                      <div key={index} className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                        <div className="flex items-center justify-between">
+                          <div className="min-w-0 flex-1">
+                            <div className="font-medium text-sm text-foreground">
+                              {yieldData.symbol || 'Unknown Pool'}
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-1">
+                              {yieldData.chain} • {formatTVL(yieldData.tvlUsd)} TVL
+                              {yieldData.stablecoin && ' • Stablecoin'}
+                            </div>
+                            {/* Reward Tokens */}
+                            {yieldData.rewardTokens && yieldData.rewardTokens.length > 0 && (
+                              <div className="flex items-center gap-1 mt-2">
+                                <span className="text-xs text-muted-foreground">Rewards:</span>
+                                <div className="flex flex-wrap gap-1">
+                                  {yieldData.rewardTokens.slice(0, 3).map((token, tokenIndex) => (
+                                    <Badge key={tokenIndex} variant="outline" className="h-5 px-1.5 text-xs font-mono">
+                                      {formatRewardToken(token)}
+                                    </Badge>
+                                  ))}
+                                  {yieldData.rewardTokens.length > 3 && (
+                                    <Badge variant="outline" className="h-5 px-1.5 text-xs">
+                                      +{yieldData.rewardTokens.length - 3}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            )}
                           </div>
-                          <div className="text-xs text-muted-foreground mt-1">
-                            {yieldData.chain} • {formatTVL(yieldData.tvlUsd)} TVL
-                            {yieldData.stablecoin && ' • Stablecoin'}
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <div className="text-right">
+                              <div className="font-bold text-lg text-emerald-600 dark:text-emerald-400">
+                                {formatAPY(yieldData.apy)}
+                              </div>
+                              <div className="text-xs text-muted-foreground">APY</div>
+                            </div>
+                            {yieldData.url && (
+                              <Button variant="outline" size="sm" asChild>
+                                <a 
+                                  href={yieldData.url} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-xs"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <ExternalLink className="w-3 h-3" />
+                                </a>
+                              </Button>
+                            )}
                           </div>
-                        </div>
-                        <div className="text-right flex-shrink-0">
-                          <div className="font-bold text-lg text-emerald-600 dark:text-emerald-400">
-                            {formatAPY(yieldData.apy)}
-                          </div>
-                          <div className="text-xs text-muted-foreground">APY</div>
                         </div>
                       </div>
                     ))}
