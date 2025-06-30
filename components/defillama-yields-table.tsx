@@ -44,54 +44,64 @@ function YieldRow({ yieldData }: { yieldData: DeFiLlamaYield }) {
         className="border-b border-white/10 last:border-b-0 hover:bg-white/5 transition-colors cursor-pointer"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <TableCell className="p-3">
-          <div className="flex items-center gap-2">
-            <div>
-              <div className="text-sm font-medium text-white">
+        <TableCell className="p-2 md:p-3">
+          <div className="flex items-center gap-1 md:gap-2">
+            <div className="min-w-0 flex-1">
+              <div className="text-xs md:text-sm font-medium text-white truncate" title={yieldData.project}>
                 <ProtocolLink protocolName={yieldData.project} />
               </div>
-              <div className="flex items-center gap-2 mt-1">
-                <span className={`text-xs ${getChainColor(yieldData.chain)}`}>
+              <div className="flex items-center gap-1 md:gap-2 mt-0.5 md:mt-1">
+                <span className={`text-[10px] md:text-xs ${getChainColor(yieldData.chain)} truncate`} title={yieldData.chain}>
                   {yieldData.chain}
                 </span>
                 {yieldData.symbol && (
-                  <span className="text-xs text-gray-400">
+                  <span className="text-[10px] md:text-xs text-gray-400 truncate" title={yieldData.symbol}>
                     {yieldData.symbol}
                   </span>
                 )}
               </div>
+              {/* Mobile: Show TVL below project name */}
+              <div className="sm:hidden mt-1">
+                <span className="text-xs text-blue-200/80">
+                  TVL: {formatTVL(yieldData.tvlUsd)}
+                </span>
+              </div>
             </div>
           </div>
         </TableCell>
-        <TableCell className="text-right p-3 text-sm font-semibold">
-          {formatTVL(yieldData.tvlUsd)}
+        <TableCell className="text-right p-2 md:p-3 text-xs md:text-sm font-semibold hidden sm:table-cell">
+          <div className="break-words">
+            {formatTVL(yieldData.tvlUsd)}
+          </div>
         </TableCell>
-        <TableCell className="text-right p-3 text-sm font-semibold">
+        <TableCell className="text-right p-2 md:p-3 text-xs md:text-sm font-semibold">
           <span className="text-green-400">
             {formatAPY(totalApy)}
           </span>
         </TableCell>
-        <TableCell className="text-right p-3 text-sm">
-          <div className="flex items-center justify-end gap-2">
+        <TableCell className="text-right p-2 md:p-3 text-xs md:text-sm">
+          <div className="flex items-center justify-end gap-1">
             {yieldData.stablecoin && (
-              <Badge variant="outline" className="h-5 px-2 text-xs border-emerald-500/50 text-emerald-400">
-                <Shield className="w-3 h-3 mr-1" />
-                Stable
+              <Badge variant="outline" className="h-4 md:h-5 px-1 md:px-2 text-[10px] md:text-xs border-emerald-500/50 text-emerald-400 flex-shrink-0">
+                <Shield className="w-2 h-2 md:w-3 md:h-3 mr-0.5 md:mr-1" />
+                <span className="hidden sm:inline">Stable</span>
+                <span className="sm:hidden">S</span>
               </Badge>
             )}
             {yieldData.ilRisk && yieldData.ilRisk.toLowerCase() !== 'no' && (
-              <Badge variant="outline" className="h-5 px-2 text-xs border-amber-500/50 text-amber-400">
-                <AlertTriangle className="w-3 h-3 mr-1" />
-                IL Risk
+              <Badge variant="outline" className="h-4 md:h-5 px-1 md:px-2 text-[10px] md:text-xs border-amber-500/50 text-amber-400 flex-shrink-0">
+                <AlertTriangle className="w-2 h-2 md:w-3 md:h-3 mr-0.5 md:mr-1" />
+                <span className="hidden sm:inline">IL Risk</span>
+                <span className="sm:hidden">IL</span>
               </Badge>
             )}
           </div>
         </TableCell>
-        <TableCell className="text-center p-3 w-16">
+        <TableCell className="text-center p-2 md:p-3 w-12 md:w-16">
           {isExpanded ? (
-            <ChevronDown className="w-4 h-4 text-gray-400 mx-auto" />
+            <ChevronDown className="w-3 h-3 md:w-4 md:h-4 text-gray-400 mx-auto" />
           ) : (
-            <ChevronRight className="w-4 h-4 text-gray-400 mx-auto" />
+            <ChevronRight className="w-3 h-3 md:w-4 md:h-4 text-gray-400 mx-auto" />
           )}
         </TableCell>
       </TableRow>
@@ -99,30 +109,30 @@ function YieldRow({ yieldData }: { yieldData: DeFiLlamaYield }) {
       {isExpanded && (
         <TableRow className="border-b border-white/10">
           <TableCell colSpan={5} className="p-0">
-            <div className="p-4 bg-black/20 border-t border-white/5">
+            <div className="p-2 md:p-4 bg-black/20 border-t border-white/5">
               {/* Detailed Metrics */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                <div className="text-center p-3 rounded-lg bg-white/5">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mb-4">
+                <div className="text-center p-2 md:p-3 rounded-lg bg-white/5">
                   <div className="text-xs text-blue-200/80 mb-1">Base APY</div>
-                  <div className="font-semibold text-sm text-blue-400">
+                  <div className="font-semibold text-xs md:text-sm text-blue-400">
                     {yieldData.apyBase ? formatAPY(yieldData.apyBase) : 'N/A'}
                   </div>
                 </div>
-                <div className="text-center p-3 rounded-lg bg-white/5">
+                <div className="text-center p-2 md:p-3 rounded-lg bg-white/5">
                   <div className="text-xs text-blue-200/80 mb-1">Reward APY</div>
-                  <div className="font-semibold text-sm text-purple-400">
+                  <div className="font-semibold text-xs md:text-sm text-purple-400">
                     {yieldData.apyReward ? formatAPY(yieldData.apyReward) : 'N/A'}
                   </div>
                 </div>
-                <div className="text-center p-3 rounded-lg bg-white/5">
+                <div className="text-center p-2 md:p-3 rounded-lg bg-white/5">
                   <div className="text-xs text-blue-200/80 mb-1">30d Average</div>
-                  <div className="font-semibold text-sm text-white">
+                  <div className="font-semibold text-xs md:text-sm text-white">
                     {yieldData.apyMean30d ? formatAPY(yieldData.apyMean30d) : 'N/A'}
                   </div>
                 </div>
-                <div className="text-center p-3 rounded-lg bg-white/5">
+                <div className="text-center p-2 md:p-3 rounded-lg bg-white/5">
                   <div className="text-xs text-blue-200/80 mb-1">24h Volume</div>
-                  <div className="font-semibold text-sm text-white">
+                  <div className="font-semibold text-xs md:text-sm text-white">
                     {yieldData.volumeUsd1d ? formatTVL(yieldData.volumeUsd1d) : 'N/A'}
                   </div>
                 </div>
@@ -211,10 +221,10 @@ export function DeFiLlamaYieldsTable({
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <TrendingUp className="w-5 h-5 text-emerald-400" />
-            <h2 className="text-xl font-semibold text-white">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1 md:gap-2 mb-1">
+            <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-emerald-400" />
+            <h2 className="text-sm md:text-xl font-semibold text-white truncate">
               {isProtocolSpecific 
                 ? `${searchedProtocol ? searchedProtocol.charAt(0).toUpperCase() + searchedProtocol.slice(1) : 'Protocol'} Opportunities`
                 : hasHighYieldPools 
@@ -223,7 +233,7 @@ export function DeFiLlamaYieldsTable({
               }
             </h2>
           </div>
-          <p className="text-sm text-blue-200/80">
+          <p className="text-xs md:text-sm text-blue-200/80 hidden md:block">
             {isProtocolSpecific 
               ? `Available yield opportunities${hasHighYieldPools ? ` (includes ${yields.filter(y => y.apy >= highYieldThreshold).length} high-yield ≥${highYieldThreshold}%)` : ''}`
               : hasHighYieldPools 
@@ -233,29 +243,29 @@ export function DeFiLlamaYieldsTable({
           </p>
         </div>
         
-        <Badge variant="secondary" className="h-8 px-4 bg-white/10 text-white border-white/20">
-          {yields.length} {yields.length === 1 ? 'opportunity' : 'opportunities'}
+        <Badge variant="secondary" className="h-6 px-2 md:h-8 md:px-4 bg-white/10 text-white border-white/20 text-xs md:text-sm flex-shrink-0">
+          <span className="truncate">{yields.length} {yields.length === 1 ? 'opportunity' : 'opportunities'}</span>
         </Badge>
       </div>
 
       {/* Yields Table */}
-      <div className="table-container rounded-xl border border-white/10 bg-black/30 backdrop-blur-sm p-4">
-        <Table className="w-full border-collapse min-w-[640px]">
+      <div className="table-container rounded-xl border border-white/10 bg-black/30 backdrop-blur-sm p-2 md:p-4">
+        <Table className="w-full border-collapse min-w-[320px]">
           <TableHeader>
             <TableRow className="border-b border-white/10">
-              <TableHead className="p-3 font-normal text-sm text-blue-200/80">
+              <TableHead className="p-2 md:p-3 font-normal text-[10px] md:text-sm text-blue-200/80">
                 Project
               </TableHead>
-              <TableHead className="p-3 font-normal text-sm text-blue-200/80 text-right">
+              <TableHead className="p-2 md:p-3 font-normal text-[10px] md:text-sm text-blue-200/80 text-right hidden sm:table-cell">
                 TVL
               </TableHead>
-              <TableHead className="p-3 font-normal text-sm text-blue-200/80 text-right">
+              <TableHead className="p-2 md:p-3 font-normal text-[10px] md:text-sm text-blue-200/80 text-right">
                 APY
               </TableHead>
-              <TableHead className="p-3 font-normal text-sm text-blue-200/80 text-right">
+              <TableHead className="p-2 md:p-3 font-normal text-[10px] md:text-sm text-blue-200/80 text-right">
                 Risk
               </TableHead>
-              <TableHead className="p-3 font-normal text-sm text-blue-200/80 text-center w-16">
+              <TableHead className="p-2 md:p-3 font-normal text-[10px] md:text-sm text-blue-200/80 text-center w-12 md:w-16">
                 Details
               </TableHead>
             </TableRow>
