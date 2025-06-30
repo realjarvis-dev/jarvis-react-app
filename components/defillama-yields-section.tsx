@@ -31,6 +31,7 @@ export function DeFiLlamaYieldsSection({
   const minApy = tool.args?.minApy
   const stablecoin = tool.args?.stablecoin
   const limit = tool.args?.limit || 20
+  const includeProtocolAnalysis = tool.args?.includeProtocolAnalysis || false
 
   const getHeaderText = () => {
     const filters = []
@@ -69,6 +70,7 @@ export function DeFiLlamaYieldsSection({
 
   const yields = result.yields || []
   const statistics = result.statistics || {}
+  const protocolAnalysis = result.protocolAnalysis || []
   
   return (
     <CollapsibleMessage
@@ -108,11 +110,20 @@ export function DeFiLlamaYieldsSection({
                 <span className="text-muted-foreground">Chains</span>
                 <div className="font-semibold text-lg">{statistics.uniqueChains || 0}</div>
               </div>
+              {includeProtocolAnalysis && protocolAnalysis.length > 0 && (
+                <div>
+                  <span className="text-muted-foreground">Protocol Analysis</span>
+                  <div className="font-semibold text-lg text-purple-600">{protocolAnalysis.length}</div>
+                </div>
+              )}
             </div>
           </div>
           
-          {/* Yields Table */}
-          <DeFiLlamaYieldsTable yields={yields} />
+          {/* Yields Table with Protocol Analysis */}
+          <DeFiLlamaYieldsTable 
+            yields={yields} 
+            protocolAnalysis={includeProtocolAnalysis ? protocolAnalysis : undefined}
+          />
         </div>
       )}
     </CollapsibleMessage>

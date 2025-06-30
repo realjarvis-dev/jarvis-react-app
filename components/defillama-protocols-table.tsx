@@ -11,6 +11,7 @@ import type { DeFiLlamaProtocol } from '../lib/defillama/types'
 interface DeFiLlamaProtocolsTableProps {
   protocols: DeFiLlamaProtocol[]
   view: string
+  opportunities?: any[]
 }
 
 function ProtocolRow({ protocol }: { protocol: DeFiLlamaProtocol }) {
@@ -185,7 +186,7 @@ function ProtocolRow({ protocol }: { protocol: DeFiLlamaProtocol }) {
   )
 }
 
-export function DeFiLlamaProtocolsTable({ protocols, view }: DeFiLlamaProtocolsTableProps) {
+export function DeFiLlamaProtocolsTable({ protocols, view, opportunities }: DeFiLlamaProtocolsTableProps) {
   if (protocols.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-12 text-center">

@@ -4,9 +4,10 @@ import {
   fetchProtocols, 
   getTopGainers, 
   getTopProtocolsByTVL, 
-  filterProtocols 
+  filterProtocols,
+  fetchYields
 } from '../defillama/api'
-import { sanitizeProtocol } from '../defillama/utils'
+import { sanitizeProtocol, analyzeDeFiOpportunities } from '../defillama/utils'
 
 export const defiProtocolsTool = tool({
   description: 'Get DeFi protocol data with TVL rankings, 7-day gainers, and filtering options. Perfect for hunting DeFi opportunities by following the money flow.',
@@ -16,9 +17,10 @@ export const defiProtocolsTool = tool({
     minTvl: z.number().optional().describe('Minimum TVL in USD (default: 1,000,000 for top gainers)'),
     sortBy: z.enum(['tvl', 'change_7d', 'change_1d', 'change_1h']).optional().describe('Sort criteria'),
     view: z.enum(['top_gainers', 'top_tvl', 'custom']).default('top_gainers').describe('View type: top_gainers for 7d gainers, top_tvl for highest TVL, custom for filtered results'),
+    includeYieldOpportunities: z.boolean().default(false).describe('Include related yield farming opportunities for each protocol'),
     limit: z.number().min(1).max(50).default(20).describe('Number of results to return')
   }),
-  execute: async ({ category, chain, minTvl, sortBy, view, limit }) => {
+  execute: async ({ category, chain, minTvl, sortBy, view, includeYieldOpportunities, limit }) => {
     try {
       console.log('🚀 Starting DeFiLlama protocols tool execution...')
       const rawProtocols = await fetchProtocols()
@@ -56,18 +58,33 @@ export const defiProtocolsTool = tool({
 
       console.log(`🎯 Filtered to ${filteredProtocols.length} protocols for view: ${view}`)
 
+      // Fetch yield opportunities if requested
+      let opportunities = null
+      if (includeYieldOpportunities) {
+        console.log('📈 Fetching yield opportunities for cross-reference...')
+        try {
+          const yields = await fetchYields()
+          opportunities = analyzeDeFiOpportunities(filteredProtocols, yields)
+          console.log(`✨ Generated ${opportunities.length} opportunity analyses`)
+        } catch (error) {
+          console.warn('⚠️ Failed to fetch yield opportunities:', error)
+        }
+      }
+
       const summary = view === 'top_gainers' 
-        ? `Found ${filteredProtocols.length} top DeFi gainers over 7 days with TVL > $1M - follow the money flow!`
+        ? `Found ${filteredProtocols.length} top DeFi gainers over 7 days with TVL > $1M - follow the money flow!${includeYieldOpportunities ? ' Including related yield opportunities.' : ''}`
         : view === 'top_tvl'
-        ? `Found ${filteredProtocols.length} top DeFi protocols by TVL - the biggest players in DeFi`
-        : `Found ${filteredProtocols.length} DeFi protocols matching your criteria`
+        ? `Found ${filteredProtocols.length} top DeFi protocols by TVL - the biggest players in DeFi${includeYieldOpportunities ? ' Including related yield opportunities.' : ''}`
+        : `Found ${filteredProtocols.length} DeFi protocols matching your criteria${includeYieldOpportunities ? ' Including related yield opportunities.' : ''}`
 
       const result = {
         _uiDisplayTool: true,
         summary,
         data: { 
           protocols: filteredProtocols,
+          opportunities: opportunities || [],
           view,
+          includeYields: includeYieldOpportunities,
           totalProtocols: protocols.length,
           averageTvl: protocols.reduce((sum, p) => sum + p.tvl, 0) / protocols.length
         }

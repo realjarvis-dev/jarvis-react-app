@@ -21,7 +21,6 @@ export const ToolBadge: React.FC<ToolBadgeProps> = ({
     transfer: <DollarSign size={14} />,
     market_chart: <TrendingUp size={14} />,
     get_gas_price: <Lightbulb size={14} />,
-    defillama_opportunities: <Target size={14} />,
     defillama_yields: <DollarSign size={14} />,
     defillama_protocols: <BarChart size={14} />
   }

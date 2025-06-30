@@ -30,6 +30,7 @@ export function DeFiLlamaProtocolsSection({
   const category = tool.args?.category
   const chain = tool.args?.chain
   const limit = tool.args?.limit || 20
+  const includeYields = tool.args?.includeYieldOpportunities || false
 
   const getHeaderText = () => {
     switch (view) {
@@ -80,6 +81,7 @@ export function DeFiLlamaProtocolsSection({
   }
 
   const protocols = result.protocols || []
+  const opportunities = result.opportunities || []
   
   return (
     <CollapsibleMessage
@@ -106,6 +108,9 @@ export function DeFiLlamaProtocolsSection({
               {result.averageTvl && (
                 <span>Avg TVL: ${(result.averageTvl / 1e9).toFixed(2)}B</span>
               )}
+              {includeYields && opportunities.length > 0 && (
+                <span>{opportunities.length} yield opportunities found</span>
+              )}
             </div>
           </div>
           
@@ -113,6 +118,7 @@ export function DeFiLlamaProtocolsSection({
           <DeFiLlamaProtocolsTable 
             protocols={protocols} 
             view={view}
+            opportunities={includeYields ? opportunities : undefined}
           />
         </div>
       )}

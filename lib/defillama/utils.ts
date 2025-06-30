@@ -53,6 +53,155 @@ export function formatAPY(apy: number): string {
 }
 
 /**
+ * Get protocol URL - either from known mapping or API lookup
+ */
+export function getProtocolUrl(protocolName: string): string | null {
+  // Common protocol URLs mapping (for instant access)
+  const knownProtocols: Record<string, string> = {
+    // DEXs
+    'uniswap-v3': 'https://app.uniswap.org',
+    'uniswap-v2': 'https://app.uniswap.org',
+    'sushiswap': 'https://www.sushi.com',
+    'pancakeswap': 'https://pancakeswap.finance',
+    'curve': 'https://curve.fi',
+    'balancer': 'https://balancer.fi',
+    '1inch': 'https://1inch.io',
+    'trader-joe': 'https://traderjoexyz.com',
+    
+    // Lending Protocols
+    'aave-v3': 'https://app.aave.com',
+    'aave-v2': 'https://app.aave.com',
+    'compound': 'https://app.compound.finance',
+    'compound-v3': 'https://v3-app.compound.finance',
+    'maker': 'https://makerdao.com',
+    'liquity': 'https://www.liquity.org',
+    'euler': 'https://app.euler.finance',
+    'morpho': 'https://app.morpho.org',
+    
+    // Yield Farming
+    'convex-finance': 'https://www.convexfinance.com',
+    'yearn-finance': 'https://yearn.fi',
+    'beefy': 'https://app.beefy.finance',
+    'harvest-finance': 'https://app.harvest.finance',
+    'pickle-finance': 'https://app.pickle.finance',
+    
+    // Liquid Staking
+    'lido': 'https://lido.fi',
+    'rocket-pool': 'https://rocketpool.net',
+    'frax': 'https://app.frax.finance',
+    'stakewise': 'https://app.stakewise.io',
+    'ankr': 'https://www.ankr.com/staking',
+    
+    // Layer 2 & Cross-chain
+    'stargate': 'https://stargate.finance',
+    'hop-protocol': 'https://app.hop.exchange',
+    'synapse': 'https://synapseprotocol.com',
+    'multichain': 'https://multichain.org',
+    
+    // Derivatives & Options
+    'gmx': 'https://app.gmx.io',
+    'perpetual-protocol': 'https://perp.com',
+    'synthetix': 'https://synthetix.io',
+    'ribbon': 'https://app.ribbon.finance',
+    'dopex': 'https://www.dopex.io',
+    
+    // Algorithmic Stablecoins
+    'olympus': 'https://app.olympusdao.finance',
+    'terra': 'https://terra.money',
+    'fei-protocol': 'https://fei.money',
+    
+    // Insurance & Risk
+    'nexus-mutual': 'https://nexusmutual.io',
+    'cover-protocol': 'https://coverprotocol.com',
+    'unslashed': 'https://unslashed.finance',
+    
+    // Newer Protocols
+    'pendle': 'https://app.pendle.finance',
+    'jones-dao': 'https://jonesdao.io',
+    'plutus': 'https://plutusdao.io',
+    'radiant': 'https://radiant.capital',
+    'camelot': 'https://app.camelot.exchange',
+    'merchant-moe': 'https://merchantmoe.com',
+    'benqi': 'https://app.benqi.fi',
+    'avalanche': 'https://www.avax.network',
+    'joe': 'https://traderjoexyz.com',
+    
+    // Restaking
+    'eigenlayer': 'https://app.eigenlayer.xyz',
+    'renzo': 'https://app.renzoprotocol.com',
+    'etherfi': 'https://app.ether.fi',
+    'kelp-dao': 'https://kelpdao.xyz',
+    
+    // Specific protocols from DeFiLlama data
+    'merkl': 'https://merkl.angle.money',
+    'angle': 'https://app.angle.money',
+    'kepple': 'https://kepple.finance'
+  }
+
+  // Normalize protocol name for lookup
+  const normalizedName = protocolName.toLowerCase().trim()
+  
+  // Check direct match first
+  if (knownProtocols[normalizedName]) {
+    return knownProtocols[normalizedName]
+  }
+  
+  // Check for partial matches (e.g., "uniswap" matches "uniswap-v3")
+  for (const [key, url] of Object.entries(knownProtocols)) {
+    if (key.includes(normalizedName) || normalizedName.includes(key.split('-')[0])) {
+      return url
+    }
+  }
+  
+  return null
+}
+
+/**
+ * Async lookup for protocol URL from DeFiLlama protocols API
+ */
+export async function getProtocolUrlAsync(protocolName: string): Promise<string | null> {
+  // First try the synchronous version
+  const syncResult = getProtocolUrl(protocolName)
+  if (syncResult) {
+    return syncResult
+  }
+  
+  try {
+    // Dynamic API lookup
+    const { lookupProtocolUrl } = await import('./protocol-lookup')
+    return await lookupProtocolUrl(protocolName)
+  } catch (error) {
+    console.warn(`Failed to lookup protocol URL for ${protocolName}:`, error)
+    return null
+  }
+}
+
+/**
+ * Get blockchain explorer URL for a token address
+ */
+export function getExplorerUrl(tokenAddress: string, chain: string = 'ethereum'): string {
+  const explorerMap: Record<string, string> = {
+    'ethereum': 'https://etherscan.io/token',
+    'arbitrum': 'https://arbiscan.io/token',
+    'arbitrum one': 'https://arbiscan.io/token',
+    'polygon': 'https://polygonscan.com/token',
+    'optimism': 'https://optimistic.etherscan.io/token',
+    'base': 'https://basescan.org/token',
+    'avalanche': 'https://snowtrace.io/token',
+    'avax': 'https://snowtrace.io/token',
+    'bsc': 'https://bscscan.com/token',
+    'fantom': 'https://ftmscan.com/token',
+    'solana': 'https://solscan.io/token',
+    'mainnet': 'https://etherscan.io/token'
+  }
+  
+  const normalizedChain = chain.toLowerCase().trim()
+  const baseUrl = explorerMap[normalizedChain] || explorerMap['ethereum']
+  
+  return `${baseUrl}/${tokenAddress}`
+}
+
+/**
  * Format reward token address to show more meaningful information
  */
 export function formatRewardToken(token: string): string {
@@ -108,6 +257,74 @@ export function formatRewardToken(token: string): string {
   
   // If it's already a symbol/name, show first 8 characters
   return token.length > 8 ? `${token.slice(0, 8)}...` : token
+}
+
+/**
+ * Async version of formatRewardToken that can lookup unknown tokens via API
+ */
+export async function formatRewardTokenAsync(token: string, chain: string = 'ethereum'): Promise<string> {
+  // First try the synchronous version for known tokens
+  const syncResult = formatRewardToken(token)
+  
+  // If it's not a shortened address (meaning we found a known token or it's already a symbol), return it
+  if (!syncResult.includes('...') || !token.startsWith('0x')) {
+    return syncResult
+  }
+  
+  // For unknown addresses, try API lookup
+  try {
+    const { lookupToken } = await import('./token-lookup')
+    const apiResult = await lookupToken(token, chain)
+    
+    if (apiResult) {
+      return apiResult
+    }
+  } catch (error) {
+    console.warn(`Failed to lookup token ${token}:`, error)
+  }
+  
+  // Fallback to shortened address
+  return syncResult
+}
+
+/**
+ * Batch format multiple reward tokens efficiently
+ */
+export async function formatRewardTokensBatch(tokens: string[], chain: string = 'ethereum'): Promise<Map<string, string>> {
+  const results = new Map<string, string>()
+  const unknownTokens: string[] = []
+  
+  // First process with sync version to identify unknown tokens
+  for (const token of tokens) {
+    const syncResult = formatRewardToken(token)
+    results.set(token, syncResult)
+    
+    // If it's a shortened address, we might be able to improve it with API lookup
+    if (syncResult.includes('...') && token.startsWith('0x')) {
+      unknownTokens.push(token)
+    }
+  }
+  
+  // If no unknown tokens, return early
+  if (unknownTokens.length === 0) {
+    return results
+  }
+  
+  try {
+    // Batch lookup unknown tokens
+    const { lookupTokensBatch } = await import('./token-lookup')
+    const tokenObjects = unknownTokens.map(address => ({ address, chain }))
+    const apiResults = await lookupTokensBatch(tokenObjects)
+    
+    // Update results with API findings
+    for (const [address, symbol] of apiResults) {
+      results.set(address, symbol)
+    }
+  } catch (error) {
+    console.warn('Failed batch token lookup:', error)
+  }
+  
+  return results
 }
 
 /**

@@ -3,13 +3,16 @@
 import { Badge } from './ui/badge'
 import { Button } from './ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table'
-import { formatTVL, formatAPY, formatRewardToken } from '../lib/defillama/utils'
+import { RewardTokenBadge } from './reward-token-badge'
+import { ProtocolLink } from './protocol-link'
+import { formatTVL, formatAPY } from '../lib/defillama/utils'
 import { ExternalLink, Shield, AlertTriangle, TrendingUp, ChevronDown, ChevronRight } from 'lucide-react'
 import { useState } from 'react'
 import type { DeFiLlamaYield } from '../lib/defillama/types'
 
 interface DeFiLlamaYieldsTableProps {
   yields: DeFiLlamaYield[]
+  protocolAnalysis?: any[]
 }
 
 function getChainColor(chain: string): string {
@@ -41,7 +44,7 @@ function YieldRow({ yieldData }: { yieldData: DeFiLlamaYield }) {
           <div className="flex items-center gap-2">
             <div>
               <div className="text-sm font-medium text-white">
-                {yieldData.project}
+                <ProtocolLink protocolName={yieldData.project} />
               </div>
               <div className="flex items-center gap-2 mt-1">
                 <span className={`text-xs ${getChainColor(yieldData.chain)}`}>
@@ -127,9 +130,12 @@ function YieldRow({ yieldData }: { yieldData: DeFiLlamaYield }) {
                   <div className="text-xs text-blue-200/80 mb-2">Reward Tokens</div>
                   <div className="flex flex-wrap gap-1">
                     {yieldData.rewardTokens.slice(0, 6).map((token, index) => (
-                      <Badge key={index} variant="outline" className="h-5 px-2 text-xs font-mono border-white/20 text-white">
-                        {formatRewardToken(token)}
-                      </Badge>
+                      <RewardTokenBadge 
+                        key={index} 
+                        token={token} 
+                        chain={yieldData.chain?.toLowerCase() || 'ethereum'}
+                        className="h-5 px-2"
+                      />
                     ))}
                     {yieldData.rewardTokens.length > 6 && (
                       <Badge variant="outline" className="h-5 px-2 text-xs border-white/20 text-white">
@@ -179,7 +185,7 @@ function YieldRow({ yieldData }: { yieldData: DeFiLlamaYield }) {
   )
 }
 
-export function DeFiLlamaYieldsTable({ yields }: DeFiLlamaYieldsTableProps) {
+export function DeFiLlamaYieldsTable({ yields, protocolAnalysis }: DeFiLlamaYieldsTableProps) {
   if (yields.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-12 text-center">
@@ -207,7 +213,7 @@ export function DeFiLlamaYieldsTable({ yields }: DeFiLlamaYieldsTableProps) {
         </div>
         
         <Badge variant="secondary" className="h-8 px-4 bg-white/10 text-white border-white/20">
-          {yields.length} opportunity{yields.length > 1 ? 'ies' : 'y'}
+          {yields.length} {yields.length === 1 ? 'opportunity' : 'opportunities'}
         </Badge>
       </div>
 

@@ -1,7 +1,6 @@
 import { ChainType } from '@/lib/network/types'
 import { z } from 'zod'
 import { searchSchema } from '../schema/search'
-import { defiOpportunitiesTool } from '../tools/defillama-opportunities'
 import { defiProtocolsTool } from '../tools/defillama-protocols'
 import { defiYieldsTool } from '../tools/defillama-yields'
 import { getGasPriceTool } from '../tools/gas-price'
@@ -554,17 +553,6 @@ export function createToolRegistry(model: string): ToolRegistry {
     category: ToolCategory.WEB
   })
 
-  registry.registerTool({
-    name: 'defillama_opportunities',
-    description: 'Hunt for DeFi opportunities by analyzing top-performing protocols with high TVL growth and momentum',
-    schema: defiOpportunitiesTool.parameters,
-    execute: async (params, context) => defiOpportunitiesTool.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!
-    } as any),
-    category: ToolCategory.WEB
-  })
 
   return registry
 }
