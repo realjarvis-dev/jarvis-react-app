@@ -95,10 +95,15 @@ const get_system_prompt = (
 
   // Generate web3 tools list dynamically
   const generateWeb3ToolsList = () => {
-    const web3Tools = registry
-      .getToolNamesByCategory(ToolCategory.WEB3)
+    const web3ReadTools = registry
+      .getToolNamesByCategory(ToolCategory.WEB3_READ)
       .filter((tool: string) => supportedTools.includes(tool))
-    return web3Tools.length > 0 ? web3Tools.join('\n- ') : ''
+    const web3WriteTools = registry
+      .getToolNamesByCategory(ToolCategory.WEB3_WRITE)
+      .filter((tool: string) => supportedTools.includes(tool))
+
+    const allWeb3Tools = [...web3ReadTools, ...web3WriteTools]
+    return allWeb3Tools.length > 0 ? allWeb3Tools.join('\n- ') : ''
   }
 
   // Generate read-only tools section dynamically
@@ -224,17 +229,18 @@ When asked a question, you should:
 1. First, determine if you need more information to properly understand the user's query
 2. Determine if the user wants to explore any opportunities that are covered by the web3 tools. If so, call the tool but don't return any results in your response since the tool will render the UI.
 3. If the user wants to execute transactions, use the most appropriate tool to execute the transaction.
-4. Use search tool to find information if the user's query is not covered by the tools, as the tool only includes market information but not any other information. Search for protocol's doc if user asked about protocol's product or service.
-5. **If the query is ambiguous or lacks specific details, use the ask_question tool to create a structured question with relevant options**
-6. If you have enough information, use the most appropriate tool (see above) to gather relevant information
-7. Use the retrieve tool to get detailed content from specific URLs
-8. Use the video search tool when looking for video content
-9. Analyze all search results to provide accurate, up-to-date information
-10. Always cite sources using the [number](url) format, matching the order of search results. If multiple sources are relevant, include all of them, and comma separate them. Only use information that has a URL available for citation.
-11. If results are not relevant or helpful, rely on your general knowledge
-12. Provide comprehensive and detailed responses based on search results, ensuring thorough coverage of the user's question
-13. Use markdown to structure your responses. Use headings to break up the content into sections.
-14. **Use the retrieve tool only with user-provided URLs.**
+4. Use search tool to find information if the user's query is not covered by the other web3 tools, as these tool only includes market information but not any other information. Search for protocol's doc if user asked about protocol's product or service.
+5. When use the search tool, break down the query into smaller parts and use the search tool for each part if the query is too broad.
+7. **If the query is ambiguous or lacks specific details, use the ask_question tool to create a structured question with relevant options**
+8. If you have enough information, use the most appropriate tool (see above) to gather relevant information
+9. Use the retrieve tool to get detailed content from specific URLs
+10. Use the video search tool when looking for video content
+11. Analyze all search results to provide accurate, up-to-date information
+12. Always cite sources using the [number](url) format, matching the order of search results. If multiple sources are relevant, include all of them, and comma separate them. Only use information that has a URL available for citation.
+13. If results are not relevant or helpful, rely on your general knowledge
+14. Provide comprehensive and detailed responses based on search results, ensuring thorough coverage of the user's question
+15. Use markdown to structure your responses. Use headings to break up the content into sections.
+16. Use retrieve tool if user provides urls.
 
 When using the ask_question tool:
 - Create clear, concise questions
@@ -344,7 +350,10 @@ export function researcher({
 
     const maxSteps = registry.getMaxSteps(model, searchMode)
 
-    let web3_tools = registry.getToolNamesByCategory(ToolCategory.WEB3)
+    let web3_tools = [
+      ...registry.getToolNamesByCategory(ToolCategory.WEB3_READ),
+      ...registry.getToolNamesByCategory(ToolCategory.WEB3_WRITE)
+    ]
 
     // Apply network filtering to web3 tools if networkContext is provided
     if (networkContext) {
@@ -361,22 +370,32 @@ export function researcher({
     if (allowWeb3Tools === 'false') {
       supportedTools = supportedTools.filter(tool => !web3_tools.includes(tool))
       web3_tools = []
+    } else if (allowWeb3Tools === 'readonly') {
+      // For Twitter agent and other read-only use cases, only allow WEB3_READ tools
+      const web3WriteTools = registry.getToolNamesByCategory(
+        ToolCategory.WEB3_WRITE
+      )
+      supportedTools = supportedTools.filter(
+        tool => !web3WriteTools.includes(tool)
+      )
+      web3_tools = web3_tools.filter(tool => !web3WriteTools.includes(tool))
     }
 
     let userWalletInfo
     if (userEvmWallet === undefined) {
-      userWalletInfo =
-        "The user is not logged in. Don't use any web3 tools. If the user wants to use web3 tools, ask them to login friendly"
+      userWalletInfo = ""
+      // userWalletInfo =
+      //   "The user is not logged in. Don't use any web3 write tools. If the user wants to use web3 write tools, ask them to login friendly"
     } else {
       userWalletInfo = `
 User EVM wallet address: ${userEvmWallet?.address}, delegated status: ${userEvmWallet?.delegated}
 You can only execute on behalf of the user if they have wallets and have delegated you access to their wallet.
 `
-// userWalletInfo = `
-// User EVM wallet address: ${userEvmWallet?.address}, delegated status: ${userEvmWallet?.delegated}
-// User Solana wallet address: ${userSolWallet?.address}, delegated status: ${userSolWallet?.delegated}
-// You can only execute on behalf of the user if they have wallets and have delegated you access to their wallet.
-// `
+      // userWalletInfo = `
+      // User EVM wallet address: ${userEvmWallet?.address}, delegated status: ${userEvmWallet?.delegated}
+      // User Solana wallet address: ${userSolWallet?.address}, delegated status: ${userSolWallet?.delegated}
+      // You can only execute on behalf of the user if they have wallets and have delegated you access to their wallet.
+      // `
     }
 
     // Add network context info to the prompt
@@ -393,7 +412,12 @@ Network Context:
     }
 
     // Create tool list from registry with network context and user context
-    const tool_lst = createToolList(supportedTools, registry, networkContext, isNewUser)
+    const tool_lst = createToolList(
+      supportedTools,
+      registry,
+      networkContext,
+      isNewUser
+    )
 
     const o3MiniTools = networkContext
       ? registry.getSupportedToolNamesForNetwork(

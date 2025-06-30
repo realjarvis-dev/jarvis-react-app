@@ -1,6 +1,9 @@
 import { z } from 'zod'
-import { ToolRegistry, ToolCategory, createToolRegistry } from '../tool-registry'
-
+import {
+  ToolCategory,
+  ToolRegistry,
+  createToolRegistry
+} from '../tool-registry'
 
 const mockSearchSchema = z.object({
   query: z.string(),
@@ -20,7 +23,7 @@ const mockWalletTool = {
   description: 'Get wallet balance',
   schema: z.object({ wallet_address: z.string() }),
   execute: jest.fn().mockResolvedValue({ tokens: [] }),
-  category: ToolCategory.WEB3
+  category: ToolCategory.WEB3_READ
 }
 
 describe('ToolRegistry', () => {
@@ -51,7 +54,7 @@ describe('ToolRegistry', () => {
     expect(webTools).toHaveLength(1)
     expect(webTools[0].name).toBe('search')
 
-    const web3Tools = registry.getToolsByCategory(ToolCategory.WEB3)
+    const web3Tools = registry.getToolsByCategory(ToolCategory.WEB3_READ)
     expect(web3Tools).toHaveLength(1)
     expect(web3Tools[0].name).toBe('wallet_balance')
   })
@@ -60,7 +63,9 @@ describe('ToolRegistry', () => {
     const webToolNames = registry.getToolNamesByCategory(ToolCategory.WEB)
     expect(webToolNames).toEqual(['search'])
 
-    const web3ToolNames = registry.getToolNamesByCategory(ToolCategory.WEB3)
+    const web3ToolNames = registry.getToolNamesByCategory(
+      ToolCategory.WEB3_READ
+    )
     expect(web3ToolNames).toEqual(['wallet_balance'])
   })
 
@@ -103,7 +108,7 @@ describe('createToolRegistry', () => {
   test('should create a registry with all tools', () => {
     const registry = createToolRegistry('test-model')
     expect(registry).toBeInstanceOf(ToolRegistry)
-    
+
     const toolNames = registry.getAllToolNames()
     expect(toolNames).toContain('search')
     expect(toolNames).toContain('retrieve')
