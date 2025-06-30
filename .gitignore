@@ -38,4 +38,10 @@ next-env.d.ts
 # cursor
 .cursor/rules/private
 
+# claude code
+.claude/
+
+# redis dump files
+dump.rdb
+
 /lib/kodiak/docs

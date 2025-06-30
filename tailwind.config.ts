@@ -9,6 +9,19 @@ const config = {
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}'
   ],
+  safelist: [
+    // DeFiLlama badge colors - category badges
+    { pattern: /^!?bg-(blue|emerald|purple|indigo|amber|orange|slate|red|pink|cyan|teal|violet|rose|yellow|fuchsia|sky|stone|zinc|lime|green|neutral)-(400|500)\/20$/ },
+    { pattern: /^!?text-(blue|emerald|purple|indigo|amber|orange|slate|red|pink|cyan|teal|violet|rose|yellow|fuchsia|sky|stone|zinc|lime|green|neutral)-(300|700)$/ },
+    { pattern: /^!?border-(blue|emerald|purple|indigo|amber|orange|slate|red|pink|cyan|teal|violet|rose|yellow|fuchsia|sky|stone|zinc|lime|green|neutral)-(400|500)\/40$/ },
+    { pattern: /^!?border-(blue|emerald|purple|indigo|amber|orange|slate|red|pink|cyan|teal|violet|rose|yellow|fuchsia|sky|stone|zinc|lime|green|neutral)-(400|500)\/50$/ },
+    // DeFiLlama risk badge specific colors
+    'text-teal-700', 'text-teal-300', 'text-yellow-700', 'text-yellow-300', 'text-red-700', 'text-red-300',
+    '!bg-teal-500/20', '!bg-yellow-500/20', '!bg-red-500/20', '!bg-teal-400/20', '!bg-yellow-400/20', '!bg-red-400/20',
+    '!border-teal-500/50', '!border-yellow-500/50', '!border-red-500/50', '!border-teal-400/50', '!border-yellow-400/50', '!border-red-400/50',
+    // Common utility classes
+    'hide-scrollbar', 'whitespace-nowrap', 'backdrop-blur-sm'
+  ],
   prefix: '',
   theme: {
   	container: {

@@ -1,4 +1,4 @@
-import { DollarSign, Link, Search, Film, Lightbulb, TrendingUp } from 'lucide-react'
+import { DollarSign, Link, Search, Film, Lightbulb, TrendingUp, BarChart, Target } from 'lucide-react'
 import React from 'react'
 import { Badge } from './ui/badge'
 
@@ -20,8 +20,9 @@ export const ToolBadge: React.FC<ToolBadgeProps> = ({
     pendle_opportunities: <DollarSign size={14} />,
     transfer: <DollarSign size={14} />,
     market_chart: <TrendingUp size={14} />,
-    // what is the light bulb 
-    get_gas_price: <Lightbulb size={14} />
+    get_gas_price: <Lightbulb size={14} />,
+    defillama_yields: <DollarSign size={14} />,
+    defillama_protocols: <BarChart size={14} />
   }
 
   return (

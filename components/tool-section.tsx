@@ -24,6 +24,8 @@ import { TransferSection } from './transfer-section'
 import { VideoSearchSection } from './video-search-section'
 import { WalletBalanceSection } from './wallet-balance-section'
 import { WalletFundingSection } from './wallet-funding-section'
+import { DeFiLlamaYieldsSection } from './defillama-yields-section'
+import { DeFiLlamaProtocolsSection } from './defillama-protocols-section'
 
 interface ToolSectionProps {
   tool: ToolInvocation
@@ -267,6 +269,22 @@ export function ToolSection({
     case 'initial_wallet_reward':
       return (
         <WalletFundingSection
+          tool={tool}
+          isOpen={isOpen}
+          onOpenChange={onOpenChange}
+        />
+      )
+    case 'defillama_yields':
+      return (
+        <DeFiLlamaYieldsSection
+          tool={tool}
+          isOpen={isOpen}
+          onOpenChange={onOpenChange}
+        />
+      )
+    case 'defillama_protocols':
+      return (
+        <DeFiLlamaProtocolsSection
           tool={tool}
           isOpen={isOpen}
           onOpenChange={onOpenChange}
