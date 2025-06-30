@@ -12,5 +12,3 @@ export const getGasPriceByChainId = async (chainId: number): Promise<bigint> => 
   const gasPrice = await alchemy.core.getGasPrice()
   return gasPrice.toBigInt()
 }
-
-console.log(await getGasPriceByChainId(8453))

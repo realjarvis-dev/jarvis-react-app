@@ -2,21 +2,42 @@ import { ChainType } from '@/lib/network/types'
 import { z } from 'zod'
 import { searchSchema } from '../schema/search'
 import { getGasPriceTool } from '../tools/gas-price'
-import { kodiakBaultProfitabilityTool, kodiakCompoundBaultTool, kodiakDepositTool, kodiakOpportunitiesTool } from '../tools/kodiak'
+import {
+  kodiakBaultProfitabilityTool,
+  kodiakCompoundBaultTool,
+  kodiakDepositTool,
+  kodiakOpportunitiesTool
+} from '../tools/kodiak'
 import { bridgeExecuteTool, bridgeQuoteTool } from '../tools/lifi-bridge'
 import { marketChartTool } from '../tools/market-chart'
-import { pendleMintQuoteTool, pendleMintTool, pendleOpportunitiesTool, pendleQuoteTool, pendleRedeemQuoteTool, pendleRedeemTool, pendleSwapTool } from '../tools/pendle'
+import {
+  pendleMintQuoteTool,
+  pendleMintTool,
+  pendleOpportunitiesTool,
+  pendleQuoteTool,
+  pendleRedeemQuoteTool,
+  pendleRedeemTool,
+  pendleSwapTool
+} from '../tools/pendle'
+import {
+  pendleZapInExecuteTool,
+  pendleZapInQuoteTool
+} from '../tools/pendle-liquidity'
+import {
+  pendleZapOutExecuteTool,
+  pendleZapOutQuoteTool
+} from '../tools/pendle-remove-liquidity'
 import { privyTransferTool } from '../tools/privy-transfer'
 import { createQuestionTool } from '../tools/question'
 import { retrieveTool } from '../tools/retrieve'
 import { createSearchTool } from '../tools/search'
 import { createVideoSearchTool } from '../tools/video-search'
-import { fundWalletTool, initialWalletRewardTool, walletBalanceTool } from '../tools/wallet'
+import {
+  fundWalletTool,
+  initialWalletRewardTool,
+  walletBalanceTool
+} from '../tools/wallet'
 import { NetworkContext, ToolContext } from '../types/context'
-import { pendleZapInQuoteTool, pendleZapInExecuteTool } from '../tools/pendle-liquidity'
-import { pendleZapOutExecuteTool, pendleZapOutQuoteTool } from '../tools/pendle-remove-liquidity'
-
-
 
 /**
  * Interface for tool definition with schema and execution function
@@ -25,7 +46,10 @@ export interface ToolDefinition<T = any> {
   name: string
   description: string
   schema: z.ZodType<T>
-  execute?: (params: T, context?: ToolContext) => Promise<any> | PromiseLike<any>
+  execute?: (
+    params: T,
+    context?: ToolContext
+  ) => Promise<any> | PromiseLike<any>
   category: ToolCategory
   supportedNetworks?: (ChainType | 'demo')[]
 }
@@ -35,7 +59,8 @@ export interface ToolDefinition<T = any> {
  */
 export enum ToolCategory {
   WEB = 'web',
-  WEB3 = 'web3',
+  WEB3_READ = 'web3_read',
+  WEB3_WRITE = 'web3_write',
   UTILITY = 'utility'
 }
 
@@ -56,7 +81,12 @@ export class ToolRegistry {
 
   constructor() {
     this.modelCapabilities.set('default', {
-      supportedCategories: [ToolCategory.WEB, ToolCategory.WEB3, ToolCategory.UTILITY],
+      supportedCategories: [
+        ToolCategory.WEB,
+        ToolCategory.WEB3_READ,
+        ToolCategory.WEB3_WRITE,
+        ToolCategory.UTILITY
+      ],
       maxSteps: 10
     })
 
@@ -119,7 +149,10 @@ export class ToolRegistry {
    * Get model capabilities
    */
   getModelCapability(modelId: string): ModelCapability {
-    return this.modelCapabilities.get(modelId) || this.modelCapabilities.get('default')!
+    return (
+      this.modelCapabilities.get(modelId) ||
+      this.modelCapabilities.get('default')!
+    )
   }
 
   /**
@@ -135,7 +168,10 @@ export class ToolRegistry {
   /**
    * Get supported tool names for a model with network filtering
    */
-  getSupportedToolNamesForNetwork(modelId: string, networkContext: NetworkContext): string[] {
+  getSupportedToolNamesForNetwork(
+    modelId: string,
+    networkContext: NetworkContext
+  ): string[] {
     const capability = this.getModelCapability(modelId)
     return this.getAllTools()
       .filter(tool => capability.supportedCategories.includes(tool.category))
@@ -171,24 +207,37 @@ export function createToolRegistry(model: string): ToolRegistry {
     name: 'get_gas_price',
     description: 'Get the proposed gas price',
     schema: getGasPriceTool.parameters,
-    execute: async (params, context) => getGasPriceTool.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!
-    } as any),
-    category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism', 'unichain', 'bsc', 'sonic']
+    execute: async (params, context) =>
+      getGasPriceTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.WEB3_WRITE,
+    supportedNetworks: [
+      'ethereum',
+      'berachain',
+      'demo',
+      'base',
+      'arbitrum',
+      'polygon',
+      'optimism',
+      'unichain',
+      'bsc',
+      'sonic'
+    ]
   })
 
   registry.registerTool({
     name: 'search',
     description: 'Search the web for information',
     schema: searchSchema,
-    execute: async (params, context) => searchTool.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!
-    } as any),
+    execute: async (params, context) =>
+      searchTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
     category: ToolCategory.WEB
   })
 
@@ -196,11 +245,12 @@ export function createToolRegistry(model: string): ToolRegistry {
     name: 'retrieve',
     description: 'Get detailed content from specific URLs',
     schema: retrieveTool.parameters,
-    execute: async (params, context) => retrieveTool.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!
-    } as any),
+    execute: async (params, context) =>
+      retrieveTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
     category: ToolCategory.WEB
   })
 
@@ -208,11 +258,12 @@ export function createToolRegistry(model: string): ToolRegistry {
     name: 'videoSearch',
     description: 'Search for video content',
     schema: videoSearchTool.parameters,
-    execute: async (params, context) => videoSearchTool.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!
-    } as any),
+    execute: async (params, context) =>
+      videoSearchTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
     category: ToolCategory.WEB
   })
 
@@ -227,11 +278,12 @@ export function createToolRegistry(model: string): ToolRegistry {
     name: 'market_chart',
     description: 'Fetch and display cryptocurrency market chart data',
     schema: marketChartTool.parameters,
-    execute: async (params, context) => marketChartTool.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!
-    } as any),
+    execute: async (params, context) =>
+      marketChartTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
     category: ToolCategory.WEB
   })
 
@@ -239,169 +291,275 @@ export function createToolRegistry(model: string): ToolRegistry {
     name: 'pendle_opportunities',
     description: 'Get Pendle yield opportunities',
     schema: pendleOpportunitiesTool.parameters,
-    execute: async (params, context) => pendleOpportunitiesTool.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!
-    } as any),
-    category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'sonic', 'berachain', 'optimism', 'mantle', 'demo']
+    execute: async (params, context) =>
+      pendleOpportunitiesTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.WEB3_READ,
+    supportedNetworks: [
+      'ethereum',
+      'bsc',
+      'arbitrum',
+      'base',
+      'sonic',
+      'berachain',
+      'optimism',
+      'mantle',
+      'demo'
+    ]
   })
 
   registry.registerTool({
     name: 'pendle_quote',
     description: 'Get a quote for swapping ETH to a Pendle token',
     schema: pendleQuoteTool.parameters,
-    execute: async (params, context) => pendleQuoteTool.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!
-    } as any),
-    category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'sonic', 'berachain', 'optimism', 'mantle', 'demo']
+    execute: async (params, context) =>
+      pendleQuoteTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.WEB3_READ,
+    supportedNetworks: [
+      'ethereum',
+      'bsc',
+      'arbitrum',
+      'base',
+      'sonic',
+      'berachain',
+      'optimism',
+      'mantle',
+      'demo'
+    ]
   })
 
   registry.registerTool({
     name: 'pendle_swap',
     description: pendleSwapTool.description || '',
     schema: pendleSwapTool.parameters,
-    execute: async (params, context) => pendleSwapTool.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!
-    } as any),
-    category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'sonic', 'berachain', 'optimism', 'mantle', 'demo']
+    execute: async (params, context) =>
+      pendleSwapTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.WEB3_WRITE,
+    supportedNetworks: [
+      'ethereum',
+      'bsc',
+      'arbitrum',
+      'base',
+      'sonic',
+      'berachain',
+      'optimism',
+      'mantle',
+      'demo'
+    ]
   })
 
   registry.registerTool({
     name: 'pendle_redeem',
     description: pendleRedeemTool.description || '',
     schema: pendleRedeemTool.parameters,
-    execute: async (params, context) => pendleRedeemTool.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!
-    } as any),
-    category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'sonic', 'berachain', 'optimism', 'mantle', 'demo']
+    execute: async (params, context) =>
+      pendleRedeemTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.WEB3_WRITE,
+    supportedNetworks: [
+      'ethereum',
+      'bsc',
+      'arbitrum',
+      'base',
+      'sonic',
+      'berachain',
+      'optimism',
+      'mantle',
+      'demo'
+    ]
   })
 
   registry.registerTool({
     name: 'pendle_mint',
     description: pendleMintTool.description || '',
     schema: pendleMintTool.parameters,
-    execute: async (params, context) => pendleMintTool.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!
-    } as any),
-    category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'sonic', 'berachain', 'optimism', 'mantle', 'demo']
+    execute: async (params, context) =>
+      pendleMintTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.WEB3_WRITE,
+    supportedNetworks: [
+      'ethereum',
+      'bsc',
+      'arbitrum',
+      'base',
+      'sonic',
+      'berachain',
+      'optimism',
+      'mantle',
+      'demo'
+    ]
   })
 
   registry.registerTool({
     name: 'pendle_redeem_quote',
     description: pendleRedeemQuoteTool.description || '',
     schema: pendleRedeemQuoteTool.parameters,
-    execute: async (params, context) => pendleRedeemQuoteTool.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!
-    } as any),
-    category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'sonic', 'berachain', 'optimism', 'mantle', 'demo']
+    execute: async (params, context) =>
+      pendleRedeemQuoteTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.WEB3_READ,
+    supportedNetworks: [
+      'ethereum',
+      'bsc',
+      'arbitrum',
+      'base',
+      'sonic',
+      'berachain',
+      'optimism',
+      'mantle',
+      'demo'
+    ]
   })
 
   registry.registerTool({
     name: 'pendle_mint_quote',
     description: pendleMintQuoteTool.description || '',
     schema: pendleMintQuoteTool.parameters,
-    execute: async (params, context) => pendleMintQuoteTool.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!
-    } as any),
-    category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'sonic', 'berachain', 'optimism', 'mantle', 'demo']
+    execute: async (params, context) =>
+      pendleMintQuoteTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.WEB3_READ,
+    supportedNetworks: [
+      'ethereum',
+      'bsc',
+      'arbitrum',
+      'base',
+      'sonic',
+      'berachain',
+      'optimism',
+      'mantle',
+      'demo'
+    ]
   })
 
   registry.registerTool({
     name: 'wallet_balance',
     description: 'Get wallet balance information',
     schema: walletBalanceTool.parameters,
-    execute: async (params, context) => walletBalanceTool.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!
-    } as any),
-    category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism', 'unichain', 'bsc', 'sonic']
+    execute: async (params, context) =>
+      walletBalanceTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.WEB3_READ,
+    supportedNetworks: [
+      'ethereum',
+      'berachain',
+      'demo',
+      'base',
+      'arbitrum',
+      'polygon',
+      'optimism',
+      'unichain',
+      'bsc',
+      'sonic'
+    ]
   })
 
   registry.registerTool({
     name: 'privy_transfer',
     description: privyTransferTool.description || '',
     schema: privyTransferTool.parameters,
-    execute: async (params, context) => privyTransferTool.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!
-    } as any),
-    category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism', 'unichain', 'bsc', 'sonic']
+    execute: async (params, context) =>
+      privyTransferTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.WEB3_WRITE,
+    supportedNetworks: [
+      'ethereum',
+      'berachain',
+      'demo',
+      'base',
+      'arbitrum',
+      'polygon',
+      'optimism',
+      'unichain',
+      'bsc',
+      'sonic'
+    ]
   })
 
   registry.registerTool({
     name: 'kodiak_opportunities',
     description: 'Get Kodiak Island yield opportunities on Berachain',
     schema: kodiakOpportunitiesTool.parameters,
-    execute: async (params, context) => kodiakOpportunitiesTool.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!
-    } as any),
-    category: ToolCategory.WEB3,
+    execute: async (params, context) =>
+      kodiakOpportunitiesTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.WEB3_READ,
     supportedNetworks: ['berachain']
   })
 
   registry.registerTool({
     name: 'kodiak_deposit',
-    description: 'Deposit a single token into a Kodiak Island yield opportunity on Berachain',
+    description:
+      'Deposit a single token into a Kodiak Island yield opportunity on Berachain',
     schema: kodiakDepositTool.parameters,
-    execute: async (params, context) => kodiakDepositTool.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!
-    } as any),
-    category: ToolCategory.WEB3,
+    execute: async (params, context) =>
+      kodiakDepositTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.WEB3_WRITE,
     supportedNetworks: ['berachain']
   })
-
 
   registry.registerTool({
     name: 'kodiak_bault_profitability',
     description: 'Check the profitability of Kodiak Baults for compounding',
     schema: kodiakBaultProfitabilityTool.parameters,
-    execute: async (params, context) => kodiakBaultProfitabilityTool.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!
-    } as any),
-    category: ToolCategory.WEB3,
+    execute: async (params, context) =>
+      kodiakBaultProfitabilityTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.WEB3_READ,
     supportedNetworks: ['berachain']
   })
 
   registry.registerTool({
     name: 'kodiak_compound_bault',
-    description: 'Compound a profitable Kodiak Bault using the BountyHelper contract',
+    description:
+      'Compound a profitable Kodiak Bault using the BountyHelper contract',
     schema: kodiakCompoundBaultTool.parameters,
-    execute: async (params, context) => kodiakCompoundBaultTool.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!
-    } as any),
-    category: ToolCategory.WEB3,
+    execute: async (params, context) =>
+      kodiakCompoundBaultTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.WEB3_WRITE,
     supportedNetworks: ['berachain']
   })
 
@@ -424,54 +582,80 @@ export function createToolRegistry(model: string): ToolRegistry {
     name: 'lifi_bridge_quote',
     description: bridgeQuoteTool.description || '',
     schema: bridgeQuoteTool.parameters,
-    execute: async (params, context) => bridgeQuoteTool.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!
-    } as any),
-    category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism', 'unichain', 'bsc', 'sonic']
+    execute: async (params, context) =>
+      bridgeQuoteTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.WEB3_READ,
+    supportedNetworks: [
+      'ethereum',
+      'berachain',
+      'demo',
+      'base',
+      'arbitrum',
+      'polygon',
+      'optimism',
+      'unichain',
+      'bsc',
+      'sonic'
+    ]
   })
 
   registry.registerTool({
     name: 'lifi_bridge_execute',
     description: bridgeExecuteTool.description || '',
     schema: bridgeExecuteTool.parameters,
-    execute: async (params, context) => bridgeExecuteTool.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!
-    } as any),
-    category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'berachain', 'demo', 'base', 'arbitrum', 'polygon', 'optimism', 'unichain', 'bsc', 'sonic']
+    execute: async (params, context) =>
+      bridgeExecuteTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.WEB3_WRITE,
+    supportedNetworks: [
+      'ethereum',
+      'berachain',
+      'demo',
+      'base',
+      'arbitrum',
+      'polygon',
+      'optimism',
+      'unichain',
+      'bsc',
+      'sonic'
+    ]
   })
-
 
   registry.registerTool({
     name: 'fund_wallet',
     description: 'Fund a wallet with ETH (only available in Demo mode)',
     schema: fundWalletTool.parameters,
-    execute: async (params, context) => fundWalletTool.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!,
-      isNewUser: context?.isNewUser
-    } as any),
-    category: ToolCategory.WEB3,
+    execute: async (params, context) =>
+      fundWalletTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!,
+        isNewUser: context?.isNewUser
+      } as any),
+    category: ToolCategory.WEB3_WRITE,
     supportedNetworks: ['demo']
   })
 
   registry.registerTool({
     name: 'initial_wallet_reward',
-    description: 'Grant initial wallet reward of 1 ETH to new users (only available in Demo mode)',
+    description:
+      'Grant initial wallet reward of 1 ETH to new users (only available in Demo mode)',
     schema: initialWalletRewardTool.parameters,
-    execute: async (params, context) => initialWalletRewardTool.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!,
-      isNewUser: context?.isNewUser
-    } as any),
-    category: ToolCategory.WEB3,
+    execute: async (params, context) =>
+      initialWalletRewardTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!,
+        isNewUser: context?.isNewUser
+      } as any),
+    category: ToolCategory.WEB3_WRITE,
     supportedNetworks: ['demo']
   })
 
@@ -479,54 +663,96 @@ export function createToolRegistry(model: string): ToolRegistry {
     name: 'pendle_zap_in_quote',
     description: pendleZapInQuoteTool.description || '',
     schema: pendleZapInQuoteTool.parameters,
-    execute: async (params, context) => pendleZapInQuoteTool.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!
-    } as any),
-    category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'sonic', 'berachain', 'optimism', 'mantle', 'demo']
+    execute: async (params, context) =>
+      pendleZapInQuoteTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.WEB3_READ,
+    supportedNetworks: [
+      'ethereum',
+      'bsc',
+      'arbitrum',
+      'base',
+      'sonic',
+      'berachain',
+      'optimism',
+      'mantle',
+      'demo'
+    ]
   })
 
   registry.registerTool({
     name: 'pendle_zap_in_execute',
     description: pendleZapInExecuteTool.description || '',
     schema: pendleZapInExecuteTool.parameters,
-    execute: async (params, context) => pendleZapInExecuteTool.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!
-    } as any),
-    category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'sonic', 'berachain', 'optimism', 'mantle', 'demo']
+    execute: async (params, context) =>
+      pendleZapInExecuteTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.WEB3_WRITE,
+    supportedNetworks: [
+      'ethereum',
+      'bsc',
+      'arbitrum',
+      'base',
+      'sonic',
+      'berachain',
+      'optimism',
+      'mantle',
+      'demo'
+    ]
   })
   registry.registerTool({
     name: 'pendle_zap_out_quote',
     description: pendleZapOutQuoteTool.description || '',
     schema: pendleZapOutQuoteTool.parameters,
-    execute: async (params, context) => pendleZapOutQuoteTool.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!
-    } as any),
-    category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'sonic', 'berachain', 'optimism', 'mantle', 'demo']
+    execute: async (params, context) =>
+      pendleZapOutQuoteTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.WEB3_READ,
+    supportedNetworks: [
+      'ethereum',
+      'bsc',
+      'arbitrum',
+      'base',
+      'sonic',
+      'berachain',
+      'optimism',
+      'mantle',
+      'demo'
+    ]
   })
 
   registry.registerTool({
     name: 'pendle_zap_out_execute',
     description: pendleZapOutExecuteTool.description || '',
     schema: pendleZapOutExecuteTool.parameters,
-    execute: async (params, context) => pendleZapOutExecuteTool.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!
-    } as any),
-    category: ToolCategory.WEB3,
-    supportedNetworks: ['ethereum', 'bsc', 'arbitrum', 'base', 'sonic', 'berachain', 'optimism', 'mantle', 'demo']
+    execute: async (params, context) =>
+      pendleZapOutExecuteTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.WEB3_WRITE,
+    supportedNetworks: [
+      'ethereum',
+      'bsc',
+      'arbitrum',
+      'base',
+      'sonic',
+      'berachain',
+      'optimism',
+      'mantle',
+      'demo'
+    ]
   })
-
-
 
   return registry
 }
