@@ -58,19 +58,39 @@ export function formatAPY(apy: number): string {
 export function formatRewardToken(token: string): string {
   // Common token addresses to names mapping
   const knownTokens: Record<string, string> = {
-    '0xa0b86a33e6441986c3740012f9e01847a919de8e': 'CRV',
+    // CRV tokens  
+    '0xa0b73e1ff0b80914ab6fe0444e65848c4c34450b': 'CRV', 
+    '0xd533a949740bb3306d119cc777fa900ba034cd52': 'CRV',
+    
+    // Convex tokens
+    '0x4e3fbd56cd56c3e72c1403e103b45db9da5b9d2b': 'CVX',
+    '0x62b9c7356a2dc64a1969e19c23e4f579f9810aa7': 'cvxCRV',
+    
+    // Stablecoins
     '0x6b175474e89094c44da98b954eedeac495271d0f': 'DAI',
-    '0xa0b73e1ff0b80914ab6fe0444e65848c4c34450b': 'CRV',
+    '0xa0b86a33e6441986c3740012f9e01847a919de8e': 'USDC',
+    '0xdac17f958d2ee523a2206206994597c13d831ec7': 'USDT',
+    '0x4fabb145d64652a948d72533023f6e7a623c7c53': 'BUSD',
+    
+    // DeFi tokens
     '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9': 'AAVE',
     '0x6dea81c8171d0ba574754ef6f8b412f2ed88c54d': 'LQTY',
-    '0x4e3fbd56cd56c3e72c1403e103b45db9da5b9d2b': 'CVX',
     '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984': 'UNI',
     '0xc18360217d8f7ab5e7c516566761ea12ce7f9d72': 'ENS',
     '0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2': 'MKR',
+    '0x6982508145454ce325ddbe47a25d4ec3d2311933': 'PEPE',
+    '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce': 'SHIB',
+    
+    // Base assets
     '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599': 'WBTC',
     '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2': 'WETH',
-    '0xd533a949740bb3306d119cc777fa900ba034cd52': 'CRV', // The actual CRV token address
-    '0x0000000000000000000000000000000000000000': 'ETH'
+    '0x0000000000000000000000000000000000000000': 'ETH',
+    
+    // Additional common tokens
+    '0x514910771af9ca656af840dff83e8264ecf986ca': 'LINK',
+    '0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0': 'MATIC',
+    '0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e': 'YFI',
+    '0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f': 'SNX'
   }
 
   // Convert to lowercase for lookup
