@@ -53,6 +53,43 @@ export function formatAPY(apy: number): string {
 }
 
 /**
+ * Format reward token address to show more meaningful information
+ */
+export function formatRewardToken(token: string): string {
+  // Common token addresses to names mapping
+  const knownTokens: Record<string, string> = {
+    '0xa0b86a33e6441986c3740012f9e01847a919de8e': 'CRV',
+    '0x6b175474e89094c44da98b954eedeac495271d0f': 'DAI',
+    '0xa0b73e1ff0b80914ab6fe0444e65848c4c34450b': 'CRV',
+    '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9': 'AAVE',
+    '0x6dea81c8171d0ba574754ef6f8b412f2ed88c54d': 'LQTY',
+    '0x4e3fbd56cd56c3e72c1403e103b45db9da5b9d2b': 'CVX',
+    '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984': 'UNI',
+    '0xc18360217d8f7ab5e7c516566761ea12ce7f9d72': 'ENS',
+    '0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2': 'MKR',
+    '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599': 'WBTC',
+    '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2': 'WETH',
+    '0x0000000000000000000000000000000000000000': 'ETH'
+  }
+
+  // Convert to lowercase for lookup
+  const lowerToken = token.toLowerCase()
+  
+  // Check if it's a known token
+  if (knownTokens[lowerToken]) {
+    return knownTokens[lowerToken]
+  }
+  
+  // If it's an address (starts with 0x), show a shortened version
+  if (token.startsWith('0x') && token.length === 42) {
+    return `${token.slice(0, 6)}...${token.slice(-4)}`
+  }
+  
+  // If it's already a symbol/name, show first 8 characters
+  return token.length > 8 ? `${token.slice(0, 8)}...` : token
+}
+
+/**
  * Get risk level based on various factors
  */
 export function getRiskLevel(protocol: DeFiLlamaProtocol): 'low' | 'medium' | 'high' {

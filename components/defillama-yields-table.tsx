@@ -3,7 +3,7 @@
 import { Badge } from './ui/badge'
 import { Card, CardContent } from './ui/card'
 import { Button } from './ui/button'
-import { formatTVL, formatAPY } from '../lib/defillama/utils'
+import { formatTVL, formatAPY, formatRewardToken } from '../lib/defillama/utils'
 import { ExternalLink, Shield, AlertTriangle, TrendingUp, Percent, DollarSign } from 'lucide-react'
 import type { DeFiLlamaYield } from '../lib/defillama/types'
 
@@ -121,8 +121,7 @@ function YieldCard({ yieldData, rank }: { yieldData: DeFiLlamaYield, rank: numbe
           
           {/* APY Display */}
           <div className="text-right flex-shrink-0">
-            <div className="flex items-center gap-1 text-3xl font-bold text-emerald-600 dark:text-emerald-400 mb-1">
-              <Percent className="w-6 h-6" />
+            <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mb-1">
               {formatAPY(totalApy)}
             </div>
             <div className="text-xs text-muted-foreground">Total APY</div>
@@ -176,7 +175,7 @@ function YieldCard({ yieldData, rank }: { yieldData: DeFiLlamaYield, rank: numbe
             <div className="flex flex-wrap gap-1">
               {yieldData.rewardTokens.slice(0, 4).map((token, index) => (
                 <Badge key={index} variant="outline" className="h-6 px-2 text-xs font-mono">
-                  {token.slice(0, 8)}...
+                  {formatRewardToken(token)}
                 </Badge>
               ))}
               {yieldData.rewardTokens.length > 4 && (
@@ -205,12 +204,28 @@ function YieldCard({ yieldData, rank }: { yieldData: DeFiLlamaYield, rank: numbe
             )}
           </div>
           
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            {yieldData.volumeUsd1d && (
-              <span>24h Vol: {formatTVL(yieldData.volumeUsd1d)}</span>
-            )}
-            {yieldData.volumeUsd7d && (
-              <span>7d Vol: {formatTVL(yieldData.volumeUsd7d)}</span>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              {yieldData.volumeUsd1d && (
+                <span>24h Vol: {formatTVL(yieldData.volumeUsd1d)}</span>
+              )}
+              {yieldData.volumeUsd7d && (
+                <span>7d Vol: {formatTVL(yieldData.volumeUsd7d)}</span>
+              )}
+            </div>
+            
+            {yieldData.url && (
+              <Button variant="outline" size="sm" asChild>
+                <a 
+                  href={yieldData.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-xs font-medium"
+                >
+                  <ExternalLink className="w-3 h-3 mr-1" />
+                  View Opportunity
+                </a>
+              </Button>
             )}
           </div>
         </div>
