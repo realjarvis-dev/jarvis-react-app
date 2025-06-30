@@ -1,15 +1,16 @@
 import { ChainType } from '@/lib/network/types'
 import { z } from 'zod'
 import { searchSchema } from '../schema/search'
+import { defiOpportunitiesTool } from '../tools/defillama-opportunities'
+import { defiProtocolsTool } from '../tools/defillama-protocols'
+import { defiYieldsTool } from '../tools/defillama-yields'
 import { getGasPriceTool } from '../tools/gas-price'
 import { kodiakBaultProfitabilityTool, kodiakCompoundBaultTool, kodiakDepositTool, kodiakOpportunitiesTool } from '../tools/kodiak'
 import { bridgeExecuteTool, bridgeQuoteTool } from '../tools/lifi-bridge'
 import { marketChartTool } from '../tools/market-chart'
 import { pendleMintQuoteTool, pendleMintTool, pendleOpportunitiesTool, pendleQuoteTool, pendleRedeemQuoteTool, pendleRedeemTool, pendleSwapTool } from '../tools/pendle'
-import { defiProtocolsTool } from '../tools/defillama-protocols'
-import { defiYieldsTool } from '../tools/defillama-yields'
-import { defiOpportunitiesTool } from '../tools/defillama-opportunities'
-import { defiTestTool } from '../tools/defillama-test'
+import { pendleZapInExecuteTool, pendleZapInQuoteTool } from '../tools/pendle-liquidity'
+import { pendleZapOutExecuteTool, pendleZapOutQuoteTool } from '../tools/pendle-remove-liquidity'
 import { privyTransferTool } from '../tools/privy-transfer'
 import { createQuestionTool } from '../tools/question'
 import { retrieveTool } from '../tools/retrieve'
@@ -17,8 +18,6 @@ import { createSearchTool } from '../tools/search'
 import { createVideoSearchTool } from '../tools/video-search'
 import { fundWalletTool, initialWalletRewardTool, walletBalanceTool } from '../tools/wallet'
 import { NetworkContext, ToolContext } from '../types/context'
-import { pendleZapInQuoteTool, pendleZapInExecuteTool } from '../tools/pendle-liquidity'
-import { pendleZapOutExecuteTool, pendleZapOutQuoteTool } from '../tools/pendle-remove-liquidity'
 
 
 
@@ -560,19 +559,6 @@ export function createToolRegistry(model: string): ToolRegistry {
     description: 'Hunt for DeFi opportunities by analyzing top-performing protocols with high TVL growth and momentum',
     schema: defiOpportunitiesTool.parameters,
     execute: async (params, context) => defiOpportunitiesTool.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!
-    } as any),
-    category: ToolCategory.WEB
-  })
-
-  // Test tool for debugging
-  registry.registerTool({
-    name: 'defillama_test',
-    description: 'Test tool for debugging DeFiLlama integration',
-    schema: defiTestTool.parameters,
-    execute: async (params, context) => defiTestTool.execute(params, {
       toolCallId: context?.toolCallId || 'unknown',
       messages: context?.messages || [],
       networkContext: context?.networkContext!
