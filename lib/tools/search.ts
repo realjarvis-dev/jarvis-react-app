@@ -30,8 +30,27 @@ export function createSearchTool(fullModel: string) {
         max_results = 20,
         search_depth = 'basic',
         include_domains = [],
-        exclude_domains = []
+        exclude_domains = [],
+        freshness = false,
       } = params;
+
+      // if (crypto_native) {
+      //   include_domains.push(...[
+      //     'www.coindesk.com',
+      //     'cointelegraph.com',
+      //     'coingape.com',
+      //     'thecryptobasic.com',
+      //     'u.today',
+      //     'www.bitcoin.com',
+      //     'decrypt.co',
+      //     'beincrypto.com',
+      //     'blockworks.co',
+      //     'cryptonews.com',
+      //     'cryptopotato.com',
+      //     'coincodex.com',
+      //     'theblock.co'
+      //   ])
+      // }
       
       // Ensure max_results is at least 10
       const minResults = 10
@@ -92,7 +111,8 @@ export function createSearchTool(fullModel: string) {
             effectiveMaxResults,
             effectiveSearchDepthForAPI,
             include_domains,
-            exclude_domains
+            exclude_domains,
+            freshness
           )
         }
       } catch (error) {
@@ -119,7 +139,8 @@ export async function search(
   maxResults: number = 10,
   searchDepth: 'basic' | 'advanced' = 'basic',
   includeDomains: string[] = [],
-  excludeDomains: string[] = []
+  excludeDomains: string[] = [],
+  freshness: boolean = false
 ): Promise<SearchResults> {
   return searchTool.execute(
     {
@@ -127,7 +148,8 @@ export async function search(
       max_results: maxResults,
       search_depth: searchDepth,
       include_domains: includeDomains,
-      exclude_domains: excludeDomains
+      exclude_domains: excludeDomains,
+      freshness: freshness
     },
     {
       toolCallId: 'search',
@@ -141,7 +163,8 @@ async function tavilySearch(
   maxResults: number = 10,
   searchDepth: 'basic' | 'advanced' = 'basic',
   includeDomains: string[] = [],
-  excludeDomains: string[] = []
+  excludeDomains: string[] = [],
+  freshness: boolean = false
 ): Promise<SearchResults> {
   const apiKey = process.env.TAVILY_API_KEY
   if (!apiKey) {
@@ -162,7 +185,8 @@ async function tavilySearch(
       include_image_descriptions: includeImageDescriptions,
       include_answers: true,
       include_domains: includeDomains,
-      exclude_domains: excludeDomains
+      exclude_domains: excludeDomains,
+      time_range: freshness ? 'week' : 'month'
     })
   })
 
@@ -200,7 +224,8 @@ async function exaSearch(
   maxResults: number = 10,
   _searchDepth: string,
   includeDomains: string[] = [],
-  excludeDomains: string[] = []
+  excludeDomains: string[] = [],
+  freshness: boolean = false
 ): Promise<SearchResults> {
   const apiKey = process.env.EXA_API_KEY
   if (!apiKey) {
@@ -232,7 +257,8 @@ async function searxngSearch(
   maxResults: number = 10,
   searchDepth: string,
   includeDomains: string[] = [],
-  excludeDomains: string[] = []
+  excludeDomains: string[] = [],
+  freshness: boolean = false
 ): Promise<SearchResults> {
   const apiUrl = process.env.SEARXNG_API_URL
   if (!apiUrl) {
