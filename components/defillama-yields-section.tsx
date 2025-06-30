@@ -40,7 +40,19 @@ export function DeFiLlamaYieldsSection({
     if (minApy) filters.push(`>${minApy}% APY`)
     if (stablecoin) filters.push('Stablecoins')
     
-    return filters.length > 0 ? `Yield Opportunities • ${filters.join(' • ')}` : 'High Yield Opportunities'
+    // Use contextual information from statistics to determine appropriate header
+    const statistics = result.statistics || {}
+    const isProtocolSpecific = statistics.isProtocolSpecific
+    const hasHighYieldPools = statistics.hasHighYieldPools
+    const highYieldThreshold = statistics.highYieldThreshold || 8
+    
+    if (filters.length > 0) {
+      return `Yield Opportunities • ${filters.join(' • ')}`
+    } else if (isProtocolSpecific) {
+      return hasHighYieldPools ? `Yield Opportunities (includes high-yield ≥${highYieldThreshold}%)` : 'Yield Opportunities'
+    } else {
+      return hasHighYieldPools ? 'High Yield Opportunities' : 'Yield Opportunities'
+    }
   }
 
   const header = (
@@ -107,9 +119,15 @@ export function DeFiLlamaYieldsSection({
                 </div>
               </div>
               <div>
-                <span className="text-muted-foreground">Chains</span>
-                <div className="font-semibold text-lg">{statistics.uniqueChains || 0}</div>
+                <span className="text-muted-foreground">{statistics.isProtocolSpecific ? 'Protocols' : 'Chains'}</span>
+                <div className="font-semibold text-lg">{statistics.isProtocolSpecific ? statistics.uniqueProjects || 0 : statistics.uniqueChains || 0}</div>
               </div>
+              {statistics.hasHighYieldPools && statistics.highYieldCount > 0 && (
+                <div>
+                  <span className="text-muted-foreground">High Yield (≥{statistics.highYieldThreshold}%)</span>
+                  <div className="font-semibold text-lg text-orange-600">{statistics.highYieldCount}</div>
+                </div>
+              )}
               {includeProtocolAnalysis && protocolAnalysis.length > 0 && (
                 <div>
                   <span className="text-muted-foreground">Protocol Analysis</span>
@@ -123,6 +141,10 @@ export function DeFiLlamaYieldsSection({
           <DeFiLlamaYieldsTable 
             yields={yields} 
             protocolAnalysis={includeProtocolAnalysis ? protocolAnalysis : undefined}
+            isProtocolSpecific={statistics.isProtocolSpecific}
+            hasHighYieldPools={statistics.hasHighYieldPools}
+            searchedProtocol={project}
+            highYieldThreshold={statistics.highYieldThreshold}
           />
         </div>
       )}

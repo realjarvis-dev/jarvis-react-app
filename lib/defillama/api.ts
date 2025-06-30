@@ -7,6 +7,7 @@ import type {
   ProtocolsFilters,
   YieldsFilters 
 } from './types'
+import { createProtocolMatcherFromYields } from './fuzzy-protocol-matcher'
 
 const DEFILLAMA_BASE_URL = 'https://api.llama.fi'
 const TIMEOUT = 10000
@@ -16,6 +17,31 @@ const apiClient = axios.create({
   baseURL: DEFILLAMA_BASE_URL,
   timeout: TIMEOUT,
 })
+
+/**
+ * Normalize protocol names to handle common variations
+ */
+function normalizeProtocolName(name: string): string {
+  const normalized = name.toLowerCase().trim()
+  
+  // Handle common protocol name variations
+  const protocolMap: Record<string, string> = {
+    'aave': 'aave',
+    'aave v3': 'aave-v3',
+    'aave-v3': 'aave-v3',
+    'lido': 'lido',
+    'compound': 'compound',
+    'uniswap': 'uniswap',
+    'uniswap v3': 'uniswap-v3',
+    'curve': 'curve',
+    'yearn': 'yearn',
+    'convex': 'convex',
+    'makerdao': 'makerdao',
+    'maker': 'makerdao'
+  }
+  
+  return protocolMap[normalized] || normalized
+}
 
 /**
  * Fetch all protocols from DeFiLlama
@@ -52,6 +78,10 @@ export async function fetchYields(): Promise<DeFiLlamaYield[]> {
     // Limit to first 300 yield pools for performance
     const limitedData = response.data.data.slice(0, 300)
     console.log(`📊 Processing ${limitedData.length} yield pools (limited for performance)`)
+    
+    // Log unique project names for debugging
+    const uniqueProjects = [...new Set(limitedData.map(y => y.project))].sort()
+    console.log(`💡 Available projects (${uniqueProjects.length}): ${uniqueProjects.slice(0, 20).join(', ')}${uniqueProjects.length > 20 ? '...' : ''}`)
     
     return limitedData
   } catch (error) {
@@ -192,9 +222,38 @@ export function filterYields(
   }
 
   if (filters.project) {
-    filtered = filtered.filter(y => 
-      y.project.toLowerCase().includes(filters.project!.toLowerCase())
-    )
+    console.log(`🔍 Filtering by project: "${filters.project}"`)
+    
+    // Create fuzzy matcher from available yields
+    const protocolMatcher = createProtocolMatcherFromYields(yields)
+    
+    // Find matching protocols using fuzzy search
+    const matchingProtocols = protocolMatcher.match(filters.project, 10)
+    console.log(`🎯 Fuzzy search found ${matchingProtocols.length} potential protocol matches:`, 
+      matchingProtocols.map(p => `${p.name} (score: ${p.score.toFixed(3)})`).join(', '))
+    
+    if (matchingProtocols.length > 0) {
+      const matchingProjectNames = matchingProtocols.map(p => p.name.toLowerCase())
+      filtered = filtered.filter(y => 
+        matchingProjectNames.includes(y.project.toLowerCase())
+      )
+    } else {
+      // Fallback to the old normalization approach
+      const normalizedProject = normalizeProtocolName(filters.project)
+      console.log(`⚠️ No fuzzy matches found, falling back to basic matching for: "${normalizedProject}"`)
+      
+      filtered = filtered.filter(y => {
+        const projectMatch = y.project.toLowerCase().includes(normalizedProject) ||
+                            normalizeProtocolName(y.project).includes(normalizedProject)
+        return projectMatch
+      })
+    }
+    
+    console.log(`📊 Found ${filtered.length} pools matching project filter from ${yields.length} total pools`)
+    if (filtered.length === 0) {
+      const availableProjects = [...new Set(yields.map(y => y.project))].slice(0, 15)
+      console.log(`💡 Available projects (first 15): ${availableProjects.join(', ')}`)
+    }
   }
 
   if (filters.minTvl !== undefined) {

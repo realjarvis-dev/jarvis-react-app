@@ -13,6 +13,10 @@ import type { DeFiLlamaYield } from '../lib/defillama/types'
 interface DeFiLlamaYieldsTableProps {
   yields: DeFiLlamaYield[]
   protocolAnalysis?: any[]
+  isProtocolSpecific?: boolean
+  hasHighYieldPools?: boolean
+  searchedProtocol?: string
+  highYieldThreshold?: number
 }
 
 function getChainColor(chain: string): string {
@@ -185,7 +189,14 @@ function YieldRow({ yieldData }: { yieldData: DeFiLlamaYield }) {
   )
 }
 
-export function DeFiLlamaYieldsTable({ yields, protocolAnalysis }: DeFiLlamaYieldsTableProps) {
+export function DeFiLlamaYieldsTable({ 
+  yields, 
+  protocolAnalysis, 
+  isProtocolSpecific = false,
+  hasHighYieldPools = false,
+  searchedProtocol,
+  highYieldThreshold = 8
+}: DeFiLlamaYieldsTableProps) {
   if (yields.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-12 text-center">
@@ -204,11 +215,21 @@ export function DeFiLlamaYieldsTable({ yields, protocolAnalysis }: DeFiLlamaYiel
           <div className="flex items-center gap-2 mb-1">
             <TrendingUp className="w-5 h-5 text-emerald-400" />
             <h2 className="text-xl font-semibold text-white">
-              High-Yield Opportunities
+              {isProtocolSpecific 
+                ? `${searchedProtocol ? searchedProtocol.charAt(0).toUpperCase() + searchedProtocol.slice(1) : 'Protocol'} Opportunities`
+                : hasHighYieldPools 
+                  ? 'High-Yield Opportunities' 
+                  : 'Yield Opportunities'
+              }
             </h2>
           </div>
           <p className="text-sm text-blue-200/80">
-            Top yield farming and staking opportunities across DeFi protocols
+            {isProtocolSpecific 
+              ? `Available yield opportunities${hasHighYieldPools ? ` (includes ${yields.filter(y => y.apy >= highYieldThreshold).length} high-yield ≥${highYieldThreshold}%)` : ''}`
+              : hasHighYieldPools 
+                ? 'Top yield farming and staking opportunities across DeFi protocols'
+                : 'Yield farming and staking opportunities across DeFi protocols'
+            }
           </p>
         </div>
         
@@ -268,21 +289,41 @@ export function DeFiLlamaYieldsTable({ yields, protocolAnalysis }: DeFiLlamaYiel
         `}</style>
       </div>
 
-      {/* Footer Warning */}
-      <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4">
-        <div className="flex items-start gap-3">
-          <AlertTriangle className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
-          <div className="min-w-0">
-            <h4 className="text-sm font-medium text-amber-100 mb-1">
-              Risk Disclosure
-            </h4>
-            <p className="text-xs text-amber-200/80 leading-relaxed">
-              High yields often involve increased risks including impermanent loss, smart contract vulnerabilities, 
-              and token emission schedules. Always DYOR and consider your risk tolerance before investing.
-            </p>
+      {/* Footer Warning - Only show for high-yield opportunities */}
+      {hasHighYieldPools && (
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
+            <div className="min-w-0">
+              <h4 className="text-sm font-medium text-amber-100 mb-1">
+                High-Yield Risk Disclosure
+              </h4>
+              <p className="text-xs text-amber-200/80 leading-relaxed">
+                High yields (≥{highYieldThreshold}%) often involve increased risks including impermanent loss, smart contract vulnerabilities, 
+                and token emission schedules. Always DYOR and consider your risk tolerance before investing.
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
+      
+      {/* General DeFi warning for protocol-specific searches */}
+      {isProtocolSpecific && !hasHighYieldPools && (
+        <div className="rounded-lg border border-blue-500/30 bg-blue-500/10 p-4">
+          <div className="flex items-start gap-3">
+            <Shield className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
+            <div className="min-w-0">
+              <h4 className="text-sm font-medium text-blue-100 mb-1">
+                DeFi Protocol Information
+              </h4>
+              <p className="text-xs text-blue-200/80 leading-relaxed">
+                These are the available yield opportunities for this protocol. 
+                Always verify pool details and understand the underlying mechanisms before investing.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
