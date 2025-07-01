@@ -5,6 +5,7 @@ import { Share } from 'lucide-react'
 import { useEffect, useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { Button } from './ui/button'
+import { useCopyToClipboard } from '@/lib/hooks/use-copy-to-clipboard'
 import {
   Dialog,
   DialogContent,
@@ -26,6 +27,7 @@ export function ChatShare({ chatId, className }: ChatShareProps) {
   const [pending, startTransition] = useTransition()
   const [hasCopied, setHasCopied] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
+  const { copyToClipboard } = useCopyToClipboard({ timeout: 1000 })
 
   useEffect(() => {
     setIsMounted(true)
@@ -51,7 +53,7 @@ export function ChatShare({ chatId, className }: ChatShareProps) {
 
   // 2. Copy immediately on tap, while gesture is still active
   try {
-    await navigator.clipboard.writeText(url)
+    copyToClipboard(url.toString())
     setHasCopied(true)
     toast.success('Link copied to clipboard')
   } catch {
