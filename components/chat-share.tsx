@@ -57,7 +57,7 @@ export function ChatShare({ chatId, className }: ChatShareProps) {
 
       // Use raw clipboard API like copyable-wallet-address.tsx
       if (typeof navigator !== 'undefined' && navigator.clipboard) {
-        navigator.clipboard.writeText(url.toString())
+        await navigator.clipboard.writeText(url.toString())
         setHasCopied(true)
         toast.success('Link copied to clipboard')
       } else {
