@@ -10,13 +10,13 @@ import {
 import { sanitizeProtocol, analyzeDeFiOpportunities } from '../defillama/utils'
 
 export const defiProtocolsTool = tool({
-  description: 'Get DeFi protocol data with TVL rankings, 7-day gainers, and filtering options. Perfect for hunting DeFi opportunities by following the money flow.',
+  description: 'Get comprehensive DeFi protocol data including top protocols by TVL, trending gainers, and custom filtered results. Supports all major chains and categories.',
   parameters: z.object({
     category: z.string().optional().describe('Filter by protocol category (e.g., "Lending", "DEX", "Liquid Staking")'),
     chain: z.string().optional().describe('Filter by blockchain (e.g., "Ethereum", "Arbitrum", "Base")'),
-    minTvl: z.number().optional().describe('Minimum TVL in USD (default: 1,000,000 for top gainers)'),
+    minTvl: z.number().optional().describe('Minimum TVL in USD (default: 1,000,000)'),
     sortBy: z.enum(['tvl', 'change_7d', 'change_1d', 'change_1h']).optional().describe('Sort criteria'),
-    view: z.enum(['top_gainers', 'top_tvl', 'custom']).default('top_gainers').describe('View type: top_gainers for 7d gainers, top_tvl for highest TVL, custom for filtered results'),
+    view: z.enum(['top_tvl', 'top_gainers', 'custom']).default('top_tvl').describe('View type: top_tvl for major protocols by TVL (default for general queries), top_gainers for trending/hot protocols (use when user asks about "gainers", "trending", "hot"), custom for specific filters'),
     includeYieldOpportunities: z.boolean().default(false).describe('Include related yield farming opportunities for each protocol'),
     limit: z.number().min(1).max(50).default(20).describe('Number of results to return')
   }),
@@ -36,11 +36,11 @@ export const defiProtocolsTool = tool({
       let filteredProtocols
 
       switch (view) {
-        case 'top_gainers':
-          filteredProtocols = getTopGainers(protocols, limit)
-          break
         case 'top_tvl':
           filteredProtocols = getTopProtocolsByTVL(protocols, limit)
+          break
+        case 'top_gainers':
+          filteredProtocols = getTopGainers(protocols, limit)
           break
         case 'custom':
           filteredProtocols = filterProtocols(protocols, {
@@ -53,7 +53,7 @@ export const defiProtocolsTool = tool({
           })
           break
         default:
-          filteredProtocols = getTopGainers(protocols, limit)
+          filteredProtocols = getTopProtocolsByTVL(protocols, limit)
       }
 
       console.log(`🎯 Filtered to ${filteredProtocols.length} protocols for view: ${view}`)
@@ -71,11 +71,11 @@ export const defiProtocolsTool = tool({
         }
       }
 
-      const summary = view === 'top_gainers' 
-        ? `Found ${filteredProtocols.length} top DeFi gainers over 7 days with TVL > $1M - follow the money flow!${includeYieldOpportunities ? ' Including related yield opportunities.' : ''}`
-        : view === 'top_tvl'
-        ? `Found ${filteredProtocols.length} top DeFi protocols by TVL - the biggest players in DeFi${includeYieldOpportunities ? ' Including related yield opportunities.' : ''}`
-        : `Found ${filteredProtocols.length} DeFi protocols matching your criteria${includeYieldOpportunities ? ' Including related yield opportunities.' : ''}`
+      const summary = view === 'top_tvl'
+        ? `Found ${filteredProtocols.length} top DeFi protocols by Total Value Locked (TVL) - the major players in DeFi${includeYieldOpportunities ? ' with related yield opportunities.' : ''}`
+        : view === 'top_gainers' 
+        ? `Found ${filteredProtocols.length} trending DeFi protocols with highest 7-day gains (TVL > $1M)${includeYieldOpportunities ? ' with related yield opportunities.' : ''}`
+        : `Found ${filteredProtocols.length} DeFi protocols matching your criteria${includeYieldOpportunities ? ' with related yield opportunities.' : ''}`
 
       const result = {
         _uiDisplayTool: true,

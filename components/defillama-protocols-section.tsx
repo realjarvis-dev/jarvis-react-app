@@ -99,17 +99,17 @@ export function DeFiLlamaProtocolsSection({
       ) : (
         <div className="space-y-4">
           {/* Summary Stats */}
-          <div className="px-4 pt-4 pb-2">
-            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-              <span>{protocols.length} protocols</span>
+          <div className="px-2 md:px-4 pt-2 md:pt-4 pb-1 md:pb-2">
+            <div className="flex flex-wrap gap-2 md:gap-4 text-xs md:text-sm text-muted-foreground">
+              <span className="whitespace-nowrap">{protocols.length} protocols</span>
               {result.totalProtocols && (
-                <span>{result.totalProtocols} total available</span>
+                <span className="whitespace-nowrap">{result.totalProtocols} total available</span>
               )}
               {result.averageTvl && (
-                <span>Avg TVL: ${(result.averageTvl / 1e9).toFixed(2)}B</span>
+                <span className="whitespace-nowrap">Avg TVL: ${(result.averageTvl / 1e9).toFixed(2)}B</span>
               )}
               {includeYields && opportunities.length > 0 && (
-                <span>{opportunities.length} yield opportunities found</span>
+                <span className="whitespace-nowrap">{opportunities.length} yield opportunities found</span>
               )}
             </div>
           </div>

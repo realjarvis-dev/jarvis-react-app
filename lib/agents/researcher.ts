@@ -372,6 +372,9 @@ export function researcher({
       web3_tools = []
     } else if (allowWeb3Tools === 'readonly') {
       // For Twitter agent and other read-only use cases, only allow WEB3_READ tools
+      console.log('supportedTools', supportedTools)
+      console.log('web3_tools', web3_tools)
+
       const web3WriteTools = registry.getToolNamesByCategory(
         ToolCategory.WEB3_WRITE
       )
@@ -379,6 +382,9 @@ export function researcher({
         tool => !web3WriteTools.includes(tool)
       )
       web3_tools = web3_tools.filter(tool => !web3WriteTools.includes(tool))
+
+      console.log('supportedTools after filtering in readonly mode', supportedTools)
+      console.log('web3_tools after filtering in readonly mode', web3_tools)
     }
 
     let userWalletInfo

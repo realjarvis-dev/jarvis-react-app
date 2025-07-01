@@ -23,57 +23,66 @@ function ProtocolRow({ protocol }: { protocol: DeFiLlamaProtocol }) {
         className="border-b border-white/10 last:border-b-0 hover:bg-white/5 transition-colors cursor-pointer"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <TableCell className="p-3">
-          <div className="flex items-center gap-2">
+        <TableCell className="p-2 md:p-3">
+          <div className="flex items-center gap-1 md:gap-2">
             {protocol.logo && (
               <img 
                 src={protocol.logo} 
                 alt={protocol.name}
-                className="w-6 h-6 rounded-full border border-white/20"
+                className="w-4 h-4 md:w-6 md:h-6 rounded-full border border-white/20 flex-shrink-0"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none'
                 }}
               />
             )}
-            <div>
-              <div className="text-sm font-medium text-white">
+            <div className="min-w-0 flex-1">
+              <div className="text-xs md:text-sm font-medium text-white truncate" title={protocol.name}>
                 {protocol.name}
               </div>
-              <div className="flex items-center gap-2 mt-1">
+              <div className="flex items-center gap-1 mt-0.5 md:mt-1">
                 <Badge 
                   variant="outline" 
-                  className="h-4 px-1.5 text-xs border-blue-500/50 text-blue-400"
+                  className="h-3 md:h-4 px-1 md:px-1.5 text-[10px] md:text-xs border-blue-500/50 text-blue-400 truncate"
+                  title={protocol.category}
                 >
                   {protocol.category}
                 </Badge>
                 {protocol.audits && parseInt(protocol.audits) > 0 && (
-                  <Badge variant="outline" className="h-4 px-1.5 text-xs border-emerald-500/50 text-emerald-400">
-                    <Shield className="w-3 h-3 mr-1" />
+                  <Badge variant="outline" className="h-3 md:h-4 px-1 md:px-1.5 text-[10px] md:text-xs border-emerald-500/50 text-emerald-400">
+                    <Shield className="w-2 h-2 md:w-3 md:h-3 mr-0.5 md:mr-1" />
                     {protocol.audits}
                   </Badge>
                 )}
               </div>
+              {/* Mobile: Show 24h change below protocol name */}
+              <div className="sm:hidden mt-1">
+                <span className={`text-xs ${protocol.change_1d && protocol.change_1d >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  24h: {protocol.change_1d ? formatPercentage(protocol.change_1d) : 'N/A'}
+                </span>
+              </div>
             </div>
           </div>
         </TableCell>
-        <TableCell className="text-right p-3 text-sm font-semibold">
-          {formatTVL(protocol.tvl)}
+        <TableCell className="text-right p-2 md:p-3 text-xs md:text-sm font-semibold">
+          <div className="break-words">
+            {formatTVL(protocol.tvl)}
+          </div>
         </TableCell>
-        <TableCell className="text-right p-3 text-sm font-semibold">
+        <TableCell className="text-right p-2 md:p-3 text-xs md:text-sm font-semibold hidden sm:table-cell">
           <span className={protocol.change_1d && protocol.change_1d >= 0 ? 'text-green-400' : 'text-red-400'}>
             {protocol.change_1d ? formatPercentage(protocol.change_1d) : 'N/A'}
           </span>
         </TableCell>
-        <TableCell className="text-right p-3 text-sm font-semibold">
+        <TableCell className="text-right p-2 md:p-3 text-xs md:text-sm font-semibold">
           <span className={protocol.change_7d && protocol.change_7d >= 0 ? 'text-green-400' : 'text-red-400'}>
             {protocol.change_7d ? formatPercentage(protocol.change_7d) : 'N/A'}
           </span>
         </TableCell>
-        <TableCell className="text-center p-3 w-16">
+        <TableCell className="text-center p-2 md:p-3 w-12 md:w-16">
           {isExpanded ? (
-            <ChevronDown className="w-4 h-4 text-gray-400 mx-auto" />
+            <ChevronDown className="w-3 h-3 md:w-4 md:h-4 text-gray-400 mx-auto" />
           ) : (
-            <ChevronRight className="w-4 h-4 text-gray-400 mx-auto" />
+            <ChevronRight className="w-3 h-3 md:w-4 md:h-4 text-gray-400 mx-auto" />
           )}
         </TableCell>
       </TableRow>
@@ -210,41 +219,41 @@ export function DeFiLlamaProtocolsTable({ protocols, view, opportunities }: DeFi
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <BarChart3 className="w-5 h-5 text-blue-400" />
-            <h2 className="text-xl font-semibold text-white">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1 md:gap-2 mb-1">
+            <BarChart3 className="w-4 h-4 md:w-5 md:h-5 text-blue-400" />
+            <h2 className="text-sm md:text-xl font-semibold text-white truncate">
               {getViewTitle()}
             </h2>
           </div>
-          <p className="text-sm text-blue-200/80">
+          <p className="text-xs md:text-sm text-blue-200/80 hidden md:block">
             Leading DeFi protocols ranked by total value locked (TVL)
           </p>
         </div>
         
-        <Badge variant="secondary" className="h-8 px-4 bg-white/10 text-white border-white/20">
-          {protocols.length} protocol{protocols.length > 1 ? 's' : ''}
+        <Badge variant="secondary" className="h-6 px-2 md:h-8 md:px-4 bg-white/10 text-white border-white/20 text-xs md:text-sm flex-shrink-0">
+          <span className="truncate">{protocols.length} protocol{protocols.length > 1 ? 's' : ''}</span>
         </Badge>
       </div>
 
       {/* Protocols Table */}
-      <div className="table-container rounded-xl border border-white/10 bg-black/30 backdrop-blur-sm p-4">
-        <Table className="w-full border-collapse min-w-[640px]">
+      <div className="table-container rounded-xl border border-white/10 bg-black/30 backdrop-blur-sm p-2 md:p-4">
+        <Table className="w-full border-collapse min-w-[320px]">
           <TableHeader>
             <TableRow className="border-b border-white/10">
-              <TableHead className="p-3 font-normal text-sm text-blue-200/80">
+              <TableHead className="p-2 md:p-3 font-normal text-[10px] md:text-sm text-blue-200/80">
                 Protocol
               </TableHead>
-              <TableHead className="p-3 font-normal text-sm text-blue-200/80 text-right">
+              <TableHead className="p-2 md:p-3 font-normal text-[10px] md:text-sm text-blue-200/80 text-right">
                 TVL
               </TableHead>
-              <TableHead className="p-3 font-normal text-sm text-blue-200/80 text-right">
-                24h Change
+              <TableHead className="p-2 md:p-3 font-normal text-[10px] md:text-sm text-blue-200/80 text-right hidden sm:table-cell">
+                <span className="whitespace-nowrap">24h Change</span>
               </TableHead>
-              <TableHead className="p-3 font-normal text-sm text-blue-200/80 text-right">
-                7d Change
+              <TableHead className="p-2 md:p-3 font-normal text-[10px] md:text-sm text-blue-200/80 text-right">
+                <span className="whitespace-nowrap">7d Change</span>
               </TableHead>
-              <TableHead className="p-3 font-normal text-sm text-blue-200/80 text-center w-16">
+              <TableHead className="p-2 md:p-3 font-normal text-[10px] md:text-sm text-blue-200/80 text-center w-12 md:w-16">
                 Details
               </TableHead>
             </TableRow>
