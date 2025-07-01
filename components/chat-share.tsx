@@ -53,9 +53,9 @@ export function ChatShare({ chatId, className }: ChatShareProps) {
 
   // 2. Copy immediately on tap, while gesture is still active
   try {
-    copyToClipboard(url.toString())
+    copyToClipboard(url)
     setHasCopied(true)
-    toast.success('Link copied to clipboard')
+    toast.success('Link copied to clipboard, link is: ' + url)
   } catch {
     toast.error('Could not copy link to clipboard')
     return
