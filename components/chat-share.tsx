@@ -1,11 +1,11 @@
 'use client'
 
 import { shareChat } from '@/lib/actions/chat'
-import { Share } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { Check, Copy, Share } from 'lucide-react'
 import { useEffect, useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { Button } from './ui/button'
-import { useCopyToClipboard } from '@/lib/hooks/use-copy-to-clipboard'
 import {
   Dialog,
   DialogContent,
@@ -27,7 +27,7 @@ export function ChatShare({ chatId, className }: ChatShareProps) {
   const [pending, startTransition] = useTransition()
   const [hasCopied, setHasCopied] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
-  const { copyToClipboard } = useCopyToClipboard({ timeout: 1000 })
+  const [shareUrl, setShareUrl] = useState<string | null>(null)
 
   useEffect(() => {
     setIsMounted(true)
@@ -42,28 +42,37 @@ export function ChatShare({ chatId, className }: ChatShareProps) {
     }
   }, [hasCopied])
 
-  const handleShareAndCopy = async () => {
-      // 1. Trigger shareChat and get the URL (you can still await this)
-  const result = await shareChat(chatId)
-  if (!result?.sharePath) {
-    toast.error('Failed to share chat')
-    return
-  }
-  const url = new URL(result.sharePath, window.location.href).toString()
-
-  // 2. Copy immediately on tap, while gesture is still active
-  try {
-    copyToClipboard(url)
-    setHasCopied(true)
-    toast.success('Link copied to clipboard, link is: ' + url)
-  } catch {
-    toast.error('Could not copy link to clipboard')
-    return
+  const handleGenerateLink = async () => {
+    startTransition(async () => {
+      const result = await shareChat(chatId)
+      if (!result?.sharePath) {
+        toast.error('Failed to share chat')
+        return
+      }
+      const url = new URL(result.sharePath, window.location.href).toString()
+      setShareUrl(url)
+    })
   }
 
-  // 3. Close the dialog (still part of same handler)
-  setOpen(false)
+  const handleCopy = () => {
+    if (!shareUrl) return
+
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(shareUrl)
+      setHasCopied(true)
+      toast.success('Link copied to clipboard')
+    }
   }
+
+  const canCopy =
+    isMounted && typeof navigator !== 'undefined' && !!navigator.clipboard
+
+  // Shortened URL for display (similar to wallet address pattern)
+  const shortUrl = shareUrl
+    ? `${shareUrl.substring(0, 20)}...${shareUrl.substring(
+        shareUrl.length - 10
+      )}`
+    : ''
 
   return (
     <div className={className}>
@@ -90,11 +99,47 @@ export function ChatShare({ chatId, className }: ChatShareProps) {
               Anyone with the link will be able to view this Jarvis response.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="items-center">
-            <Button onClick={handleShareAndCopy} disabled={pending} size="sm">
-              {pending ? <Spinner /> : 'Copy link'}
-            </Button>
-          </DialogFooter>
+
+          {!shareUrl ? (
+            <DialogFooter className="items-center">
+              <Button onClick={handleGenerateLink} disabled={pending} size="sm">
+                {pending ? <Spinner /> : 'Generate link'}
+              </Button>
+            </DialogFooter>
+          ) : (
+            <div className="space-y-4">
+              <div
+                className={cn(
+                  'flex items-center gap-2 p-3 border rounded-lg bg-muted/50'
+                )}
+              >
+                <span className="text-sm break-all flex-1">{shortUrl}</span>
+                <Button
+                  onClick={handleCopy}
+                  variant="ghost"
+                  size="icon"
+                  className="size-6 shrink-0"
+                  aria-label="Copy share link"
+                  disabled={!canCopy}
+                >
+                  {hasCopied ? (
+                    <Check className="size-3 text-green-500" />
+                  ) : (
+                    <Copy className="size-3" />
+                  )}
+                </Button>
+              </div>
+              <DialogFooter className="items-center">
+                <Button
+                  onClick={() => setOpen(false)}
+                  variant="outline"
+                  size="sm"
+                >
+                  Close
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
