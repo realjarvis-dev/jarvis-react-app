@@ -3,24 +3,35 @@ import { getRedisClient, RedisWrapper } from '@/lib/redis/config';
 export class SimpleRedisCache {
   private redis: RedisWrapper | null = null;
   private isAvailable: boolean = false;
+  private initPromise: Promise<void> | null = null;
 
   constructor() {
-    this.initRedis();
+    // Don't call async function in constructor
   }
 
   private async initRedis(): Promise<void> {
-    try {
-      this.redis = await getRedisClient();
-      this.isAvailable = true;
-    } catch (error) {
-      this.redis = null;
-      this.isAvailable = false;
+    if (this.initPromise) {
+      return this.initPromise;
     }
+
+    this.initPromise = (async () => {
+      try {
+        this.redis = await getRedisClient();
+        this.isAvailable = true;
+      } catch (error) {
+        this.redis = null;
+        this.isAvailable = false;
+      }
+    })();
+
+    return this.initPromise;
   }
 
   private async ensureRedis(): Promise<RedisWrapper | null> {
-    if (!this.redis && this.isAvailable === false) {
+    if (!this.redis && this.isAvailable === false && !this.initPromise) {
       await this.initRedis();
+    } else if (this.initPromise) {
+      await this.initPromise;
     }
     return this.redis;
   }
