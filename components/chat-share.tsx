@@ -41,31 +41,26 @@ export function ChatShare({ chatId, className }: ChatShareProps) {
   }, [hasCopied])
 
   const handleShareAndCopy = async () => {
-    startTransition(async () => {
-      const result = await shareChat(chatId)
-      if (!result) {
-        toast.error('Failed to share chat')
-        return
-      }
+      // 1. Trigger shareChat and get the URL (you can still await this)
+  const result = await shareChat(chatId)
+  if (!result?.sharePath) {
+    toast.error('Failed to share chat')
+    return
+  }
+  const url = new URL(result.sharePath, window.location.href).toString()
 
-      if (!result.sharePath) {
-        toast.error('Could not copy link to clipboard')
-        return
-      }
+  // 2. Copy immediately on tap, while gesture is still active
+  try {
+    await navigator.clipboard.writeText(url)
+    setHasCopied(true)
+    toast.success('Link copied to clipboard')
+  } catch {
+    toast.error('Could not copy link to clipboard')
+    return
+  }
 
-      const url = new URL(result.sharePath, window.location.href)
-
-      // Use raw clipboard API like copyable-wallet-address.tsx
-      if (typeof navigator !== 'undefined' && navigator.clipboard) {
-        await navigator.clipboard.writeText(url.toString())
-        setHasCopied(true)
-        toast.success('Link copied to clipboard')
-      } else {
-        toast.error('Could not copy link to clipboard')
-      }
-
-      setOpen(false)
-    })
+  // 3. Close the dialog (still part of same handler)
+  setOpen(false)
   }
 
   return (
