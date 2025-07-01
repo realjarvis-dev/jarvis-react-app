@@ -13,6 +13,7 @@ import { toast } from 'sonner'
 import useLocalStorage from 'use-local-storage-state'
 import { ChatMessages } from './chat-messages'
 import { ChatPanel } from './optimized-chat-panel'
+import { FloatingAskJarvis } from './floating-ask-jarvis'
 
 const TRIAL_KEY = 'anon_trials'
 const MAX_TRIALS = 2
@@ -255,6 +256,14 @@ export function Chat({
     sendMessage()
   }
 
+  const handleAskJarvis = (selectedText: string) => {
+    // Add the selected text to the input field
+    const prompt = `Please explain this: "${selectedText}"`
+    handleInputChange({
+      target: { value: prompt }
+    } as React.ChangeEvent<HTMLTextAreaElement>)
+  }
+
   return (
     <div
       className={cn(
@@ -295,6 +304,7 @@ export function Chat({
           This is a read-only shared conversation
         </div>
       )}
+      {!isReadOnly && <FloatingAskJarvis onAskJarvis={handleAskJarvis} />}
     </div>
   )
 }
