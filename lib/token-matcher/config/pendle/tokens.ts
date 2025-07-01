@@ -3720,39 +3720,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 42161,
-      "address": "0x2a780e4cd5c3705a3e400012dacf80bbf2fa2552",
-      "symbol": "PT-dWBTC-18DEC2025",
-      "name": "PT dWBTC 18DEC2025",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0x3db95e24f76c53177c4015244af2b523a8caa065",
-      "expiry": "2025-12-18T00:00:00.000Z",
-      "underlyingAsset": "0x0a52bcb532f59f6a37a9d3b5bc9ffd47e461d995"
-    },
-    {
-      "chainId": 42161,
-      "address": "0x8186a7b0c9db06fd762d719ed29604da1f31c082",
-      "symbol": "YT-dWBTC-18DEC2025",
-      "name": "YT dWBTC 18DEC2025",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0x3db95e24f76c53177c4015244af2b523a8caa065",
-      "expiry": "2025-12-18T00:00:00.000Z",
-      "underlyingAsset": "0x0a52bcb532f59f6a37a9d3b5bc9ffd47e461d995"
-    },
-    {
-      "chainId": 42161,
-      "address": "0x3055a746e040bd05ad1806840ca0114d632bc7e2",
-      "symbol": "SY-dWBTC",
-      "name": "SY dWBTC",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0x3db95e24f76c53177c4015244af2b523a8caa065",
-      "expiry": "2025-12-18T00:00:00.000Z",
-      "underlyingAsset": "0x0a52bcb532f59f6a37a9d3b5bc9ffd47e461d995"
-    },
-    {
-      "chainId": 42161,
       "address": "0x8d2860d69f95a529baec8ceec8be2c6e62b9874b",
       "symbol": "PT-dUSDC-18DEC2025",
       "name": "PT dUSDC 18DEC2025",
