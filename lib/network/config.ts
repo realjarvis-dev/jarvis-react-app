@@ -134,10 +134,10 @@ export const mantleConfig: NetworkConfig = {
   id: 'mantle' as const,
   displayName: 'Mantle',
   chainId: 5000,
-  rpcUrl: 'https://rpc.mantle.xyz',
+  rpcUrl: 'https://mantle-mainnet.g.alchemy.com/v2/yIRJoLX9TId7oSWYdnflKgthIy59m-vr',
   scanLink: 'mantlescan.xyz',
   isDemo: false,
-  alchemyNetwork: Network.ETH_MAINNET,
+  alchemyNetwork: Network.MANTLE_MAINNET,
   icon: '/icons/chains/mantle.png',
   nativeAsset: { name: 'Mantle', symbol: 'MNT', decimals: 18 },
   viemChain: mantle
