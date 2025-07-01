@@ -12,13 +12,34 @@ import type {
 import { createProtocolMatcherFromYields } from './fuzzy-protocol-matcher'
 
 const DEFILLAMA_BASE_URL = 'https://api.llama.fi'
-const TIMEOUT = 10000
+const TIMEOUT = 12000 // Increased timeout to 12 seconds
 
-// Create axios instance with timeout
+// Create axios instance with timeout and retry logic
 const apiClient = axios.create({
   baseURL: DEFILLAMA_BASE_URL,
   timeout: TIMEOUT,
+  headers: {
+    'Accept': 'application/json',
+    'User-Agent': 'Jarvis-Investment-Agent/1.0'
+  }
 })
+
+// Add response interceptor for better error handling
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.code === 'ECONNABORTED') {
+      throw new Error('Request timed out - DeFiLlama API is slow or unavailable')
+    }
+    if (error.response?.status === 429) {
+      throw new Error('Rate limited by DeFiLlama API - please wait and try again')
+    }
+    if (error.response?.status >= 500) {
+      throw new Error('DeFiLlama API server error - please try again later')
+    }
+    throw error
+  }
+)
 
 /**
  * Normalize protocol names to handle common variations
@@ -78,7 +99,18 @@ export async function fetchProtocols(): Promise<DeFiLlamaProtocol[]> {
 async function fetchProtocolsFromAPI(): Promise<DeFiLlamaProtocol[]> {
   try {
     console.log('🔍 Fetching DeFiLlama protocols from API...')
-    const response = await apiClient.get<DeFiLlamaProtocol[]>('/protocols')
+    
+    // Create a timeout promise
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('API request timed out after 10 seconds')), 10000)
+    })
+    
+    // Race between API call and timeout
+    const response = await Promise.race([
+      apiClient.get<DeFiLlamaProtocol[]>('/protocols'),
+      timeoutPromise
+    ])
+    
     console.log(`✅ Fetched ${response.data.length} protocols from DeFiLlama API`)
     
     // Limit to first 500 protocols to avoid processing too much data (keep original limitation for API fallback)
@@ -88,7 +120,14 @@ async function fetchProtocolsFromAPI(): Promise<DeFiLlamaProtocol[]> {
     return limitedData
   } catch (error) {
     console.error('❌ Failed to fetch DeFiLlama protocols from API:', error)
-    throw new Error('Failed to fetch protocols data')
+    
+    if (error instanceof Error) {
+      if (error.message.includes('timed out')) {
+        throw new Error('Request timed out - DeFiLlama API is currently slow or unavailable')
+      }
+    }
+    
+    throw new Error('Failed to fetch protocols data - please try again')
   }
 }
 
@@ -129,10 +168,24 @@ export async function fetchYields(): Promise<DeFiLlamaYield[]> {
 async function fetchYieldsFromAPI(): Promise<DeFiLlamaYield[]> {
   try {
     console.log('🔍 Fetching DeFiLlama yields from yields.llama.fi API...')
-    // Use the correct yields API endpoint
-    const response = await axios.get<{ status: string, data: DeFiLlamaYield[] }>('https://yields.llama.fi/pools', {
-      timeout: TIMEOUT
+    
+    // Create a timeout promise
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('Yields API request timed out after 10 seconds')), 10000)
     })
+    
+    // Race between API call and timeout
+    const response = await Promise.race([
+      axios.get<{ status: string, data: DeFiLlamaYield[] }>('https://yields.llama.fi/pools', {
+        timeout: TIMEOUT,
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'Jarvis-Investment-Agent/1.0'
+        }
+      }),
+      timeoutPromise
+    ])
+    
     console.log(`✅ Fetched ${response.data.data.length} yield pools from DeFiLlama API`)
     
     // Limit to first 300 yield pools for performance (keep original limitation for API fallback)
@@ -146,7 +199,14 @@ async function fetchYieldsFromAPI(): Promise<DeFiLlamaYield[]> {
     return limitedData
   } catch (error) {
     console.error('❌ Failed to fetch DeFiLlama yields from API:', error)
-    throw new Error('Failed to fetch yields data')
+    
+    if (error instanceof Error) {
+      if (error.message.includes('timed out')) {
+        throw new Error('Request timed out - DeFiLlama yields API is currently slow or unavailable')
+      }
+    }
+    
+    throw new Error('Failed to fetch yields data - please try again')
   }
 }
 
