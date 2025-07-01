@@ -1,9 +1,8 @@
 'use client'
 
 import { shareChat } from '@/lib/actions/chat'
-import { useCopyToClipboard } from '@/lib/hooks/use-copy-to-clipboard'
 import { Share } from 'lucide-react'
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { Button } from './ui/button'
 import {
@@ -25,7 +24,21 @@ interface ChatShareProps {
 export function ChatShare({ chatId, className }: ChatShareProps) {
   const [open, setOpen] = useState(false)
   const [pending, startTransition] = useTransition()
-  const { copyToClipboard } = useCopyToClipboard({ timeout: 1000 })
+  const [hasCopied, setHasCopied] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (hasCopied) {
+      const timer = setTimeout(() => {
+        setHasCopied(false)
+      }, 2000)
+      return () => clearTimeout(timer)
+    }
+  }, [hasCopied])
 
   const handleShareAndCopy = async () => {
     startTransition(async () => {
@@ -41,9 +54,11 @@ export function ChatShare({ chatId, className }: ChatShareProps) {
       }
 
       const url = new URL(result.sharePath, window.location.href)
-      const success = await copyToClipboard(url.toString())
 
-      if (success) {
+      // Use raw clipboard API like copyable-wallet-address.tsx
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        navigator.clipboard.writeText(url.toString())
+        setHasCopied(true)
         toast.success('Link copied to clipboard')
       } else {
         toast.error('Could not copy link to clipboard')
