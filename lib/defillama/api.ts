@@ -1,4 +1,6 @@
 import axios from 'axios'
+import fs from 'fs'
+import path from 'path'
 import type { 
   DeFiLlamaProtocol, 
   DeFiLlamaYield, 
@@ -44,38 +46,96 @@ function normalizeProtocolName(name: string): string {
 }
 
 /**
- * Fetch all protocols from DeFiLlama
+ * Fetch all protocols from local JSON file (fallback to API)
  */
 export async function fetchProtocols(): Promise<DeFiLlamaProtocol[]> {
   try {
-    console.log('🔍 Fetching DeFiLlama protocols...')
-    const response = await apiClient.get<DeFiLlamaProtocol[]>('/protocols')
-    console.log(`✅ Fetched ${response.data.length} protocols from DeFiLlama`)
+    // Try to read from local JSON file first
+    const dataPath = path.join(process.cwd(), 'data', 'defillama-protocols.json')
     
-    // Limit to first 500 protocols to avoid processing too much data
+    if (fs.existsSync(dataPath)) {
+      console.log('📁 Reading DeFiLlama protocols from local JSON file...')
+      const fileContent = fs.readFileSync(dataPath, 'utf-8')
+      const protocols = JSON.parse(fileContent) as DeFiLlamaProtocol[]
+      console.log(`✅ Loaded ${protocols.length} protocols from local JSON file`)
+      
+      return protocols
+    } else {
+      console.log('⚠️ Local protocols JSON file not found, falling back to API...')
+      // Fallback to API if local file doesn't exist
+      return await fetchProtocolsFromAPI()
+    }
+  } catch (error) {
+    console.error('❌ Failed to read local protocols JSON file, falling back to API:', error)
+    // Fallback to API if local file reading fails
+    return await fetchProtocolsFromAPI()
+  }
+}
+
+/**
+ * Fetch protocols from DeFiLlama API (original implementation)
+ */
+async function fetchProtocolsFromAPI(): Promise<DeFiLlamaProtocol[]> {
+  try {
+    console.log('🔍 Fetching DeFiLlama protocols from API...')
+    const response = await apiClient.get<DeFiLlamaProtocol[]>('/protocols')
+    console.log(`✅ Fetched ${response.data.length} protocols from DeFiLlama API`)
+    
+    // Limit to first 500 protocols to avoid processing too much data (keep original limitation for API fallback)
     const limitedData = response.data.slice(0, 500)
     console.log(`📊 Processing ${limitedData.length} protocols (limited for performance)`)
     
     return limitedData
   } catch (error) {
-    console.error('❌ Failed to fetch DeFiLlama protocols:', error)
+    console.error('❌ Failed to fetch DeFiLlama protocols from API:', error)
     throw new Error('Failed to fetch protocols data')
   }
 }
 
 /**
- * Fetch yield pools from DeFiLlama
+ * Fetch yield pools from local JSON file (fallback to API)
  */
 export async function fetchYields(): Promise<DeFiLlamaYield[]> {
   try {
-    console.log('🔍 Fetching DeFiLlama yields from yields.llama.fi...')
+    // Try to read from local JSON file first
+    const dataPath = path.join(process.cwd(), 'data', 'defillama-yields.json')
+    
+    if (fs.existsSync(dataPath)) {
+      console.log('📁 Reading DeFiLlama yields from local JSON file...')
+      const fileContent = fs.readFileSync(dataPath, 'utf-8')
+      const jsonData = JSON.parse(fileContent) as { status: string, data: DeFiLlamaYield[] }
+      console.log(`✅ Loaded ${jsonData.data.length} yield pools from local JSON file`)
+      
+      // Log unique project names for debugging
+      const uniqueProjects = [...new Set(jsonData.data.map(y => y.project))].sort()
+      console.log(`💡 Available projects (${uniqueProjects.length}): ${uniqueProjects.slice(0, 20).join(', ')}${uniqueProjects.length > 20 ? '...' : ''}`)
+      
+      return jsonData.data
+    } else {
+      console.log('⚠️ Local JSON file not found, falling back to API...')
+      // Fallback to API if local file doesn't exist
+      return await fetchYieldsFromAPI()
+    }
+  } catch (error) {
+    console.error('❌ Failed to read local JSON file, falling back to API:', error)
+    // Fallback to API if local file reading fails
+    return await fetchYieldsFromAPI()
+  }
+}
+
+/**
+ * Fetch yield pools from DeFiLlama API (original implementation)
+ */
+async function fetchYieldsFromAPI(): Promise<DeFiLlamaYield[]> {
+  try {
+    console.log('🔍 Fetching DeFiLlama yields from yields.llama.fi API...')
     // Use the correct yields API endpoint
     const response = await axios.get<{ status: string, data: DeFiLlamaYield[] }>('https://yields.llama.fi/pools', {
       timeout: TIMEOUT
     })
-    console.log(`✅ Fetched ${response.data.data.length} yield pools from DeFiLlama`)
+    console.log(`✅ Fetched ${response.data.data.length} yield pools from DeFiLlama API`)
     
-    // Limit to first 300 yield pools for performance
+    // Limit to first 300 yield pools for performance (keep original limitation for API fallback)
     const limitedData = response.data.data.slice(0, 300)
     console.log(`📊 Processing ${limitedData.length} yield pools (limited for performance)`)
     
@@ -85,7 +145,7 @@ export async function fetchYields(): Promise<DeFiLlamaYield[]> {
     
     return limitedData
   } catch (error) {
-    console.error('❌ Failed to fetch DeFiLlama yields:', error)
+    console.error('❌ Failed to fetch DeFiLlama yields from API:', error)
     throw new Error('Failed to fetch yields data')
   }
 }
