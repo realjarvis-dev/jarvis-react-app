@@ -26,7 +26,8 @@ export function DeFiLlamaProtocolsSection({
   const result = toolResult.data || toolResult || {}
   
   // Extract parameters from tool args
-  const view = tool.args?.view || 'top_gainers'
+  const view = result.view || tool.args?.view || 'top_gainers'
+  const protocolName = result.searchTerm || tool.args?.protocolName
   const category = tool.args?.category
   const chain = tool.args?.chain
   const limit = tool.args?.limit || 20
@@ -34,6 +35,8 @@ export function DeFiLlamaProtocolsSection({
 
   const getHeaderText = () => {
     switch (view) {
+      case 'protocol_search':
+        return protocolName ? `Protocol Search: "${protocolName}"` : 'Protocol Search'
       case 'top_gainers':
         return 'Top 7-Day Gainers'
       case 'top_tvl':
@@ -63,6 +66,8 @@ export function DeFiLlamaProtocolsSection({
 
   // Handle error state
   if (result.error) {
+    const isSearchError = result.searchTerm && result.error.includes('No protocols found matching')
+    
     return (
       <CollapsibleMessage
         role="assistant"
@@ -73,8 +78,15 @@ export function DeFiLlamaProtocolsSection({
         showIcon={false}
       >
         <div className="p-4 text-red-600 dark:text-red-400">
-          <div className="font-medium mb-2">Error fetching DeFi protocols</div>
+          <div className="font-medium mb-2">
+            {isSearchError ? 'Protocol Not Found' : 'Error fetching DeFi protocols'}
+          </div>
           <div className="text-sm">{result.error}</div>
+          {isSearchError && (
+            <div className="mt-3 text-xs text-muted-foreground">
+              Try searching for a different protocol name or check the spelling.
+            </div>
+          )}
         </div>
       </CollapsibleMessage>
     )
