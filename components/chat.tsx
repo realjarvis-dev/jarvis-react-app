@@ -48,12 +48,12 @@ export function Chat({
         setAnonId(newAnonId)
         setHeaders({
           'x-user-id': newAnonId,
-          'allow-web3-tools': 'false'
+          'allow-web3-tools': 'readonly'
         })
       } else {
         setHeaders({
           'x-user-id': anonId,
-          'allow-web3-tools': 'false'
+          'allow-web3-tools': 'readonly'
         })
       }
       return
@@ -69,7 +69,7 @@ export function Chat({
           console.error('Failed to get access token:', error)
           setHeaders({
             'x-user-id': 'anonymous',
-            'allow-web3-tools': 'false'
+            'allow-web3-tools': 'readonly'
           })
         }
       })()

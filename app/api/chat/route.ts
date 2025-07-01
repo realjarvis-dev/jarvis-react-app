@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     const referer = request.headers.get('referer')
     const isSharePage = referer?.includes('/share/')
     const userId = request.headers.get('x-user-id') || 'anonymous'
-    const allowWeb3Tools = request.headers.get('allow-web3-tools') || 'false'
+    const allowWeb3Tools = request.headers.get('allow-web3-tools') || 'readonly'
 
     if (isSharePage) {
       return new Response('Chat API is not available on share pages', {
