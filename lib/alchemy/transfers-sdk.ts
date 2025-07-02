@@ -1,3 +1,4 @@
+import { getRedisClient } from '@/lib/redis/config';
 import { Alchemy, AssetTransfersCategory, AssetTransfersParams, AssetTransfersResponse, Network } from "alchemy-sdk";
 import {
   AlchemyTransfersConfig
@@ -234,10 +235,10 @@ export async function enrichAllTransfers(
 
 /**
  * Recursively fetch and enrich ALL transfers for an address with pagination
+ * Always fetches both incoming and outgoing transfers
  */
 export async function enrichAllTransfersForAddress(
   address: string,
-  direction: 'from' | 'to' | 'both' = 'both',
   fromBlock: string = "0x0",
   additionalParams?: Partial<AssetTransfersParams>,
   config?: AlchemyTransfersConfig,
@@ -247,29 +248,45 @@ export async function enrichAllTransfersForAddress(
   allTransfers: any[];
   totalCount: number;
   pagesProcessed: number;
-  fromTransfers?: any[];
-  toTransfers?: any[];
+  fromTransfers: any[];
+  toTransfers: any[];
 }> {
   console.log(`🚀 Starting comprehensive enrichment for address: ${address}`);
-  console.log(`📋 Direction: ${direction}, Max pages: ${maxPages}, Concurrency: ${maxConcurrency}`);
+  console.log(`📋 Processing both incoming and outgoing transfers - Max pages: ${maxPages}, Concurrency: ${maxConcurrency}`);
   
-  if (direction === 'both') {
-    console.log('🔄 Processing both incoming and outgoing transfers...');
-    
-    const [fromResults, toResults] = await Promise.all([
-      enrichAllTransfersForAddress(address, 'from', fromBlock, additionalParams, config, maxConcurrency, maxPages),
-      enrichAllTransfersForAddress(address, 'to', fromBlock, additionalParams, config, maxConcurrency, maxPages)
-    ]);
-    
-    return {
-      allTransfers: [...fromResults.allTransfers, ...toResults.allTransfers],
-      totalCount: fromResults.totalCount + toResults.totalCount,
-      pagesProcessed: fromResults.pagesProcessed + toResults.pagesProcessed,
-      fromTransfers: fromResults.allTransfers,
-      toTransfers: toResults.allTransfers
-    };
-  }
+  console.log('🔄 Processing both incoming and outgoing transfers...');
   
+  // Process both directions in parallel
+  const [fromResults, toResults] = await Promise.all([
+    enrichAllTransfersForDirection(address, 'from', fromBlock, additionalParams, config, maxConcurrency, maxPages),
+    enrichAllTransfersForDirection(address, 'to', fromBlock, additionalParams, config, maxConcurrency, maxPages)
+  ]);
+  
+  return {
+    allTransfers: [...fromResults.allTransfers, ...toResults.allTransfers],
+    totalCount: fromResults.totalCount + toResults.totalCount,
+    pagesProcessed: fromResults.pagesProcessed + toResults.pagesProcessed,
+    fromTransfers: fromResults.allTransfers,
+    toTransfers: toResults.allTransfers
+  };
+}
+
+/**
+ * Helper function to fetch and enrich transfers for a single direction
+ */
+async function enrichAllTransfersForDirection(
+  address: string,
+  direction: 'from' | 'to',
+  fromBlock: string = "0x0",
+  additionalParams?: Partial<AssetTransfersParams>,
+  config?: AlchemyTransfersConfig,
+  maxConcurrency: number = 5,
+  maxPages: number = 10
+): Promise<{
+  allTransfers: any[];
+  totalCount: number;
+  pagesProcessed: number;
+}> {
   // Single direction processing
   const allEnrichedTransfers: any[] = [];
   let pageKey: string | undefined;
@@ -328,11 +345,11 @@ export async function enrichAllTransfersForAddress(
 
 /**
  * Complete wallet intelligence: Fetch, enrich, and analyze ALL transactions for behavioral insights
+ * Always analyzes both incoming and outgoing transfers
  */
 export async function getCompleteWalletIntelligence(
   address: string,
   options: {
-    direction?: 'from' | 'to' | 'both';
     fromBlock?: string;
     maxPages?: number;
     maxConcurrency?: number;
@@ -349,7 +366,6 @@ export async function getCompleteWalletIntelligence(
   };
 }> {
   const {
-    direction = 'both',
     fromBlock = '0x0',
     maxPages = 5,
     maxConcurrency = 3,
@@ -357,14 +373,13 @@ export async function getCompleteWalletIntelligence(
   } = options;
 
   console.log(`Starting complete wallet intelligence for: ${address}`);
-  console.log(`Parameters: direction=${direction}, maxPages=${maxPages}, model=${analysisModel}`);
+  console.log(`Parameters: maxPages=${maxPages}, model=${analysisModel}`);
 
   const enrichmentStartTime = Date.now();
 
-  // Step 1: Fetch and enrich all transactions
+  // Step 1: Fetch and enrich all transactions (both directions)
   const enrichmentResults = await enrichAllTransfersForAddress(
     address,
-    direction,
     fromBlock,
     { maxCount: 20 }, // 20 per page for thorough analysis
     undefined,
@@ -435,7 +450,6 @@ async function main() {
     console.log('This combines enrichment + LLM behavioral analysis...\n');
     
     const intelligence = await getCompleteWalletIntelligence(testAddress, {
-      direction: 'from',
       maxPages: 2,
       maxConcurrency: 2,
       analysisModel: 'openai:gpt-4o-mini' // Use mini for faster testing
@@ -476,6 +490,15 @@ async function main() {
       console.log(`  [${rec.category}] ${rec.recommendation}`);
     });
 
+    // Test 4: Save wallet summary to Redis
+    console.log('\nTEST 4: Save Wallet Summary to Redis');
+    try {
+      await saveWalletSummary(testAddress, intelligence.behavioralAnalysis);
+      console.log('✅ Wallet summary saved to Redis successfully!');
+    } catch (error) {
+      console.log('❌ Failed to save wallet summary to Redis:', error);
+    }
+
     console.log('\nComplete wallet intelligence test completed successfully!');
     
   } catch (error) {
@@ -486,4 +509,35 @@ async function main() {
 // Run main function if this file is executed directly
 if (require.main === module) {
   main();
+}
+
+/**
+ * Save wallet summary to Redis for easy retrieval
+ */
+export async function saveWalletSummary(
+  walletId: string,
+  summary: WalletAnalysis
+): Promise<void> {
+  try {
+    const redis = await getRedisClient();
+    const walletKey = `wallet:summary:${walletId.toLowerCase()}`;
+    
+    const summaryToSave = {
+      ...summary,
+      // Stringify complex objects for Redis storage
+      userPersona: JSON.stringify(summary.userPersona),
+      behavioralPatterns: JSON.stringify(summary.behavioralPatterns),
+      protocolPreferences: JSON.stringify(summary.protocolPreferences),
+      portfolioInsights: JSON.stringify(summary.portfolioInsights),
+      actionableRecommendations: JSON.stringify(summary.actionableRecommendations),
+      savedAt: new Date().toISOString()
+    };
+
+    await redis.hmset(walletKey, summaryToSave);
+    console.log(`✅ Wallet summary saved for ${walletId}`);
+    
+  } catch (error) {
+    console.error('Error saving wallet summary to Redis:', error);
+    throw error;
+  }
 }
