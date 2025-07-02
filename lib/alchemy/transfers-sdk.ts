@@ -8,6 +8,7 @@ import { analyzeWalletBehavior, WalletAnalysis } from './wallet-indexing-llm';
 
 /**
  * Create an Alchemy instance with the given configuration
+ * Uses server-side compatible settings to avoid browser-specific issues
  */
 function createAlchemyInstance(config?: AlchemyTransfersConfig): Alchemy {
   const apiKey = process.env.ALCHEMY_API_KEY;
@@ -19,7 +20,11 @@ function createAlchemyInstance(config?: AlchemyTransfersConfig): Alchemy {
   
   return new Alchemy({
     apiKey,
-    network
+    network,
+    // Add server-side compatible settings to prevent browser-specific errors
+    connectionInfoOverrides: { 
+      skipFetchSetup: true 
+    }
   });
 }
 
@@ -539,5 +544,41 @@ export async function saveWalletSummary(
   } catch (error) {
     console.error('Error saving wallet summary to Redis:', error);
     throw error;
+  }
+}
+
+/**
+ * Retrieve wallet summary from Redis
+ */
+export async function getWalletSummary(
+  walletId: string
+): Promise<WalletAnalysis | null> {
+  try {
+    const redis = await getRedisClient();
+    const walletKey = `wallet:summary:${walletId.toLowerCase()}`;
+    
+    const summaryData = await redis.hgetall(walletKey);
+    
+    if (!summaryData || Object.keys(summaryData).length === 0) {
+      console.log(`No wallet summary found for ${walletId}`);
+      return null;
+    }
+
+    // Parse the stringified JSON fields back to objects, with proper fallbacks
+    const walletSummary: WalletAnalysis = {
+      userPersona: JSON.parse((summaryData.userPersona as string) || '{}'),
+      behavioralPatterns: JSON.parse((summaryData.behavioralPatterns as string) || '{}'),
+      protocolPreferences: JSON.parse((summaryData.protocolPreferences as string) || '{}'),
+      portfolioInsights: JSON.parse((summaryData.portfolioInsights as string) || '{}'),
+      actionableRecommendations: JSON.parse((summaryData.actionableRecommendations as string) || '[]'),
+      summary: (summaryData.summary as string) || ''
+    };
+
+    console.log(`✅ Wallet summary retrieved for ${walletId}`);
+    return walletSummary;
+    
+  } catch (error) {
+    console.error('Error retrieving wallet summary from Redis:', error);
+    return null;
   }
 }
