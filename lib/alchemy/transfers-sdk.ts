@@ -3,6 +3,7 @@ import {
   AlchemyTransfersConfig
 } from './types';
 import { decodeFunction, fetchContractName, getAddressType } from './utils';
+import { analyzeWalletBehavior, WalletAnalysis } from './wallet-indexing-llm';
 
 /**
  * Create an Alchemy instance with the given configuration
@@ -326,63 +327,159 @@ export async function enrichAllTransfersForAddress(
 }
 
 /**
- * Main function to test the transfers SDK with enrichment
+ * Complete wallet intelligence: Fetch, enrich, and analyze ALL transactions for behavioral insights
+ */
+export async function getCompleteWalletIntelligence(
+  address: string,
+  options: {
+    direction?: 'from' | 'to' | 'both';
+    fromBlock?: string;
+    maxPages?: number;
+    maxConcurrency?: number;
+    analysisModel?: string;
+  } = {}
+): Promise<{
+  enrichedTransactions: any[];
+  behavioralAnalysis: WalletAnalysis;
+  processingStats: {
+    totalTransactions: number;
+    pagesProcessed: number;
+    analysisTime: number;
+    enrichmentTime: number;
+  };
+}> {
+  const {
+    direction = 'both',
+    fromBlock = '0x0',
+    maxPages = 5,
+    maxConcurrency = 3,
+    analysisModel = 'openai:gpt-4o'
+  } = options;
+
+  console.log(`Starting complete wallet intelligence for: ${address}`);
+  console.log(`Parameters: direction=${direction}, maxPages=${maxPages}, model=${analysisModel}`);
+
+  const enrichmentStartTime = Date.now();
+
+  // Step 1: Fetch and enrich all transactions
+  const enrichmentResults = await enrichAllTransfersForAddress(
+    address,
+    direction,
+    fromBlock,
+    { maxCount: 20 }, // 20 per page for thorough analysis
+    undefined,
+    maxConcurrency,
+    maxPages
+  );
+
+  const enrichmentTime = Date.now() - enrichmentStartTime;
+  console.log(`Enrichment completed in ${enrichmentTime}ms`);
+
+  if (enrichmentResults.allTransfers.length === 0) {
+    throw new Error('No transactions found for analysis');
+  }
+
+  console.log(`Analyzing ${enrichmentResults.allTransfers.length} enriched transactions...`);
+  const analysisStartTime = Date.now();
+
+  // Step 2: Generate behavioral analysis
+  const behavioralAnalysis = await analyzeWalletBehavior(
+    enrichmentResults.allTransfers, 
+    address, 
+    { model: analysisModel }
+  );
+
+  const analysisTime = Date.now() - analysisStartTime;
+  console.log(`Analysis completed in ${analysisTime}ms`);
+
+  // Step 3: Return comprehensive results
+  return {
+    enrichedTransactions: enrichmentResults.allTransfers,
+    behavioralAnalysis,
+    processingStats: {
+      totalTransactions: enrichmentResults.totalCount,
+      pagesProcessed: enrichmentResults.pagesProcessed,
+      analysisTime,
+      enrichmentTime
+    }
+  };
+}
+
+/**
+ * Main function to test the complete wallet intelligence system
  */
 async function main() {
   try {
     const testAddress = '0xe852Bb2b0d981a4e869c6e642678CD95298681Bb';
     
-    console.log('🔍 Testing basic transfer fetching...');
-    const transfers = await getTransfersFromAddress(
-      testAddress,
-      '0x0',
-      { maxCount: 5 } // Limit to 5 transfers for basic test
-    );
-    
-    console.log(`📊 Found ${transfers.transfers.length} transfers`);
-    
+    console.log('TESTING COMPLETE WALLET INTELLIGENCE SYSTEM\n');
+    console.log('=' .repeat(60));
+
+    // Test 1: Basic functionality
+    console.log('\nTEST 1: Basic Transfer Fetching');
+    const transfers = await getTransfersFromAddress(testAddress, '0x0', { maxCount: 3 });
+    console.log(`Found ${transfers.transfers.length} transfers`);
+
+    // Test 2: Single enrichment
+    console.log('\nTEST 2: Single Transaction Enrichment');
     if (transfers.transfers.length > 0) {
-      console.log('\n🔍 Testing single transfer enrichment...');
-      const enrichedTransfer = await enrichTransaction(transfers.transfers[0]);
-      console.log('✨ Enriched fields:', Object.keys(enrichedTransfer).filter(key => 
+      const enriched = await enrichTransaction(transfers.transfers[0]);
+      const newFields = Object.keys(enriched).filter(key => 
         !Object.keys(transfers.transfers[0]).includes(key)
-      ));
-      
-      console.log('\n🔍 Testing batch enrichment...');
-      const allEnriched = await enrichAllTransfers(transfers);
-      console.log(`✅ Successfully enriched ${allEnriched.length} transfers`);
-      
-      console.log('\n🚀 Testing comprehensive recursive enrichment...');
-      console.log('📋 Note: This will fetch and enrich ALL transfers (limited to 3 pages for demo)');
-      
-      const comprehensiveResults = await enrichAllTransfersForAddress(
-        testAddress,
-        'from', // Only outgoing for demo
-        '0x0',
-        { maxCount: 10 }, // 10 per page
-        undefined, // default config
-        3, // max 3 concurrent enrichments
-        3  // max 3 pages for demo
       );
-      
-      console.log('\n📈 COMPREHENSIVE RESULTS:');
-      console.log(`🎯 Total enriched transfers: ${comprehensiveResults.totalCount}`);
-      console.log(`📖 Pages processed: ${comprehensiveResults.pagesProcessed}`);
-      
-      // Show summary of enriched data
-      if (comprehensiveResults.allTransfers.length > 0) {
-        const sampleEnriched = comprehensiveResults.allTransfers[0];
-        console.log('\n📋 Sample enriched transfer fields:');
-        Object.keys(sampleEnriched).forEach(key => {
-          if (!['blockNum', 'uniqueId', 'hash', 'from', 'to', 'value', 'erc721TokenId', 'erc1155Metadata', 'tokenId', 'asset', 'category', 'rawContract'].includes(key)) {
-            console.log(`  ✨ ${key}: ${typeof sampleEnriched[key] === 'object' ? JSON.stringify(sampleEnriched[key]) : sampleEnriched[key]}`);
-          }
-        });
-      }
+      console.log(`Added enrichment fields: ${newFields.join(', ')}`);
     }
+
+    // Test 3: Complete wallet intelligence
+    console.log('\nTEST 3: Complete Wallet Intelligence (AI Analysis)');
+    console.log('This combines enrichment + LLM behavioral analysis...\n');
+    
+    const intelligence = await getCompleteWalletIntelligence(testAddress, {
+      direction: 'from',
+      maxPages: 2,
+      maxConcurrency: 2,
+      analysisModel: 'openai:gpt-4o-mini' // Use mini for faster testing
+    });
+
+    // Display results
+    console.log('\nCOMPLETE WALLET INTELLIGENCE RESULTS:');
+    console.log('=' .repeat(60));
+    
+    console.log('\nPROCESSING STATS:');
+    console.log(`  Total transactions: ${intelligence.processingStats.totalTransactions}`);
+    console.log(`  Pages processed: ${intelligence.processingStats.pagesProcessed}`);
+    console.log(`  Enrichment time: ${intelligence.processingStats.enrichmentTime}ms`);
+    console.log(`  Analysis time: ${intelligence.processingStats.analysisTime}ms`);
+
+    console.log('\nBEHAVIORAL ANALYSIS:');
+    console.log(`  Risk Profile: ${intelligence.behavioralAnalysis.userPersona.riskProfile} (${Math.round(intelligence.behavioralAnalysis.userPersona.confidence * 100)}% confidence)`);
+    console.log(`  Reasoning: ${intelligence.behavioralAnalysis.userPersona.reasoning}`);
+    console.log(`  Trading Frequency: ${intelligence.behavioralAnalysis.behavioralPatterns.tradingFrequency}`);
+    console.log(`  Transaction Category: ${intelligence.behavioralAnalysis.behavioralPatterns.transactionCategory}`);
+    console.log(`  Avg Transaction: ${intelligence.behavioralAnalysis.behavioralPatterns.averageTransactionSize.eth} ETH (~$${intelligence.behavioralAnalysis.behavioralPatterns.averageTransactionSize.usd_estimate})`);
+    console.log(`  Activity Pattern: ${intelligence.behavioralAnalysis.portfolioInsights.activityPattern}`);
+    console.log(`  Primary Assets: ${intelligence.behavioralAnalysis.portfolioInsights.primaryAssets.join(', ')}`);
+
+    console.log('\nPROTOCOL PREFERENCES:');
+    intelligence.behavioralAnalysis.protocolPreferences.topProtocols.forEach((protocol, index) => {
+      console.log(`  ${index + 1}. ${protocol.name} (${protocol.category}, ${protocol.frequency} uses)`);
+    });
+    
+    console.log('\nDEFI CATEGORIES:');
+    console.log(`  ${intelligence.behavioralAnalysis.protocolPreferences.defiCategories.join(', ')}`);
+
+    console.log('\nSUMMARY:');
+    console.log(`  "${intelligence.behavioralAnalysis.summary}"`);
+
+    console.log('\nACTIONABLE RECOMMENDATIONS:');
+    intelligence.behavioralAnalysis.actionableRecommendations.forEach((rec, index) => {
+      console.log(`  [${rec.category}] ${rec.recommendation}`);
+    });
+
+    console.log('\nComplete wallet intelligence test completed successfully!');
     
   } catch (error) {
-    console.error('❌ Error in main test:', error);
+    console.error('Error in wallet intelligence test:', error);
   }
 }
 
