@@ -527,14 +527,15 @@ export async function saveWalletSummary(
     const redis = await getRedisClient();
     const walletKey = `wallet:summary:${walletId.toLowerCase()}`;
     
+    // Follow the same pattern as chat - let Redis wrapper handle stringification
     const summaryToSave = {
-      ...summary,
-      // Stringify complex objects for Redis storage
-      userPersona: JSON.stringify(summary.userPersona),
-      behavioralPatterns: JSON.stringify(summary.behavioralPatterns),
-      protocolPreferences: JSON.stringify(summary.protocolPreferences),
-      portfolioInsights: JSON.stringify(summary.portfolioInsights),
-      actionableRecommendations: JSON.stringify(summary.actionableRecommendations),
+      // Store complex objects directly, Redis wrapper will handle conversion
+      userPersona: summary.userPersona,
+      behavioralPatterns: summary.behavioralPatterns,
+      protocolPreferences: summary.protocolPreferences,
+      portfolioInsights: summary.portfolioInsights,
+      actionableRecommendations: summary.actionableRecommendations,
+      summary: summary.summary,
       savedAt: new Date().toISOString()
     };
 
@@ -564,13 +565,25 @@ export async function getWalletSummary(
       return null;
     }
 
-    // Parse the stringified JSON fields back to objects, with proper fallbacks
+    // Helper function to safely parse JSON fields
+    const safeParseJSON = (field: any, fallback: any) => {
+      if (typeof field === 'string') {
+        try {
+          return JSON.parse(field);
+        } catch {
+          return fallback;
+        }
+      }
+      return field || fallback;
+    };
+
+    // Parse fields that might be strings (following chat pattern)
     const walletSummary: WalletAnalysis = {
-      userPersona: JSON.parse((summaryData.userPersona as string) || '{}'),
-      behavioralPatterns: JSON.parse((summaryData.behavioralPatterns as string) || '{}'),
-      protocolPreferences: JSON.parse((summaryData.protocolPreferences as string) || '{}'),
-      portfolioInsights: JSON.parse((summaryData.portfolioInsights as string) || '{}'),
-      actionableRecommendations: JSON.parse((summaryData.actionableRecommendations as string) || '[]'),
+      userPersona: safeParseJSON(summaryData.userPersona, {}),
+      behavioralPatterns: safeParseJSON(summaryData.behavioralPatterns, {}),
+      protocolPreferences: safeParseJSON(summaryData.protocolPreferences, {}),
+      portfolioInsights: safeParseJSON(summaryData.portfolioInsights, {}),
+      actionableRecommendations: safeParseJSON(summaryData.actionableRecommendations, []),
       summary: (summaryData.summary as string) || ''
     };
 
