@@ -21,16 +21,18 @@ export const walletBalanceTool = tool({
   description: 'Get wallet balance information for all tokens or a specific token.',
   parameters: z.object({
     wallet_address: z.string()
-      .describe('Specific EVM wallet address to check'),
+      .describe('Specific EVM wallet address to check, default to user\'s EVM wallet'),
+    solana_wallet_address: z.string()
+      .describe('Specific Solana wallet address to check, default to user\'s Solana wallet'),
     token_symbol: z.string().optional()
       .describe('Specific token symbol to filter by (e.g., "ETH", "DAI", etc.)')
   }),
   execute: async (params, context: ToolContext) => {
-    const { wallet_address, token_symbol } = params;
+    const { wallet_address, token_symbol, solana_wallet_address } = params;
     const networkContext = context?.networkContext;
     
     try {
-      const walletBalances = await getWalletBalances(wallet_address)
+      const walletBalances = await getWalletBalances(wallet_address, solana_wallet_address)
       
       // If a specific token was requested, filter the results
       if (token_symbol) {

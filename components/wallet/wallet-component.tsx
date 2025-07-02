@@ -103,13 +103,13 @@ export function WalletComponent({ showVideoBg }: WalletComponentProps) {
           className={showVideoBg ? 'text-white/90' : ''}
         />
       )}
-      {/* {solAddress && (
+      {solAddress && (
         <CopyableWalletAddress
           walletAddress={solAddress}
           walletAddressIntroText="Solana wallet:"
           className={showVideoBg ? 'text-white/90' : ''}
         />
-      )} */}
+      )}
     </div>
   )
 }

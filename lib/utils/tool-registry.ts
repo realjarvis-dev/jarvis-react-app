@@ -478,7 +478,9 @@ export function createToolRegistry(model: string): ToolRegistry {
       'optimism',
       'unichain',
       'bsc',
-      'sonic'
+      'sonic',
+      'solana',
+      'mantle'
     ]
   })
 
@@ -503,7 +505,8 @@ export function createToolRegistry(model: string): ToolRegistry {
       'optimism',
       'unichain',
       'bsc',
-      'sonic'
+      'sonic',
+      'mantle'
     ]
   })
 

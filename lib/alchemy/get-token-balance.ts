@@ -2,7 +2,7 @@ import { TokenBalance } from 'alchemy-sdk'
 import { ethers } from 'ethers'
 import { getConfigByChainId, TENDERLY_DEMO_CONFIG } from '../network/config'
 import { getAlchemyClient } from './client'
-import { TokenData } from './types'
+import { TokenData } from '../types/wallet-token'
 import {
   commonlyUsedPTTokensArray,
   commonlyUsedTokensArray,
@@ -51,10 +51,10 @@ export async function getTokenBalances(
 
       const allTokenData: TokenData[] = resolvedTokenData
         .filter(
-          (tokenData): tokenData is NonNullable<typeof tokenData> =>
+          (tokenData: TokenData): tokenData is NonNullable<typeof tokenData> =>
             (tokenData !== null) && (tokenData.decimals !== 0) && (tokenData.symbol !== '') && (tokenData.name !== '')
         )
-        .map(tokenData => ({
+        .map((tokenData: TokenData) => ({
           ...tokenData,
           network: networkConfig.displayName
         }))

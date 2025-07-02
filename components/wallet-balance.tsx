@@ -3,7 +3,7 @@
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { TokenData } from '@/lib/alchemy/types'
+import { TokenData } from '@/lib/types/wallet-token'
 import { allNetworkConfigs } from '@/lib/network/config'
 import { useNetwork } from '@/lib/network/context'
 import { cn } from '@/lib/utils'
@@ -71,6 +71,7 @@ const NetworkSection = ({
 interface WalletBalanceProps {
   title: string
   walletAddress?: string
+  solanaWalletAddress?: string
   tokens?: TokenData[]
   isLoading: boolean
   error?: string | null
@@ -81,6 +82,7 @@ interface WalletBalanceProps {
 export function WalletBalance({
   title,
   walletAddress,
+  solanaWalletAddress,
   tokens,
   isLoading,
   error,
@@ -131,6 +133,10 @@ export function WalletBalance({
 
   const totalTokenCount = filteredTokens.length
   const hasMultipleNetworks = sortedNetworks.length > 1
+  let walletAddressToDisplay = walletAddress
+  if (activeNetwork.id === "solana") {
+    walletAddressToDisplay = solanaWalletAddress
+  }
   return (
     <Card
       className={cn(
@@ -140,9 +146,9 @@ export function WalletBalance({
     >
       <CardHeader className="border-b pb-4">
         <div className="flex w-full ">
-          {walletAddress ? (
+          {walletAddressToDisplay ? (
             <CopyableWalletAddress
-              walletAddress={walletAddress}
+              walletAddress={walletAddressToDisplay}
               walletAddressIntroText=""
             />
           ) : (
