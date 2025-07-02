@@ -1,9 +1,48 @@
 import { TokenData } from '../types/wallet-token'
 import { searchTokens } from '../jupiter/search'
+import { LAMPORTS_PER_SOL } from '@solana/web3.js';
+
+
+
+
+export const getSolanaBalance = async (
+    walletAddress: string
+): Promise<number> => {
+    const response = await fetch(
+        `https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY}`,
+        {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                jsonrpc: '2.0',
+                id: '1',
+                method: 'getBalance',
+                params: [walletAddress]
+            })
+        }
+    )
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    const data = await response.json()
+    return data.result.value / LAMPORTS_PER_SOL
+}
 
 export const getTokenBalances = async (
   walletAddress: string
 ): Promise<TokenData[]> => {
+  const solanaBalance = await getSolanaBalance(walletAddress)
+  let tokenBalances: TokenData[] = []
+  if (solanaBalance > 0) {
+    tokenBalances.push({
+      name: 'Solana',
+      symbol: 'SOL',
+      address: 'So11111111111111111111111111111111111111112',
+      balance: solanaBalance.toString(),
+      network: 'Solana',
+      decimals: 9
+    })
+  }
   try {
     const response = await fetch(
       `https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY}`,
@@ -34,7 +73,7 @@ export const getTokenBalances = async (
     const data = await response.json()
 
     if (!data.result?.value) {
-      return []
+      return tokenBalances
     }
 
     // Process all tokens in parallel with the cached registry
@@ -62,12 +101,10 @@ export const getTokenBalances = async (
       })
     )
     // Filter out null results
-    return tokenList.filter((token): token is TokenData => token !== null)
+    tokenBalances.push(...tokenList.filter((token): token is TokenData => token !== null))
+    return tokenBalances
   } catch (error) {
     console.error('Error fetching token balances:', error)
     throw error
   }
 }
-
-// Example usage
-// console.log(JSON.stringify(await getTokenBalances("7VkW8pL9ok28CZgB5qDKBU2zNtiwxPw3QKLaEBXqWJ2m"), null, 2));
