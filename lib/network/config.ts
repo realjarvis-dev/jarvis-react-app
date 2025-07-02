@@ -6,6 +6,7 @@ import { solana } from '@metalayer/viem-chains'
 // Individual network configurations
 // These objects must match the NetworkConfig interface from types.ts
 // The `id` field is crucial as it forms the basis for ChainType
+export const SOLANA_CHAIN_ID = 501494
 
 export const ethereumConfig: NetworkConfig = {
   id: 'ethereum' as const,
