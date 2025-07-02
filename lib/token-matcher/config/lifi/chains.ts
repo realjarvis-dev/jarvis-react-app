@@ -360,6 +360,14 @@ export const chains = [
     "mainnet": true
   },
   {
+    "key": "kat",
+    "chainType": "EVM",
+    "name": "Katana",
+    "coin": "ETH",
+    "id": 747474,
+    "mainnet": true
+  },
+  {
     "key": "ber",
     "chainType": "EVM",
     "name": "Berachain",
