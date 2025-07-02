@@ -1,6 +1,7 @@
 import { Network } from 'alchemy-sdk'
 import type { ChainType, NetworkConfig } from './types'
 import { base, mainnet, polygon, optimism, arbitrum, berachain, bsc, sonic, mantle, unichain } from 'viem/chains'
+import { solana } from '@metalayer/viem-chains'
 
 // Individual network configurations
 // These objects must match the NetworkConfig interface from types.ts
@@ -143,6 +144,19 @@ export const mantleConfig: NetworkConfig = {
   viemChain: mantle
 }
 
+export const solanaConfig: NetworkConfig = {
+  id: 'solana' as const,
+  displayName: 'Solana',
+  chainId: 501494,
+  rpcUrl: `https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY}`,
+  scanLink: 'solscan.io',
+  isDemo: false,
+  alchemyNetwork: Network.SOLANA_MAINNET,
+  icon: '/icons/chains/solana.svg',
+  nativeAsset: { name: 'Solana', symbol: 'SOL', decimals: 9 },
+  viemChain: solana
+}
+
 /**
  * A mapping of all available production/main network configurations.
  * The keys of this object are used to generate the `ChainType`.
@@ -158,7 +172,8 @@ export const allNetworkConfigs = {
   unichain: unichainConfig,
   bsc: bnbSmartChainConfig,
   sonic: sonicConfig,
-  mantle: mantleConfig
+  mantle: mantleConfig,
+  solana: solanaConfig
 } as const
 
 /**
