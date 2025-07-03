@@ -176,7 +176,7 @@ export const pendleZapInQuoteTool = tool({
         console.log(`[ERROR] Market not found for: "${marketName}" on chain ${chainId}`)
         return {
           status: 'fail',
-          error_message: `Market not found: "${marketName}". Try using "sENA" instead of "sENA LP Pool"`,
+          error_message: `Market not found: "${marketName}". Please check the market name and try again.`,
           hash: null
         }
       }
