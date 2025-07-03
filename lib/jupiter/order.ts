@@ -1,0 +1,184 @@
+import axios from 'axios'
+
+// Create a new axios instance for Jupiter Ultra API
+const jupiterUltraAxios = axios.create({
+  baseURL: 'https://lite-api.jup.ag'
+})
+
+// Types for Jupiter Ultra API
+export interface JupiterOrderRequest {
+  inputMint: string
+  outputMint: string
+  amount: string
+  taker?: string
+}
+
+export interface JupiterOrderResponse {
+
+  inputMint: string
+  outputMint: string
+  inAmount: string
+  outAmount: string
+  otherAmountThreshold: string
+  swapMode: string
+  slippageBps: number
+  platformFee?: {
+    feeBps: number
+    amount: string
+  }
+  dynamicSlippageReport?: {
+    amplificationRatio: string | null
+    otherAmount: number | null
+    simulatedIncurredSlippageBps: number | null
+    slippageBps: number
+    categoryName: string
+    heuristicMaxSlippageBps: number
+  }
+  priceImpactPct: string
+  routePlan: Array<{
+    swapInfo: {
+      ammKey: string
+      label: string
+      inputMint: string
+      outputMint: string
+      inAmount: string
+      outAmount: string
+      feeAmount: string
+      feeMint: string
+
+    }
+    percent: number
+  }>
+  feeMint?: string
+  feeBps: number
+  prioritizationFeeLamports: number
+  swapType: 'aggregator' | 'rfq' | 'hashflow'
+  gasless: boolean
+  requestId: string
+  transaction: string
+  totalTime: number
+  taker: string | null
+  quoteId?: string
+  maker?: string
+  expireAt?: string
+
+}
+
+export interface JupiterExecuteRequest {
+  requestId: string
+  signedTransaction: string
+}
+
+export interface JupiterExecuteResponse {
+  status: "Success" | "Failed"
+  signature: string
+  slot?: string
+  error: string
+  code: number
+  totalInputAmount?: string
+  totalOutputAmount?: string
+  inputAmountResult?: string
+  outputAmountResult?: string
+  swapEvents?: Array<{
+    inputMint: string
+    inputAmount: string
+    outputMint: string
+    outputAmount: string
+  }>
+}
+
+/**
+ * Get a base64-encoded unsigned swap transaction from Jupiter Ultra API
+ * @param params - Order request parameters
+ * @returns Promise with order response containing swap transaction
+ */
+export async function getJupiterOrder(
+  params: JupiterOrderRequest
+): Promise<JupiterOrderResponse> {
+  try {
+    const response = await jupiterUltraAxios.get<JupiterOrderResponse>(
+      '/ultra/v1/order',
+      {
+        params
+      }
+    )
+
+    return response.data
+  } catch (error) {
+    console.error('Error fetching Jupiter order:', error)
+    if (axios.isAxiosError(error)) {
+      if (error.response?.status === 400) {
+        throw new Error('Bad request: Invalid parameters provided')
+      } else if (error.response?.status === 500) {
+        throw new Error(
+          'Internal server error: Jupiter API is experiencing issues'
+        )
+      }
+    }
+    throw new Error('Failed to fetch Jupiter order')
+  }
+}
+
+/**
+ * Execute a signed swap transaction via Jupiter Ultra API
+ * @param params - Execute request parameters containing requestId and signed transaction
+ * @returns Promise with execution response containing transaction status
+ */
+export async function executeJupiterOrder(
+  params: JupiterExecuteRequest
+): Promise<JupiterExecuteResponse> {
+  try {
+    const response = await jupiterUltraAxios.post<JupiterExecuteResponse>(
+      '/ultra/v1/execute',
+      params
+    )
+
+    return response.data
+  } catch (error) {
+    console.error('Error executing Jupiter order:', error)
+    if (axios.isAxiosError(error)) {
+      if (error.response?.status === 400) {
+        throw new Error('Bad request: Invalid transaction or request ID')
+      } else if (error.response?.status === 500) {
+        throw new Error(
+          'Internal server error: Jupiter API is experiencing issues'
+        )
+      }
+    }
+    throw new Error('Failed to execute Jupiter order')
+  }
+}
+
+/**
+ * Complete Jupiter swap flow: get order and execute
+ * @param orderParams - Order request parameters
+ * @param signedTransaction - Signed transaction from the order response
+ * @returns Promise with execution response
+ */
+export async function completeJupiterSwap(
+  orderParams: JupiterOrderRequest,
+  signedTransaction: string
+): Promise<JupiterExecuteResponse> {
+  try {
+    // First get the order
+    const orderResponse = await getJupiterOrder(orderParams)
+
+    // Then execute with the signed transaction
+    const executeResponse = await executeJupiterOrder({
+      requestId: orderResponse.requestId,
+      signedTransaction: signedTransaction
+    })
+
+    return executeResponse
+  } catch (error) {
+    console.error('Error completing Jupiter swap:', error)
+    throw error
+  }
+}
+
+console.log(JSON.stringify(await getJupiterOrder({
+    inputMint: "So11111111111111111111111111111111111111112",
+    outputMint: "XsDoVfqeBukxuZHWhdvWHBhgEHjGNst4MLodqsJHzoB",
+    amount: "1000000000",
+    taker: "7VkW8pL9ok28CZgB5qDKBU2zNtiwxPw3QKLaEBXqWJ2m"
+}), null, 2))

@@ -28,3 +28,25 @@ export async function searchTokens(mintAddress: string) {
     throw error
   }
 }
+
+export async function searchXStocksByName(name: string) {
+  try {
+    const response = await cachedJupiterAxios.get(
+      'https://lite-api.jup.ag/tokens/v2/search',
+      {
+        params: { query: name }
+      }
+    )
+
+    // Filter tokens to only include those with "xstocks" tag
+    const tokens = response.data
+    const xstocksTokens = tokens.filter(
+      (token: any) => token.tags && token.tags.includes('xstocks')
+    )
+
+    return xstocksTokens
+  } catch (error) {
+    console.error('Error searching XStocks by name:', error)
+    throw error
+  }
+}
