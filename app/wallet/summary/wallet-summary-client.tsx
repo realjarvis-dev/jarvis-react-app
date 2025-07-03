@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { usePrivy } from '@privy-io/react-auth'
 import { Activity, AlertCircle, BarChart3, Brain, CheckCircle, ChevronDown, ChevronUp, Coins, DollarSign, Loader2, Shield, TrendingUp, Users, Zap } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -332,243 +333,252 @@ export default function WalletSummaryClient() {
   const RiskIcon = riskStyle.icon
 
   return (
-    <div className="space-y-8">
-      {/* Enhanced Header Card */}
-      <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900/20">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-3 text-2xl">
-            <div className="p-2 rounded-full bg-green-100 dark:bg-green-900/20">
-              <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
-            </div>
-            <div>
-              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Wallet Intelligence Summary
-              </span>
-            </div>
-          </CardTitle>
-          <CardDescription className="text-base">
-            <span className="font-mono text-sm px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-lg border break-all">
-              {walletAddress}
-            </span>
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="p-6 bg-white/50 dark:bg-gray-800/50 rounded-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm">
-            <p className="text-lg leading-relaxed text-gray-700 dark:text-gray-300">{quickSummary}</p>
-          </div>
-          
-          {/* Additional Wallet Section for Re-indexing */}
-          <div className="mt-6 space-y-4">
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowAdditionalWallet(!showAdditionalWallet)}
-                className="p-0 h-auto text-sm text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300"
-              >
-                {showAdditionalWallet ? (
-                  <>
-                    <ChevronUp className="h-4 w-4 mr-1" />
-                    Hide additional wallet
-                  </>
-                ) : (
-                  <>
-                    <ChevronDown className="h-4 w-4 mr-1" />
-                    {additionalWallet ? 'Update additional wallet' : 'Add additional wallet (optional)'}
-                  </>
-                )}
-              </Button>
-              {additionalWallet && !showAdditionalWallet && (
-                <span className="text-xs text-muted-foreground font-mono">
-                  Currently: {additionalWallet.slice(0, 6)}...{additionalWallet.slice(-4)}
+    <TooltipProvider>
+      <div className="space-y-8">
+        {/* Enhanced Header Card */}
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900/20">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-3 text-2xl">
+              <div className="p-2 rounded-full bg-green-100 dark:bg-green-900/20">
+                <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
+              </div>
+              <div>
+                <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  Wallet Intelligence Summary
                 </span>
+              </div>
+            </CardTitle>
+            <CardDescription className="text-base">
+              <span className="font-mono text-sm px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-lg border break-all">
+                {walletAddress}
+              </span>
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="p-6 bg-white/50 dark:bg-gray-800/50 rounded-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm">
+              <p className="text-lg leading-relaxed text-gray-700 dark:text-gray-300">{quickSummary}</p>
+            </div>
+            
+            {/* Additional Wallet Section for Re-indexing */}
+            <div className="mt-6 space-y-4">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowAdditionalWallet(!showAdditionalWallet)}
+                  className="p-0 h-auto text-sm text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300"
+                >
+                  {showAdditionalWallet ? (
+                    <>
+                      <ChevronUp className="h-4 w-4 mr-1" />
+                      Hide additional wallet
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="h-4 w-4 mr-1" />
+                      {additionalWallet ? 'Update additional wallet' : 'Add additional wallet (optional)'}
+                    </>
+                  )}
+                </Button>
+                {additionalWallet && !showAdditionalWallet && (
+                  <span className="text-xs text-muted-foreground font-mono">
+                    Currently: {additionalWallet.slice(0, 6)}...{additionalWallet.slice(-4)}
+                  </span>
+                )}
+              </div>
+              
+              {showAdditionalWallet && (
+                <div className="space-y-3 p-4 bg-purple-50 dark:bg-purple-900/10 rounded-lg border border-purple-200 dark:border-purple-800">
+                  <Label htmlFor="additional-wallet-reindex" className="text-sm font-medium">
+                    Additional Wallet Address
+                  </Label>
+                  <Input
+                    id="additional-wallet-reindex"
+                    type="text"
+                    placeholder="0x... (optional)"
+                    value={additionalWallet}
+                    onChange={(e) => setAdditionalWallet(e.target.value)}
+                    className="font-mono text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Optionally provide another wallet address to analyze together with your Jarvis wallet.
+                  </p>
+                </div>
               )}
             </div>
             
-            {showAdditionalWallet && (
-              <div className="space-y-3 p-4 bg-purple-50 dark:bg-purple-900/10 rounded-lg border border-purple-200 dark:border-purple-800">
-                <Label htmlFor="additional-wallet-reindex" className="text-sm font-medium">
-                  Additional Wallet Address
-                </Label>
-                <Input
-                  id="additional-wallet-reindex"
-                  type="text"
-                  placeholder="0x... (optional)"
-                  value={additionalWallet}
-                  onChange={(e) => setAdditionalWallet(e.target.value)}
-                  className="font-mono text-sm"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Optionally provide another wallet address to analyze together with your Jarvis wallet.
-                </p>
-              </div>
-            )}
-          </div>
-          
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Button onClick={handleIndexWallet} variant="outline" size="sm" disabled={isIndexing} className="border-purple-200 hover:bg-purple-50 dark:border-purple-800 dark:hover:bg-purple-900/20">
-              {isIndexing ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Brain className="h-4 w-4 mr-2" />
-              )}
-              Re-index Wallet
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Enhanced Analysis Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Enhanced Risk Profile */}
-        <Card className={`border-0 shadow-lg bg-gradient-to-br ${riskStyle.gradient} hover:shadow-xl transition-all duration-200`}>
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl flex items-center gap-3">
-              <div className={`p-2 rounded-full bg-white/80 dark:bg-gray-800/80 ${riskStyle.color}`}>
-                <RiskIcon className="h-5 w-5" />
-              </div>
-              Risk Profile
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-3">
-              <Badge className={`text-sm font-semibold px-3 py-1 ${riskStyle.badge}`}>
-                {analysis?.riskProfile}
-              </Badge>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Button onClick={handleIndexWallet} variant="outline" size="sm" disabled={isIndexing} className="border-purple-200 hover:bg-purple-50 dark:border-purple-800 dark:hover:bg-purple-900/20">
+                {isIndexing ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Brain className="h-4 w-4 mr-2" />
+                )}
+                Re-index Wallet
+              </Button>
             </div>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Confidence</span>
-                <span className="text-sm font-bold">{analysis?.confidence}%</span>
-              </div>
-              <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                <div 
-                  className={`h-2 rounded-full ${
-                    riskStyle.color.includes('emerald') ? 'bg-emerald-500' :
-                    riskStyle.color.includes('blue') ? 'bg-blue-500' :
-                    riskStyle.color.includes('orange') ? 'bg-orange-500' :
-                    riskStyle.color.includes('red') ? 'bg-red-500' : 'bg-gray-500'
-                  }`} 
-                  style={{ width: `${analysis?.confidence}%` }}
-                ></div>
-              </div>
-            </div>
-            <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-400 bg-white/60 dark:bg-gray-800/60 p-3 rounded-lg">
-              {analysis?.reasoning}
-            </p>
           </CardContent>
         </Card>
 
-        {/* Enhanced Activity Patterns */}
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/10 dark:to-emerald-900/5 hover:shadow-xl transition-all duration-200">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl flex items-center gap-3">
-              <div className="p-2 rounded-full bg-white/80 dark:bg-gray-800/80">
-                <Activity className="h-5 w-5 text-green-600 dark:text-green-400" />
-              </div>
-              Activity Patterns
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <div className="flex justify-between items-center p-3 bg-white/60 dark:bg-gray-800/60 rounded-lg">
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Trading Frequency</span>
-                <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300 dark:bg-green-900/20 dark:text-green-400">
-                  {analysis?.tradingFrequency}
+        {/* Enhanced Analysis Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Enhanced Risk Profile */}
+          <Card className={`border-0 shadow-lg bg-gradient-to-br ${riskStyle.gradient} hover:shadow-xl transition-all duration-200`}>
+            <CardHeader className="pb-4">
+              <CardTitle className="text-xl flex items-center gap-3">
+                <div className={`p-2 rounded-full bg-white/80 dark:bg-gray-800/80 ${riskStyle.color}`}>
+                  <RiskIcon className="h-5 w-5" />
+                </div>
+                Risk Profile
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Badge className={`text-sm font-semibold px-3 py-1 ${riskStyle.badge}`}>
+                  {analysis?.riskProfile}
                 </Badge>
               </div>
-              <div className="flex justify-between items-center p-3 bg-white/60 dark:bg-gray-800/60 rounded-lg">
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Activity Pattern</span>
-                <span className="text-sm font-semibold capitalize">{analysis?.activityPattern}</span>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Confidence</span>
+                  <span className="text-sm font-bold">{analysis?.confidence}%</span>
+                </div>
+                <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-2 rounded-full ${
+                      riskStyle.color.includes('emerald') ? 'bg-emerald-500' :
+                      riskStyle.color.includes('blue') ? 'bg-blue-500' :
+                      riskStyle.color.includes('orange') ? 'bg-orange-500' :
+                      riskStyle.color.includes('red') ? 'bg-red-500' : 'bg-gray-500'
+                    }`} 
+                    style={{ width: `${analysis?.confidence}%` }}
+                  ></div>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Enhanced Transaction Size */}
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/10 dark:to-orange-900/5 hover:shadow-xl transition-all duration-200">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl flex items-center gap-3">
-              <div className="p-2 rounded-full bg-white/80 dark:bg-gray-800/80">
-                <DollarSign className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-              </div>
-              Transaction Size
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center p-4 bg-white/60 dark:bg-gray-800/60 rounded-lg">
-              <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
-                {analysis?.averageTransactionSize?.eth?.toFixed(4)} ETH
+              <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-400 bg-white/60 dark:bg-gray-800/60 p-3 rounded-lg">
+                {analysis?.reasoning}
               </p>
-              <p className="text-lg font-semibold text-gray-600 dark:text-gray-400 mt-1">
-                ~${analysis?.averageTransactionSize?.usd_estimate?.toLocaleString()}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">Average per transaction</p>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        {/* Enhanced Top Protocols */}
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/10 dark:to-pink-900/5 hover:shadow-xl transition-all duration-200">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl flex items-center gap-3">
-              <div className="p-2 rounded-full bg-white/80 dark:bg-gray-800/80">
-                <Users className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+          {/* Enhanced Activity Patterns */}
+          <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/10 dark:to-emerald-900/5 hover:shadow-xl transition-all duration-200">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-xl flex items-center gap-3">
+                <div className="p-2 rounded-full bg-white/80 dark:bg-gray-800/80">
+                  <Activity className="h-5 w-5 text-green-600 dark:text-green-400" />
+                </div>
+                Activity Patterns
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 bg-white/60 dark:bg-gray-800/60 rounded-lg">
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Trading Frequency</span>
+                  <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300 dark:bg-green-900/20 dark:text-green-400">
+                    {analysis?.tradingFrequency}
+                  </Badge>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-white/60 dark:bg-gray-800/60 rounded-lg">
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Activity Pattern</span>
+                  <span className="text-sm font-semibold capitalize">{analysis?.activityPattern}</span>
+                </div>
               </div>
-              Top Protocols
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {analysis?.topProtocols && analysis.topProtocols.length > 0 ? (
-                analysis.topProtocols.map((protocol, index) => (
-                  <div key={index} className="flex items-center gap-3 p-3 bg-white/60 dark:bg-gray-800/60 rounded-lg">
-                    <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/20 rounded-full flex items-center justify-center">
-                      <span className="text-xs font-bold text-purple-600 dark:text-purple-400">
-                        {index + 1}
-                      </span>
-                    </div>
-                    <span className="font-medium">{protocol}</span>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">No protocols identified</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        {/* Enhanced Primary Assets */}
-        <Card className="md:col-span-2 border-0 shadow-lg bg-gradient-to-br from-cyan-50 to-blue-50 dark:from-cyan-900/10 dark:to-blue-900/5 hover:shadow-xl transition-all duration-200">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl flex items-center gap-3">
-              <div className="p-2 rounded-full bg-white/80 dark:bg-gray-800/80">
-                <Coins className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
+          {/* Enhanced Transaction Size */}
+          <Card className="border-0 shadow-lg bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/10 dark:to-orange-900/5 hover:shadow-xl transition-all duration-200">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-xl flex items-center gap-3">
+                <div className="p-2 rounded-full bg-white/80 dark:bg-gray-800/80">
+                  <DollarSign className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                </div>
+                Transaction Size
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center p-4 bg-white/60 dark:bg-gray-800/60 rounded-lg">
+                <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
+                  {analysis?.averageTransactionSize?.eth?.toFixed(4)} ETH
+                </p>
+                <p className="text-lg font-semibold text-gray-600 dark:text-gray-400 mt-1">
+                  ~${analysis?.averageTransactionSize?.usd_estimate?.toLocaleString()}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">Average per transaction</p>
               </div>
-              Primary Assets
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {analysis?.primaryAssets && analysis.primaryAssets.length > 0 ? (
-                analysis.primaryAssets.map((asset, index) => (
-                  <div key={index} className="p-4 bg-white/60 dark:bg-gray-800/60 rounded-lg border border-cyan-200/50 dark:border-cyan-800/50 min-h-[60px] flex items-center">
-                    <div className="flex items-center gap-3 w-full">
-                      <div className="w-8 h-8 bg-cyan-100 dark:bg-cyan-900/20 rounded-full flex items-center justify-center flex-shrink-0">
-                        <Coins className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+            </CardContent>
+          </Card>
+
+          {/* Enhanced Top Protocols */}
+          <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/10 dark:to-pink-900/5 hover:shadow-xl transition-all duration-200">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-xl flex items-center gap-3">
+                <div className="p-2 rounded-full bg-white/80 dark:bg-gray-800/80">
+                  <Users className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                </div>
+                Top Protocols
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {analysis?.topProtocols && analysis.topProtocols.length > 0 ? (
+                  analysis.topProtocols.map((protocol, index) => (
+                    <div key={index} className="flex items-center gap-3 p-3 bg-white/60 dark:bg-gray-800/60 rounded-lg">
+                      <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/20 rounded-full flex items-center justify-center">
+                        <span className="text-xs font-bold text-purple-600 dark:text-purple-400">
+                          {index + 1}
+                        </span>
                       </div>
-                      <span className="font-medium text-sm leading-tight break-words">{asset}</span>
+                      <span className="font-medium">{protocol}</span>
                     </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground col-span-full text-center py-4">No primary assets identified</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">No protocols identified</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Enhanced Primary Assets */}
+          <Card className="md:col-span-2 border-0 shadow-lg bg-gradient-to-br from-cyan-50 to-blue-50 dark:from-cyan-900/10 dark:to-blue-900/5 hover:shadow-xl transition-all duration-200">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-xl flex items-center gap-3">
+                <div className="p-2 rounded-full bg-white/80 dark:bg-gray-800/80">
+                  <Coins className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
+                </div>
+                Primary Assets
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {analysis?.primaryAssets && analysis.primaryAssets.length > 0 ? (
+                  analysis.primaryAssets.map((asset, index) => (
+                    <div key={index} className="p-4 bg-white/60 dark:bg-gray-800/60 rounded-lg border border-cyan-200/50 dark:border-cyan-800/50 min-h-[60px] flex items-center">
+                      <div className="flex items-center gap-3 w-full">
+                        <div className="w-8 h-8 bg-cyan-100 dark:bg-cyan-900/20 rounded-full flex items-center justify-center flex-shrink-0">
+                          <Coins className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+                        </div>
+                        <Tooltip>
+                          <TooltipTrigger asChild className="flex-1 min-w-0">
+                            <span className="font-medium text-sm leading-tight truncate block cursor-help">{asset}</span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{asset}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground col-span-full text-center py-4">No primary assets identified</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   )
 }
 
