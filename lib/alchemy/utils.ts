@@ -1,6 +1,6 @@
 import { TENDERLY_DEMO_CONFIG } from "@/lib/network/config";
 import { ethers } from "ethers";
-import { TokenData } from "./types";
+import { TokenData } from "@/lib/types/wallet-token";
 
 const commonlyUsedTokens = {
     USDT: '0xdac17f958d2ee523a2206206994597c13d831ec7',
