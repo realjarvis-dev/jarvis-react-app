@@ -4,7 +4,7 @@ import {
   AlchemyTransfersConfig
 } from './types';
 import { decodeFunction, fetchContractName, getAddressType } from './utils';
-import { analyzeWalletBehavior, WalletAnalysis } from './wallet-indexing-llm';
+import { analyzeWalletBehavior, WalletAnalysis, WalletAnalysisSchema } from './wallet-indexing-llm';
 
 /**
  * Create an Alchemy instance with the given configuration
@@ -516,6 +516,17 @@ if (require.main === module) {
   main();
 }
 
+// Define the structure of how wallet summary is stored in Redis
+interface WalletSummaryRedisData extends Record<string, unknown> {
+  userPersona: string | object;
+  behavioralPatterns: string | object;
+  protocolPreferences: string | object;
+  portfolioInsights: string | object;
+  actionableRecommendations: string | object[];
+  summary: string;
+  savedAt: string;
+}
+
 /**
  * Save wallet summary to Redis for easy retrieval
  */
@@ -527,8 +538,8 @@ export async function saveWalletSummary(
     const redis = await getRedisClient();
     const walletKey = `wallet:summary:${walletId.toLowerCase()}`;
     
-    // Follow the same pattern as chat - let Redis wrapper handle stringification
-    const summaryToSave = {
+    // Follow the same pattern as chat - let Redis wrapper handle conversion
+    const summaryToSave: Record<string, any> = {
       // Store complex objects directly, Redis wrapper will handle conversion
       userPersona: summary.userPersona,
       behavioralPatterns: summary.behavioralPatterns,
@@ -558,15 +569,15 @@ export async function getWalletSummary(
     const redis = await getRedisClient();
     const walletKey = `wallet:summary:${walletId.toLowerCase()}`;
     
-    const summaryData = await redis.hgetall(walletKey);
+    const summaryData = await redis.hgetall<WalletSummaryRedisData>(walletKey);
     
     if (!summaryData || Object.keys(summaryData).length === 0) {
       console.log(`No wallet summary found for ${walletId}`);
       return null;
     }
 
-    // Helper function to safely parse JSON fields
-    const safeParseJSON = (field: any, fallback: any) => {
+    // Helper function to safely parse JSON fields with type validation
+    const safeParseJSON = <T>(field: any, fallback: T): T => {
       if (typeof field === 'string') {
         try {
           return JSON.parse(field);
@@ -577,18 +588,40 @@ export async function getWalletSummary(
       return field || fallback;
     };
 
-    // Parse fields that might be strings (following chat pattern)
-    const walletSummary: WalletAnalysis = {
-      userPersona: safeParseJSON(summaryData.userPersona, {}),
-      behavioralPatterns: safeParseJSON(summaryData.behavioralPatterns, {}),
-      protocolPreferences: safeParseJSON(summaryData.protocolPreferences, {}),
-      portfolioInsights: safeParseJSON(summaryData.portfolioInsights, {}),
+    // Parse and construct the wallet summary with proper fallbacks
+    const parsedSummary = {
+      userPersona: safeParseJSON(summaryData.userPersona, {
+        riskProfile: 'moderate',
+        confidence: 0.5,
+        reasoning: 'Unable to determine risk profile'
+      }),
+      behavioralPatterns: safeParseJSON(summaryData.behavioralPatterns, {
+        tradingFrequency: 'regular',
+        transactionCategory: 'medium',
+        averageTransactionSize: { eth: 0.001, usd_estimate: 2 }
+      }),
+      protocolPreferences: safeParseJSON(summaryData.protocolPreferences, {
+        topProtocols: [],
+        defiCategories: []
+      }),
+      portfolioInsights: safeParseJSON(summaryData.portfolioInsights, {
+        primaryAssets: ['ETH'],
+        activityPattern: 'experimenter'
+      }),
       actionableRecommendations: safeParseJSON(summaryData.actionableRecommendations, []),
-      summary: (summaryData.summary as string) || ''
+      summary: summaryData.summary || 'No summary available'
     };
 
-    console.log(`✅ Wallet summary retrieved for ${walletId}`);
-    return walletSummary;
+    // Validate the parsed data against the schema
+    try {
+      const validatedSummary = WalletAnalysisSchema.parse(parsedSummary);
+      console.log(`✅ Wallet summary retrieved for ${walletId}`);
+      return validatedSummary;
+    } catch (validationError) {
+      console.warn(`⚠️ Wallet summary validation failed for ${walletId}:`, validationError);
+      // Return the parsed data even if validation fails (backwards compatibility)
+      return parsedSummary as WalletAnalysis;
+    }
     
   } catch (error) {
     console.error('Error retrieving wallet summary from Redis:', error);
