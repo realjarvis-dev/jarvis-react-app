@@ -93,7 +93,23 @@ export const pendleZapInQuoteTool = tool({
         
         // If not found, try fuzzy matching
         if (!market) {
-          const searchTerm = marketName.toLowerCase().replace(/\s+(lp|pool|market).*$/i, '')
+          // Extract token name from various patterns like:
+          // "Pendle Market (sENA)" -> "sENA"
+          // "sENA LP Pool" -> "sENA"
+          // "sENA Market" -> "sENA"
+          let searchTerm = marketName.toLowerCase()
+          
+          // Extract content from parentheses first
+          const parenthesesMatch = searchTerm.match(/\(([^)]+)\)/)
+          if (parenthesesMatch) {
+            searchTerm = parenthesesMatch[1]
+          } else {
+            // Remove common suffixes if no parentheses
+            searchTerm = searchTerm
+              .replace(/^(pendle\s+)?(market\s+)?/i, '') // Remove "Pendle Market" prefix
+              .replace(/\s+(lp|pool|market).*$/i, '') // Remove "LP Pool" etc suffix
+          }
+          
           console.log(`[DEBUG] Fuzzy search term: "${searchTerm}"`)
           
           market = staticMarkets.find(m => 
