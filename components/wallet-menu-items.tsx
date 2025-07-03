@@ -9,10 +9,9 @@ import {
     useWallets, type ConnectedSolanaWallet,
     type ConnectedWallet, type WalletWithMetadata
 } from '@privy-io/react-auth';
-import { AlertCircle, ArrowRightCircle, BarChart3, Brain, CheckCircle, Loader2, Unlink2, Wallet } from 'lucide-react';
+import { ArrowRightCircle, Brain, Unlink2, Wallet } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
 
 const desktopEvmText = 'Delegate EVM wallet'
 const desktopSolText = 'Delegate Sol wallet'
@@ -41,10 +40,6 @@ export function WalletMenuItems() {
   const { wallets: evmWallets, ready: evmReady } = useWallets()
   const [evmWalletToDelegate, setEvmWalletToDelegate] = useState<ConnectedWallet | undefined>(undefined);
   const [evmWalletAlreadyDelegated, setEvmWalletAlreadyDelegated] = useState<boolean>(false);
-  
-  // Wallet indexing state
-  const [isIndexingWallet, setIsIndexingWallet] = useState<boolean>(false);
-  const [indexingStatus, setIndexingStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
   useEffect(() => {
     if (solanaReady) {
@@ -107,103 +102,6 @@ export function WalletMenuItems() {
     await revokeWallets();
   }
 
-  const handleIndexWallet = async () => {
-    if (!userReady || !user) {
-      toast.error('Please make sure you are logged in')
-      return
-    }
-
-    if (isIndexingWallet) {
-      return // Prevent multiple simultaneous requests
-    }
-
-    setIsIndexingWallet(true)
-    setIndexingStatus('loading')
-    
-    try {
-      toast.info('Starting wallet analysis...', {
-        description: 'This may take a few moments to complete',
-        duration: 3000
-      })
-
-      const response = await fetch('/api/wallet/index', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          maxPages: 3,
-          maxConcurrency: 2,
-          analysisModel: 'openai:gpt-4o-mini'
-        })
-      })
-
-      const result = await response.json()
-
-      if (result.success) {
-        setIndexingStatus('success')
-        
-        toast.success('Wallet indexed successfully!', {
-          description: `Analyzed ${result.summary.totalTransactions} transactions across ${result.summary.pagesProcessed} pages. Risk profile: ${result.summary.riskProfile}`,
-          duration: 5000
-        })
-        
-        console.log('Wallet indexing completed:', result)
-      } else {
-        setIndexingStatus('error')
-        
-        toast.error('Wallet indexing failed', {
-          description: result.error || 'Unknown error occurred',
-          duration: 4000
-        })
-        
-        console.error('Wallet indexing failed:', result.error)
-      }
-    } catch (error) {
-      setIndexingStatus('error')
-      
-      toast.error('Network error', {
-        description: 'Failed to connect to indexing service',
-        duration: 4000
-      })
-      
-      console.error('Network error during wallet indexing:', error)
-    } finally {
-      setIsIndexingWallet(false)
-      
-      // Reset status after a delay
-      setTimeout(() => {
-        setIndexingStatus('idle')
-      }, 3000)
-    }
-  }
-
-  const getIndexingIcon = () => {
-    switch (indexingStatus) {
-      case 'loading':
-        return <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-      case 'success':
-        return <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
-      case 'error':
-        return <AlertCircle className="mr-2 h-4 w-4 text-red-500" />
-      default:
-        return <Brain className="mr-2 h-4 w-4" />
-    }
-  }
-
-  const getIndexingText = () => {
-    switch (indexingStatus) {
-      case 'loading':
-        return isMobile ? 'Indexing...' : 'Analyzing wallet...'
-      case 'success':
-        return isMobile ? 'Indexed!' : 'Wallet indexed!'
-      case 'error':
-        return isMobile ? 'Failed' : 'Indexing failed'
-      default:
-        return isMobile ? 'Index wallet' : 'Index wallet'
-    }
-  }
-
   return (
     <>
       <DropdownMenuItem onClick={handleFundWallet} disabled={!evmReady || !evmWalletToDelegate}>
@@ -211,15 +109,8 @@ export function WalletMenuItems() {
         <span>Fund Wallet</span>
       </DropdownMenuItem>
       <DropdownMenuItem onClick={() => router.push('/wallet/summary')}>
-        <BarChart3 className="mr-2 h-4 w-4" />
-        <span>View Analysis</span>
-      </DropdownMenuItem>
-      <DropdownMenuItem 
-        onClick={handleIndexWallet} 
-        disabled={!userReady || !user || isIndexingWallet}
-      >
-        {getIndexingIcon()}
-        <span>{getIndexingText()}</span>
+        <Brain className="mr-2 h-4 w-4" />
+        <span>Wallet Intelligence</span>
       </DropdownMenuItem>
       <DropdownMenuItem onClick={handleDelegateEVMWallet} disabled={evmWalletAlreadyDelegated || !evmReady || !userReady}>
         <ArrowRightCircle className="mr-2 h-4 w-4" />
