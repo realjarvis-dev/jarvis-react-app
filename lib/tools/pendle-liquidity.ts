@@ -12,9 +12,10 @@ import { balanceChangePub } from '../pubsub/balance-change-pub'
 
 export const pendleZapInQuoteTool = tool({
   description: `Get a quote for adding liquidity (zap in) to a Pendle market. This tool should be used before executing the transaction. 
-    You MUST confirm with user whether they want the zero price impact mode or not before quoting.
-    For example, if user say "zap in <number> <token> to <market>", you should ask user whether they want the zero price impact mode or not if they are not using pt token.
-    Recommend disable zpi for not advanced users. zpi has to be false if tokenInType is pt.
+    IMPORTANT: Only ask about zero price impact mode if tokenInType is NOT 'pt'. 
+    - If tokenInType is 'pt': automatically set zeroPriceImpact to false, do NOT ask user
+    - If tokenInType is NOT 'pt': ask user whether they want zero price impact mode
+    Zero price impact mode is not supported for PT tokens.
     `,
   parameters: z.object({
     marketName: z
@@ -48,7 +49,7 @@ export const pendleZapInQuoteTool = tool({
     zeroPriceImpact: z
       .boolean()
       .describe(
-        'Whether to use zero price impact for the transaction. Default to false if user uses pt token to zap in, otherwise please confirm with user if they did not specify use askQuestion tool.'
+        'Whether to use zero price impact for the transaction. MUST be false if tokenInType is "pt". Only ask user about this option if tokenInType is NOT "pt".'
       )
   }),
   execute: async (params, context: ToolContext) => {
@@ -63,6 +64,12 @@ export const pendleZapInQuoteTool = tool({
       zeroPriceImpact
     } = params
     try {
+      // Enforce zero price impact rules
+      if (tokenInType === 'pt' && zeroPriceImpact) {
+        console.log('[DEBUG] Automatically disabling zero price impact for PT token')
+        zeroPriceImpact = false
+      }
+      
       const networkContext = context.networkContext
       const chainId = networkContext!.selectedChainId
       const isDemo = networkContext!.isDemo
