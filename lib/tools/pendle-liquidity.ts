@@ -11,12 +11,14 @@ import { ToolContext } from '../types/context'
 import { balanceChangePub } from '../pubsub/balance-change-pub'
 
 export const pendleZapInQuoteTool = tool({
-  description: `Get a quote for adding liquidity (zap in) to a Pendle market. This tool should be used before executing the transaction. 
+  description: `Get a quote for adding liquidity (zap in) to a Pendle market. This tool MUST be called before pendleZapInExecuteTool.
+    CRITICAL FLOW: ALWAYS call this quote tool first, then pass ALL returned values (including quotedAmountOut and completeTime) to the execute tool.
     IMPORTANT: 
     - Only use amounts that are available in user's wallet balance. The tool will validate balance and fail if amount exceeds available balance.
     - Only ask about zero price impact mode if tokenInType is NOT 'pt'. 
     - If tokenInType is 'pt': automatically set zeroPriceImpact to false, do NOT ask user
     - If tokenInType is NOT 'pt': ask user whether they want zero price impact mode
+    - The execute tool requires the exact quotedAmountOut and completeTime from this quote
     Zero price impact mode is not supported for PT tokens.
     `,
   parameters: z.object({
@@ -349,6 +351,7 @@ export const pendleZapInQuoteTool = tool({
         zeroPriceImpact: zeroPriceImpact,
         ytDecimals: ytDecimals,
         ytName: ytDetails.name,
+        quotedAmountOut: result.quoteData!.amountLpOut,
         completeTime: new Date().toISOString()
       }
     } catch (error) {
@@ -364,7 +367,7 @@ export const pendleZapInQuoteTool = tool({
 
 export const pendleZapInExecuteTool = tool({
   description:
-    'Execute a zap in transaction to a Pendle market. This tool should be used after the user has confirmed the quote.',
+    'Execute a zap in transaction to a Pendle market. CRITICAL: This tool can ONLY be used immediately after calling pendleZapInQuoteTool with the EXACT SAME parameters. You MUST verify that a quote was generated for the exact same marketName, tokenInName, tokenInType, amountIn, slippage, and zeroPriceImpact values. Do NOT execute if the previous tool call was not pendleZapInQuoteTool or if any parameters differ.',
   parameters: z.object({
     marketName: z
       .string()
@@ -392,7 +395,13 @@ export const pendleZapInExecuteTool = tool({
       ),
     zeroPriceImpact: z
       .boolean()
-      .describe('Whether to use zero price impact for the transaction.')
+      .describe('Whether to use zero price impact for the transaction.'),
+    quotedAmountOut: z
+      .string()
+      .describe('The LP amount out from the quote. This MUST match the exact value returned by pendleZapInQuoteTool.'),
+    quoteTimestamp: z
+      .string()
+      .describe('The timestamp from the quote (completeTime field). Used to validate quote freshness.')
   }),
   execute: async (params, context: ToolContext) => {
     let {
@@ -405,8 +414,26 @@ export const pendleZapInExecuteTool = tool({
       ytDecimals,
       amountIn,
       slippage,
-      zeroPriceImpact
+      zeroPriceImpact,
+      quotedAmountOut,
+      quoteTimestamp
     } = params
+    // Validate quote freshness and consistency
+    const quoteTime = new Date(quoteTimestamp)
+    const currentTime = new Date()
+    const timeDiffMinutes = (currentTime.getTime() - quoteTime.getTime()) / (1000 * 60)
+    
+    if (timeDiffMinutes > 5) {
+      console.log(`[ERROR] Quote is stale. Quote time: ${quoteTimestamp}, Current: ${currentTime.toISOString()}, Diff: ${timeDiffMinutes.toFixed(2)} minutes`)
+      return {
+        status: 'fail',
+        error_message: 'Quote is too old (>5 minutes). Please get a fresh quote before executing.',
+        hash: null
+      }
+    }
+    
+    console.log(`[DEBUG] Quote validation passed. Age: ${timeDiffMinutes.toFixed(2)} minutes, Expected LP out: ${quotedAmountOut}`)
+
     const networkContext = context.networkContext
     const chainId = networkContext!.selectedChainId
     const isDemo = networkContext!.isDemo
@@ -517,6 +544,9 @@ export const pendleZapInExecuteTool = tool({
       status: 'success',
       hash: result.hash,
       addLiquidityData: result.quoteData,
+      actualAmountOut: result.quoteData!.amountLpOut,
+      expectedAmountOut: quotedAmountOut,
+      amountInUsed: amountIn,
       completeTime: new Date().toISOString(),
       explorerLink: explorerLink ? explorerLinkWithHash : undefined
     }
