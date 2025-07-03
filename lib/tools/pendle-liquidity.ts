@@ -12,7 +12,9 @@ import { balanceChangePub } from '../pubsub/balance-change-pub'
 
 export const pendleZapInQuoteTool = tool({
   description: `Get a quote for adding liquidity (zap in) to a Pendle market. This tool should be used before executing the transaction. 
-    IMPORTANT: Only ask about zero price impact mode if tokenInType is NOT 'pt'. 
+    IMPORTANT: 
+    - Only use amounts that are available in user's wallet balance. The tool will validate balance and fail if amount exceeds available balance.
+    - Only ask about zero price impact mode if tokenInType is NOT 'pt'. 
     - If tokenInType is 'pt': automatically set zeroPriceImpact to false, do NOT ask user
     - If tokenInType is NOT 'pt': ask user whether they want zero price impact mode
     Zero price impact mode is not supported for PT tokens.
@@ -242,13 +244,52 @@ export const pendleZapInQuoteTool = tool({
           hash: null
         }
       }
-      const amountInWei = parseUnits(amountIn, tokenInDecimals).toString()
+      
+      // Validate user has sufficient balance
+      if (!tokenInAddress) {
+        return {
+          status: 'fail',
+          error_message: 'Token address not found',
+          hash: null
+        }
+      }
+      
+      const { getTokenBalances } = await import('../alchemy/get-token-balance')
+      const userTokenBalances = await getTokenBalances(userAddress, chainId, isDemo)
+      const userTokenBalance = userTokenBalances.find(
+        token => token.address.toLowerCase() === tokenInAddress!.toLowerCase()
+      )
+      
+      if (!userTokenBalance) {
+        console.log(`[ERROR] Token not found in user wallet: ${tokenInAddress!}`)
+        return {
+          status: 'fail',
+          error_message: `Token ${tokenInName} not found in your wallet`,
+          hash: null
+        }
+      }
+      
+      const amountInWei = parseUnits(amountIn, tokenInDecimals)
+      const availableBalanceWei = BigInt(userTokenBalance.balance)
+      
+      if (amountInWei > availableBalanceWei) {
+        const availableBalance = (Number(availableBalanceWei) / Math.pow(10, tokenInDecimals)).toFixed(6)
+        console.log(`[ERROR] Insufficient balance. Requested: ${amountIn}, Available: ${availableBalance}`)
+        return {
+          status: 'fail',
+          error_message: `Insufficient balance. You have ${availableBalance} ${tokenInName}, but requested ${amountIn}`,
+          hash: null
+        }
+      }
+      
+      console.log(`[DEBUG] Balance check passed. Requested: ${amountIn}, Available: ${(Number(availableBalanceWei) / Math.pow(10, tokenInDecimals)).toFixed(6)}`)
+      
       let result = await addLiquiditySingleEnableAggregator(
         chainId,
         marketAddress,
         userAddress,
-        tokenInAddress,
-        amountInWei,
+        tokenInAddress!,
+        amountInWei.toString(),
         slippage,
         zeroPriceImpact,
         isDemo,
@@ -356,13 +397,44 @@ export const pendleZapInExecuteTool = tool({
     if (isDemo) {
       slippage = 0.3
     }
-    const amountInWei = parseUnits(amountIn, tokenInDecimals).toString()
+    
+    // Validate user has sufficient balance before execution
+    const { getTokenBalances } = await import('../alchemy/get-token-balance')
+    const userTokenBalances = await getTokenBalances(userAddress, chainId, isDemo)
+    const userTokenBalance = userTokenBalances.find(
+      token => token.address.toLowerCase() === tokenInAddress.toLowerCase()
+    )
+    
+    if (!userTokenBalance) {
+      console.log(`[ERROR] Token not found in user wallet during execution: ${tokenInAddress}`)
+      return {
+        status: 'fail',
+        error_message: `Token ${tokenInName} not found in your wallet`,
+        hash: null
+      }
+    }
+    
+    const amountInWei = parseUnits(amountIn, tokenInDecimals)
+    const availableBalanceWei = BigInt(userTokenBalance.balance)
+    
+    if (amountInWei > availableBalanceWei) {
+      const availableBalance = (Number(availableBalanceWei) / Math.pow(10, tokenInDecimals)).toFixed(6)
+      console.log(`[ERROR] Insufficient balance during execution. Requested: ${amountIn}, Available: ${availableBalance}`)
+      return {
+        status: 'fail',
+        error_message: `Insufficient balance. You have ${availableBalance} ${tokenInName}, but requested ${amountIn}`,
+        hash: null
+      }
+    }
+    
+    console.log(`[DEBUG] Execute balance check passed. Requested: ${amountIn}, Available: ${(Number(availableBalanceWei) / Math.pow(10, tokenInDecimals)).toFixed(6)}`)
+    
     const result = await addLiquiditySingleEnableAggregator(
       chainId,
       marketAddress,
       userAddress,
       tokenInAddress,
-      amountInWei,
+      amountInWei.toString(),
       slippage,
       zeroPriceImpact,
       isDemo,
