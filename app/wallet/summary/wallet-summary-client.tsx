@@ -3,9 +3,11 @@
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { usePrivy } from '@privy-io/react-auth'
-import { Activity, AlertCircle, BarChart3, Brain, CheckCircle, Coins, DollarSign, Loader2, Shield, TrendingUp, Users, Zap } from 'lucide-react'
+import { Activity, AlertCircle, BarChart3, Brain, CheckCircle, ChevronDown, ChevronUp, Coins, DollarSign, Loader2, Shield, TrendingUp, Users, Zap } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -36,6 +38,8 @@ export default function WalletSummaryClient() {
   const [isLoading, setIsLoading] = useState(true)
   const [isIndexing, setIsIndexing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [additionalWallet, setAdditionalWallet] = useState<string>('')
+  const [showAdditionalWallet, setShowAdditionalWallet] = useState(false)
 
   const fetchWalletSummary = async () => {
     try {
@@ -54,6 +58,25 @@ export default function WalletSummaryClient() {
       }
       
       setSummaryData(data)
+      
+      // If wallet is indexed, fetch the additional wallet address from the last indexing
+      if (data.indexed) {
+        try {
+          const additionalWalletResponse = await fetch('/api/wallet/additional-wallet', {
+            method: 'GET',
+            credentials: 'include'
+          })
+          if (additionalWalletResponse.ok) {
+            const additionalWalletData = await additionalWalletResponse.json()
+            if (additionalWalletData.additionalWallet) {
+              setAdditionalWallet(additionalWalletData.additionalWallet)
+            }
+          }
+        } catch (err) {
+          // Ignore errors for additional wallet fetching
+          console.log('No additional wallet found or error fetching:', err)
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
       console.error('Error fetching wallet summary:', err)
@@ -71,16 +94,28 @@ export default function WalletSummaryClient() {
         duration: 3000
       })
 
+      const requestBody: {
+        maxPages: number;
+        maxConcurrency: number;
+        analysisModel: string;
+        additionalWallet?: string;
+      } = {
+        maxPages: 3,
+        maxConcurrency: 2,
+        analysisModel: 'openai:gpt-4o-mini'
+      }
+
+      // Add additional wallet if provided
+      if (additionalWallet.trim()) {
+        requestBody.additionalWallet = additionalWallet.trim()
+      }
+
       const response = await fetch('/api/wallet/index', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          maxPages: 3,
-          maxConcurrency: 2,
-          analysisModel: 'openai:gpt-4o-mini'
-        })
+        body: JSON.stringify(requestBody)
       })
 
       const result = await response.json()
@@ -184,6 +219,50 @@ export default function WalletSummaryClient() {
           <p className="text-sm text-muted-foreground mb-6">
             {summaryData?.suggestion || 'Click the button below to start analyzing your transaction history with AI.'}
           </p>
+          
+          {/* Additional Wallet Section */}
+          <div className="mb-6 space-y-4">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowAdditionalWallet(!showAdditionalWallet)}
+                className="p-0 h-auto text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+              >
+                {showAdditionalWallet ? (
+                  <>
+                    <ChevronUp className="h-4 w-4 mr-1" />
+                    Hide additional wallet
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="h-4 w-4 mr-1" />
+                    Add additional wallet (optional)
+                  </>
+                )}
+              </Button>
+            </div>
+            
+            {showAdditionalWallet && (
+              <div className="space-y-3 p-4 bg-blue-50 dark:bg-blue-900/10 rounded-lg border border-blue-200 dark:border-blue-800">
+                <Label htmlFor="additional-wallet" className="text-sm font-medium">
+                  Additional Wallet Address
+                </Label>
+                <Input
+                  id="additional-wallet"
+                  type="text"
+                  placeholder="0x... (optional)"
+                  value={additionalWallet}
+                  onChange={(e) => setAdditionalWallet(e.target.value)}
+                  className="font-mono text-sm"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Optionally provide another wallet address to analyze together with your Jarvis wallet.
+                </p>
+              </div>
+            )}
+          </div>
+          
           <Button 
             onClick={handleIndexWallet} 
             disabled={isIndexing}
@@ -277,6 +356,55 @@ export default function WalletSummaryClient() {
           <div className="p-6 bg-white/50 dark:bg-gray-800/50 rounded-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm">
             <p className="text-lg leading-relaxed text-gray-700 dark:text-gray-300">{quickSummary}</p>
           </div>
+          
+          {/* Additional Wallet Section for Re-indexing */}
+          <div className="mt-6 space-y-4">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowAdditionalWallet(!showAdditionalWallet)}
+                className="p-0 h-auto text-sm text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300"
+              >
+                {showAdditionalWallet ? (
+                  <>
+                    <ChevronUp className="h-4 w-4 mr-1" />
+                    Hide additional wallet
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="h-4 w-4 mr-1" />
+                    {additionalWallet ? 'Update additional wallet' : 'Add additional wallet (optional)'}
+                  </>
+                )}
+              </Button>
+              {additionalWallet && !showAdditionalWallet && (
+                <span className="text-xs text-muted-foreground font-mono">
+                  Currently: {additionalWallet.slice(0, 6)}...{additionalWallet.slice(-4)}
+                </span>
+              )}
+            </div>
+            
+            {showAdditionalWallet && (
+              <div className="space-y-3 p-4 bg-purple-50 dark:bg-purple-900/10 rounded-lg border border-purple-200 dark:border-purple-800">
+                <Label htmlFor="additional-wallet-reindex" className="text-sm font-medium">
+                  Additional Wallet Address
+                </Label>
+                <Input
+                  id="additional-wallet-reindex"
+                  type="text"
+                  placeholder="0x... (optional)"
+                  value={additionalWallet}
+                  onChange={(e) => setAdditionalWallet(e.target.value)}
+                  className="font-mono text-sm"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Optionally provide another wallet address to analyze together with your Jarvis wallet.
+                </p>
+              </div>
+            )}
+          </div>
+          
           <div className="mt-6 flex flex-wrap gap-3">
             <Button onClick={handleIndexWallet} variant="outline" size="sm" disabled={isIndexing} className="border-purple-200 hover:bg-purple-50 dark:border-purple-800 dark:hover:bg-purple-900/20">
               {isIndexing ? (
