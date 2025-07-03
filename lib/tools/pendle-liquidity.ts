@@ -230,6 +230,26 @@ export const pendleZapInQuoteTool = tool({
         tokenInDecimals = Number(tokenResult.token!.decimals)
       }
 
+      // Check if PT token is expired (market inactive)
+      if (tokenInType === 'pt') {
+        const { pendleTokenMatcher } = await import('../token-matcher/pendle-token-matcher')
+        const ptToken = pendleTokenMatcher.findTokenByAddress(tokenInAddress!, chainId)
+        
+        if (ptToken && ptToken.expiry) {
+          const expiryDate = new Date(ptToken.expiry)
+          const currentDate = new Date()
+          
+          if (expiryDate < currentDate) {
+            console.log(`[ERROR] PT token expired. Expiry: ${ptToken.expiry}, Current: ${currentDate.toISOString()}`)
+            return {
+              status: 'fail',
+              error_message: `This PT token has expired (${expiryDate.toLocaleDateString()}). Expired PT tokens cannot be used for zapping as their markets are inactive. Consider redeeming the token instead.`,
+              hash: null
+            }
+          }
+        }
+      }
+
       if (tokenInType === 'yt') {
         return {
           status: 'fail',
@@ -354,6 +374,9 @@ export const pendleZapInExecuteTool = tool({
       .describe('The address of the market to add liquidity to. '),
     tokenInName: z.string().describe('The name of the input token'),
     tokenInAddress: z.string().describe('The address of the input token'),
+    tokenInType: z
+      .enum(['sy', 'yt', 'pt', 'other'])
+      .describe('The type of the input token'),
     tokenInDecimals: z.number().describe('The decimals of the input token'),
     ytDecimals: z
       .number()
@@ -377,6 +400,7 @@ export const pendleZapInExecuteTool = tool({
       marketAddress,
       tokenInName,
       tokenInAddress,
+      tokenInType,
       tokenInDecimals,
       ytDecimals,
       amountIn,
@@ -396,6 +420,26 @@ export const pendleZapInExecuteTool = tool({
     }
     if (isDemo) {
       slippage = 0.3
+    }
+    
+    // Check if PT token is expired (market inactive) before execution
+    if (tokenInType === 'pt') {
+      const { pendleTokenMatcher } = await import('../token-matcher/pendle-token-matcher')
+      const ptToken = pendleTokenMatcher.findTokenByAddress(tokenInAddress, chainId)
+      
+      if (ptToken && ptToken.expiry) {
+        const expiryDate = new Date(ptToken.expiry)
+        const currentDate = new Date()
+        
+        if (expiryDate < currentDate) {
+          console.log(`[ERROR] PT token expired during execution. Expiry: ${ptToken.expiry}, Current: ${currentDate.toISOString()}`)
+          return {
+            status: 'fail',
+            error_message: `This PT token has expired (${expiryDate.toLocaleDateString()}). Expired PT tokens cannot be used for zapping as their markets are inactive. Consider redeeming the token instead.`,
+            hash: null
+          }
+        }
+      }
     }
     
     // Validate user has sufficient balance before execution
