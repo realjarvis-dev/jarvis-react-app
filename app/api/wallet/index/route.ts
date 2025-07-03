@@ -1,5 +1,6 @@
 import { indexUserWallet, WalletIndexingOptions } from '@/lib/alchemy/index-wallet'
-import { privy } from '@/lib/privy/client'
+import { getUserEvmWalletAddress, privy } from '@/lib/privy/client'
+import { getRedisClient } from '@/lib/redis/config'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
@@ -33,6 +34,44 @@ export async function POST(request: NextRequest) {
       analysisModel: body.analysisModel || 'openai:gpt-4o-mini', // Use mini for faster response
       skipSaving: body.skipSaving || false, // Save by default
       fromBlock: body.fromBlock || '0x0'
+    }
+
+    // Handle additional wallet if provided
+    let additionalWallet = body.additionalWallet
+    
+    // If no additional wallet in request, try to get from Redis
+    if (!additionalWallet) {
+      try {
+        const walletAddress = await getUserEvmWalletAddress()
+        if (walletAddress) {
+          const redis = await getRedisClient()
+          const additionalWalletKey = `wallet:additionalWallet:${walletAddress.toLowerCase()}`
+          additionalWallet = await redis.get(additionalWalletKey)
+        }
+      } catch (error) {
+        console.log('Could not retrieve additional wallet from Redis:', error)
+      }
+    } else {
+      // If additional wallet provided, store it in Redis for future use
+      try {
+        const walletAddress = await getUserEvmWalletAddress()
+        if (walletAddress) {
+          const redis = await getRedisClient()
+          const additionalWalletKey = `wallet:additionalWallet:${walletAddress.toLowerCase()}`
+          if (additionalWallet.trim()) {
+            await redis.set(additionalWalletKey, additionalWallet.trim())
+          } else {
+            await redis.del(additionalWalletKey)
+          }
+        }
+      } catch (error) {
+        console.warn('Could not store additional wallet in Redis:', error)
+      }
+    }
+
+    // Add additional wallet to options if present
+    if (additionalWallet && additionalWallet.trim()) {
+      options.additionalWallet = additionalWallet.trim()
     }
 
     console.log('Starting wallet indexing with options:', options)
