@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { usePrivy } from '@privy-io/react-auth'
-import { Activity, AlertCircle, Brain, CheckCircle, DollarSign, Loader2, RefreshCw, TrendingUp, Users } from 'lucide-react'
+import { Activity, AlertCircle, BarChart3, Brain, CheckCircle, Coins, DollarSign, Loader2, Shield, TrendingUp, Users, Zap } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -154,7 +154,6 @@ export default function WalletSummaryClient() {
         <CardContent>
           <p className="text-muted-foreground mb-4">{error}</p>
           <Button onClick={fetchWalletSummary} variant="outline">
-            <RefreshCw className="h-4 w-4 mr-2" />
             Try Again
           </Button>
         </CardContent>
@@ -209,147 +208,233 @@ export default function WalletSummaryClient() {
 
   const { analysis, quickSummary, walletAddress } = summaryData
 
+  // Helper function to get risk profile styling
+  const getRiskProfileStyle = (riskProfile: string) => {
+    switch (riskProfile?.toLowerCase()) {
+      case 'conservative':
+        return {
+          badge: 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/20 dark:text-emerald-400',
+          gradient: 'from-emerald-500/10 to-green-500/5',
+          icon: Shield,
+          color: 'text-emerald-600 dark:text-emerald-400'
+        }
+      case 'moderate':
+        return {
+          badge: 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/20 dark:text-blue-400',
+          gradient: 'from-blue-500/10 to-cyan-500/5',
+          icon: BarChart3,
+          color: 'text-blue-600 dark:text-blue-400'
+        }
+      case 'aggressive':
+        return {
+          badge: 'bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-900/20 dark:text-orange-400',
+          gradient: 'from-orange-500/10 to-red-500/5',
+          icon: TrendingUp,
+          color: 'text-orange-600 dark:text-orange-400'
+        }
+      case 'degen':
+        return {
+          badge: 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900/20 dark:text-red-400',
+          gradient: 'from-red-500/10 to-pink-500/5',
+          icon: Zap,
+          color: 'text-red-600 dark:text-red-400'
+        }
+      default:
+        return {
+          badge: 'bg-gray-100 text-gray-800 border-gray-300 dark:bg-gray-900/20 dark:text-gray-400',
+          gradient: 'from-gray-500/10 to-slate-500/5',
+          icon: BarChart3,
+          color: 'text-gray-600 dark:text-gray-400'
+        }
+    }
+  }
+
+  const riskStyle = getRiskProfileStyle(analysis?.riskProfile || '')
+  const RiskIcon = riskStyle.icon
+
   return (
-    <div className="space-y-6">
-      {/* Header Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CheckCircle className="h-6 w-6 text-green-500" />
-            Wallet Intelligence Summary
+    <div className="space-y-8">
+      {/* Enhanced Header Card */}
+      <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900/20">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-3 text-2xl">
+            <div className="p-2 rounded-full bg-green-100 dark:bg-green-900/20">
+              <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
+            </div>
+            <div>
+              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Wallet Intelligence Summary
+              </span>
+            </div>
           </CardTitle>
-          <CardDescription>
-            <span className="font-mono text-xs break-all">{walletAddress}</span>
+          <CardDescription className="text-base">
+            <span className="font-mono text-sm px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-lg border break-all">
+              {walletAddress}
+            </span>
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <p className="text-lg">{quickSummary}</p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Button onClick={fetchWalletSummary} variant="outline" size="sm">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
-            <Button onClick={handleIndexWallet} variant="outline" size="sm" disabled={isIndexing}>
+        <CardContent className="pt-0">
+          <div className="p-6 bg-white/50 dark:bg-gray-800/50 rounded-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm">
+            <p className="text-lg leading-relaxed text-gray-700 dark:text-gray-300">{quickSummary}</p>
+          </div>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Button onClick={handleIndexWallet} variant="outline" size="sm" disabled={isIndexing} className="border-purple-200 hover:bg-purple-50 dark:border-purple-800 dark:hover:bg-purple-900/20">
               {isIndexing ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               ) : (
                 <Brain className="h-4 w-4 mr-2" />
               )}
-              Re-analyze
+              Re-index Wallet
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Analysis Grid */}
+      {/* Enhanced Analysis Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Risk Profile */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
+        {/* Enhanced Risk Profile */}
+        <Card className={`border-0 shadow-lg bg-gradient-to-br ${riskStyle.gradient} hover:shadow-xl transition-all duration-200`}>
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl flex items-center gap-3">
+              <div className={`p-2 rounded-full bg-white/80 dark:bg-gray-800/80 ${riskStyle.color}`}>
+                <RiskIcon className="h-5 w-5" />
+              </div>
               Risk Profile
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <Badge variant={
-                analysis?.riskProfile === 'Conservative' ? 'secondary' :
-                analysis?.riskProfile === 'Moderate' ? 'default' : 'destructive'
-              } className="text-sm">
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-3">
+              <Badge className={`text-sm font-semibold px-3 py-1 ${riskStyle.badge}`}>
                 {analysis?.riskProfile}
               </Badge>
-              <p className="text-sm text-muted-foreground">
-                Confidence: {analysis?.confidence}%
-              </p>
-              <p className="text-sm">{analysis?.reasoning}</p>
             </div>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Confidence</span>
+                <span className="text-sm font-bold">{analysis?.confidence}%</span>
+              </div>
+              <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                <div 
+                  className={`h-2 rounded-full ${
+                    riskStyle.color.includes('emerald') ? 'bg-emerald-500' :
+                    riskStyle.color.includes('blue') ? 'bg-blue-500' :
+                    riskStyle.color.includes('orange') ? 'bg-orange-500' :
+                    riskStyle.color.includes('red') ? 'bg-red-500' : 'bg-gray-500'
+                  }`} 
+                  style={{ width: `${analysis?.confidence}%` }}
+                ></div>
+              </div>
+            </div>
+            <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-400 bg-white/60 dark:bg-gray-800/60 p-3 rounded-lg">
+              {analysis?.reasoning}
+            </p>
           </CardContent>
         </Card>
 
-        {/* Transaction Patterns */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Activity className="h-5 w-5" />
+        {/* Enhanced Activity Patterns */}
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/10 dark:to-emerald-900/5 hover:shadow-xl transition-all duration-200">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl flex items-center gap-3">
+              <div className="p-2 rounded-full bg-white/80 dark:bg-gray-800/80">
+                <Activity className="h-5 w-5 text-green-600 dark:text-green-400" />
+              </div>
               Activity Patterns
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <div className="space-y-3">
-              <div>
-                <p className="text-sm font-medium">Trading Frequency</p>
-                <Badge variant="outline">{analysis?.tradingFrequency}</Badge>
+              <div className="flex justify-between items-center p-3 bg-white/60 dark:bg-gray-800/60 rounded-lg">
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Trading Frequency</span>
+                <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300 dark:bg-green-900/20 dark:text-green-400">
+                  {analysis?.tradingFrequency}
+                </Badge>
               </div>
-              <div>
-                <p className="text-sm font-medium">Activity Pattern</p>
-                <p className="text-sm text-muted-foreground">{analysis?.activityPattern}</p>
+              <div className="flex justify-between items-center p-3 bg-white/60 dark:bg-gray-800/60 rounded-lg">
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Activity Pattern</span>
+                <span className="text-sm font-semibold capitalize">{analysis?.activityPattern}</span>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Average Transaction Size */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <DollarSign className="h-5 w-5" />
+        {/* Enhanced Transaction Size */}
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/10 dark:to-orange-900/5 hover:shadow-xl transition-all duration-200">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl flex items-center gap-3">
+              <div className="p-2 rounded-full bg-white/80 dark:bg-gray-800/80">
+                <DollarSign className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+              </div>
               Transaction Size
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              <div>
-                <p className="text-2xl font-bold">{analysis?.averageTransactionSize?.eth?.toFixed(4)} ETH</p>
-                <p className="text-sm text-muted-foreground">
-                  ~${analysis?.averageTransactionSize?.usd_estimate?.toLocaleString()}
-                </p>
-              </div>
+            <div className="text-center p-4 bg-white/60 dark:bg-gray-800/60 rounded-lg">
+              <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
+                {analysis?.averageTransactionSize?.eth?.toFixed(4)} ETH
+              </p>
+              <p className="text-lg font-semibold text-gray-600 dark:text-gray-400 mt-1">
+                ~${analysis?.averageTransactionSize?.usd_estimate?.toLocaleString()}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">Average per transaction</p>
             </div>
           </CardContent>
         </Card>
 
-        {/* Top Protocols */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Users className="h-5 w-5" />
+        {/* Enhanced Top Protocols */}
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/10 dark:to-pink-900/5 hover:shadow-xl transition-all duration-200">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl flex items-center gap-3">
+              <div className="p-2 rounded-full bg-white/80 dark:bg-gray-800/80">
+                <Users className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+              </div>
               Top Protocols
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {analysis?.topProtocols && analysis.topProtocols.length > 0 ? (
                 analysis.topProtocols.map((protocol, index) => (
-                  <Badge key={index} variant="outline" className="mr-2 mb-2">
-                    {protocol}
-                  </Badge>
+                  <div key={index} className="flex items-center gap-3 p-3 bg-white/60 dark:bg-gray-800/60 rounded-lg">
+                    <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/20 rounded-full flex items-center justify-center">
+                      <span className="text-xs font-bold text-purple-600 dark:text-purple-400">
+                        {index + 1}
+                      </span>
+                    </div>
+                    <span className="font-medium">{protocol}</span>
+                  </div>
                 ))
               ) : (
-                <p className="text-sm text-muted-foreground">No protocols identified</p>
+                <p className="text-sm text-muted-foreground text-center py-4">No protocols identified</p>
               )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Primary Assets */}
-        <Card className="md:col-span-2">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Activity className="h-5 w-5" />
+        {/* Enhanced Primary Assets */}
+        <Card className="md:col-span-2 border-0 shadow-lg bg-gradient-to-br from-cyan-50 to-blue-50 dark:from-cyan-900/10 dark:to-blue-900/5 hover:shadow-xl transition-all duration-200">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl flex items-center gap-3">
+              <div className="p-2 rounded-full bg-white/80 dark:bg-gray-800/80">
+                <Coins className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
+              </div>
               Primary Assets
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {analysis?.primaryAssets && analysis.primaryAssets.length > 0 ? (
                 analysis.primaryAssets.map((asset, index) => (
-                  <Badge key={index} variant="outline" className="mb-2">
-                    {asset}
-                  </Badge>
+                  <div key={index} className="p-4 bg-white/60 dark:bg-gray-800/60 rounded-lg border border-cyan-200/50 dark:border-cyan-800/50 min-h-[60px] flex items-center">
+                    <div className="flex items-center gap-3 w-full">
+                      <div className="w-8 h-8 bg-cyan-100 dark:bg-cyan-900/20 rounded-full flex items-center justify-center flex-shrink-0">
+                        <Coins className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+                      </div>
+                      <span className="font-medium text-sm leading-tight break-words">{asset}</span>
+                    </div>
+                  </div>
                 ))
               ) : (
-                <p className="text-sm text-muted-foreground">No primary assets identified</p>
+                <p className="text-sm text-muted-foreground col-span-full text-center py-4">No primary assets identified</p>
               )}
             </div>
           </CardContent>
@@ -361,30 +446,61 @@ export default function WalletSummaryClient() {
 
 function WalletSummarySkeleton() {
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-6 w-64" />
-          <Skeleton className="h-4 w-96" />
+    <div className="space-y-8">
+      <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900/20">
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <Skeleton className="h-8 w-64" />
+          </div>
+          <Skeleton className="h-6 w-96 mt-2" />
         </CardHeader>
-        <CardContent>
-          <Skeleton className="h-4 w-full mb-2" />
-          <Skeleton className="h-4 w-3/4" />
+        <CardContent className="pt-0">
+          <div className="p-6 bg-white/50 dark:bg-gray-800/50 rounded-xl border border-gray-200/50 dark:border-gray-700/50">
+            <Skeleton className="h-6 w-full mb-3" />
+            <Skeleton className="h-6 w-3/4" />
+          </div>
+          <div className="mt-6 flex gap-3">
+            <Skeleton className="h-9 w-32" />
+            <Skeleton className="h-9 w-36" />
+          </div>
         </CardContent>
       </Card>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Card key={i}>
-            <CardHeader>
-              <Skeleton className="h-5 w-32" />
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Card key={i} className="border-0 shadow-lg hover:shadow-xl transition-all duration-200">
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-9 w-9 rounded-full" />
+                <Skeleton className="h-6 w-32" />
+              </div>
             </CardHeader>
             <CardContent>
-              <Skeleton className="h-4 w-full mb-2" />
-              <Skeleton className="h-4 w-2/3" />
+              <div className="space-y-3">
+                <Skeleton className="h-8 w-full" />
+                <Skeleton className="h-4 w-2/3" />
+                <Skeleton className="h-4 w-1/2" />
+              </div>
             </CardContent>
           </Card>
         ))}
+        {/* Last card spans 2 columns */}
+        <Card className="md:col-span-2 border-0 shadow-lg hover:shadow-xl transition-all duration-200">
+          <CardHeader className="pb-4">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-9 w-9 rounded-full" />
+              <Skeleton className="h-6 w-32" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full rounded-lg" />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )
