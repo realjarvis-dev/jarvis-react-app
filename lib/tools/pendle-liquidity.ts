@@ -79,10 +79,71 @@ export const pendleZapInQuoteTool = tool({
       }
       let market = null
       if (!marketAddress) {
-        const markets = await getPendleMarkets('active', chainId)
-        market = markets.find(
-          market => market.name.toLowerCase() === marketName.toLowerCase()
+        // First try static markets from JSON config
+        const { pendleTokenMatcher } = await import('../token-matcher/pendle-token-matcher')
+        const staticMarkets = pendleTokenMatcher.getAllMarketsForChain(chainId)
+        
+        console.log(`[DEBUG] Looking for market: "${marketName}"`)
+        console.log(`[DEBUG] Available static markets:`, staticMarkets.map(m => ({ name: m.name, address: m.address })))
+        
+        // Try exact match first
+        market = staticMarkets.find(
+          m => m.name.toLowerCase() === marketName.toLowerCase()
         )
+        
+        // If not found, try fuzzy matching
+        if (!market) {
+          const searchTerm = marketName.toLowerCase().replace(/\s+(lp|pool|market).*$/i, '')
+          console.log(`[DEBUG] Fuzzy search term: "${searchTerm}"`)
+          
+          market = staticMarkets.find(m => 
+            m.name.toLowerCase().includes(searchTerm) || 
+            searchTerm.includes(m.name.toLowerCase())
+          )
+          
+          if (market) {
+            console.log(`[DEBUG] Found fuzzy match: ${market.name}`)
+            // Convert to expected format
+            market = {
+              name: market.name,
+              address: market.address,
+              expiry: market.expiry,
+              pt: market.pt,
+              yt: market.yt,
+              sy: market.sy,
+              underlyingAsset: market.underlyingAsset,
+              liquidity: 0,
+              impliedApy: 0,
+              active: true
+            }
+          }
+        } else {
+          console.log(`[DEBUG] Found exact match: ${market.name}`)
+          // Convert to expected format
+          market = {
+            name: market.name,
+            address: market.address,
+            expiry: market.expiry,
+            pt: market.pt,
+            yt: market.yt,
+            sy: market.sy,
+            underlyingAsset: market.underlyingAsset,
+            liquidity: 0,
+            impliedApy: 0,
+            active: true
+          }
+        }
+        
+        // Fallback to API markets if static lookup fails
+        if (!market) {
+          console.log(`[DEBUG] Fallback to API markets`)
+          const markets = await getPendleMarkets('active', chainId)
+          console.log(`[DEBUG] API markets:`, markets.map(m => ({ name: m.name, address: m.address })))
+          
+          market = markets.find(
+            market => market.name.toLowerCase() === marketName.toLowerCase()
+          )
+        }
       } else {
         const { pendleTokenMatcher } = await import('../token-matcher/pendle-token-matcher')
         const staticMarket = pendleTokenMatcher.getAllMarketsForChain(chainId).find(
@@ -112,9 +173,10 @@ export const pendleZapInQuoteTool = tool({
         }
       }
       if (!market) {
+        console.log(`[ERROR] Market not found for: "${marketName}" on chain ${chainId}`)
         return {
           status: 'fail',
-          error_message: 'Market not found',
+          error_message: `Market not found: "${marketName}". Try using "sENA" instead of "sENA LP Pool"`,
           hash: null
         }
       }
@@ -206,10 +268,11 @@ export const pendleZapInQuoteTool = tool({
         completeTime: new Date().toISOString()
       }
     } catch (error) {
-      console.error(error)
+      console.error('[ERROR] Pendle zap-in quote failed:', error)
+      console.log('[DEBUG] Tool parameters:', params)
       return {
         status: 'fail',
-        error_message: 'Error getting quote'
+        error_message: `Error getting quote: ${error instanceof Error ? error.message : 'Unknown error'}`
       }
     }
   }
@@ -283,6 +346,8 @@ export const pendleZapInExecuteTool = tool({
       true
     )
     if (result.status === 'fail') {
+      console.error('[ERROR] Pendle zap-in execution failed:', result.error)
+      console.log('[DEBUG] Execute parameters:', params)
       return {
         status: 'fail',
         error_message: result.error
