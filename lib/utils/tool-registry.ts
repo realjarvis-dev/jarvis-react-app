@@ -40,6 +40,7 @@ import {
   walletBalanceTool
 } from '../tools/wallet'
 import { NetworkContext, ToolContext } from '../types/context'
+import { xStockList } from '../tools/xstock-search'
 
 /**
  * Interface for tool definition with schema and execution function
@@ -785,6 +786,18 @@ export function createToolRegistry(model: string): ToolRegistry {
     category: ToolCategory.WEB
   })
 
+  registry.registerTool({
+    name: 'xstock_list',
+    description: 'List all the xstocks available on solana',
+    schema: xStockList.parameters,
+    execute: async (params, context) => xStockList.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3_READ,
+    supportedNetworks: ['solana']
+  })
 
   return registry
 }

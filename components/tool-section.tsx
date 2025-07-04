@@ -26,6 +26,7 @@ import { WalletBalanceSection } from './wallet-balance-section'
 import { WalletFundingSection } from './wallet-funding-section'
 import { DeFiLlamaYieldsSection } from './defillama-yields-section'
 import { DeFiLlamaProtocolsSection } from './defillama-protocols-section'
+import { XStockListSection } from './jupiter/xstock-list-section'
 
 interface ToolSectionProps {
   tool: ToolInvocation
@@ -285,6 +286,14 @@ export function ToolSection({
     case 'defillama_protocols':
       return (
         <DeFiLlamaProtocolsSection
+          tool={tool}
+          isOpen={isOpen}
+          onOpenChange={onOpenChange}
+        />
+      )
+    case 'xstock_list':
+      return (
+        <XStockListSection
           tool={tool}
           isOpen={isOpen}
           onOpenChange={onOpenChange}

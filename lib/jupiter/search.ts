@@ -9,6 +9,26 @@ const cachedJupiterAxios = setupCache(jupiterAxios, {
   methods: ['get'] // Only cache GET requests
 })
 
+// a simplified interface for the xstock data
+export interface XStockData {
+  id: string
+  name: string
+  symbol: string
+  icon: string
+  mcap: number
+  usdPrice: number
+  liquidity: number
+  stats5m: {
+    priceChange: number
+  }
+  stats1h: {
+    priceChange: number
+  }
+  stats24h: {
+    priceChange: number
+  }
+}
+
 /**
  * Search for token metadata via Jupiter's Token API v2
  * @param mintAddress - Mint address
@@ -29,7 +49,7 @@ export async function searchTokens(mintAddress: string) {
   }
 }
 
-export async function searchXStocksByName(name: string) {
+export async function searchXStocksByName(name: string): Promise<XStockData[]> {
   try {
     const response = await cachedJupiterAxios.get(
       'https://lite-api.jup.ag/tokens/v2/search',
@@ -50,3 +70,5 @@ export async function searchXStocksByName(name: string) {
     throw error
   }
 }
+
+console.log(await searchXStocksByName('xstock'))
