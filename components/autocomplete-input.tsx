@@ -10,7 +10,6 @@ import {
   CommandList,
 } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { createSuggestionEngine, SuggestionEngine, Suggestion, SuggestionContext } from '@/lib/utils/suggestion-engine'
 import { useNetwork } from '@/lib/network/context'
 import { cn } from '@/lib/utils'
 import * as Icons from 'lucide-react'
@@ -48,25 +47,28 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
     rows = 1
   }, ref) => {
     const [isOpen, setIsOpen] = useState(false)
-    const [suggestions, setSuggestions] = useState<Suggestion[]>([])
+    const [suggestions, setSuggestions] = useState<any[]>([])
     const [selectedIndex, setSelectedIndex] = useState(-1)
     const [cursorPosition, setCursorPosition] = useState(0)
     const [isComposing, setIsComposing] = useState(false)
     const [isMounted, setIsMounted] = useState(false)
     
     const textareaRef = useRef<HTMLTextAreaElement>(null)
-    const suggestionEngine = useRef<SuggestionEngine | null>(null)
+    const suggestionEngine = useRef<any>(null)
     const networkContext = useNetwork()
+    
     
     // Initialize suggestion engine on client side only
     useEffect(() => {
       setIsMounted(true)
-      suggestionEngine.current = createSuggestionEngine()
-      console.log('🚀 AutoCompleteInput component mounted!', { value, disabled, isMounted })
+      // Use client-safe suggestion engine
+      import('@/lib/utils/client-suggestion-engine').then((module) => {
+        suggestionEngine.current = module.createClientSuggestionEngine()
+      }).catch((error) => {
+        console.error('Failed to load client suggestion engine:', error)
+      })
     }, [])
     
-    // Debug log on every render
-    console.log('🔄 AutoCompleteInput render:', { value, isMounted, isOpen, suggestionsCount: suggestions.length, suggestions: suggestions.map(s => s.text) })
     
     useImperativeHandle(ref, () => ({
       focus: () => textareaRef.current?.focus(),
@@ -76,47 +78,135 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
 
     // Generate suggestions when input changes
     useEffect(() => {
-      const generateSuggestions = async () => {
-        if (!isMounted || !suggestionEngine.current || isComposing || disabled) {
-          console.log('⚠️ Early return from generateSuggestions:', { isMounted, hasEngine: !!suggestionEngine.current, isComposing, disabled })
-          return
-        }
-        
-        const context: SuggestionContext = {
-          networkContext: {
-            selectedNetwork: networkContext?.isDemoMode ? 'demo' : networkContext?.selectedChain || 'ethereum',
-            selectedChainId: parseInt(networkContext?.activeNetwork?.id?.toString() || '1'),
-            isDemo: networkContext?.isDemoMode || false,
-            rpcUrl: networkContext?.activeNetwork?.rpcUrl || '',
-            config: networkContext?.activeNetwork || {} as any
-          },
-          userInput: value,
-          cursorPosition,
-          isDemo: networkContext?.isDemoMode
-        }
-        
-        console.log('🌐 Network context for suggestions:', context.networkContext)
+      if (!isMounted || !networkContext) {
+        return
+      }
 
+      const generateSuggestions = async () => {
         try {
-          console.log('🔍 Generating suggestions for:', value, 'context:', context)
-          const newSuggestions = await suggestionEngine.current.generateSuggestions(context)
-          console.log('✅ Generated suggestions:', newSuggestions)
+          let newSuggestions: any[] = []
+
+          // Check if user has already provided a complete query
+          const input = value.toLowerCase().trim()
+          const isCompleteQuery = input.length > 10 && (
+            input.includes('check') && input.includes('balance') ||
+            input.includes('swap') && input.includes('for') ||
+            input.includes('find') && input.includes('opportunities') ||
+            input.includes('get') && input.includes('price') ||
+            input.includes('compare') && input.includes('returns') ||
+            input.split(' ').length >= 4 // 4+ words likely indicates a complete query
+          )
+
+          // Don't show suggestions if user has a complete query
+          if (isCompleteQuery) {
+            setSuggestions([])
+            setIsOpen(false)
+            setSelectedIndex(-1)
+            return
+          }
+
+          // Try to use the sophisticated suggestion engine if available
+          if (suggestionEngine.current) {
+            const context = {
+              selectedNetwork: networkContext.selectedChain,
+              isDemoMode: networkContext.isDemoMode,
+              userInput: value,
+              cursorPosition
+            }
+
+            newSuggestions = await suggestionEngine.current.generateSuggestions(context)
+          } else {
+            // Fallback to simple inline suggestions
+            if (input && input.length <= 10) { // Only suggest for short inputs
+              // Simple pattern matching for common crypto actions
+              if (input.includes('check') || input.includes('balance')) {
+                newSuggestions.push({
+                  id: 'check-balance',
+                  text: 'Check my wallet balance',
+                  description: 'View your current token balances',
+                  category: 'command',
+                  icon: 'Wallet',
+                  score: 100
+                })
+              }
+              
+              if (input.includes('swap') || input.startsWith('sw')) {
+                newSuggestions.push({
+                  id: 'swap-tokens',
+                  text: 'Swap tokens',
+                  description: 'Exchange one token for another',
+                  category: 'command',
+                  icon: 'ArrowRightLeft',
+                  score: 95
+                })
+              }
+              
+              if (input.includes('gas') || input.includes('fee')) {
+                newSuggestions.push({
+                  id: 'gas-price',
+                  text: 'Check gas price',
+                  description: 'Get current network gas prices',
+                  category: 'command',
+                  icon: 'Fuel',
+                  score: 90
+                })
+              }
+              
+              if (input.includes('pendle') || input.includes('yield')) {
+                newSuggestions.push({
+                  id: 'pendle-opportunities',
+                  text: 'Find Pendle opportunities',
+                  description: 'Discover yield farming opportunities',
+                  category: 'command',
+                  icon: 'TrendingUp',
+                  score: 85
+                })
+              }
+              
+              // Token suggestions
+              const tokens = ['ETH', 'USDC', 'USDT', 'DAI', 'PENDLE', 'AAVE', 'UNI']
+              tokens.forEach((token, index) => {
+                if (token.toLowerCase().includes(input) || input.includes(token.toLowerCase())) {
+                  newSuggestions.push({
+                    id: `token-${token}`,
+                    text: token,
+                    description: `${token} token`,
+                    category: 'token',
+                    icon: 'Coins',
+                    score: 70 - index
+                  })
+                }
+              })
+
+              // Sort by score and take top 6
+              newSuggestions = newSuggestions
+                .sort((a, b) => b.score - a.score)
+                .slice(0, 6)
+            }
+          }
+            
           setSuggestions(newSuggestions)
-          const shouldOpen = newSuggestions.length > 0 && value.trim().length > 0
-          console.log('🎨 Setting isOpen to:', shouldOpen, 'suggestions count:', newSuggestions.length, 'value length:', value.trim().length)
-          setIsOpen(shouldOpen)
           
-          setSelectedIndex(-1)
+          // Only show popover if we have suggestions and user is typing a short query
+          // Never show popover with "No suggestions found" - just hide it completely
+          if (newSuggestions.length > 0 && value.trim().length > 0 && value.trim().length <= 15) {
+            setIsOpen(true)
+            setSelectedIndex(0) // Auto-select first suggestion
+          } else {
+            setIsOpen(false)
+            setSelectedIndex(-1)
+          }
         } catch (error) {
-          console.error('❌ Failed to generate suggestions:', error)
+          console.error('Error generating suggestions:', error)
           setSuggestions([])
           setIsOpen(false)
         }
       }
 
-      const debounceTimer = setTimeout(generateSuggestions, 150)
-      return () => clearTimeout(debounceTimer)
-    }, [value, cursorPosition, isComposing, disabled, networkContext, isMounted]) // eslint-disable-line react-hooks/exhaustive-deps
+      // Debounce suggestions generation
+      const timeoutId = setTimeout(generateSuggestions, 150)
+      return () => clearTimeout(timeoutId)
+    }, [value, isMounted, networkContext, cursorPosition, suggestionEngine.current])
 
     // Handle keyboard navigation
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -166,7 +256,7 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
     }
 
     // Apply selected suggestion
-    const applySuggestion = (suggestion: Suggestion) => {
+    const applySuggestion = (suggestion: any) => {
       const textarea = textareaRef.current
       if (!textarea) return
 
@@ -204,7 +294,6 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
     // Handle input change
     const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       const newValue = e.target.value
-      console.log('📝 AutoCompleteInput handleInputChange called with:', newValue)
       onChange(newValue)
       setCursorPosition(e.target.selectionStart || 0)
     }
@@ -226,35 +315,13 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
       return IconComponent ? <IconComponent className="h-4 w-4" /> : null
     }
 
-    // Render simple textarea on server, full component on client
-    if (!isMounted) {
-      return (
-        <Textarea
-          ref={textareaRef}
-          value={value}
-          onChange={(e) => {
-            console.log('📝 SSR handleInputChange called with:', e.target.value)
-            onChange(e.target.value)
-          }}
-          onKeyDown={onKeyDown}
-          onCompositionStart={onCompositionStart}
-          onCompositionEnd={onCompositionEnd}
-          placeholder={placeholder}
-          className={cn(
-            "resize-none border-0 bg-transparent px-0 py-0 text-base shadow-none focus-visible:ring-0",
-            className
-          )}
-          disabled={disabled}
-          autoFocus={autoFocus}
-          rows={rows}
-        />
-      )
-    }
+    // Always render the same structure to avoid hydration mismatch
+    // Just disable suggestions on server side
+    const shouldShowPopover = isMounted && isOpen
 
-    console.log('🎭 Popover render state:', { isOpen, suggestionsLength: suggestions.length, value })
     
     return (
-      <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <Popover open={shouldShowPopover} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <div className="relative w-full">
             <Textarea
@@ -276,17 +343,16 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
           </div>
         </PopoverTrigger>
         
-        <PopoverContent 
-          className="w-80 p-0 z-[100]" 
-          align="start"
-          side="bottom"
-          sideOffset={8}
-        >
-          <Command className="border-0">
-            <CommandList>
-              <CommandEmpty>No suggestions found.</CommandEmpty>
-              
-              {suggestions.length > 0 && (
+        {shouldShowPopover && suggestions.length > 0 && (
+          <PopoverContent 
+            className="w-80 p-0 z-[9999]" 
+            align="start"
+            side="bottom"
+            sideOffset={8}
+            style={{ zIndex: 9999 }}
+          >
+            <Command className="border-0">
+              <CommandList>
                 <CommandGroup>
                   {suggestions.map((suggestion, index) => (
                     <CommandItem
@@ -313,10 +379,10 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
                     </CommandItem>
                   ))}
                 </CommandGroup>
-              )}
-            </CommandList>
-          </Command>
-        </PopoverContent>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        )}
       </Popover>
     )
   }

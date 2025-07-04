@@ -1,7 +1,11 @@
-import { ToolDefinition, ToolCategory, ToolRegistry, getToolRegistry } from './tool-registry'
-import { NetworkContext } from '../types/context'
+'use client'
 
-export interface Suggestion {
+/**
+ * Client-safe suggestion engine for autocomplete
+ * This version doesn't import server-only dependencies
+ */
+
+export interface ClientSuggestion {
   id: string
   text: string
   description: string
@@ -12,22 +16,18 @@ export interface Suggestion {
   isComplete?: boolean
 }
 
-export interface SuggestionContext {
-  networkContext: NetworkContext
-  walletAddress?: string
-  isDemo?: boolean
-  previousMessages?: string[]
+export interface ClientSuggestionContext {
+  selectedNetwork: string
+  isDemoMode: boolean
   userInput: string
   cursorPosition: number
 }
 
 /**
- * Main suggestion engine class for intelligent autocomplete
+ * Client-safe suggestion engine class
  */
-export class SuggestionEngine {
-  private toolRegistry: ToolRegistry
-  
-  // Common DeFi tokens and protocols
+export class ClientSuggestionEngine {
+  // Common DeFi tokens
   private commonTokens = [
     'ETH', 'WETH', 'USDC', 'USDT', 'DAI', 'BTC', 'WBTC',
     'AAVE', 'UNI', 'COMP', 'MKR', 'LINK', 'SNX', 'CRV',
@@ -51,28 +51,42 @@ export class SuggestionEngine {
     'get market data', 'check price', 'view chart'
   ]
 
-  constructor(modelId: string = 'default') {
-    this.toolRegistry = getToolRegistry(modelId)
-  }
-
   /**
    * Generate suggestions based on user input and context
    */
-  async generateSuggestions(context: SuggestionContext): Promise<Suggestion[]> {
-    const { userInput, networkContext } = context
+  async generateSuggestions(context: ClientSuggestionContext): Promise<ClientSuggestion[]> {
+    const { userInput } = context
     const input = userInput.toLowerCase().trim()
-    
     
     if (!input) {
       return this.getDefaultSuggestions(context)
     }
 
-    const suggestions: Suggestion[] = []
+    // Check if user has already provided a complete query
+    const isCompleteQuery = input.length > 10 && (
+      input.includes('check') && input.includes('balance') ||
+      input.includes('swap') && input.includes('for') ||
+      input.includes('find') && input.includes('opportunities') ||
+      input.includes('get') && input.includes('price') ||
+      input.includes('compare') && input.includes('returns') ||
+      input.split(' ').length >= 4 // 4+ words likely indicates a complete query
+    )
+
+    // Don't show suggestions if user has a complete query
+    if (isCompleteQuery) {
+      return []
+    }
+
+    // Only show suggestions for short queries (15 characters or less)
+    if (input.length > 15) {
+      return []
+    }
+
+    const suggestions: ClientSuggestion[] = []
     
-    
-    // Get tool-based suggestions
-    const toolSuggestions = await this.getToolSuggestions(input, context)
-    suggestions.push(...toolSuggestions)
+    // Get action suggestions
+    const actionSuggestions = this.getActionSuggestions(input, context)
+    suggestions.push(...actionSuggestions)
     
     // Get token suggestions
     const tokenSuggestions = this.getTokenSuggestions(input, context)
@@ -81,10 +95,6 @@ export class SuggestionEngine {
     // Get protocol suggestions
     const protocolSuggestions = this.getProtocolSuggestions(input, context)
     suggestions.push(...protocolSuggestions)
-    
-    // Get action suggestions
-    const actionSuggestions = this.getActionSuggestions(input, context)
-    suggestions.push(...actionSuggestions)
     
     // Sort by score and return top 8
     const finalSuggestions = suggestions
@@ -97,10 +107,8 @@ export class SuggestionEngine {
   /**
    * Get default suggestions when input is empty
    */
-  private getDefaultSuggestions(context: SuggestionContext): Suggestion[] {
-    const { networkContext } = context
-    
-    const suggestions: Suggestion[] = [
+  private getDefaultSuggestions(context: ClientSuggestionContext): ClientSuggestion[] {
+    const suggestions: ClientSuggestion[] = [
       {
         id: 'check-balance',
         text: 'Check my wallet balance',
@@ -140,7 +148,7 @@ export class SuggestionEngine {
     ]
 
     // Add network-specific suggestions
-    if (networkContext.selectedNetwork === 'berachain') {
+    if (context.selectedNetwork === 'berachain') {
       suggestions.push({
         id: 'kodiak-opportunities',
         text: 'Find Kodiak opportunities',
@@ -156,128 +164,13 @@ export class SuggestionEngine {
   }
 
   /**
-   * Get tool-based suggestions
-   */
-  private async getToolSuggestions(
-    input: string,
-    context: SuggestionContext
-  ): Promise<Suggestion[]> {
-    const tools = this.toolRegistry.getSupportedToolNamesForNetwork(
-      'default',
-      context.networkContext
-    )
-    
-    const suggestions: Suggestion[] = []
-    
-    for (const toolName of tools) {
-      const tool = this.toolRegistry.getTool(toolName)
-      if (!tool) continue
-      
-      const score = this.calculateToolScore(tool, input, context)
-      if (score > 0) {
-        suggestions.push({
-          id: `tool-${toolName}`,
-          text: this.generateToolSuggestionText(tool, input),
-          description: tool.description,
-          category: 'tool',
-          icon: this.getToolIcon(tool),
-          score,
-          toolName: tool.name
-        })
-      }
-    }
-    
-    return suggestions
-  }
-
-  /**
-   * Calculate relevance score for a tool
-   */
-  private calculateToolScore(
-    tool: ToolDefinition,
-    input: string,
-    context: SuggestionContext
-  ): number {
-    let score = 0
-    const toolName = tool.name.toLowerCase()
-    const description = tool.description.toLowerCase()
-    
-    // Exact matches
-    if (toolName.includes(input) || description.includes(input)) {
-      score += 50
-    }
-    
-    // Keyword matching
-    const keywords = this.extractKeywords(input)
-    for (const keyword of keywords) {
-      if (toolName.includes(keyword) || description.includes(keyword)) {
-        score += 20
-      }
-    }
-    
-    // Category-based scoring
-    if (tool.category === ToolCategory.WEB3_READ) score += 10
-    if (tool.category === ToolCategory.WEB3_WRITE) score += 15
-    
-    // Network-specific bonuses
-    if (context.networkContext.selectedNetwork === 'berachain' && 
-        toolName.includes('kodiak')) {
-      score += 20
-    }
-    
-    if (toolName.includes('pendle')) {
-      score += 15
-    }
-    
-    return score
-  }
-
-  /**
-   * Generate suggestion text for a tool
-   */
-  private generateToolSuggestionText(tool: ToolDefinition, input: string): string {
-    const toolName = tool.name.toLowerCase()
-    
-    // Generate contextual suggestions based on tool type
-    if (toolName.includes('balance')) {
-      return 'Check my wallet balance'
-    }
-    if (toolName.includes('swap')) {
-      return 'Swap tokens'
-    }
-    if (toolName.includes('bridge')) {
-      return 'Bridge tokens between chains'
-    }
-    if (toolName.includes('pendle')) {
-      if (toolName.includes('opportunities')) {
-        return 'Find Pendle yield opportunities'
-      }
-      if (toolName.includes('zap_in')) {
-        return 'Zap into Pendle pool'
-      }
-      if (toolName.includes('zap_out')) {
-        return 'Zap out of Pendle pool'
-      }
-    }
-    if (toolName.includes('kodiak')) {
-      return 'Find Kodiak Island opportunities'
-    }
-    if (toolName.includes('gas')) {
-      return 'Check current gas price'
-    }
-    
-    // Default to description or tool name
-    return tool.description || tool.name
-  }
-
-  /**
    * Get token suggestions
    */
   private getTokenSuggestions(
     input: string,
-    context: SuggestionContext
-  ): Suggestion[] {
-    const suggestions: Suggestion[] = []
+    context: ClientSuggestionContext
+  ): ClientSuggestion[] {
+    const suggestions: ClientSuggestion[] = []
     
     for (const token of this.commonTokens) {
       const score = this.calculateTokenScore(token, input, context)
@@ -302,7 +195,7 @@ export class SuggestionEngine {
   private calculateTokenScore(
     token: string,
     input: string,
-    context: SuggestionContext
+    context: ClientSuggestionContext
   ): number {
     const tokenLower = token.toLowerCase()
     
@@ -321,9 +214,9 @@ export class SuggestionEngine {
    */
   private getProtocolSuggestions(
     input: string,
-    context: SuggestionContext
-  ): Suggestion[] {
-    const suggestions: Suggestion[] = []
+    context: ClientSuggestionContext
+  ): ClientSuggestion[] {
+    const suggestions: ClientSuggestion[] = []
     
     for (const protocol of this.commonProtocols) {
       const score = this.calculateProtocolScore(protocol, input, context)
@@ -348,7 +241,7 @@ export class SuggestionEngine {
   private calculateProtocolScore(
     protocol: string,
     input: string,
-    context: SuggestionContext
+    context: ClientSuggestionContext
   ): number {
     const protocolLower = protocol.toLowerCase()
     
@@ -367,9 +260,9 @@ export class SuggestionEngine {
    */
   private getActionSuggestions(
     input: string,
-    context: SuggestionContext
-  ): Suggestion[] {
-    const suggestions: Suggestion[] = []
+    context: ClientSuggestionContext
+  ): ClientSuggestion[] {
+    const suggestions: ClientSuggestion[] = []
     
     for (const action of this.commonActions) {
       const score = this.calculateActionScore(action, input, context)
@@ -379,7 +272,7 @@ export class SuggestionEngine {
           text: action,
           description: `${action}`,
           category: 'command',
-          icon: 'Zap',
+          icon: this.getActionIcon(action),
           score
         })
       }
@@ -394,7 +287,7 @@ export class SuggestionEngine {
   private calculateActionScore(
     action: string,
     input: string,
-    context: SuggestionContext
+    context: ClientSuggestionContext
   ): number {
     const actionLower = action.toLowerCase()
     
@@ -424,38 +317,29 @@ export class SuggestionEngine {
   }
 
   /**
-   * Get icon for tool category
+   * Get icon for action
    */
-  private getToolIcon(tool: ToolDefinition): string {
-    const toolName = tool.name.toLowerCase()
+  private getActionIcon(action: string): string {
+    const actionLower = action.toLowerCase()
     
-    if (toolName.includes('balance')) return 'Wallet'
-    if (toolName.includes('swap') || toolName.includes('bridge')) return 'ArrowRightLeft'
-    if (toolName.includes('gas')) return 'Fuel'
-    if (toolName.includes('pendle')) return 'TrendingUp'
-    if (toolName.includes('kodiak')) return 'Mountain'
-    if (toolName.includes('search')) return 'Search'
-    if (toolName.includes('transfer')) return 'Send'
-    if (toolName.includes('chart')) return 'BarChart3'
+    if (actionLower.includes('balance')) return 'Wallet'
+    if (actionLower.includes('swap') || actionLower.includes('bridge')) return 'ArrowRightLeft'
+    if (actionLower.includes('gas')) return 'Fuel'
+    if (actionLower.includes('pendle') || actionLower.includes('yield')) return 'TrendingUp'
+    if (actionLower.includes('kodiak')) return 'Mountain'
+    if (actionLower.includes('search')) return 'Search'
+    if (actionLower.includes('transfer')) return 'Send'
+    if (actionLower.includes('chart') || actionLower.includes('price')) return 'BarChart3'
+    if (actionLower.includes('liquidity')) return 'Waves'
+    if (actionLower.includes('mint') || actionLower.includes('redeem')) return 'Coins'
     
-    switch (tool.category) {
-      case ToolCategory.WEB3_READ:
-        return 'Eye'
-      case ToolCategory.WEB3_WRITE:
-        return 'Edit'
-      case ToolCategory.WEB:
-        return 'Globe'
-      case ToolCategory.UTILITY:
-        return 'Tool'
-      default:
-        return 'Zap'
-    }
+    return 'Zap'
   }
 }
 
 /**
- * Create suggestion engine instance
+ * Create client-safe suggestion engine instance
  */
-export function createSuggestionEngine(modelId: string = 'default'): SuggestionEngine {
-  return new SuggestionEngine(modelId)
+export function createClientSuggestionEngine(): ClientSuggestionEngine {
+  return new ClientSuggestionEngine()
 }
