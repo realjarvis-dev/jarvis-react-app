@@ -62,7 +62,10 @@ export class SuggestionEngine {
     const { userInput, networkContext } = context
     const input = userInput.toLowerCase().trim()
     
+    console.log('🎯 SuggestionEngine.generateSuggestions called with:', { userInput, input, networkContext })
+    
     if (!input) {
+      console.log('📝 No input, returning default suggestions')
       return this.getDefaultSuggestions(context)
     }
 
@@ -70,24 +73,31 @@ export class SuggestionEngine {
     
     // Get tool-based suggestions
     const toolSuggestions = await this.getToolSuggestions(input, context)
+    console.log('🔧 Tool suggestions:', toolSuggestions)
     suggestions.push(...toolSuggestions)
     
     // Get token suggestions
     const tokenSuggestions = this.getTokenSuggestions(input, context)
+    console.log('🪙 Token suggestions:', tokenSuggestions)
     suggestions.push(...tokenSuggestions)
     
     // Get protocol suggestions
     const protocolSuggestions = this.getProtocolSuggestions(input, context)
+    console.log('🏢 Protocol suggestions:', protocolSuggestions)
     suggestions.push(...protocolSuggestions)
     
     // Get action suggestions
     const actionSuggestions = this.getActionSuggestions(input, context)
+    console.log('⚡ Action suggestions:', actionSuggestions)
     suggestions.push(...actionSuggestions)
     
     // Sort by score and return top 8
-    return suggestions
+    const finalSuggestions = suggestions
       .sort((a, b) => b.score - a.score)
       .slice(0, 8)
+    
+    console.log('🏆 Final suggestions returned:', finalSuggestions)
+    return finalSuggestions
   }
 
   /**

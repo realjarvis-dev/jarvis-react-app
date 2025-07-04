@@ -10,7 +10,7 @@ import {
   CommandList,
 } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { createSuggestionEngine, Suggestion, SuggestionContext } from '@/lib/utils/suggestion-engine'
+import { createSuggestionEngine, SuggestionEngine, Suggestion, SuggestionContext } from '@/lib/utils/suggestion-engine'
 import { useNetwork } from '@/lib/network/context'
 import { cn } from '@/lib/utils'
 import * as Icons from 'lucide-react'
@@ -52,10 +52,21 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
     const [selectedIndex, setSelectedIndex] = useState(-1)
     const [cursorPosition, setCursorPosition] = useState(0)
     const [isComposing, setIsComposing] = useState(false)
+    const [isMounted, setIsMounted] = useState(false)
     
     const textareaRef = useRef<HTMLTextAreaElement>(null)
-    const suggestionEngine = useRef(createSuggestionEngine())
+    const suggestionEngine = useRef<SuggestionEngine | null>(null)
     const networkContext = useNetwork()
+    
+    // Initialize suggestion engine on client side only
+    useEffect(() => {
+      setIsMounted(true)
+      suggestionEngine.current = createSuggestionEngine()
+      console.log('🚀 AutoCompleteInput component mounted!', { value, disabled, isMounted })
+    }, [])
+    
+    // Debug log on every render
+    console.log('🔄 AutoCompleteInput render:', { value, isMounted, isOpen, suggestionsCount: suggestions.length, suggestions: suggestions.map(s => s.text) })
     
     useImperativeHandle(ref, () => ({
       focus: () => textareaRef.current?.focus(),
@@ -66,7 +77,10 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
     // Generate suggestions when input changes
     useEffect(() => {
       const generateSuggestions = async () => {
-        if (isComposing || disabled) return
+        if (!isMounted || !suggestionEngine.current || isComposing || disabled) {
+          console.log('⚠️ Early return from generateSuggestions:', { isMounted, hasEngine: !!suggestionEngine.current, isComposing, disabled })
+          return
+        }
         
         const context: SuggestionContext = {
           networkContext: {
@@ -80,14 +94,21 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
           cursorPosition,
           isDemo: networkContext?.isDemoMode
         }
+        
+        console.log('🌐 Network context for suggestions:', context.networkContext)
 
         try {
+          console.log('🔍 Generating suggestions for:', value, 'context:', context)
           const newSuggestions = await suggestionEngine.current.generateSuggestions(context)
+          console.log('✅ Generated suggestions:', newSuggestions)
           setSuggestions(newSuggestions)
-          setIsOpen(newSuggestions.length > 0 && value.trim().length > 0)
+          const shouldOpen = newSuggestions.length > 0 && value.trim().length > 0
+          console.log('🎨 Setting isOpen to:', shouldOpen, 'suggestions count:', newSuggestions.length, 'value length:', value.trim().length)
+          setIsOpen(shouldOpen)
+          
           setSelectedIndex(-1)
         } catch (error) {
-          console.error('Failed to generate suggestions:', error)
+          console.error('❌ Failed to generate suggestions:', error)
           setSuggestions([])
           setIsOpen(false)
         }
@@ -95,7 +116,7 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
 
       const debounceTimer = setTimeout(generateSuggestions, 150)
       return () => clearTimeout(debounceTimer)
-    }, [value, cursorPosition, isComposing, disabled, networkContext])
+    }, [value, cursorPosition, isComposing, disabled, networkContext, isMounted]) // eslint-disable-line react-hooks/exhaustive-deps
 
     // Handle keyboard navigation
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -183,6 +204,7 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
     // Handle input change
     const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       const newValue = e.target.value
+      console.log('📝 AutoCompleteInput handleInputChange called with:', newValue)
       onChange(newValue)
       setCursorPosition(e.target.selectionStart || 0)
     }
@@ -204,6 +226,33 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
       return IconComponent ? <IconComponent className="h-4 w-4" /> : null
     }
 
+    // Render simple textarea on server, full component on client
+    if (!isMounted) {
+      return (
+        <Textarea
+          ref={textareaRef}
+          value={value}
+          onChange={(e) => {
+            console.log('📝 SSR handleInputChange called with:', e.target.value)
+            onChange(e.target.value)
+          }}
+          onKeyDown={onKeyDown}
+          onCompositionStart={onCompositionStart}
+          onCompositionEnd={onCompositionEnd}
+          placeholder={placeholder}
+          className={cn(
+            "resize-none border-0 bg-transparent px-0 py-0 text-base shadow-none focus-visible:ring-0",
+            className
+          )}
+          disabled={disabled}
+          autoFocus={autoFocus}
+          rows={rows}
+        />
+      )
+    }
+
+    console.log('🎭 Popover render state:', { isOpen, suggestionsLength: suggestions.length, value })
+    
     return (
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
@@ -228,9 +277,9 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
         </PopoverTrigger>
         
         <PopoverContent 
-          className="w-full p-0" 
+          className="w-80 p-0 z-[100]" 
           align="start"
-          side="top"
+          side="bottom"
           sideOffset={8}
         >
           <Command className="border-0">

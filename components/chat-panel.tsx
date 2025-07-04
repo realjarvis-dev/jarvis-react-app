@@ -434,7 +434,7 @@ export function ChatPanel({
           position: 'sticky',
           bottom: 0,
           // zIndex is now on the div itself, VideoBackground is z-0
-          overflow: 'hidden'
+          overflow: 'visible'
         }}
       >
         <div className="w-full max-w-3xl">
