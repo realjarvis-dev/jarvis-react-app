@@ -2525,8 +2525,8 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     {
       "chainId": 56,
       "address": "0xb84cec1ab2af11b530ae0d8594b1493556be49cd",
-      "symbol": "PT-clisBNB-30OCT2025",
-      "name": "PT clisBNB 30OCT2025",
+      "symbol": "PT-slisBNBx-30OCT2025",
+      "name": "PT slisBNBx 30OCT2025",
       "decimals": 18,
       "tokenType": "pt",
       "marketAddress": "0xbd577ddabb5a1672d3c786726b87a175de652b96",
@@ -2536,8 +2536,8 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     {
       "chainId": 56,
       "address": "0xbe436f6ed7ff7f747aae1912f88c59549df82158",
-      "symbol": "YT-clisBNB-30OCT2025",
-      "name": "YT clisBNB 30OCT2025",
+      "symbol": "YT-slisBNBx-30OCT2025",
+      "name": "YT slisBNBx 30OCT2025",
       "decimals": 18,
       "tokenType": "yt",
       "marketAddress": "0xbd577ddabb5a1672d3c786726b87a175de652b96",
@@ -2547,8 +2547,8 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     {
       "chainId": 56,
       "address": "0x27faf900007b4cba7803000251ec96bc69ff1bea",
-      "symbol": "SY-clisBNB",
-      "name": "SY clisBNB",
+      "symbol": "SY-slisBNBx",
+      "name": "SY slisBNBx",
       "decimals": 18,
       "tokenType": "sy",
       "marketAddress": "0xbd577ddabb5a1672d3c786726b87a175de652b96",
