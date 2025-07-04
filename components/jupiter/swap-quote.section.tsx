@@ -222,7 +222,7 @@ export function JupiterSwapQuoteSection({
                     {tool.args.tokenInDisplayName}
                   </span>
 
-                  {swapDetails.networkFee && (
+                  {swapDetails.networkFee > 0 && (
                     <span className="text-xs text-gray-500 dark:text-gray-400">
                       <FontAwesomeIcon
                         icon={faGasPump}

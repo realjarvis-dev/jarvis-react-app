@@ -7,6 +7,7 @@ import { formatUnits, parseUnits } from 'viem'
 import { computeNetworkFeeFromTxString } from '../jupiter/utils'
 import { clusterApiUrl, Connection } from '@solana/web3.js'
 import * as _ from "lodash";
+import { excelonMainnet } from 'viem/chains'
 
 const commonTokenMap = {
   SOL: 'So11111111111111111111111111111111111111112',
@@ -68,10 +69,21 @@ export const jupiterQuote = tool({
                 swapMode: "ExactIn"
             })
         } catch (error) {
-            return {
-                status: "Failed",
-                error: "Failed to get quote"
+            // retry
+            try {
+                quoteResult = await getJupiterOrder({
+                    inputMint: tokenInAddress,
+                    outputMint: tokenOutAddress,
+                    amount: amountInLamports.toString(),
+                    swapMode: "ExactIn"
+                })
+            } catch (error) {
+                return {
+                    status: "Failed",
+                    error: "Failed to get quote"
+                }
             }
+            
         }
 
         const connection = new Connection(context.networkContext?.rpcUrl || clusterApiUrl('mainnet-beta'))
@@ -86,9 +98,10 @@ export const jupiterQuote = tool({
         const numMarkets = _.uniq(allMarkets).length
 
         const amountOut = formatUnits(BigInt(quoteResult.outAmount), tokenOutDecimals)
-
+        const enoughBalance = quoteResult.transaction && quoteResult.transaction !== ""
         return {
             status: "Success",
+            instruction: enoughBalance ? "User has enough balance, you can ask if they want to proceed with the trade" : `User does not have enough balance of ${tokenIn} to trade ${amountIn} ${tokenIn}`,
             swapDetails: {
                 amountOut: amountOut,
                 networkFee: networkFee || 0,
