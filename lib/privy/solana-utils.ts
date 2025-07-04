@@ -14,7 +14,9 @@ import {
     VersionedTransaction,
     TransactionMessage,
     Commitment,
-    sendAndConfirmRawTransaction
+    sendAndConfirmRawTransaction,
+    Message,
+    VersionedMessage
     } from '@solana/web3.js';
 import { privy, getUserWallet, getUserSolWalletAddress } from './client';
 import { solanaConfig } from '@/lib/network/config';

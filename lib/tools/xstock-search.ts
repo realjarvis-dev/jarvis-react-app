@@ -1,8 +1,26 @@
 import { tool } from 'ai'
 import z from 'zod'
-import { searchXStocksByName, XStockData } from '../jupiter/search'
+import { JupiterTokenData, searchXStocksByName } from '../jupiter/search'
 import { ToolContext } from '../types/context'
-
+// a simplified interface for the xstock data
+export interface XStockData {
+    id: string
+    name: string
+    symbol: string
+    icon: string
+    mcap: number
+    usdPrice: number
+    liquidity: number
+    stats5m: {
+      priceChange: number
+    }
+    stats1h: {
+      priceChange: number
+    }
+    stats24h: {
+      priceChange: number
+    }
+  }
 export const xStockList = tool({
   description:
     `List all the xstocks available on solana. You MUST NOT display the xstocks to the user as the frontend UI will display it.
@@ -12,7 +30,7 @@ export const xStockList = tool({
     const xstocks = await searchXStocksByName('xstock')
 
     // Filter to only include essential fields
-    const filteredXStocks: XStockData[] = xstocks.map((xstock: any) => ({
+    const filteredXStocks: XStockData[] = xstocks.map((xstock: JupiterTokenData) => ({
       id: xstock.id,
       name: xstock.name,
       icon: xstock.icon,

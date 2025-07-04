@@ -1,3 +1,4 @@
+
 import axios from 'axios'
 
 // Create a new axios instance for Jupiter Ultra API
@@ -15,7 +16,10 @@ export interface JupiterOrderRequest {
 }
 
 export interface JupiterOrderResponse {
-
+  router: string
+  priceImpact: number
+  inUsdValue: number
+  outUsdValue: number
   inputMint: string
   outputMint: string
   inAmount: string
@@ -177,10 +181,19 @@ export async function completeJupiterSwap(
   }
 }
 
-console.log(JSON.stringify(await getJupiterOrder({
-    inputMint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-    outputMint: "Xs7ZdzSHLU9ftNJsii5fCeJhoRWSC32SQGzGQtePxNu",
-    amount: "10000000",
-    taker: "7VkW8pL9ok28CZgB5qDKBU2zNtiwxPw3QKLaEBXqWJ2m",
-    swapMode: "ExactIn"
-}), null, 2))
+// console.log(JSON.stringify(await getJupiterOrder({
+//     inputMint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+//     outputMint: "Xs7ZdzSHLU9ftNJsii5fCeJhoRWSC32SQGzGQtePxNu",
+//     amount: "10000000",
+//     taker: "7VkW8pL9ok28CZgB5qDKBU2zNtiwxPw3QKLaEBXqWJ2m",
+//     swapMode: "ExactIn"
+// }), null, 2))
+// const quoteResult = await getJupiterOrder({
+//         inputMint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+//         outputMint: "Xs7ZdzSHLU9ftNJsii5fCeJhoRWSC32SQGzGQtePxNu",
+//         amount: "10000000",
+//         taker: "7VkW8pL9ok28CZgB5qDKBU2zNtiwxPw3QKLaEBXqWJ2m",
+//         swapMode: "ExactIn"
+//     })
+// const connection = new Connection(clusterApiUrl('mainnet-beta'))
+// console.log(await computeNetworkFeeFromTxString(quoteResult.transaction, connection))

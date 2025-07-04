@@ -2,7 +2,7 @@
 
 import { Check, Copy, Minus, TrendingDown, TrendingUp } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { XStockData } from '../../lib/jupiter/search'
+import { XStockData } from '../../lib/tools/xstock-search'
 import { CollapsibleMessage } from '../collapsible-message'
 import { DefaultSkeleton } from '../default-skeleton'
 import { ToolArgsSection } from '../section'

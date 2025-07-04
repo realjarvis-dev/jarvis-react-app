@@ -41,6 +41,7 @@ import {
 } from '../tools/wallet'
 import { NetworkContext, ToolContext } from '../types/context'
 import { xStockList } from '../tools/xstock-search'
+import { jupiterQuote } from '../tools/jupiter-trade'
 
 /**
  * Interface for tool definition with schema and execution function
@@ -791,6 +792,19 @@ export function createToolRegistry(model: string): ToolRegistry {
     description: 'List all the xstocks available on solana',
     schema: xStockList.parameters,
     execute: async (params, context) => xStockList.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3_READ,
+    supportedNetworks: ['solana']
+  })
+
+  registry.registerTool({
+    name: 'jupiter_quote',
+    description: 'Get the quote for a trade on Jupiter dex, can only be used for trading SOL, USDC, or any xStock',
+    schema: jupiterQuote.parameters,
+    execute: async (params, context) => jupiterQuote.execute(params, {
       toolCallId: context?.toolCallId || 'unknown',
       messages: context?.messages || [],
       networkContext: context?.networkContext!

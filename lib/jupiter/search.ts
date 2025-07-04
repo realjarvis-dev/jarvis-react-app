@@ -10,11 +10,12 @@ const cachedJupiterAxios = setupCache(jupiterAxios, {
 })
 
 // a simplified interface for the xstock data
-export interface XStockData {
+export interface JupiterTokenData {
   id: string
   name: string
   symbol: string
   icon: string
+  decimals: number
   mcap: number
   usdPrice: number
   liquidity: number
@@ -49,7 +50,7 @@ export async function searchTokens(mintAddress: string) {
   }
 }
 
-export async function searchXStocksByName(name: string): Promise<XStockData[]> {
+export async function searchXStocksByName(name: string): Promise<JupiterTokenData[]> {
   try {
     const response = await cachedJupiterAxios.get(
       'https://lite-api.jup.ag/tokens/v2/search',

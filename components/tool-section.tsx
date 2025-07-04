@@ -27,6 +27,7 @@ import { WalletFundingSection } from './wallet-funding-section'
 import { DeFiLlamaYieldsSection } from './defillama-yields-section'
 import { DeFiLlamaProtocolsSection } from './defillama-protocols-section'
 import { XStockListSection } from './jupiter/xstock-list-section'
+import { JupiterSwapQuoteSection } from './jupiter/swap-quote.section'
 
 interface ToolSectionProps {
   tool: ToolInvocation
@@ -294,6 +295,14 @@ export function ToolSection({
     case 'xstock_list':
       return (
         <XStockListSection
+          tool={tool}
+          isOpen={isOpen}
+          onOpenChange={onOpenChange}
+        />
+      )
+    case 'jupiter_quote':
+      return (
+        <JupiterSwapQuoteSection
           tool={tool}
           isOpen={isOpen}
           onOpenChange={onOpenChange}
