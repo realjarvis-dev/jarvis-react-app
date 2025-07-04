@@ -292,7 +292,8 @@ export const pendleZapInQuoteTool = tool({
       }
       
       const amountInWei = parseUnits(amountIn, tokenInDecimals)
-      const availableBalanceWei = BigInt(userTokenBalance.balance)
+      // const availableBalanceWei = BigInt(userTokenBalance.balance)
+      const availableBalanceWei = parseUnits(userTokenBalance.balance, tokenInDecimals)
       
       if (amountInWei > availableBalanceWei) {
         const availableBalance = (Number(availableBalanceWei) / Math.pow(10, tokenInDecimals)).toFixed(6)
@@ -486,7 +487,9 @@ export const pendleZapInExecuteTool = tool({
     }
     
     const amountInWei = parseUnits(amountIn, tokenInDecimals)
-    const availableBalanceWei = BigInt(userTokenBalance.balance)
+    // const availableBalanceWei = BigInt(userTokenBalance.balance)
+    const availableBalanceWei = parseUnits(userTokenBalance.balance, tokenInDecimals)
+
     
     if (amountInWei > availableBalanceWei) {
       const availableBalance = (Number(availableBalanceWei) / Math.pow(10, tokenInDecimals)).toFixed(6)
