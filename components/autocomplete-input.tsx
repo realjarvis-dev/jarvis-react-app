@@ -52,10 +52,13 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
     const [cursorPosition, setCursorPosition] = useState(0)
     const [isComposing, setIsComposing] = useState(false)
     const [isMounted, setIsMounted] = useState(false)
+    const [isTyping, setIsTyping] = useState(false)
     
     const textareaRef = useRef<HTMLTextAreaElement>(null)
     const suggestionEngine = useRef<any>(null)
     const networkContext = useNetwork()
+    const typingTimeoutRef = useRef<NodeJS.Timeout>()
+    const suggestionTimeoutRef = useRef<NodeJS.Timeout>()
     
     
     // Initialize suggestion engine on client side only
@@ -67,6 +70,16 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
       }).catch((error) => {
         console.error('Failed to load client suggestion engine:', error)
       })
+      
+      // Cleanup function to clear timeouts
+      return () => {
+        if (typingTimeoutRef.current) {
+          clearTimeout(typingTimeoutRef.current)
+        }
+        if (suggestionTimeoutRef.current) {
+          clearTimeout(suggestionTimeoutRef.current)
+        }
+      }
     }, [])
     
     
@@ -80,6 +93,11 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
     useEffect(() => {
       if (!isMounted || !networkContext) {
         return
+      }
+
+      // Clear previous suggestion timeout
+      if (suggestionTimeoutRef.current) {
+        clearTimeout(suggestionTimeoutRef.current)
       }
 
       const generateSuggestions = async () => {
@@ -185,11 +203,29 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
             }
           }
             
-          setSuggestions(newSuggestions)
+          // Filter out suggestions that exactly match the current input
+          const filteredSuggestions = newSuggestions.filter(suggestion => {
+            const currentInput = value.trim().toLowerCase()
+            const suggestionText = suggestion.text.toLowerCase()
+            
+            // Don't show suggestion if it exactly matches current input
+            if (currentInput === suggestionText) {
+              return false
+            }
+            
+            // Don't show suggestion if current input is longer and contains the suggestion
+            if (currentInput.length > suggestionText.length && currentInput.includes(suggestionText)) {
+              return false
+            }
+            
+            return true
+          })
           
-          // Only show popover if we have suggestions and user is typing a short query
+          setSuggestions(filteredSuggestions)
+          
+          // Only show popover if we have suggestions, user is not actively typing, and input is appropriate
           // Never show popover with "No suggestions found" - just hide it completely
-          if (newSuggestions.length > 0 && value.trim().length > 0 && value.trim().length <= 15) {
+          if (filteredSuggestions.length > 0 && value.trim().length > 0 && value.trim().length <= 15 && !isTyping) {
             setIsOpen(true)
             setSelectedIndex(0) // Auto-select first suggestion
           } else {
@@ -203,10 +239,22 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
         }
       }
 
-      // Debounce suggestions generation
-      const timeoutId = setTimeout(generateSuggestions, 150)
-      return () => clearTimeout(timeoutId)
-    }, [value, isMounted, networkContext, cursorPosition, suggestionEngine.current])
+      // Only generate suggestions if user is not actively typing
+      // Use longer delay to ensure user has stopped typing
+      if (!isTyping && value.trim().length > 0) {
+        suggestionTimeoutRef.current = setTimeout(generateSuggestions, 500)
+      } else {
+        // Hide suggestions immediately if user is typing
+        setIsOpen(false)
+        setSelectedIndex(-1)
+      }
+
+      return () => {
+        if (suggestionTimeoutRef.current) {
+          clearTimeout(suggestionTimeoutRef.current)
+        }
+      }
+    }, [value, isMounted, networkContext, cursorPosition, isTyping])
 
     // Handle keyboard navigation
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -280,14 +328,25 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
         afterCursor
 
       onChange(newValue)
+      
+      // Immediately hide suggestions and clear state
       setIsOpen(false)
       setSelectedIndex(-1)
+      setSuggestions([])
+      
+      // Set typing state to prevent immediate re-showing of suggestions
+      setIsTyping(true)
 
       // Set cursor position after the inserted text
       setTimeout(() => {
         const newCursorPos = wordStart + suggestion.text.length
         textarea.setSelectionRange(newCursorPos, newCursorPos)
         setCursorPosition(newCursorPos)
+        
+        // Clear typing state after a short delay to allow normal typing detection
+        setTimeout(() => {
+          setIsTyping(false)
+        }, 100)
       }, 0)
     }
 
@@ -296,6 +355,19 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
       const newValue = e.target.value
       onChange(newValue)
       setCursorPosition(e.target.selectionStart || 0)
+      
+      // Set typing state to true when user types
+      setIsTyping(true)
+      
+      // Clear previous typing timeout
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current)
+      }
+      
+      // Set typing to false after user stops typing for 300ms
+      typingTimeoutRef.current = setTimeout(() => {
+        setIsTyping(false)
+      }, 300)
     }
 
     // Handle composition events
@@ -317,7 +389,8 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
 
     // Always render the same structure to avoid hydration mismatch
     // Just disable suggestions on server side
-    const shouldShowPopover = isMounted && isOpen
+    // Don't show popover if user is actively typing
+    const shouldShowPopover = isMounted && isOpen && !isTyping
 
     
     return (
