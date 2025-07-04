@@ -106,16 +106,16 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
 
           // Check if user has already provided a complete query
           const input = value.toLowerCase().trim()
-          const isCompleteQuery = input.length > 10 && (
-            input.includes('check') && input.includes('balance') ||
-            input.includes('swap') && input.includes('for') ||
-            input.includes('find') && input.includes('opportunities') ||
-            input.includes('get') && input.includes('price') ||
-            input.includes('compare') && input.includes('returns') ||
-            input.split(' ').length >= 4 // 4+ words likely indicates a complete query
+          const isCompleteQuery = input.length > 15 && (
+            (input.includes('check') && input.includes('balance')) ||
+            (input.includes('swap') && input.includes('for')) ||
+            (input.includes('find') && input.includes('opportunities')) ||
+            (input.includes('get') && input.includes('price')) ||
+            (input.includes('compare') && input.includes('returns'))
+            // Removed word count check as it was too restrictive
           )
 
-          // Don't show suggestions if user has a complete query
+          // Don't show suggestions if user has a very specific complete query
           if (isCompleteQuery) {
             setSuggestions([])
             setIsOpen(false)
@@ -135,7 +135,7 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
             newSuggestions = await suggestionEngine.current.generateSuggestions(context)
           } else {
             // Fallback to simple inline suggestions
-            if (input && input.length <= 10) { // Only suggest for short inputs
+            if (input && input.length <= 50) { // Allow suggestions for longer inputs
               // Simple pattern matching for common crypto actions
               if (input.includes('check') || input.includes('balance')) {
                 newSuggestions.push({
@@ -223,11 +223,11 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
           
           setSuggestions(filteredSuggestions)
           
-          // Only show popover if we have suggestions, user is not actively typing, and input is appropriate
-          // Never show popover with "No suggestions found" - just hide it completely
-          if (filteredSuggestions.length > 0 && value.trim().length > 0 && value.trim().length <= 15 && !isTyping) {
+          // Always show popover when there's input to make autocomplete feel always-on
+          // This provides consistent UX and users feel autocomplete is always available
+          if (value.trim().length > 0 && value.trim().length <= 25) {
             setIsOpen(true)
-            setSelectedIndex(0) // Auto-select first suggestion
+            setSelectedIndex(-1) // Don't auto-select to avoid blocking typing
           } else {
             setIsOpen(false)
             setSelectedIndex(-1)
@@ -239,14 +239,15 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
         }
       }
 
-      // Only generate suggestions if user is not actively typing
-      // Use longer delay to ensure user has stopped typing
-      if (!isTyping && value.trim().length > 0) {
-        suggestionTimeoutRef.current = setTimeout(generateSuggestions, 500)
+      // Generate suggestions in real-time as user types
+      // Use minimal delay to keep it responsive but not overwhelming
+      if (value.trim().length > 0) {
+        suggestionTimeoutRef.current = setTimeout(generateSuggestions, 100)
       } else {
-        // Hide suggestions immediately if user is typing
+        // Hide suggestions only when input is empty
         setIsOpen(false)
         setSelectedIndex(-1)
+        setSuggestions([])
       }
 
       return () => {
@@ -254,7 +255,7 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
           clearTimeout(suggestionTimeoutRef.current)
         }
       }
-    }, [value, isMounted, networkContext, cursorPosition, isTyping])
+    }, [value, isMounted, networkContext, cursorPosition])
 
     // Handle keyboard navigation
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -268,13 +269,13 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
           case 'ArrowDown':
             e.preventDefault()
             setSelectedIndex(prev => 
-              prev < suggestions.length - 1 ? prev + 1 : 0
+              prev === -1 ? 0 : (prev < suggestions.length - 1 ? prev + 1 : 0)
             )
             return
           case 'ArrowUp':
             e.preventDefault()
             setSelectedIndex(prev => 
-              prev > 0 ? prev - 1 : suggestions.length - 1
+              prev === -1 ? suggestions.length - 1 : (prev > 0 ? prev - 1 : suggestions.length - 1)
             )
             return
           case 'Tab':
@@ -346,7 +347,7 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
         // Clear typing state after a short delay to allow normal typing detection
         setTimeout(() => {
           setIsTyping(false)
-        }, 100)
+        }, 50)
       }, 0)
     }
 
@@ -364,10 +365,10 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
         clearTimeout(typingTimeoutRef.current)
       }
       
-      // Set typing to false after user stops typing for 300ms
+      // Set typing to false after user stops typing for 150ms
       typingTimeoutRef.current = setTimeout(() => {
         setIsTyping(false)
-      }, 300)
+      }, 150)
     }
 
     // Handle composition events
@@ -389,8 +390,8 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
 
     // Always render the same structure to avoid hydration mismatch
     // Just disable suggestions on server side
-    // Don't show popover if user is actively typing
-    const shouldShowPopover = isMounted && isOpen && !isTyping
+    // Always show popover when open to make autocomplete feel always-on
+    const shouldShowPopover = isMounted && isOpen
 
     
     return (
@@ -406,7 +407,7 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
               onCompositionEnd={handleCompositionEnd}
               placeholder={placeholder}
               className={cn(
-                "resize-none border-0 bg-transparent px-0 py-0 text-base shadow-none focus-visible:ring-0",
+                "resize-none border-0 bg-transparent px-0 py-0 text-base shadow-none focus-visible:ring-0 outline-none focus:outline-none",
                 className
               )}
               disabled={disabled}
@@ -416,42 +417,49 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
           </div>
         </PopoverTrigger>
         
-        {shouldShowPopover && suggestions.length > 0 && (
+        {shouldShowPopover && (
           <PopoverContent 
-            className="w-80 p-0 z-[9999]" 
+            className="w-80 p-0 border bg-background shadow-lg rounded-md overflow-hidden" 
             align="start"
             side="bottom"
             sideOffset={8}
-            style={{ zIndex: 9999 }}
+            onOpenAutoFocus={(e) => e.preventDefault()}
+            onCloseAutoFocus={(e) => e.preventDefault()}
           >
-            <Command className="border-0">
-              <CommandList>
-                <CommandGroup>
-                  {suggestions.map((suggestion, index) => (
-                    <CommandItem
-                      key={suggestion.id}
-                      value={suggestion.text}
-                      onSelect={() => applySuggestion(suggestion)}
-                      className={cn(
-                        "flex items-center gap-2 px-3 py-2 cursor-pointer",
-                        index === selectedIndex && "bg-accent text-accent-foreground"
-                      )}
-                    >
-                      {suggestion.icon && getIcon(suggestion.icon)}
-                      <div className="flex flex-col items-start gap-0.5 flex-1 min-w-0">
-                        <div className="font-medium text-sm truncate w-full">
-                          {suggestion.text}
+            <Command className="border-0 bg-transparent">
+              <CommandList className="max-h-[200px] overflow-y-auto">
+                {suggestions.length > 0 ? (
+                  <CommandGroup className="p-0">
+                    {suggestions.map((suggestion, index) => (
+                      <CommandItem
+                        key={suggestion.id}
+                        value={suggestion.text}
+                        onSelect={() => applySuggestion(suggestion)}
+                        className={cn(
+                          "flex items-center gap-2 px-3 py-2 cursor-pointer border-0 hover:bg-accent hover:text-accent-foreground",
+                          index === selectedIndex && "bg-accent text-accent-foreground"
+                        )}
+                      >
+                        {suggestion.icon && getIcon(suggestion.icon)}
+                        <div className="flex flex-col items-start gap-0.5 flex-1 min-w-0">
+                          <div className="font-medium text-sm truncate w-full">
+                            {suggestion.text}
+                          </div>
+                          <div className="text-xs text-muted-foreground truncate w-full">
+                            {suggestion.description}
+                          </div>
                         </div>
-                        <div className="text-xs text-muted-foreground truncate w-full">
-                          {suggestion.description}
+                        <div className="text-xs text-muted-foreground capitalize px-1.5 py-0.5 bg-muted rounded">
+                          {suggestion.category}
                         </div>
-                      </div>
-                      <div className="text-xs text-muted-foreground capitalize px-1.5 py-0.5 bg-muted rounded">
-                        {suggestion.category}
-                      </div>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                ) : (
+                  <div className="px-3 py-2 text-sm text-muted-foreground text-center">
+                    Continue typing for suggestions...
+                  </div>
+                )}
               </CommandList>
             </Command>
           </PopoverContent>
