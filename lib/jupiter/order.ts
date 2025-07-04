@@ -2,7 +2,7 @@ import axios from 'axios'
 
 // Create a new axios instance for Jupiter Ultra API
 const jupiterUltraAxios = axios.create({
-  baseURL: 'https://lite-api.jup.ag'
+  baseURL: 'https://ultra-api.jup.ag'
 })
 
 // Types for Jupiter Ultra API
@@ -11,6 +11,7 @@ export interface JupiterOrderRequest {
   outputMint: string
   amount: string
   taker?: string
+  swapMode: "ExactIn" | "ExactOut"
 }
 
 export interface JupiterOrderResponse {
@@ -97,7 +98,7 @@ export async function getJupiterOrder(
 ): Promise<JupiterOrderResponse> {
   try {
     const response = await jupiterUltraAxios.get<JupiterOrderResponse>(
-      '/ultra/v1/order',
+      '/order',
       {
         params
       }
@@ -177,8 +178,9 @@ export async function completeJupiterSwap(
 }
 
 console.log(JSON.stringify(await getJupiterOrder({
-    inputMint: "So11111111111111111111111111111111111111112",
-    outputMint: "XsDoVfqeBukxuZHWhdvWHBhgEHjGNst4MLodqsJHzoB",
-    amount: "1000000000",
-    taker: "7VkW8pL9ok28CZgB5qDKBU2zNtiwxPw3QKLaEBXqWJ2m"
+    inputMint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    outputMint: "Xs7ZdzSHLU9ftNJsii5fCeJhoRWSC32SQGzGQtePxNu",
+    amount: "10000000",
+    taker: "7VkW8pL9ok28CZgB5qDKBU2zNtiwxPw3QKLaEBXqWJ2m",
+    swapMode: "ExactIn"
 }), null, 2))
