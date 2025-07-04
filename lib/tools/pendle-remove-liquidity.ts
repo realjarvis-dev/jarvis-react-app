@@ -141,8 +141,20 @@ export const pendleZapOutQuoteTool = tool({
       }
     }
     
+    // Helper function to safely convert to BigInt, handling decimal strings
+    const safeBigInt = (value: string): bigint => {
+      // If value contains decimal point, it's already formatted
+      if (value.includes('.')) {
+        // Convert decimal to wei (multiply by 10^18)
+        const [whole, decimal = ''] = value.split('.')
+        const paddedDecimal = decimal.padEnd(18, '0').slice(0, 18)
+        return BigInt(whole + paddedDecimal)
+      }
+      return BigInt(value)
+    }
+
     const amountLpInWei = parseUnits(amountLpIn, 18)
-    const availableBalanceWei = BigInt(lpToken.balance)
+    const availableBalanceWei = safeBigInt(lpToken.balance)
     
     if (amountLpInWei > availableBalanceWei) {
       const availableBalance = (Number(availableBalanceWei) / Math.pow(10, 18)).toFixed(6)
@@ -319,7 +331,19 @@ export const pendleZapOutExecuteTool = tool({
       }
     }
     
-    const availableBalanceWei = BigInt(lpToken.balance)
+    // Helper function to safely convert to BigInt, handling decimal strings
+    const safeBigInt = (value: string): bigint => {
+      // If value contains decimal point, it's already formatted
+      if (value.includes('.')) {
+        // Convert decimal to wei (multiply by 10^18)
+        const [whole, decimal = ''] = value.split('.')
+        const paddedDecimal = decimal.padEnd(18, '0').slice(0, 18)
+        return BigInt(whole + paddedDecimal)
+      }
+      return BigInt(value)
+    }
+
+    const availableBalanceWei = safeBigInt(lpToken.balance)
     
     if (amountLpInWei > availableBalanceWei) {
       const availableBalance = (Number(availableBalanceWei) / Math.pow(10, 18)).toFixed(6)
