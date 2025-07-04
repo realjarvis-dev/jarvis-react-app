@@ -4,7 +4,9 @@ import { searchXStocksByName, XStockData } from '../jupiter/search'
 import { ToolContext } from '../types/context'
 
 export const xStockList = tool({
-  description: 'List all the xstocks available on solana',
+  description:
+    `List all the xstocks available on solana. You MUST NOT display the xstocks to the user as the frontend UI will display it.
+    Only acknowledge that you have fetched the xstocks, don't display them.`,
   parameters: z.object({}),
   execute: async (params, context: ToolContext) => {
     const xstocks = await searchXStocksByName('xstock')
@@ -30,8 +32,8 @@ export const xStockList = tool({
     }))
 
     return {
-    //   _uiDisplayTool: true,
-      summary: `Fetched ${filteredXStocks.length} xstocks`,
+      _uiDisplayTool: true,
+      instructions: `You MUST NOT display the xstocks to the user as the frontend UI will display it.`,
       data: filteredXStocks
     }
   }

@@ -45,7 +45,7 @@ function getPriceChangeColor(change: number): string {
 function getPriceChangeIcon(change: number) {
   if (change > 0) return <TrendingUp className="w-3 h-3" />
   if (change < 0) return <TrendingDown className="w-3 h-3" />
-  return <Minus className="w-3 h-3" />
+  return null
 }
 
 export function XStockCard({ xstock }: XStockCardProps) {
@@ -84,20 +84,27 @@ export function XStockCard({ xstock }: XStockCardProps) {
           </div>
           <div className="min-w-0 flex-1">
             <CardTitle className="text-sm font-semibold text-white truncate">
-              {xstock.name}
+              {xstock.symbol}
+              <Button
+              onClick={onCopy}
+              variant="ghost"
+              size="icon"
+              className="size-5 sm:size-6 shrink-0"
+              aria-label="Copy address"
+            >
+              {hasCopied ? (
+                <Check className="size-2 sm:size-3 text-green-500" />
+              ) : (
+                <Copy className="size-2 sm:size-3" />
+              )}
+            </Button>
             </CardTitle>
             <div className="flex items-center gap-2 mt-1">
               <Badge
                 variant="outline"
-                className="h-5 px-2 text-xs border-emerald-500/50 text-emerald-400"
+                className="h-5 px-2 text-xs border-emerald-500/50 text-emerald-400 truncate"
               >
-                {xstock.symbol}
-              </Badge>
-              <Badge
-                variant="outline"
-                className="h-5 px-2 text-xs border-blue-500/50 text-blue-400"
-              >
-                xStocks
+                {xstock.name.replace('xStock', '')}
               </Badge>
             </div>
           </div>
@@ -113,7 +120,7 @@ export function XStockCard({ xstock }: XStockCardProps) {
             </div>
           </div>
           <div className="text-center p-3 rounded-lg bg-white/5">
-            <div className="text-xs text-blue-200/80 mb-1">Market Cap</div>
+            <div className="text-xs text-blue-200/80 mb-1">MCap</div>
             <div className="font-semibold text-sm text-white">
               {formatMarketCap(xstock.mcap)}
             </div>
@@ -127,11 +134,11 @@ export function XStockCard({ xstock }: XStockCardProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-2 mb-4">
-          <div className="text-center p-2 rounded-lg bg-white/5">
-            <div className="text-xs text-blue-200/80 mb-1">5m</div>
+        <div className="mb-4">
+          <div className="flex items-center justify-between p-2 rounded-lg bg-white/5 mb-2">
+            <div className="text-xs text-blue-200/80">5m</div>
             <div
-              className={`flex items-center justify-center gap-1 text-xs font-semibold ${getPriceChangeColor(
+              className={`flex items-center gap-1 text-xs font-semibold ${getPriceChangeColor(
                 xstock.stats5m.priceChange
               )}`}
             >
@@ -139,10 +146,10 @@ export function XStockCard({ xstock }: XStockCardProps) {
               {formatPriceChange(xstock.stats5m.priceChange)}
             </div>
           </div>
-          <div className="text-center p-2 rounded-lg bg-white/5">
-            <div className="text-xs text-blue-200/80 mb-1">1h</div>
+          <div className="flex items-center justify-between p-2 rounded-lg bg-white/5 mb-2">
+            <div className="text-xs text-blue-200/80">1h</div>
             <div
-              className={`flex items-center justify-center gap-1 text-xs font-semibold ${getPriceChangeColor(
+              className={`flex items-center gap-1 text-xs font-semibold ${getPriceChangeColor(
                 xstock.stats1h.priceChange
               )}`}
             >
@@ -150,10 +157,10 @@ export function XStockCard({ xstock }: XStockCardProps) {
               {formatPriceChange(xstock.stats1h.priceChange)}
             </div>
           </div>
-          <div className="text-center p-2 rounded-lg bg-white/5">
-            <div className="text-xs text-blue-200/80 mb-1">24h</div>
+          <div className="flex items-center justify-between p-2 rounded-lg bg-white/5">
+            <div className="text-xs text-blue-200/80">24h</div>
             <div
-              className={`flex items-center justify-center gap-1 text-xs font-semibold ${getPriceChangeColor(
+              className={`flex items-center gap-1 text-xs font-semibold ${getPriceChangeColor(
                 xstock.stats24h.priceChange
               )}`}
             >
@@ -163,10 +170,10 @@ export function XStockCard({ xstock }: XStockCardProps) {
           </div>
         </div>
 
-        <div className="flex items-center justify-between pt-3 border-t border-white/5">
+        {/* <div className="flex items-center justify-between pt-3 border-t border-white/5">
           <div className="flex items-center gap-2 text-xs text-blue-200/80">
             <span>
-              Address: {xstock.id.slice(0, 5)}...{xstock.id.slice(-5)}
+              {xstock.id.slice(0, 5)}...{xstock.id.slice(-5)}
             </span>
             <Button
               onClick={onCopy}
@@ -181,8 +188,8 @@ export function XStockCard({ xstock }: XStockCardProps) {
                 <Copy className="size-2 sm:size-3" />
               )}
             </Button>
-          </div>
-        </div>
+          </div> */}
+        {/* </div> */}
       </CardContent>
     </Card>
   )
