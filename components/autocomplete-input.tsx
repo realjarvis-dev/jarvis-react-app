@@ -32,6 +32,254 @@ export interface AutoCompleteInputRef {
   getTextareaRef: () => HTMLTextAreaElement | null
 }
 
+// Calculate relevance score based on user input
+const calculateRelevanceScore = (suggestionText: string, userInput: string, currentWord: string): number => {
+  let score = 0
+  const suggestion = suggestionText.toLowerCase()
+  const input = userInput.toLowerCase()
+  const word = currentWord.toLowerCase()
+  
+  // Exact match with current word gets highest score
+  if (suggestion.includes(word) && word.length > 1) {
+    score += 100
+    // Bonus if it starts with the current word
+    if (suggestion.startsWith(word)) {
+      score += 50
+    }
+  }
+  
+  // Check for partial matches in suggestion text
+  const suggestionWords = suggestion.split(' ')
+  const inputWords = input.split(' ')
+  
+  suggestionWords.forEach(suggWord => {
+    if (word && suggWord.startsWith(word)) {
+      score += 75
+    }
+    inputWords.forEach(inputWord => {
+      if (inputWord.length > 2 && suggWord.includes(inputWord)) {
+        score += 25
+      }
+    })
+  })
+  
+  return score
+}
+
+// Network-aware suggestion helper
+const getNetworkAwareSuggestions = (input: string, network: string, currentWord: string) => {
+  const suggestions: any[] = []
+  
+  // Network-specific protocols and opportunities
+  const networkProtocols = {
+    'ethereum': ['Uniswap', 'Aave', 'Compound', 'MakerDAO', 'Pendle', 'Lido'],
+    'arbitrum': ['GMX', 'Camelot', 'Radiant', 'Pendle', 'Uniswap V3'],
+    'base': ['Aerodrome', 'Baseswap', 'Seamless', 'Pendle'],
+    'polygon': ['Quickswap', 'Aave', 'Pendle', 'Balancer'],
+    'optimism': ['Velodrome', 'Aave', 'Pendle', 'Uniswap V3']
+  }
+  
+  const currentProtocols = networkProtocols[network?.toLowerCase() as keyof typeof networkProtocols] || networkProtocols.ethereum
+  
+  // Context-aware suggestions based on input
+  if (input.includes('find') || input.includes('discover') || input.includes('explore')) {
+    currentProtocols.forEach((protocol, index) => {
+      const suggestionText = `Find ${protocol} opportunities`
+      const baseScore = 100 - index
+      const relevanceScore = calculateRelevanceScore(suggestionText, input, currentWord)
+      
+      suggestions.push({
+        id: `find-${protocol.toLowerCase()}`,
+        text: suggestionText,
+        description: `Discover ${protocol} yield farming and trading opportunities`,
+        category: 'command',
+        icon: 'TrendingUp',
+        score: baseScore + relevanceScore
+      })
+    })
+  }
+  
+  if (input.includes('yield') || input.includes('earn') || input.includes('farm')) {
+    currentProtocols.slice(0, 3).forEach((protocol, index) => {
+      const suggestionText = `Show ${protocol} yield opportunities`
+      const baseScore = 95 - index
+      const relevanceScore = calculateRelevanceScore(suggestionText, input, currentWord)
+      
+      suggestions.push({
+        id: `yield-${protocol.toLowerCase()}`,
+        text: suggestionText,
+        description: `View current ${protocol} yield farming options`,
+        category: 'command',
+        icon: 'BarChart3',
+        score: baseScore + relevanceScore
+      })
+    })
+  }
+  
+  return suggestions
+}
+
+// Check if suggestion is already in the input
+const isSuggestionAlreadyUsed = (suggestionText: string, userInput: string): boolean => {
+  const suggestion = suggestionText.toLowerCase().trim()
+  const input = userInput.toLowerCase().trim()
+  
+  // Check if the exact suggestion text appears in the input
+  if (input.includes(suggestion)) {
+    return true
+  }
+  
+  // Special handling for "Find [Protocol] opportunities" pattern
+  if (suggestion.startsWith('find ') && suggestion.includes(' opportunities')) {
+    // If input already has any "Find [something] opportunities", block similar suggestions
+    if (input.includes('find ') && input.includes(' opportunities')) {
+      return true
+    }
+  }
+  
+  // Special handling for protocol-specific suggestions
+  const protocolPatterns = [
+    /find \w+ opportunities/,
+    /show \w+ (yields?|opportunities)/,
+    /check \w+ (balance|positions)/,
+    /swap \w+ for \w+/
+  ]
+  
+  for (const pattern of protocolPatterns) {
+    if (pattern.test(suggestion) && pattern.test(input)) {
+      return true
+    }
+  }
+  
+  // Check if key parts of the suggestion are already in the input
+  const suggestionWords = suggestion.split(' ').filter(word => word.length > 3)
+  const inputWords = input.split(' ')
+  
+  // If most key words from suggestion are in input, consider it used
+  const usedWords = suggestionWords.filter(word => 
+    inputWords.some(inputWord => inputWord.includes(word) || word.includes(inputWord))
+  )
+  
+  return usedWords.length >= Math.max(1, suggestionWords.length * 0.7)
+}
+
+// Contextual suggestion helper
+const getContextualSuggestions = (input: string, currentWord: string, network: string) => {
+  const suggestions: any[] = []
+  
+  // Basic actions
+  if (input.includes('check') || input.includes('balance')) {
+    const balanceSuggestion = 'Check my wallet balance'
+    if (!isSuggestionAlreadyUsed(balanceSuggestion, input)) {
+      suggestions.push({
+        id: 'check-balance',
+        text: balanceSuggestion,
+        description: 'View your current token balances',
+        category: 'command',
+        icon: 'Wallet',
+        score: 90 + calculateRelevanceScore(balanceSuggestion, input, currentWord)
+      })
+    }
+  }
+  
+  if (input.includes('swap') || input.startsWith('sw')) {
+    const swapSuggestion = 'Swap ETH for USDC'
+    if (!isSuggestionAlreadyUsed(swapSuggestion, input)) {
+      suggestions.push({
+        id: 'swap-tokens',
+        text: swapSuggestion,
+        description: 'Exchange tokens on the current network',
+        category: 'command',
+        icon: 'ArrowRightLeft',
+        score: 85 + calculateRelevanceScore(swapSuggestion, input, currentWord)
+      })
+    }
+  }
+  
+  if (input.includes('gas') || input.includes('fee')) {
+    const gasSuggestion = 'Check current gas prices'
+    if (!isSuggestionAlreadyUsed(gasSuggestion, input)) {
+      suggestions.push({
+        id: 'gas-price',
+        text: gasSuggestion,
+        description: 'Get network fee information',
+        category: 'command',
+        icon: 'Fuel',
+        score: 90 + calculateRelevanceScore(gasSuggestion, input, currentWord)
+      })
+    }
+  }
+  
+  // Network-specific tokens
+  const networkTokens = {
+    'ethereum': ['ETH', 'USDC', 'USDT', 'DAI', 'AAVE', 'UNI'],
+    'arbitrum': ['ETH', 'USDC', 'ARB', 'GMX', 'MAGIC'],
+    'base': ['ETH', 'USDC', 'AERO', 'BALD'],
+    'polygon': ['MATIC', 'USDC', 'USDT', 'QUICK'],
+    'optimism': ['ETH', 'USDC', 'OP', 'VELO']
+  }
+  
+  const currentTokens = networkTokens[network?.toLowerCase() as keyof typeof networkTokens] || networkTokens.ethereum
+  
+  // Token-specific suggestions
+  currentTokens.forEach((token, index) => {
+    if (currentWord.includes(token.toLowerCase()) || token.toLowerCase().startsWith(currentWord)) {
+      const tokenSuggestion = `Check ${token} balance`
+      if (!isSuggestionAlreadyUsed(tokenSuggestion, input)) {
+        suggestions.push({
+          id: `token-${token}`,
+          text: tokenSuggestion,
+          description: `View ${token} token balance`,
+          category: 'token',
+          icon: 'Coins',
+          score: (80 - index) + calculateRelevanceScore(tokenSuggestion, input, currentWord)
+        })
+      }
+    }
+  })
+  
+  // Generic helpful suggestions
+  if (input.length > 3) {
+    const portfolioSuggestion = 'Show my portfolio overview'
+    const marketSuggestion = 'Analyze market trends'
+    
+    if (!isSuggestionAlreadyUsed(portfolioSuggestion, input)) {
+      suggestions.push({
+        id: 'portfolio-overview',
+        text: portfolioSuggestion,
+        description: 'View complete portfolio',
+        category: 'command',
+        icon: 'PieChart',
+        score: 75 + calculateRelevanceScore(portfolioSuggestion, input, currentWord)
+      })
+    }
+    
+    if (!isSuggestionAlreadyUsed(marketSuggestion, input)) {
+      suggestions.push({
+        id: 'market-analysis',
+        text: marketSuggestion,
+        description: 'Get market insights',
+        category: 'command',
+        icon: 'TrendingUp',
+        score: 70 + calculateRelevanceScore(marketSuggestion, input, currentWord)
+      })
+    }
+  }
+  
+  // Add network-aware suggestions
+  const networkSuggestions = getNetworkAwareSuggestions(input, network, currentWord)
+  // Filter out already used network suggestions
+  const filteredNetworkSuggestions = networkSuggestions.filter(suggestion => 
+    !isSuggestionAlreadyUsed(suggestion.text, input)
+  )
+  suggestions.push(...filteredNetworkSuggestions)
+  
+  // Sort by score and take top 8
+  return suggestions
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 8)
+}
+
 export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteInputProps>(
   ({ 
     value, 
@@ -121,15 +369,6 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
           const currentWord = words[words.length - 1] || ''
           const currentWordLower = currentWord.toLowerCase()
           
-          // Debug logging
-          console.log('Debug autocomplete:', {
-            input,
-            cursorPosition,
-            beforeCursor,
-            currentWord,
-            currentWordLower,
-            isPendleMatch: currentWordLower.includes('pendle') || currentWordLower.startsWith('pen')
-          })
 
           // Try to use the sophisticated suggestion engine if available
           if (suggestionEngine.current) {
@@ -140,262 +379,48 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
               cursorPosition
             }
 
-            newSuggestions = await suggestionEngine.current.generateSuggestions(context)
+            try {
+              newSuggestions = await suggestionEngine.current.generateSuggestions(context)
+              
+              // Add network-aware suggestions if the engine results are insufficient
+              if (newSuggestions.length < 3) {
+                const networkSuggestions = getNetworkAwareSuggestions(input, networkContext.selectedChain, currentWordLower)
+                // Filter out already used suggestions
+                const filteredNetworkSuggestions = networkSuggestions.filter(suggestion => 
+                  !isSuggestionAlreadyUsed(suggestion.text, value)
+                )
+                newSuggestions.push(...filteredNetworkSuggestions)
+              }
+            } catch (error) {
+              console.error('Suggestion engine error:', error)
+              newSuggestions = []
+            }
           } else {
-            // Fallback to simple inline suggestions - prioritize current word being typed
+            // Fallback to contextual suggestions based on user input and network
             if (input) {
-              // Prioritize suggestions based on current word at cursor - more flexible matching
-              if (currentWordLower.includes('pendle') || currentWordLower.startsWith('pen') || 
-                  currentWordLower === 'pendle' || input.includes('pendle')) {
-                // Pendle-specific suggestions
-                newSuggestions.push({
-                  id: 'pendle-opportunities',
-                  text: 'opportunities',
-                  description: 'Find Pendle yield farming opportunities',
-                  category: 'completion',
-                  icon: 'TrendingUp',
-                  score: 100
-                })
-                
-                newSuggestions.push({
-                  id: 'pendle-yields',
-                  text: 'PT yields',
-                  description: 'Show top Pendle PT yields',
-                  category: 'completion',
-                  icon: 'BarChart3',
-                  score: 95
-                })
-                
-                newSuggestions.push({
-                  id: 'pendle-positions',
-                  text: 'positions',
-                  description: 'Check my Pendle positions',
-                  category: 'completion',
-                  icon: 'PieChart',
-                  score: 90
-                })
-                
-                newSuggestions.push({
-                  id: 'pendle-compare',
-                  text: 'PT vs YT returns',
-                  description: 'Compare Pendle PT vs YT returns',
-                  category: 'completion',
-                  icon: 'GitCompare',
-                  score: 85
-                })
-              }
+              newSuggestions = getContextualSuggestions(input, currentWordLower, networkContext.selectedChain)
               
-              // Token-specific suggestions for current word
-              const currentTokens = ['ETH', 'USDC', 'USDT', 'DAI', 'AAVE', 'UNI']
-              currentTokens.forEach((token, index) => {
-                if (currentWordLower.includes(token.toLowerCase()) || token.toLowerCase().startsWith(currentWordLower)) {
-                  newSuggestions.push({
-                    id: `current-token-${token}`,
-                    text: `${token} balance`,
-                    description: `Check ${token} balance`,
-                    category: 'completion',
-                    icon: 'Coins',
-                    score: 80 - index
-                  })
-                }
-              })
-
-              // Enhanced contextual pattern matching - more flexible matching
-              const hasBalance = input.includes('check') || input.includes('balance') || input.includes('wallet')
-              const hasSwap = input.includes('swap') || input.startsWith('sw') || input.includes('exchange')
-              const hasGas = input.includes('gas') || input.includes('fee') || input.includes('cost')
-              const hasPendle = input.includes('pendle') || input.includes('yield') || input.includes('earn')
-              const hasPrice = input.includes('price') || input.includes('cost') || input.includes('value')
-              const hasToken = input.includes('token') || input.includes('coin') || input.includes('crypto')
-              
-              // Contextual suggestions based on what's already in the prompt
-              if (hasBalance && !hasSwap) {
-                newSuggestions.push({
-                  id: 'then-swap',
-                  text: 'and then swap some ETH for USDC',
-                  description: 'Follow up with a token swap',
-                  category: 'command',
-                  icon: 'ArrowRightLeft',
-                  score: 100
-                })
-              }
-              
-              if (hasSwap && !hasPendle) {
-                newSuggestions.push({
-                  id: 'then-opportunities',
-                  text: 'and find yield opportunities',
-                  description: 'Look for earning opportunities',
-                  category: 'command',
-                  icon: 'TrendingUp',
-                  score: 100
-                })
-              }
-              
-              if ((hasBalance || hasSwap) && !hasGas) {
-                newSuggestions.push({
-                  id: 'check-gas',
-                  text: 'and check current gas prices',
-                  description: 'Get network fee information',
-                  category: 'command',
-                  icon: 'Fuel',
-                  score: 95
-                })
-              }
-              
-              // Basic action suggestions
-              if (input.includes('check') || input.includes('balance')) {
-                newSuggestions.push({
-                  id: 'check-balance',
-                  text: 'Check my wallet balance',
-                  description: 'View your current token balances',
-                  category: 'command',
-                  icon: 'Wallet',
-                  score: 90
-                })
-              }
-              
-              if (input.includes('swap') || input.startsWith('sw')) {
-                newSuggestions.push({
-                  id: 'swap-tokens',
-                  text: 'Swap tokens',
-                  description: 'Exchange one token for another',
-                  category: 'command',
-                  icon: 'ArrowRightLeft',
-                  score: 85
-                })
-              }
-              
-              if (input.includes('gas') || input.includes('fee')) {
-                newSuggestions.push({
-                  id: 'gas-price',
-                  text: 'Check gas price',
-                  description: 'Get current network gas prices',
-                  category: 'command',
-                  icon: 'Fuel',
-                  score: 90
-                })
-              }
-              
-              if (input.includes('pendle') || input.includes('yield')) {
-                newSuggestions.push({
-                  id: 'pendle-opportunities',
-                  text: 'Find Pendle opportunities',
-                  description: 'Discover yield farming opportunities',
-                  category: 'command',
-                  icon: 'TrendingUp',
-                  score: 85
-                })
-              }
-              
-              // Additional contextual suggestions for continuous experience
-              if (hasPrice) {
-                newSuggestions.push({
-                  id: 'get-price',
-                  text: 'Get current price of ETH',
-                  description: 'Check token price',
-                  category: 'command',
-                  icon: 'DollarSign',
-                  score: 85
-                })
-              }
-              
-              if (hasToken) {
-                newSuggestions.push({
-                  id: 'token-info',
-                  text: 'Get token information',
-                  description: 'View token details',
-                  category: 'command',
-                  icon: 'Info',
-                  score: 80
-                })
-              }
-              
-              // Always provide some general suggestions to keep autocomplete active
-              if (input.length > 3) {
-                newSuggestions.push({
-                  id: 'portfolio-overview',
-                  text: 'Show my portfolio overview',
-                  description: 'View complete portfolio',
-                  category: 'command',
-                  icon: 'PieChart',
-                  score: 75
-                })
-                
-                newSuggestions.push({
-                  id: 'market-analysis',
-                  text: 'Analyze market trends',
-                  description: 'Get market insights',
-                  category: 'command',
-                  icon: 'TrendingUp',
-                  score: 70
-                })
-              }
-              
-              // Token suggestions - always show some tokens
-              const allTokens = ['ETH', 'USDC', 'USDT', 'DAI', 'PENDLE', 'AAVE', 'UNI']
-              allTokens.forEach((token, index) => {
-                if (token.toLowerCase().includes(input) || input.includes(token.toLowerCase()) || input.length > 5) {
-                  newSuggestions.push({
-                    id: `token-${token}`,
-                    text: `Check ${token} balance`,
-                    description: `View ${token} token balance`,
-                    category: 'token',
-                    icon: 'Coins',
-                    score: 65 - index
-                  })
-                }
-              })
-
-              // Sort by score and take top 8 for more options
-              newSuggestions = newSuggestions
-                .sort((a, b) => b.score - a.score)
-                .slice(0, 8)
-                
-              // Fallback: if no suggestions and input contains pendle, force show pendle suggestions
-              if (newSuggestions.length === 0 && input.includes('pendle')) {
-                newSuggestions = [
-                  {
-                    id: 'pendle-opportunities-fallback',
-                    text: 'Find Pendle opportunities',
-                    description: 'Discover Pendle yield farming opportunities',
-                    category: 'command',
-                    icon: 'TrendingUp',
-                    score: 100
-                  },
-                  {
-                    id: 'pendle-yields-fallback',
-                    text: 'Show Pendle PT yields',
-                    description: 'View top Pendle PT yields',
-                    category: 'command',
-                    icon: 'BarChart3',
-                    score: 95
-                  }
-                ]
-              }
             }
           }
             
-          // Filter out suggestions that exactly match the current input
-          const filteredSuggestions = newSuggestions.filter(suggestion => {
-            const currentInput = value.trim().toLowerCase()
-            const suggestionText = suggestion.text.toLowerCase()
-            
-            // Only filter out exact matches - allow all other suggestions to show
-            if (currentInput === suggestionText) {
-              return false
-            }
-            
-            return true
-          })
+          // Filter out suggestions that are already used and remove duplicates
+          const filteredSuggestions = newSuggestions.filter(suggestion => 
+            !isSuggestionAlreadyUsed(suggestion.text, value)
+          )
           
-          setSuggestions(filteredSuggestions)
+          // Remove duplicates by text
+          const uniqueSuggestions = filteredSuggestions.filter((suggestion, index, self) => 
+            index === self.findIndex(s => s.text === suggestion.text)
+          )
           
-          // Debug logging for filtered suggestions
-          console.log('Filtered suggestions:', filteredSuggestions)
+          // Sort by relevance score
+          const sortedSuggestions = uniqueSuggestions.sort((a, b) => b.score - a.score)
           
-          // Always show popover when there's input - keep suggestions active throughout typing
-          // This provides consistent UX and users feel autocomplete is always available
-          if (value.trim().length > 0) {
+          setSuggestions(sortedSuggestions)
+          
+          
+          // Show popover when there are relevant suggestions
+          if (sortedSuggestions.length > 0 && value.trim().length > 0) {
             setIsOpen(true)
             setSelectedIndex(-1) // Don't auto-select to avoid blocking typing
           } else {
@@ -509,13 +534,15 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
 
       onChange(newValue)
       
-      // Only reset selection, keep suggestions available for continuous editing
+      // Close the popover after selection
+      setIsOpen(false)
       setSelectedIndex(-1)
       
-      // Set cursor position after the inserted text
+      // Set cursor position after the inserted text and maintain focus
       setTimeout(() => {
         textarea.setSelectionRange(newCursorPos, newCursorPos)
         setCursorPosition(newCursorPos)
+        textarea.focus() // Keep focus on textarea for continuous typing
         
         // Allow immediate re-generation of suggestions for continuous context
         setIsTyping(false)
