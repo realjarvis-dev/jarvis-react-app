@@ -114,6 +114,23 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
             return
           }
 
+          // Extract the current word being typed at cursor position
+          const beforeCursor = value.slice(0, cursorPosition)
+          const afterCursor = value.slice(cursorPosition)
+          const words = beforeCursor.split(/\s+/)
+          const currentWord = words[words.length - 1] || ''
+          const currentWordLower = currentWord.toLowerCase()
+          
+          // Debug logging
+          console.log('Debug autocomplete:', {
+            input,
+            cursorPosition,
+            beforeCursor,
+            currentWord,
+            currentWordLower,
+            isPendleMatch: currentWordLower.includes('pendle') || currentWordLower.startsWith('pen')
+          })
+
           // Try to use the sophisticated suggestion engine if available
           if (suggestionEngine.current) {
             const context = {
@@ -125,13 +142,71 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
 
             newSuggestions = await suggestionEngine.current.generateSuggestions(context)
           } else {
-            // Fallback to simple inline suggestions - always show for any input length
+            // Fallback to simple inline suggestions - prioritize current word being typed
             if (input) {
-              // Enhanced contextual pattern matching
-              const hasBalance = input.includes('check') || input.includes('balance')
-              const hasSwap = input.includes('swap') || input.startsWith('sw')
-              const hasGas = input.includes('gas') || input.includes('fee')
-              const hasPendle = input.includes('pendle') || input.includes('yield')
+              // Prioritize suggestions based on current word at cursor - more flexible matching
+              if (currentWordLower.includes('pendle') || currentWordLower.startsWith('pen') || 
+                  currentWordLower === 'pendle' || input.includes('pendle')) {
+                // Pendle-specific suggestions
+                newSuggestions.push({
+                  id: 'pendle-opportunities',
+                  text: 'opportunities',
+                  description: 'Find Pendle yield farming opportunities',
+                  category: 'completion',
+                  icon: 'TrendingUp',
+                  score: 100
+                })
+                
+                newSuggestions.push({
+                  id: 'pendle-yields',
+                  text: 'PT yields',
+                  description: 'Show top Pendle PT yields',
+                  category: 'completion',
+                  icon: 'BarChart3',
+                  score: 95
+                })
+                
+                newSuggestions.push({
+                  id: 'pendle-positions',
+                  text: 'positions',
+                  description: 'Check my Pendle positions',
+                  category: 'completion',
+                  icon: 'PieChart',
+                  score: 90
+                })
+                
+                newSuggestions.push({
+                  id: 'pendle-compare',
+                  text: 'PT vs YT returns',
+                  description: 'Compare Pendle PT vs YT returns',
+                  category: 'completion',
+                  icon: 'GitCompare',
+                  score: 85
+                })
+              }
+              
+              // Token-specific suggestions for current word
+              const currentTokens = ['ETH', 'USDC', 'USDT', 'DAI', 'AAVE', 'UNI']
+              currentTokens.forEach((token, index) => {
+                if (currentWordLower.includes(token.toLowerCase()) || token.toLowerCase().startsWith(currentWordLower)) {
+                  newSuggestions.push({
+                    id: `current-token-${token}`,
+                    text: `${token} balance`,
+                    description: `Check ${token} balance`,
+                    category: 'completion',
+                    icon: 'Coins',
+                    score: 80 - index
+                  })
+                }
+              })
+
+              // Enhanced contextual pattern matching - more flexible matching
+              const hasBalance = input.includes('check') || input.includes('balance') || input.includes('wallet')
+              const hasSwap = input.includes('swap') || input.startsWith('sw') || input.includes('exchange')
+              const hasGas = input.includes('gas') || input.includes('fee') || input.includes('cost')
+              const hasPendle = input.includes('pendle') || input.includes('yield') || input.includes('earn')
+              const hasPrice = input.includes('price') || input.includes('cost') || input.includes('value')
+              const hasToken = input.includes('token') || input.includes('coin') || input.includes('crypto')
               
               // Contextual suggestions based on what's already in the prompt
               if (hasBalance && !hasSwap) {
@@ -212,25 +287,91 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
                 })
               }
               
-              // Token suggestions
-              const tokens = ['ETH', 'USDC', 'USDT', 'DAI', 'PENDLE', 'AAVE', 'UNI']
-              tokens.forEach((token, index) => {
-                if (token.toLowerCase().includes(input) || input.includes(token.toLowerCase())) {
+              // Additional contextual suggestions for continuous experience
+              if (hasPrice) {
+                newSuggestions.push({
+                  id: 'get-price',
+                  text: 'Get current price of ETH',
+                  description: 'Check token price',
+                  category: 'command',
+                  icon: 'DollarSign',
+                  score: 85
+                })
+              }
+              
+              if (hasToken) {
+                newSuggestions.push({
+                  id: 'token-info',
+                  text: 'Get token information',
+                  description: 'View token details',
+                  category: 'command',
+                  icon: 'Info',
+                  score: 80
+                })
+              }
+              
+              // Always provide some general suggestions to keep autocomplete active
+              if (input.length > 3) {
+                newSuggestions.push({
+                  id: 'portfolio-overview',
+                  text: 'Show my portfolio overview',
+                  description: 'View complete portfolio',
+                  category: 'command',
+                  icon: 'PieChart',
+                  score: 75
+                })
+                
+                newSuggestions.push({
+                  id: 'market-analysis',
+                  text: 'Analyze market trends',
+                  description: 'Get market insights',
+                  category: 'command',
+                  icon: 'TrendingUp',
+                  score: 70
+                })
+              }
+              
+              // Token suggestions - always show some tokens
+              const allTokens = ['ETH', 'USDC', 'USDT', 'DAI', 'PENDLE', 'AAVE', 'UNI']
+              allTokens.forEach((token, index) => {
+                if (token.toLowerCase().includes(input) || input.includes(token.toLowerCase()) || input.length > 5) {
                   newSuggestions.push({
                     id: `token-${token}`,
-                    text: token,
-                    description: `${token} token`,
+                    text: `Check ${token} balance`,
+                    description: `View ${token} token balance`,
                     category: 'token',
                     icon: 'Coins',
-                    score: 70 - index
+                    score: 65 - index
                   })
                 }
               })
 
-              // Sort by score and take top 6
+              // Sort by score and take top 8 for more options
               newSuggestions = newSuggestions
                 .sort((a, b) => b.score - a.score)
-                .slice(0, 6)
+                .slice(0, 8)
+                
+              // Fallback: if no suggestions and input contains pendle, force show pendle suggestions
+              if (newSuggestions.length === 0 && input.includes('pendle')) {
+                newSuggestions = [
+                  {
+                    id: 'pendle-opportunities-fallback',
+                    text: 'Find Pendle opportunities',
+                    description: 'Discover Pendle yield farming opportunities',
+                    category: 'command',
+                    icon: 'TrendingUp',
+                    score: 100
+                  },
+                  {
+                    id: 'pendle-yields-fallback',
+                    text: 'Show Pendle PT yields',
+                    description: 'View top Pendle PT yields',
+                    category: 'command',
+                    icon: 'BarChart3',
+                    score: 95
+                  }
+                ]
+              }
             }
           }
             
@@ -239,13 +380,8 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
             const currentInput = value.trim().toLowerCase()
             const suggestionText = suggestion.text.toLowerCase()
             
-            // Don't show suggestion if it exactly matches current input
+            // Only filter out exact matches - allow all other suggestions to show
             if (currentInput === suggestionText) {
-              return false
-            }
-            
-            // Don't show suggestion if current input is longer and contains the suggestion
-            if (currentInput.length > suggestionText.length && currentInput.includes(suggestionText)) {
               return false
             }
             
@@ -254,9 +390,12 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
           
           setSuggestions(filteredSuggestions)
           
-          // Always show popover when there's input and suggestions available
+          // Debug logging for filtered suggestions
+          console.log('Filtered suggestions:', filteredSuggestions)
+          
+          // Always show popover when there's input - keep suggestions active throughout typing
           // This provides consistent UX and users feel autocomplete is always available
-          if (value.trim().length > 0 && filteredSuggestions.length > 0) {
+          if (value.trim().length > 0) {
             setIsOpen(true)
             setSelectedIndex(-1) // Don't auto-select to avoid blocking typing
           } else {
@@ -353,11 +492,20 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
       const currentWord = words[words.length - 1] || ''
       const wordStart = beforeCursor.lastIndexOf(currentWord)
       
-      // Replace the current word with the suggestion
-      const newValue = 
-        currentValue.slice(0, wordStart) + 
-        suggestion.text + 
-        afterCursor
+      // Handle different types of suggestions
+      let newValue = ''
+      let newCursorPos = 0
+      
+      if (suggestion.category === 'completion') {
+        // For completion suggestions, append to current word
+        const spaceAfter = afterCursor.startsWith(' ') ? '' : ' '
+        newValue = beforeCursor + suggestion.text + spaceAfter + afterCursor
+        newCursorPos = beforeCursor.length + suggestion.text.length + spaceAfter.length
+      } else {
+        // For full suggestions, replace the current word
+        newValue = currentValue.slice(0, wordStart) + suggestion.text + afterCursor
+        newCursorPos = wordStart + suggestion.text.length
+      }
 
       onChange(newValue)
       
@@ -366,7 +514,6 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
       
       // Set cursor position after the inserted text
       setTimeout(() => {
-        const newCursorPos = wordStart + suggestion.text.length
         textarea.setSelectionRange(newCursorPos, newCursorPos)
         setCursorPosition(newCursorPos)
         
