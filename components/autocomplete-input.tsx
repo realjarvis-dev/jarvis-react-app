@@ -119,7 +119,7 @@ const getNetworkAwareSuggestions = (input: string, network: string, currentWord:
   return suggestions
 }
 
-// Check if suggestion is already in the input
+// Check if suggestion is already in the input or conflicts with user intent
 const isSuggestionAlreadyUsed = (suggestionText: string, userInput: string): boolean => {
   const suggestion = suggestionText.toLowerCase().trim()
   const input = userInput.toLowerCase().trim()
@@ -127,6 +127,22 @@ const isSuggestionAlreadyUsed = (suggestionText: string, userInput: string): boo
   // Check if the exact suggestion text appears in the input
   if (input.includes(suggestion)) {
     return true
+  }
+  
+  // If user has already chosen a specific action, don't suggest similar actions
+  // For example, if input contains "check price", don't suggest "check balance", "check yield", etc.
+  const userActionPatterns = [
+    { pattern: /check (price|rates?|cost)/, blockSimilar: /check (balance|yield|wallet|my|portfolio)/ },
+    { pattern: /check (balance|wallet)/, blockSimilar: /check (price|yield|rates?|cost)/ },
+    { pattern: /check (yield|farm|earning)/, blockSimilar: /check (price|balance|wallet)/ },
+    { pattern: /swap \w+/, blockSimilar: /check|find|show/ },
+    { pattern: /find \w+ opportunities/, blockSimilar: /check|swap/ }
+  ]
+  
+  for (const { pattern, blockSimilar } of userActionPatterns) {
+    if (pattern.test(input) && blockSimilar.test(suggestion)) {
+      return true
+    }
   }
   
   // Special handling for "Find [Protocol] opportunities" pattern
@@ -238,8 +254,40 @@ const getContextualSuggestions = (input: string, currentWord: string, network: s
     }
   })
   
-  // Generic helpful suggestions
-  if (input.length > 3) {
+  // Context-specific suggestions when user has chosen an action
+  if (input.includes('check price')) {
+    // User wants to check prices - suggest specific tokens/assets
+    const priceTargets = ['ETH', 'BTC', 'USDC', 'ARB', 'PENDLE']
+    priceTargets.forEach((token, index) => {
+      const priceSuggestion = `Check ${token} price`
+      if (!isSuggestionAlreadyUsed(priceSuggestion, input)) {
+        suggestions.push({
+          id: `price-${token}`,
+          text: priceSuggestion,
+          description: `Get current ${token} price`,
+          category: 'token',
+          icon: 'DollarSign',
+          score: 90 - index + calculateRelevanceScore(priceSuggestion, input, currentWord)
+        })
+      }
+    })
+  } else if (input.includes('swap') && !input.includes(' for ')) {
+    // User wants to swap but hasn't specified tokens yet
+    const swapSuggestions = ['Swap ETH for USDC', 'Swap USDC for ETH', 'Swap ETH for ARB']
+    swapSuggestions.forEach((swapText, index) => {
+      if (!isSuggestionAlreadyUsed(swapText, input)) {
+        suggestions.push({
+          id: `swap-${index}`,
+          text: swapText,
+          description: 'Exchange tokens',
+          category: 'command',
+          icon: 'ArrowRightLeft',
+          score: 85 - index + calculateRelevanceScore(swapText, input, currentWord)
+        })
+      }
+    })
+  } else if (input.length > 3 && !input.includes('check ') && !input.includes('swap ') && !input.includes('find ')) {
+    // Generic helpful suggestions only when user hasn't chosen a specific action
     const portfolioSuggestion = 'Show my portfolio overview'
     const marketSuggestion = 'Analyze market trends'
     
@@ -306,6 +354,7 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
     const networkContext = useNetwork()
     const typingTimeoutRef = useRef<NodeJS.Timeout>()
     const suggestionTimeoutRef = useRef<NodeJS.Timeout>()
+    const selectedItemRef = useRef<HTMLDivElement>(null)
     
     
     // Initialize suggestion engine on client side only
@@ -422,7 +471,7 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
           // Show popover when there are relevant suggestions
           if (sortedSuggestions.length > 0 && value.trim().length > 0) {
             setIsOpen(true)
-            setSelectedIndex(-1) // Don't auto-select to avoid blocking typing
+            setSelectedIndex(0) // Auto-select first item by default
           } else {
             setIsOpen(false)
             setSelectedIndex(-1)
@@ -452,6 +501,22 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
       }
     }, [value, isMounted, networkContext, cursorPosition])
 
+    // Scroll selected item into view
+    const scrollItemIntoView = (index: number) => {
+      setTimeout(() => {
+        const itemElement = document.querySelector(`[data-item-index="${index}"]`) as HTMLElement
+        
+        if (itemElement) {
+          // Use scrollIntoView for reliable scrolling
+          itemElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest',
+            inline: 'nearest'
+          })
+        }
+      }, 0)
+    }
+
     // Handle keyboard navigation
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       if (isComposing) {
@@ -463,21 +528,36 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
         switch (e.key) {
           case 'ArrowDown':
             e.preventDefault()
-            setSelectedIndex(prev => 
-              prev === -1 ? 0 : (prev < suggestions.length - 1 ? prev + 1 : 0)
-            )
+            setSelectedIndex(prev => {
+              const newIndex = prev === -1 ? 0 : (prev < suggestions.length - 1 ? prev + 1 : 0)
+              scrollItemIntoView(newIndex)
+              return newIndex
+            })
             return
           case 'ArrowUp':
             e.preventDefault()
-            setSelectedIndex(prev => 
-              prev === -1 ? suggestions.length - 1 : (prev > 0 ? prev - 1 : suggestions.length - 1)
-            )
+            setSelectedIndex(prev => {
+              const newIndex = prev === -1 ? suggestions.length - 1 : (prev > 0 ? prev - 1 : suggestions.length - 1)
+              scrollItemIntoView(newIndex)
+              return newIndex
+            })
             return
           case 'Tab':
+            if (selectedIndex >= 0) {
+              e.preventDefault()
+              applySuggestion(suggestions[selectedIndex])
+              return
+            }
+            break
           case 'Enter':
             if (selectedIndex >= 0) {
               e.preventDefault()
               applySuggestion(suggestions[selectedIndex])
+              return
+            } else if (suggestions.length > 0) {
+              // Auto-select first suggestion when Enter is pressed without selection
+              e.preventDefault()
+              applySuggestion(suggestions[0])
               return
             }
             break
@@ -534,9 +614,15 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
 
       onChange(newValue)
       
-      // Close the popover after selection
+      // Close the popover after selection and reset state
       setIsOpen(false)
       setSelectedIndex(-1)
+      setSuggestions([]) // Clear suggestions to prevent them from reappearing
+      
+      // Clear any pending suggestion timeouts to prevent suggestions from reappearing
+      if (suggestionTimeoutRef.current) {
+        clearTimeout(suggestionTimeoutRef.current)
+      }
       
       // Set cursor position after the inserted text and maintain focus
       setTimeout(() => {
@@ -567,6 +653,13 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
       typingTimeoutRef.current = setTimeout(() => {
         setIsTyping(false)
       }, 50)
+      
+      // Reset suggestions state when user starts typing new content
+      if (suggestions.length > 0) {
+        setSuggestions([])
+        setIsOpen(false)
+        setSelectedIndex(-1)
+      }
     }
 
     // Handle composition events
@@ -624,8 +717,8 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
             onOpenAutoFocus={(e) => e.preventDefault()}
             onCloseAutoFocus={(e) => e.preventDefault()}
           >
-            <Command className="border-0 bg-transparent">
-              <CommandList className="max-h-[200px] overflow-y-auto">
+            <Command className="border-0 bg-transparent" shouldFilter={false}>
+              <CommandList className="max-h-[200px] overflow-y-auto" role="listbox">
                 {suggestions.length > 0 ? (
                   <CommandGroup className="p-0">
                     {suggestions.map((suggestion, index) => (
@@ -633,9 +726,12 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
                         key={suggestion.id}
                         value={suggestion.text}
                         onSelect={() => applySuggestion(suggestion)}
+                        data-item-index={index}
                         className={cn(
-                          "flex items-center gap-2 px-3 py-2 cursor-pointer border-0 hover:bg-accent hover:text-accent-foreground",
-                          index === selectedIndex && "bg-accent text-accent-foreground"
+                          "flex items-center gap-2 px-3 py-2 cursor-pointer border-0",
+                          "hover:bg-accent hover:text-accent-foreground",
+                          "data-[selected=true]:bg-transparent data-[selected=true]:text-inherit",
+                          index === selectedIndex && "!bg-accent !text-accent-foreground"
                         )}
                       >
                         {suggestion.icon && getIcon(suggestion.icon)}
