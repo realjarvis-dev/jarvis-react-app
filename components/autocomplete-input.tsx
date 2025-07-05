@@ -1,18 +1,17 @@
 'use client'
 
-import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react'
-import { Textarea } from '@/components/ui/textarea'
 import {
   Command,
-  CommandEmpty,
   CommandGroup,
   CommandItem,
-  CommandList,
+  CommandList
 } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Textarea } from '@/components/ui/textarea'
 import { useNetwork } from '@/lib/network/context'
 import { cn } from '@/lib/utils'
 import * as Icons from 'lucide-react'
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 
 interface AutoCompleteInputProps {
   value: string
@@ -104,19 +103,11 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
         try {
           let newSuggestions: any[] = []
 
-          // Check if user has already provided a complete query
+          // Always show suggestions - remove blocking logic
           const input = value.toLowerCase().trim()
-          const isCompleteQuery = input.length > 15 && (
-            (input.includes('check') && input.includes('balance')) ||
-            (input.includes('swap') && input.includes('for')) ||
-            (input.includes('find') && input.includes('opportunities')) ||
-            (input.includes('get') && input.includes('price')) ||
-            (input.includes('compare') && input.includes('returns'))
-            // Removed word count check as it was too restrictive
-          )
-
-          // Don't show suggestions if user has a very specific complete query
-          if (isCompleteQuery) {
+          
+          // Only skip suggestions if input is completely empty
+          if (!input) {
             setSuggestions([])
             setIsOpen(false)
             setSelectedIndex(-1)
@@ -134,9 +125,49 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
 
             newSuggestions = await suggestionEngine.current.generateSuggestions(context)
           } else {
-            // Fallback to simple inline suggestions
-            if (input && input.length <= 50) { // Allow suggestions for longer inputs
-              // Simple pattern matching for common crypto actions
+            // Fallback to simple inline suggestions - always show for any input length
+            if (input) {
+              // Enhanced contextual pattern matching
+              const hasBalance = input.includes('check') || input.includes('balance')
+              const hasSwap = input.includes('swap') || input.startsWith('sw')
+              const hasGas = input.includes('gas') || input.includes('fee')
+              const hasPendle = input.includes('pendle') || input.includes('yield')
+              
+              // Contextual suggestions based on what's already in the prompt
+              if (hasBalance && !hasSwap) {
+                newSuggestions.push({
+                  id: 'then-swap',
+                  text: 'and then swap some ETH for USDC',
+                  description: 'Follow up with a token swap',
+                  category: 'command',
+                  icon: 'ArrowRightLeft',
+                  score: 100
+                })
+              }
+              
+              if (hasSwap && !hasPendle) {
+                newSuggestions.push({
+                  id: 'then-opportunities',
+                  text: 'and find yield opportunities',
+                  description: 'Look for earning opportunities',
+                  category: 'command',
+                  icon: 'TrendingUp',
+                  score: 100
+                })
+              }
+              
+              if ((hasBalance || hasSwap) && !hasGas) {
+                newSuggestions.push({
+                  id: 'check-gas',
+                  text: 'and check current gas prices',
+                  description: 'Get network fee information',
+                  category: 'command',
+                  icon: 'Fuel',
+                  score: 95
+                })
+              }
+              
+              // Basic action suggestions
               if (input.includes('check') || input.includes('balance')) {
                 newSuggestions.push({
                   id: 'check-balance',
@@ -144,7 +175,7 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
                   description: 'View your current token balances',
                   category: 'command',
                   icon: 'Wallet',
-                  score: 100
+                  score: 90
                 })
               }
               
@@ -155,7 +186,7 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
                   description: 'Exchange one token for another',
                   category: 'command',
                   icon: 'ArrowRightLeft',
-                  score: 95
+                  score: 85
                 })
               }
               
@@ -223,9 +254,9 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
           
           setSuggestions(filteredSuggestions)
           
-          // Always show popover when there's input to make autocomplete feel always-on
+          // Always show popover when there's input and suggestions available
           // This provides consistent UX and users feel autocomplete is always available
-          if (value.trim().length > 0 && value.trim().length <= 25) {
+          if (value.trim().length > 0 && filteredSuggestions.length > 0) {
             setIsOpen(true)
             setSelectedIndex(-1) // Don't auto-select to avoid blocking typing
           } else {
@@ -242,7 +273,7 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
       // Generate suggestions in real-time as user types
       // Use minimal delay to keep it responsive but not overwhelming
       if (value.trim().length > 0) {
-        suggestionTimeoutRef.current = setTimeout(generateSuggestions, 100)
+        suggestionTimeoutRef.current = setTimeout(generateSuggestions, 50)
       } else {
         // Hide suggestions only when input is empty
         setIsOpen(false)
@@ -330,24 +361,17 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
 
       onChange(newValue)
       
-      // Immediately hide suggestions and clear state
-      setIsOpen(false)
+      // Only reset selection, keep suggestions available for continuous editing
       setSelectedIndex(-1)
-      setSuggestions([])
       
-      // Set typing state to prevent immediate re-showing of suggestions
-      setIsTyping(true)
-
       // Set cursor position after the inserted text
       setTimeout(() => {
         const newCursorPos = wordStart + suggestion.text.length
         textarea.setSelectionRange(newCursorPos, newCursorPos)
         setCursorPosition(newCursorPos)
         
-        // Clear typing state after a short delay to allow normal typing detection
-        setTimeout(() => {
-          setIsTyping(false)
-        }, 50)
+        // Allow immediate re-generation of suggestions for continuous context
+        setIsTyping(false)
       }, 0)
     }
 
@@ -365,10 +389,10 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
         clearTimeout(typingTimeoutRef.current)
       }
       
-      // Set typing to false after user stops typing for 150ms
+      // Set typing to false after user stops typing for 50ms (faster response)
       typingTimeoutRef.current = setTimeout(() => {
         setIsTyping(false)
-      }, 150)
+      }, 50)
     }
 
     // Handle composition events
@@ -407,7 +431,7 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
               onCompositionEnd={handleCompositionEnd}
               placeholder={placeholder}
               className={cn(
-                "resize-none border-0 bg-transparent px-0 py-0 text-base shadow-none focus-visible:ring-0 outline-none focus:outline-none",
+                "resize-none !border-0 bg-transparent px-0 py-0 text-base shadow-none !focus-visible:ring-0 !outline-none !focus:outline-none !ring-0 !ring-offset-0 !focus-visible:ring-offset-0",
                 className
               )}
               disabled={disabled}
@@ -419,7 +443,7 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
         
         {shouldShowPopover && (
           <PopoverContent 
-            className="w-80 p-0 border bg-background shadow-lg rounded-md overflow-hidden" 
+            className="w-80 p-0 bg-background/95 backdrop-blur-sm rounded-md overflow-hidden border-0" 
             align="start"
             side="bottom"
             sideOffset={8}
