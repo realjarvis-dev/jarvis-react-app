@@ -1,5 +1,4 @@
 import { ethers } from 'ethers';
-import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import { berachainConfig } from '@/lib/network/config';
 import { getUserWallet, privy } from '../privy/client';
@@ -80,7 +79,9 @@ export async function approveToken(
 
       // Save the signed transaction to a file for debugging
       try {
-        fs.writeFileSync('signed_transaction_approval.json', JSON.stringify({
+        const fs = typeof window === 'undefined' ? require('fs') : null
+        if (fs) {
+          fs.writeFileSync('signed_transaction_approval.json', JSON.stringify({
           signedTransaction,
           encoding,
           txDetails: {
@@ -93,7 +94,8 @@ export async function approveToken(
             nonce: correctNonce
           }
         }, null, 2));
-        console.log('Approval transaction saved to signed_transaction_approval.json');
+          console.log('Approval transaction saved to signed_transaction_approval.json');
+        }
       } catch (writeError) {
         console.error('Error saving transaction to file:', writeError);
       }
