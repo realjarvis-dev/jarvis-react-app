@@ -11125,13 +11125,6 @@ export const tokensByChain = {
     },
     {
       "chainId": 1,
-      "address": "0xd8F1460044925d2D5c723C7054cd9247027415B7",
-      "symbol": "SAIL",
-      "name": "Clipper SAIL",
-      "decimals": 18
-    },
-    {
-      "chainId": 1,
       "address": "0x3ec03cD2763A729339AFf9927BE679c76325D1bf",
       "symbol": "FGH",
       "name": "Flowing Hair",
@@ -25954,13 +25947,6 @@ export const tokensByChain = {
     },
     {
       "chainId": 56,
-      "address": "0x076DDcE096C93dcF5D51FE346062bF0Ba9523493",
-      "symbol": "PARA",
-      "name": "Paralink Network",
-      "decimals": 18
-    },
-    {
-      "chainId": 56,
       "address": "0x47BEAd2563dCBf3bF2c9407fEa4dC236fAbA485A",
       "symbol": "SXP",
       "name": "Swipe",
@@ -26951,6 +26937,13 @@ export const tokensByChain = {
       "address": "0x22b1458e780F8fA71E2F84502cEe8B5A3cc731Fa",
       "symbol": "M",
       "name": "MemeCore",
+      "decimals": 18
+    },
+    {
+      "chainId": 56,
+      "address": "0x9558a9254890B2A8B057a789F413631B9084f4a3",
+      "symbol": "AIN",
+      "name": "Infinity Ground AI",
       "decimals": 18
     }
   ],
@@ -28514,13 +28507,6 @@ export const tokensByChain = {
       "address": "0x8D02b73904856De6998Ffdf6e7ee18cC21137a79",
       "symbol": "ROBOT",
       "name": "MetaFactory on xDai",
-      "decimals": 18
-    },
-    {
-      "chainId": 100,
-      "address": "0x8E7aB03cA7D17996b097D5866bFAA1e251c35c6a",
-      "symbol": "DUCK",
-      "name": "Unit Protocol on xDai",
       "decimals": 18
     },
     {
@@ -36609,13 +36595,6 @@ export const tokensByChain = {
     },
     {
       "chainId": 137,
-      "address": "0xFf76c0B48363A7C7307868a81548d340049b0023",
-      "symbol": "DSRUN",
-      "name": "DerbyStarsRUN",
-      "decimals": 18
-    },
-    {
-      "chainId": 137,
       "address": "0xf0949Dd87D2531D665010d6274F06a357669457a",
       "symbol": "RMV",
       "name": "RealityMetaverse(PoS)",
@@ -38646,13 +38625,6 @@ export const tokensByChain = {
     },
     {
       "chainId": 137,
-      "address": "0x03C2F6808502fFD4aB2787aD1A98eC13dbD5718b",
-      "symbol": "CTI",
-      "name": "ClinTex CTI (Wormhole)",
-      "decimals": 18
-    },
-    {
-      "chainId": 137,
       "address": "0x083c56d87eAD73D6231C165Ec450C6E28f3399C9",
       "symbol": "CHART",
       "name": "ChartEx",
@@ -40165,6 +40137,13 @@ export const tokensByChain = {
     },
     {
       "chainId": 137,
+      "address": "0x06737D16aD9C1E41aA44FEe2a952B26723B20673",
+      "symbol": "GT3",
+      "name": "GT3 finance",
+      "decimals": 18
+    },
+    {
+      "chainId": 137,
       "address": "0x8c3441E7B9aA8A30a542DDE048dd067DE2802E9B",
       "symbol": "WINK",
       "name": "WINK",
@@ -40837,13 +40816,6 @@ export const tokensByChain = {
     },
     {
       "chainId": 137,
-      "address": "0x119fd89E56e3845B520644dCEDf4A86Cd0B66aA6",
-      "symbol": "NOVA",
-      "name": "Nova DAO",
-      "decimals": 18
-    },
-    {
-      "chainId": 137,
       "address": "0xC8A94a3d3D2dabC3C1CaffFFDcA6A7543c3e3e65",
       "symbol": "GUSD",
       "name": "Gemini dollar (PoS)",
@@ -41054,13 +41026,6 @@ export const tokensByChain = {
     },
     {
       "chainId": 137,
-      "address": "0x774b9Dd3977a7556BF16Cc22B74b2991e4511E13",
-      "symbol": "SCAI",
-      "name": "SecureChain AI",
-      "decimals": 18
-    },
-    {
-      "chainId": 137,
       "address": "0xaE4EFbc7736f963982aACb17EFA37fCBAb924cB3",
       "symbol": "SolvBTC",
       "name": "Solv BTC",
@@ -41152,6 +41117,13 @@ export const tokensByChain = {
     },
     {
       "chainId": 137,
+      "address": "0xf9a3e803ed270cf0cA6CD76eA40b8CC8562CF93F",
+      "symbol": "IRC",
+      "name": "IRIS",
+      "decimals": 18
+    },
+    {
+      "chainId": 137,
       "address": "0x72749806df5A6BBb72032039bbE9a3f1b17D1936",
       "symbol": "LUMIA",
       "name": "Lumia Token",
@@ -41191,6 +41163,13 @@ export const tokensByChain = {
       "symbol": "XAUt0",
       "name": "XAUt0",
       "decimals": 6
+    },
+    {
+      "chainId": 137,
+      "address": "0x2F4efd3Aa42E15a1eC6114547151B63EE5D39958",
+      "symbol": "COW",
+      "name": "CoW Protocol Token(PoS)",
+      "decimals": 18
     }
   ],
   "146": [
@@ -47802,6 +47781,13 @@ export const tokensByChain = {
     },
     {
       "chainId": 8453,
+      "address": "0x18E692c03De43972Fe81058f322fa542Ae1A5E2c",
+      "symbol": "imgnAI",
+      "name": "Image Generation AI",
+      "decimals": 18
+    },
+    {
+      "chainId": 8453,
       "address": "0x820C137fa70C8691f0e44Dc420a5e53c168921Dc",
       "symbol": "USDS",
       "name": "USDS Stablecoin",
@@ -48190,13 +48176,6 @@ export const tokensByChain = {
       "address": "0xF544251D25f3d243A36B07e7E7962a678f952691",
       "symbol": "TAROT",
       "name": "Tarot",
-      "decimals": 18
-    },
-    {
-      "chainId": 8453,
-      "address": "0xb8E564B206032bBcDa2C3978Bc371Da52152f72e",
-      "symbol": "BASEX",
-      "name": "Base Terminal",
       "decimals": 18
     },
     {
@@ -48985,13 +48964,6 @@ export const tokensByChain = {
     },
     {
       "chainId": 8453,
-      "address": "0x30193F81E7599429afd6B2b11b27d66C56A1DFe4",
-      "symbol": "101",
-      "name": "Crypto 101 by Virtuals",
-      "decimals": 18
-    },
-    {
-      "chainId": 8453,
       "address": "0xF1A7000000950C7ad8Aff13118Bb7aB561A448ee",
       "symbol": "FLAY",
       "name": "Flayer",
@@ -49009,13 +48981,6 @@ export const tokensByChain = {
       "address": "0x047157CfFB8841A64DB93fd4E29fA3796B78466c",
       "symbol": "DEV",
       "name": "Scout Protocol Token",
-      "decimals": 18
-    },
-    {
-      "chainId": 8453,
-      "address": "0x37d3D61a304695619433bc05EF841E889F69Debf",
-      "symbol": "DONNIE",
-      "name": "DONNIE",
       "decimals": 18
     },
     {
@@ -52147,6 +52112,13 @@ export const tokensByChain = {
       "symbol": "RLC",
       "name": "iEx.ec Network Token",
       "decimals": 9
+    },
+    {
+      "chainId": 42161,
+      "address": "0x2CaB3abfC1670D1a452dF502e216a66883cDf079",
+      "symbol": "L2DAO",
+      "name": "Layer2DAO",
+      "decimals": 18
     },
     {
       "chainId": 42161,
