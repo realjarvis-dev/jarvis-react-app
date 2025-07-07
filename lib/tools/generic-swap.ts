@@ -62,7 +62,7 @@ const parameters = z.object({
   amountInHuman: z
     .string()
     .describe(
-      'Amount of input token to swap in human-readable format (e.g., "1", "100.5") in the unit of Input Token. Also supports USD amounts like "$30", "$100" or "30 USD" for any supported token - the system will automatically convert to the token amount using real-time market prices. If market data is unavailable for a token, the system will inform the user to specify the exact token amount instead. Notify user if output amount is supplied.'
+      'Amount of input token to swap in human-readable format (e.g., "1", "100.5") in the unit of Input Token. Also supports USD amounts in various formats: "$30", "$100", "30 USD", "$100 of token", "$100 worth of token", "100 USD of token" - the system will automatically convert to the token amount using real-time market prices. If market data is unavailable for a token, the system will inform the user to specify the exact token amount instead. Notify user if output amount is supplied.'
     ),
   slippage: z
     .number()
@@ -84,6 +84,8 @@ async function parseUsdAmount(amountStr: string, tokenSymbol: string, chainId: n
     /^\$(\d+(?:\.\d+)?)$/, // $30, $100.50
     /^(\d+(?:\.\d+)?)\s*usd$/i, // 30 USD, 100.50 usd
     /^(\d+(?:\.\d+)?)\s*dollars?$/i, // 30 dollars, 100.50 dollar
+    /^\$(\d+(?:\.\d+)?)\s+(?:of|worth\s+of|in)\s+/i, // $100 of token, $100 worth of token, $100 in token
+    /^(\d+(?:\.\d+)?)\s*(?:usd|dollars?)\s+(?:of|worth\s+of|in)\s+/i, // 100 USD of token, 100 dollars worth of token
   ];
   
   for (const pattern of usdPatterns) {
