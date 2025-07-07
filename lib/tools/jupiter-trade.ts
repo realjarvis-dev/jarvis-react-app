@@ -5,11 +5,12 @@ import { executeJupiterOrder, getJupiterOrder } from '../jupiter/order'
 import { searchXStocksByName } from '../jupiter/search'
 import { formatUnits, parseUnits } from 'viem'
 import { computeNetworkFeeFromTxString } from '../jupiter/utils'
-import { clusterApiUrl, Connection } from '@solana/web3.js'
+import { clusterApiUrl, Connection, SendTransactionError } from '@solana/web3.js'
 import { getUserSolWalletAddress } from '../privy/client'
 import * as _ from "lodash";
 import { excelonMainnet } from 'viem/chains'
 import { broadcastSolanaTransaction, signSolanaTransactionString } from '../privy/solana-utils'
+import { solanaConfig } from "../network/config"
 
 const commonTokenMap = {
   SOL: 'So11111111111111111111111111111111111111112',
@@ -143,6 +144,7 @@ export const jupiterExecute = tool({
         tokenOutDecimals: z.number().describe('The decimals of the token to buy'),
     }),
     execute: async (params, context: ToolContext) => {
+        try {
         const { tokenInAddress, tokenOutAddress, amountIn, tokenInDecimals, tokenOutDecimals, tokenInDisplayName } = params
         const amountInLamports = parseUnits(amountIn.toString(), tokenInDecimals)
         const userSolanaAddress = await getUserSolWalletAddress()
@@ -210,12 +212,25 @@ export const jupiterExecute = tool({
         }
     }
     } catch (error) {
-        console.log("return non 200")
+        if (error instanceof SendTransactionError) {
+            console.error(error)
+            return {
+                status: "Failed",
+                error: "Failed to execute. " + (error as Error).message
+            }
+        }
         return {
             status: "Failed",
             error: "Failed to execute. " + (error as Error).message
         }
     }
-    
+    }
+    catch (error) {
+        console.error(error)
+        return {
+            status: "Failed",
+            error: "Failed to execute. " + (error as Error).message
+        }
+    }
 }
 })

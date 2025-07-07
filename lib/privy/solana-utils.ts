@@ -9,9 +9,12 @@ import {
   Connection,
   PublicKey,
   Transaction,
+  TransactionInstruction,
+  TransactionMessage,
   VersionedTransaction
 } from '@solana/web3.js'
 import { getUserWallet, privy } from './client'
+import { AddressLookupTableAccount } from "@solana/web3.js";
 
 export async function signSolanaTransaction(transaction: Transaction | VersionedTransaction,
     connection: Connection
@@ -21,22 +24,55 @@ export async function signSolanaTransaction(transaction: Transaction | Versioned
         throw new Error('Wallet not found')
     }
 
-    const {blockhash, lastValidBlockHeight} = await connection.getLatestBlockhash()
+    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash()
     if (transaction instanceof Transaction) {
         transaction.recentBlockhash = blockhash
         transaction.lastValidBlockHeight = lastValidBlockHeight
         transaction.feePayer = new PublicKey(wallet.address)
+            // Get the signed transaction object from the response
+      const { signedTransaction } = await privy.walletApi.solana.signTransaction({
+          walletId: wallet.id!,
+          transaction: transaction
+      });
+
+      return signedTransaction
+
     } else {
-        
+      const acctKeys = transaction.message.getAccountKeys();
+    
+      const ixns = transaction.message.compiledInstructions.map(ci =>
+        new TransactionInstruction({
+          programId: acctKeys.get(ci.programIdIndex)!,
+          keys: ci.accountKeyIndexes.map(i => ({
+            pubkey: acctKeys.get(i)!,
+            isSigner: transaction.message.isAccountSigner(i),
+            isWritable: transaction.message.isAccountWritable(i),
+          })),
+          data: Buffer.from(ci.data),
+        })
+      )
+        const userWalletPubkey = new PublicKey(wallet.address)
+        const { blockhash } = await connection.getLatestBlockhash()
+        // 3) Build & compile a new V0 message
+        const newMsg = new TransactionMessage({
+          payerKey: userWalletPubkey,
+          recentBlockhash: blockhash,
+          instructions: ixns,
+        }).compileToV0Message();
+
+        // For versioned transactions, we need to create a new VersionedTransaction
+        // with the message and empty signatures array
+        const newVtx = new VersionedTransaction(newMsg);
+              // Get the signed transaction object from the response
+        const { signedTransaction } = await privy.walletApi.solana.signTransaction({
+          walletId: wallet.id!,
+          transaction: newVtx
+        });
+
+        return signedTransaction
     }
 
-    // Get the signed transaction object from the response
-    const { signedTransaction } = await privy.walletApi.solana.signTransaction({
-        walletId: wallet.id!,
-        transaction: transaction
-    });
 
-    return signedTransaction
 
 }
 
@@ -51,10 +87,7 @@ export async function signSolanaTransactionString(
   transaction: string,
   connection: Connection
 ) {
-  const wallet = await getUserWallet('solana')
-  if (!wallet) {
-    throw new Error('Wallet not found')
-  }
+
   const rawTxBase64 = transaction // e.g. "AQAAAAA…"
 
   const rawTxBytes = Buffer.from(rawTxBase64, 'base64')
@@ -62,15 +95,13 @@ export async function signSolanaTransactionString(
   try {
     // Try to deserialize as a versioned transaction first
     const vtx = VersionedTransaction.deserialize(rawTxBytes)
-
-    // For versioned transactions, we need to create a new VersionedTransaction
-    // with the message and empty signatures array
-
+    
     const signedTransaction = await signSolanaTransaction(vtx, connection)
 
     // const signedBase64 = Buffer.from(signedTransaction.serialize()).toString("base64");
     return signedTransaction
   } catch (err) {
+    console.log("error:", err)
     // Fall back to legacy transaction
     const tx = Transaction.from(rawTxBytes)
 
@@ -106,7 +137,7 @@ export async function broadcastSolanaTransaction(
     { signature: txid, blockhash, lastValidBlockHeight },
     commitment
   )
-
+  // return "txid"
   return txid
 }
 
