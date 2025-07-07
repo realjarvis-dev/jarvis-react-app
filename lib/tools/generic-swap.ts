@@ -6,6 +6,7 @@ import path, { dirname } from 'path'; // Added import for path operations
 import { promisify } from 'util';
 import { z } from 'zod';
 import { ensoSwap } from '../enso/swap'; // Import ensoSwap
+import { getTokenUsdPriceBatch } from '../enso/get-token-usd-price'; // Import price fetching
 import { erc20Approval, executeTransaction } from '../privy/utils';
 import { getUserEvmWalletAddress } from '../privy/client';
 import { NetworkContext } from '../types/context';
@@ -61,7 +62,7 @@ const parameters = z.object({
   amountInHuman: z
     .string()
     .describe(
-      'Amount of input token to swap in human-readable format (e.g., "1", "100.5") in the unit of Input Token. Notify user if output amount is supplied.'
+      'Amount of input token to swap in human-readable format (e.g., "1", "100.5") in the unit of Input Token. Also supports USD amounts like "$30", "$100" or "30 USD" when swapping from ETH - the system will automatically convert to ETH using real-time prices. Notify user if output amount is supplied.'
     ),
   slippage: z
     .number()
@@ -77,6 +78,46 @@ const parameters = z.object({
     )
 })
 
+// Helper function to parse USD amounts and convert to ETH
+async function parseUsdAmount(amountStr: string, chainId: number): Promise<{ isUsd: boolean; ethAmount?: string; usdAmount?: number }> {
+  const usdPatterns = [
+    /^\$(\d+(?:\.\d+)?)$/, // $30, $100.50
+    /^(\d+(?:\.\d+)?)\s*usd$/i, // 30 USD, 100.50 usd
+    /^(\d+(?:\.\d+)?)\s*dollars?$/i, // 30 dollars, 100.50 dollar
+  ];
+  
+  for (const pattern of usdPatterns) {
+    const match = amountStr.trim().match(pattern);
+    if (match) {
+      const usdAmount = parseFloat(match[1]);
+      if (isNaN(usdAmount) || usdAmount <= 0) {
+        throw new Error(`Invalid USD amount: ${amountStr}`);
+      }
+      
+      // Fetch current ETH price
+      const ethAddress = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
+      try {
+        const priceData = await getTokenUsdPriceBatch([ethAddress], chainId);
+        if (!priceData || priceData.length === 0) {
+          throw new Error('Unable to fetch current ETH price');
+        }
+        
+        const ethPrice = priceData[0].price;
+        const ethAmount = (usdAmount / ethPrice).toFixed(18);
+        
+        return {
+          isUsd: true,
+          ethAmount: ethAmount,
+          usdAmount: usdAmount
+        };
+      } catch (error) {
+        throw new Error(`Failed to fetch ETH price for USD conversion: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+  }
+  
+  return { isUsd: false };
+}
 
 export const genericSwapTool = tool({
   description:
@@ -125,15 +166,26 @@ export const genericSwapTool = tool({
 
       let amountInBaseUnits: string
       let actualTokenInAddress: string
+      let actualAmountInHuman = amountInHuman
+      let usdConversionInfo: { isUsd: boolean; ethAmount?: string; usdAmount?: number } | null = null
       const upperTokenInSymbol = tokenInSymbol.toUpperCase()
+
+      // Check if this is a USD amount when dealing with ETH
+      if (upperTokenInSymbol === 'ETH') {
+        usdConversionInfo = await parseUsdAmount(amountInHuman, effectiveChainId)
+        if (usdConversionInfo.isUsd) {
+          actualAmountInHuman = usdConversionInfo.ethAmount!
+          logContent += `USD Conversion: $${usdConversionInfo.usdAmount} -> ${actualAmountInHuman} ETH\n`
+        }
+      }
 
       if (upperTokenInSymbol === 'ETH') {
         try {
-          amountInBaseUnits = ethers.parseEther(amountInHuman).toString()
+          amountInBaseUnits = ethers.parseEther(actualAmountInHuman).toString()
           actualTokenInAddress = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee' // Zero address for ETH
         } catch (error) {
           throw new Error(
-            `Invalid ETH amount: ${amountInHuman}. ${
+            `Invalid ETH amount: ${actualAmountInHuman}. ${
               error instanceof Error ? error.message : ''
             }`
           )
@@ -149,7 +201,7 @@ export const genericSwapTool = tool({
         try {
           actualTokenInAddress = ethers.getAddress(tokenInAddress) // Validate and checksum
           amountInBaseUnits = ethers
-            .parseUnits(amountInHuman, tokenInDecimals)
+            .parseUnits(actualAmountInHuman, tokenInDecimals)
             .toString()
         
 
@@ -218,7 +270,12 @@ export const genericSwapTool = tool({
           amount_in_human: amountInHuman,
           amount_in_base_units: amountInBaseUnits,
           chain_id: effectiveChainId,
-          complete_time: completeTime
+          complete_time: completeTime,
+          usd_conversion: usdConversionInfo?.isUsd ? {
+            original_usd_amount: usdConversionInfo.usdAmount,
+            converted_eth_amount: actualAmountInHuman,
+            conversion_note: `Converted $${usdConversionInfo.usdAmount} to ${actualAmountInHuman} ETH using real-time pricing`
+          } : null
         }
       }
     } catch (error: any) {
