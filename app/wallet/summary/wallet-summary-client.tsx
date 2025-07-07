@@ -426,8 +426,8 @@ export default function WalletSummaryClient() {
 
         {/* Enhanced Analysis Grid */}
         <div className="space-y-8">
-          {/* First Row: Risk Profile, Activity Patterns, Transaction Size */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {/* First Row: Risk Profile (50%) and Activity Patterns + Transaction Size (50%) */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Enhanced Risk Profile */}
             <Card className={`border-0 shadow-lg bg-gradient-to-br ${riskStyle.gradient} hover:shadow-xl transition-all duration-200`}>
               <CardHeader className="pb-4">
@@ -467,54 +467,59 @@ export default function WalletSummaryClient() {
               </CardContent>
             </Card>
 
-            {/* Enhanced Activity Patterns */}
-            <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/10 dark:to-emerald-900/5 hover:shadow-xl transition-all duration-200">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-xl flex items-center gap-3">
-                  <div className="p-2 rounded-full bg-white/80 dark:bg-gray-800/80">
-                    <Activity className="h-5 w-5 text-green-600 dark:text-green-400" />
+            {/* Activity Patterns and Transaction Size Combined */}
+            <div className="space-y-8">
+              {/* Enhanced Activity Patterns */}
+              <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/10 dark:to-emerald-900/5 hover:shadow-xl transition-all duration-200">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-xl flex items-center gap-3">
+                    <div className="p-2 rounded-full bg-white/80 dark:bg-gray-800/80">
+                      <Activity className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    </div>
+                    Activity Patterns
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center p-3 bg-white/60 dark:bg-gray-800/60 rounded-lg">
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Trading Frequency</span>
+                      <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300 dark:bg-green-900/20 dark:text-green-400">
+                        {analysis?.tradingFrequency}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-white/60 dark:bg-gray-800/60 rounded-lg">
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Activity Pattern</span>
+                      <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300 dark:bg-green-900/20 dark:text-green-400 capitalize">
+                        {analysis?.activityPattern}
+                      </Badge>
+                    </div>
                   </div>
-                  Activity Patterns
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center p-3 bg-white/60 dark:bg-gray-800/60 rounded-lg">
-                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Trading Frequency</span>
-                    <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300 dark:bg-green-900/20 dark:text-green-400">
-                      {analysis?.tradingFrequency}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-white/60 dark:bg-gray-800/60 rounded-lg">
-                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Activity Pattern</span>
-                    <span className="text-sm font-semibold capitalize">{analysis?.activityPattern}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
 
-            {/* Enhanced Transaction Size */}
-            <Card className="border-0 shadow-lg bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/10 dark:to-orange-900/5 hover:shadow-xl transition-all duration-200">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-xl flex items-center gap-3">
-                  <div className="p-2 rounded-full bg-white/80 dark:bg-gray-800/80">
-                    <DollarSign className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+              {/* Enhanced Transaction Size */}
+              <Card className="border-0 shadow-lg bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/10 dark:to-orange-900/5 hover:shadow-xl transition-all duration-200">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-xl flex items-center gap-3">
+                    <div className="p-2 rounded-full bg-white/80 dark:bg-gray-800/80">
+                      <DollarSign className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                    </div>
+                    Transaction Size
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center p-4 bg-white/60 dark:bg-gray-800/60 rounded-lg">
+                    <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
+                      {analysis?.averageTransactionSize?.eth?.toFixed(4)} ETH
+                    </p>
+                    <p className="text-lg font-semibold text-gray-600 dark:text-gray-400 mt-1">
+                      ~${analysis?.averageTransactionSize?.usd_estimate?.toLocaleString()}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">Average per transaction</p>
                   </div>
-                  Transaction Size
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center p-4 bg-white/60 dark:bg-gray-800/60 rounded-lg">
-                  <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
-                    {analysis?.averageTransactionSize?.eth?.toFixed(4)} ETH
-                  </p>
-                  <p className="text-lg font-semibold text-gray-600 dark:text-gray-400 mt-1">
-                    ~${analysis?.averageTransactionSize?.usd_estimate?.toLocaleString()}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">Average per transaction</p>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </div>
           </div>
 
           {/* Second Row: Top Protocols and Primary Assets (50% each) */}
