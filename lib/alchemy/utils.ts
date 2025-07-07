@@ -1,5 +1,7 @@
 import { TENDERLY_DEMO_CONFIG } from "@/lib/network/config";
+import { Alchemy } from "alchemy-sdk";
 import { ethers } from "ethers";
+import { SimpleRedisCache } from "./cache/simple-redis-cache";
 import { TokenData } from "./types";
 
 const commonlyUsedTokens = {
@@ -81,3 +83,182 @@ const ERC20_ABI = [
       return null;
     }
   }
+
+// Initialize cache instance
+const cache = new SimpleRedisCache();
+
+/**
+ * Fetch ABI for a contract address with caching
+ * Tries Sourcify first (free), then Etherscan as fallback
+ */
+export async function fetchAbi(address: string): Promise<any | null> {
+  // Check cache first
+  const cachedAbi = await cache.getAbi(address);
+  if (cachedAbi) {
+    return cachedAbi;
+  }
+
+  try {
+    // Try Sourcify first (free)
+    const sourcifyResponse = await fetch(`https://sourcify.dev/server/files/any/1/${address}`);
+    if (sourcifyResponse.ok) {
+      const files = await sourcifyResponse.json();
+      const metadataFile = files.find((f: any) => f.name.includes('metadata.json'));
+      if (metadataFile) {
+        const metadataResponse = await fetch(`https://sourcify.dev/server/files/any/1/${address}/${metadataFile.name}`);
+        const metadata = await metadataResponse.json();
+        if (metadata.output?.abi) {
+          await cache.setAbi(address, metadata.output.abi);
+          return metadata.output.abi;
+        }
+      }
+    }
+
+    // Fallback to Etherscan if available
+    if (process.env.ETHERSCAN_API_KEY) {
+      const etherscanResponse = await fetch(
+        `https://api.etherscan.io/api?module=contract&action=getabi&address=${address}&apikey=${process.env.ETHERSCAN_API_KEY}`
+      );
+      const etherscanData = await etherscanResponse.json();
+      if (etherscanData.status === '1' && etherscanData.result !== 'Contract source code not verified') {
+        const abi = JSON.parse(etherscanData.result);
+        await cache.setAbi(address, abi);
+        return abi;
+      }
+    }
+  } catch (error) {
+    // Silent failure - return null if ABI can't be fetched
+  }
+
+  return null;
+}
+
+/**
+ * Fetch function signature from 4byte.directory with caching
+ */
+export async function fetchFunctionSignature(selector: string): Promise<string | null> {
+  // Check cache first
+  const cachedSig = await cache.getFunctionSignature(selector);
+  if (cachedSig) {
+    return cachedSig;
+  }
+
+  try {
+    const response = await fetch(`https://www.4byte.directory/api/v1/signatures/?hex_signature=${selector}`);
+    const data = await response.json();
+    
+    if (data.results && data.results.length > 0) {
+      const signature = data.results[0].text_signature;
+      await cache.setFunctionSignature(selector, signature);
+      return signature;
+    }
+  } catch (error) {
+    // Silent failure
+  }
+
+  return null;
+}
+
+/**
+ * Fetch contract name from Etherscan with caching
+ */
+export async function fetchContractName(address: string): Promise<string | null> {
+  // Check cache first
+  const cachedName = await cache.getContractName(address);
+  if (cachedName) {
+    return cachedName;
+  }
+
+  try {
+    if (process.env.ETHERSCAN_API_KEY) {
+      const response = await fetch(
+        `https://api.etherscan.io/api?module=contract&action=getsourcecode&address=${address}&apikey=${process.env.ETHERSCAN_API_KEY}`
+      );
+      const data = await response.json();
+      
+      if (data.status === '1' && data.result?.[0]?.ContractName) {
+        const contractName = data.result[0].ContractName;
+        await cache.setContractName(address, contractName);
+        return contractName;
+      }
+    }
+  } catch (error) {
+    // Silent failure
+  }
+
+  return null;
+}
+
+/**
+ * Decode function call using ABI
+ */
+export async function decodeFunction(to: string, input: string): Promise<{
+  functionName: string;
+  functionSignature: string;
+  decodedParams?: any;
+} | null> {
+  if (!input || input === '0x' || input.length < 10) {
+    return null;
+  }
+
+  const selector = input.slice(0, 10);
+  
+  try {
+    // Try to get ABI and decode with it
+    const abi = await fetchAbi(to);
+    if (abi) {
+      const contractInterface = new ethers.Interface(abi);
+      try {
+        const decodedFunction = contractInterface.parseTransaction({ data: input });
+        if (decodedFunction) {
+          return {
+            functionName: decodedFunction.name,
+            functionSignature: decodedFunction.signature,
+            decodedParams: decodedFunction.args
+          };
+        }
+      } catch (error) {
+        // ABI parsing failed, fall back to signature lookup
+      }
+    }
+
+    // Fallback to function signature lookup
+    const signature = await fetchFunctionSignature(selector);
+    if (signature) {
+      return {
+        functionName: signature.split('(')[0],
+        functionSignature: signature,
+        decodedParams: undefined
+      };
+    }
+
+    return {
+      functionName: 'Unknown Function',
+      functionSignature: selector,
+      decodedParams: undefined
+    };
+  } catch (error) {
+    return null;
+  }
+}
+
+/**
+ * Check if address is a contract or wallet
+ */
+export async function getAddressType(address: string, alchemy: Alchemy): Promise<'wallet' | 'contract'> {
+  // Check cache first
+  const cachedType = await cache.getAddressType(address);
+  if (cachedType) {
+    return cachedType;
+  }
+
+  try {
+    const code = await alchemy.core.getCode(address);
+    const isContract = code !== '0x';
+    const addressType = isContract ? 'contract' : 'wallet';
+    await cache.setAddressType(address, addressType);
+    return addressType;
+  } catch (error) {
+    return 'wallet'; // Default to wallet on error
+  }
+}
