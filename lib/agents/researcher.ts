@@ -398,7 +398,7 @@ WALLET INTELLIGENCE SUMMARY:
 - Activity Pattern: ${walletSummary.portfolioInsights.activityPattern}
 - Average Transaction: ${walletSummary.behavioralPatterns.averageTransactionSize.eth} ETH (~$${walletSummary.behavioralPatterns.averageTransactionSize.usd_estimate})
 - Primary Assets: ${walletSummary.portfolioInsights.primaryAssets.join(', ')}
-- Top Protocols: ${walletSummary.protocolPreferences.topProtocols.map((p: any) => p.name).join(', ')}
+- Top Protocols: ${walletSummary.protocolPreferences.topProtocols.map((p: any) => `${p.name} (${p.frequency} txns)`).join(', ')}
 - DeFi Categories: ${walletSummary.protocolPreferences.defiCategories.join(', ')}
 - Summary: ${walletSummary.summary}
 
