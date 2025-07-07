@@ -466,14 +466,12 @@ export const pendleQuoteTool = tool({
     let usdConversionResult = null;
     
     // Determine the input token symbol for USD conversion
-    // For Pendle swaps, if direction is 'eth_to_token', input is ETH
-    // If direction is 'token_to_eth', we need to determine the token from context
-    let inputTokenSymbol = 'ETH'; // Default assumption
+    let inputTokenSymbol = 'ETH'; // Default assumption for ethToToken direction
     
     if (direction === 'tokenToEth') {
-      // The input token is not ETH, we need to infer it from the amount string or context
-      // For now, let's try common tokens that might be mentioned
-      const possibleTokens = ['LINK', 'USDT', 'USDC', 'DAI', 'WBTC', 'UNI', 'AAVE'];
+      // The input token is not ETH, we need to infer it from the amount string
+      // Try to detect token symbols in the amount string
+      const possibleTokens = ['LINK', 'USDT', 'USDC', 'DAI', 'WBTC', 'UNI', 'AAVE', 'WETH'];
       const amountLower = amount_in_human.toLowerCase();
       
       for (const token of possibleTokens) {
@@ -481,6 +479,12 @@ export const pendleQuoteTool = tool({
           inputTokenSymbol = token;
           break;
         }
+      }
+      
+      // If no token detected in amount string but we're doing tokenToEth,
+      // we can't reliably convert USD amounts without knowing the input token
+      if (inputTokenSymbol === 'ETH' && amountLower.includes('$')) {
+        console.log('Warning: USD amount detected for tokenToEth direction but input token unclear');
       }
     }
     
