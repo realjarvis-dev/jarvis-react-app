@@ -6,7 +6,7 @@ import path, { dirname } from 'path'; // Added import for path operations
 import { promisify } from 'util';
 import { z } from 'zod';
 import { ensoSwap } from '../enso/swap'; // Import ensoSwap
-import { getTokenUsdPriceBatch } from '../enso/get-token-usd-price'; // Import price fetching
+import { parseUsdAmount, getUsdSupportDescription, createUsdConversionInfo, getEffectiveAmount } from '../utils/usd-parser';
 import { erc20Approval, executeTransaction } from '../privy/utils';
 import { getUserEvmWalletAddress } from '../privy/client';
 import { NetworkContext } from '../types/context';
@@ -17,33 +17,8 @@ interface ToolContext {
   networkContext?: NetworkContext
 }
 
-const tokenAddressMap: Record<string, string> = {
-  ETH: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-  USDT: '0xdac17f958d2ee523a2206206994597c13d831ec7',
-  USDC: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-  DAI: '0x6b175474e89094c44da98b954eedeac495271d0f',
-  WETH: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-  WBTC: '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599',
-  LINK: '0x514910771af9ca656af840dff83e8264ecf986ca',
-  UNI: '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984',
-  AAVE: '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9',
-  MKR: '0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2',
-  COMP: '0xc00e94cb662c3520282e6f5717214004a7f26888'
-}
-
-const tokenDecimalMap: Record<string, number> = {
-    ETH: 18,
-    USDT: 6,
-    USDC: 6,
-    DAI: 18,
-    WETH: 18,
-    WBTC: 8,
-    LINK: 18,
-    UNI: 18,
-    AAVE: 18,
-    MKR: 18,
-    COMP: 18,
-  };
+// Import token mappings from common USD parser
+import { TOKEN_ADDRESS_MAP as tokenAddressMap, TOKEN_DECIMAL_MAP as tokenDecimalMap } from '../utils/usd-parser';
 
 const parameters = z.object({
   tokenInSymbol: z
@@ -62,7 +37,7 @@ const parameters = z.object({
   amountInHuman: z
     .string()
     .describe(
-      'Amount of input token to swap in human-readable format (e.g., "1", "100.5") in the unit of Input Token. Also supports USD amounts in various formats: "$30", "$100", "30 USD", "$100 of token", "$100 worth of token", "100 USD of token" - the system will automatically convert to the token amount using real-time market prices. If market data is unavailable for a token, the system will inform the user to specify the exact token amount instead. Notify user if output amount is supplied.'
+      getUsdSupportDescription('Amount of input token to swap in human-readable format (e.g., "1", "100.5") in the unit of Input Token. Notify user if output amount is supplied.')
     ),
   slippage: z
     .number()
@@ -78,60 +53,6 @@ const parameters = z.object({
     )
 })
 
-// Helper function to parse USD amounts and convert to any token
-async function parseUsdAmount(amountStr: string, tokenSymbol: string, chainId: number): Promise<{ isUsd: boolean; tokenAmount?: string; usdAmount?: number }> {
-  const usdPatterns = [
-    /^\$(\d+(?:\.\d+)?)$/, // $30, $100.50
-    /^(\d+(?:\.\d+)?)\s*usd$/i, // 30 USD, 100.50 usd
-    /^(\d+(?:\.\d+)?)\s*dollars?$/i, // 30 dollars, 100.50 dollar
-    /^\$(\d+(?:\.\d+)?)\s+(?:of|worth\s+of|in)\s+/i, // $100 of token, $100 worth of token, $100 in token
-    /^(\d+(?:\.\d+)?)\s*(?:usd|dollars?)\s+(?:of|worth\s+of|in)\s+/i, // 100 USD of token, 100 dollars worth of token
-  ];
-  
-  for (const pattern of usdPatterns) {
-    const match = amountStr.trim().match(pattern);
-    if (match) {
-      const usdAmount = parseFloat(match[1]);
-      if (isNaN(usdAmount) || usdAmount <= 0) {
-        throw new Error(`Invalid USD amount: ${amountStr}`);
-      }
-      
-      // Get token address for price lookup
-      const tokenAddress = tokenAddressMap[tokenSymbol.toUpperCase()];
-      if (!tokenAddress) {
-        throw new Error(`Token ${tokenSymbol} is not supported for USD conversion`);
-      }
-      
-      try {
-        const priceData = await getTokenUsdPriceBatch([tokenAddress], chainId);
-        if (!priceData || priceData.length === 0) {
-          throw new Error(`Market data unavailable for ${tokenSymbol}. Please specify the exact token amount instead of USD amount.`);
-        }
-        
-        const tokenPrice = priceData[0].price;
-        if (!tokenPrice || tokenPrice <= 0) {
-          throw new Error(`Market data unavailable for ${tokenSymbol}. Please specify the exact token amount instead of USD amount.`);
-        }
-        
-        const tokenDecimals = tokenDecimalMap[tokenSymbol.toUpperCase()] || 18;
-        const tokenAmount = (usdAmount / tokenPrice).toFixed(tokenDecimals);
-        
-        return {
-          isUsd: true,
-          tokenAmount: tokenAmount,
-          usdAmount: usdAmount
-        };
-      } catch (error) {
-        if (error instanceof Error && error.message.includes('Market data unavailable')) {
-          throw error; // Re-throw market data unavailable errors
-        }
-        throw new Error(`Failed to fetch ${tokenSymbol} price for USD conversion: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      }
-    }
-  }
-  
-  return { isUsd: false };
-}
 
 export const genericSwapTool = tool({
   description:
@@ -180,15 +101,14 @@ export const genericSwapTool = tool({
 
       let amountInBaseUnits: string
       let actualTokenInAddress: string
-      let actualAmountInHuman = amountInHuman
-      let usdConversionInfo: { isUsd: boolean; tokenAmount?: string; usdAmount?: number } | null = null
       const upperTokenInSymbol = tokenInSymbol.toUpperCase()
 
-      // Check if this is a USD amount for any token
-      usdConversionInfo = await parseUsdAmount(amountInHuman, upperTokenInSymbol, effectiveChainId)
-      if (usdConversionInfo.isUsd) {
-        actualAmountInHuman = usdConversionInfo.tokenAmount!
-        logContent += `USD Conversion: $${usdConversionInfo.usdAmount} -> ${actualAmountInHuman} ${upperTokenInSymbol}\n`
+      // Parse USD amount using common utility
+      const usdConversionResult = await parseUsdAmount(amountInHuman, upperTokenInSymbol, { chainId: effectiveChainId })
+      const actualAmountInHuman = getEffectiveAmount(usdConversionResult)
+      
+      if (usdConversionResult.isUsd) {
+        logContent += `USD Conversion: $${usdConversionResult.usdAmount} -> ${actualAmountInHuman} ${upperTokenInSymbol}\n`
       }
 
       if (upperTokenInSymbol === 'ETH') {
@@ -283,11 +203,7 @@ export const genericSwapTool = tool({
           amount_in_base_units: amountInBaseUnits,
           chain_id: effectiveChainId,
           complete_time: completeTime,
-          usd_conversion: usdConversionInfo?.isUsd ? {
-            original_usd_amount: usdConversionInfo.usdAmount,
-            converted_token_amount: actualAmountInHuman,
-            conversion_note: `Converted $${usdConversionInfo.usdAmount} to ${actualAmountInHuman} ${upperTokenInSymbol} using real-time pricing`
-          } : null
+          usd_conversion: createUsdConversionInfo(usdConversionResult)
         }
       }
     } catch (error: any) {

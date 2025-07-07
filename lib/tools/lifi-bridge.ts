@@ -5,7 +5,7 @@ import {
   // executeLifiBridgeTransactionWithAutoFuel,
   generateLifiBridgeQuote
 } from '../lifi/actions'
-import { getTokenUsdPriceBatch } from '../enso/get-token-usd-price'
+import { parseUsdAmount, getUsdSupportDescription, createUsdConversionInfo, getEffectiveAmount } from '../utils/usd-parser'
 import { getUserEvmWalletAddress } from '../privy/client'
 import { chainsById } from '../token-matcher/fuzzy-chain-matcher'
 import { ToolContext } from '../types/context'
@@ -14,89 +14,6 @@ import { getUserId } from '../privy/client'
 import { balanceChangePub } from '../pubsub/balance-change-pub'
 import { ChainType } from '../network/types'
 
-// Token address mapping for USD conversion (matching other tools)
-const tokenAddressMap: Record<string, string> = {
-  ETH: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-  USDT: '0xdac17f958d2ee523a2206206994597c13d831ec7',
-  USDC: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-  DAI: '0x6b175474e89094c44da98b954eedeac495271d0f',
-  WETH: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-  WBTC: '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599',
-  LINK: '0x514910771af9ca656af840dff83e8264ecf986ca',
-  UNI: '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984',
-  AAVE: '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9',
-  MKR: '0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2',
-  COMP: '0xc00e94cb662c3520282e6f5717214004a7f26888'
-}
-
-const tokenDecimalMap: Record<string, number> = {
-  ETH: 18,
-  USDT: 6,
-  USDC: 6,
-  DAI: 18,
-  WETH: 18,
-  WBTC: 8,
-  LINK: 18,
-  UNI: 18,
-  AAVE: 18,
-  MKR: 18,
-  COMP: 18,
-}
-
-// Helper function to parse USD amounts and convert to any token for LiFi bridge
-async function parseUsdAmountForBridge(amountStr: string, tokenSymbol: string, chainId: number): Promise<{ isUsd: boolean; tokenAmount?: string; usdAmount?: number }> {
-  const usdPatterns = [
-    /^\$(\d+(?:\.\d+)?)$/, // $30, $100.50
-    /^(\d+(?:\.\d+)?)\s*usd$/i, // 30 USD, 100.50 usd
-    /^(\d+(?:\.\d+)?)\s*dollars?$/i, // 30 dollars, 100.50 dollar
-    /^\$(\d+(?:\.\d+)?)\s+(?:of|worth\s+of|in)\s+/i, // $100 of token, $100 worth of token, $100 in token
-    /^(\d+(?:\.\d+)?)\s*(?:usd|dollars?)\s+(?:of|worth\s+of|in)\s+/i, // 100 USD of token, 100 dollars worth of token
-  ];
-  
-  for (const pattern of usdPatterns) {
-    const match = amountStr.trim().match(pattern);
-    if (match) {
-      const usdAmount = parseFloat(match[1]);
-      if (isNaN(usdAmount) || usdAmount <= 0) {
-        throw new Error(`Invalid USD amount: ${amountStr}`);
-      }
-      
-      // Get token address for price lookup
-      const tokenAddress = tokenAddressMap[tokenSymbol.toUpperCase()];
-      if (!tokenAddress) {
-        throw new Error(`Token ${tokenSymbol} is not supported for USD conversion`);
-      }
-      
-      try {
-        const priceData = await getTokenUsdPriceBatch([tokenAddress], chainId);
-        if (!priceData || priceData.length === 0) {
-          throw new Error(`Market data unavailable for ${tokenSymbol}. Please specify the exact token amount instead of USD amount.`);
-        }
-        
-        const tokenPrice = priceData[0].price;
-        if (!tokenPrice || tokenPrice <= 0) {
-          throw new Error(`Market data unavailable for ${tokenSymbol}. Please specify the exact token amount instead of USD amount.`);
-        }
-        
-        const tokenDecimals = tokenDecimalMap[tokenSymbol.toUpperCase()] || 18;
-        const tokenAmount = (usdAmount / tokenPrice).toFixed(tokenDecimals);
-        
-        return {
-          isUsd: true,
-          tokenAmount: tokenAmount,
-          usdAmount: usdAmount
-        };
-      } catch (error) {
-        if (error instanceof Error && error.message.includes('Market data unavailable')) {
-          throw error; // Re-throw market data unavailable errors
-        }
-        throw new Error(`Failed to fetch ${tokenSymbol} price for USD conversion: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      }
-    }
-  }
-  
-  return { isUsd: false };
-}
 
 const bridgeQuoteTool = tool({
   description:
@@ -125,7 +42,7 @@ const bridgeQuoteTool = tool({
     amountIn: z
       .string()
       .describe(
-        'The amount of input tokens to bridge, in human readable format. Also supports USD amounts in various formats: "$30", "$100", "30 USD", "$100 of token", "$100 worth of token", "100 USD of token" - the system will automatically convert to the token amount using real-time market prices. If market data is unavailable for a token, the system will inform the user to specify the exact token amount instead.'
+        getUsdSupportDescription('The amount of input tokens to bridge, in human readable format.')
       ),
     slippage: z
       .string()
@@ -154,25 +71,26 @@ const bridgeQuoteTool = tool({
     // }
     const isDemo = context?.networkContext?.isDemo
     
-    // Handle USD amount conversion for fromToken
-    let actualAmountIn = amountIn
-    let usdConversionInfo: { isUsd: boolean; tokenAmount?: string; usdAmount?: number } | null = null
+    // Parse USD amount using common utility
+    const chainId = context?.networkContext?.selectedChainId || 1 // Default to Ethereum mainnet
+    const usdConversionResult = await parseUsdAmount(amountIn, fromToken, { 
+      chainId, 
+      throwErrors: false // Return errors in result instead of throwing
+    })
     
-    try {
-      // Try to parse USD amount and convert to token amount
-      const chainId = context?.networkContext?.selectedChainId || 1 // Default to Ethereum mainnet
-      usdConversionInfo = await parseUsdAmountForBridge(amountIn, fromToken, chainId)
-      if (usdConversionInfo.isUsd) {
-        actualAmountIn = usdConversionInfo.tokenAmount!
-        console.log(`USD Conversion: $${usdConversionInfo.usdAmount} -> ${actualAmountIn} ${fromToken.toUpperCase()}`)
-      }
-    } catch (error) {
-      // If USD parsing fails, return error with helpful message
+    // Check for conversion errors
+    if (usdConversionResult.conversionNote && !usdConversionResult.isUsd) {
       return {
         _uiDisplayTool: true,
-        summary: `USD conversion failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        data: { error: error instanceof Error ? error.message : 'Unknown error' }
+        summary: `USD conversion failed: ${usdConversionResult.conversionNote}`,
+        data: { error: usdConversionResult.conversionNote }
       }
+    }
+    
+    const actualAmountIn = getEffectiveAmount(usdConversionResult)
+    
+    if (usdConversionResult.isUsd) {
+      console.log(`USD Conversion: $${usdConversionResult.usdAmount} -> ${actualAmountIn} ${fromToken.toUpperCase()}`)
     }
     
     console.log('fromChain', fromChain)
@@ -208,14 +126,10 @@ const bridgeQuoteTool = tool({
     )
     
     // Add USD conversion info to the result if applicable
-    if (result && typeof result === 'object' && usdConversionInfo?.isUsd) {
+    if (result && typeof result === 'object' && usdConversionResult.isUsd) {
       return {
         ...result,
-        usd_conversion: {
-          original_usd_amount: usdConversionInfo.usdAmount,
-          converted_token_amount: actualAmountIn,
-          conversion_note: `Converted $${usdConversionInfo.usdAmount} to ${actualAmountIn} ${fromToken.toUpperCase()} using real-time pricing`
-        }
+        usd_conversion: createUsdConversionInfo(usdConversionResult)
       }
     }
     
