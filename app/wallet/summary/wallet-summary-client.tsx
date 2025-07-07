@@ -519,6 +519,15 @@ export default function WalletSummaryClient() {
                 </div>
                 Top Protocols
               </CardTitle>
+              {analysis?.topProtocols && analysis.topProtocols.length > 0 && (
+                <div className="text-sm text-muted-foreground">
+                  <span className="font-medium text-purple-600 dark:text-purple-400">
+                    {analysis.topProtocols.length} protocols identified
+                  </span>
+                  {' • '}
+                  <span>Most used DeFi platforms</span>
+                </div>
+              )}
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -530,7 +539,7 @@ export default function WalletSummaryClient() {
                           {index + 1}
                         </span>
                       </div>
-                      <span className="font-medium">{protocol}</span>
+                      <span className="font-medium flex-1">{protocol}</span>
                     </div>
                   ))
                 ) : (
@@ -549,6 +558,15 @@ export default function WalletSummaryClient() {
                 </div>
                 Primary Assets
               </CardTitle>
+              {analysis?.primaryAssets && analysis.primaryAssets.length > 0 && (
+                <div className="text-sm text-muted-foreground">
+                  <span className="font-medium text-cyan-600 dark:text-cyan-400">
+                    {analysis.primaryAssets.length} primary assets
+                  </span>
+                  {' • '}
+                  <span>Most transacted tokens</span>
+                </div>
+              )}
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -559,14 +577,19 @@ export default function WalletSummaryClient() {
                         <div className="w-8 h-8 bg-cyan-100 dark:bg-cyan-900/20 rounded-full flex items-center justify-center flex-shrink-0">
                           <Coins className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
                         </div>
-                        <Tooltip>
-                          <TooltipTrigger asChild className="flex-1 min-w-0">
-                            <span className="font-medium text-sm leading-tight truncate block cursor-help">{asset}</span>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{asset}</p>
-                          </TooltipContent>
-                        </Tooltip>
+                        <div className="flex-1 min-w-0">
+                          <Tooltip>
+                            <TooltipTrigger asChild className="w-full">
+                              <span className="font-medium text-sm leading-tight truncate block cursor-help">{asset}</span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{asset}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            Rank #{index + 1} asset
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ))
