@@ -41,7 +41,7 @@ import {
 } from '../tools/wallet'
 import { NetworkContext, ToolContext } from '../types/context'
 import { xStockList } from '../tools/xstock-search'
-import { jupiterQuote } from '../tools/jupiter-trade'
+import { jupiterExecute, jupiterQuote } from '../tools/jupiter-trade'
 
 /**
  * Interface for tool definition with schema and execution function
@@ -802,7 +802,7 @@ export function createToolRegistry(model: string): ToolRegistry {
 
   registry.registerTool({
     name: 'jupiter_quote',
-    description: 'Get the quote for a trade on Jupiter dex, can only be used for trading SOL, USDC, or any xStock',
+    description: jupiterQuote.description || '',
     schema: jupiterQuote.parameters,
     execute: async (params, context) => jupiterQuote.execute(params, {
       toolCallId: context?.toolCallId || 'unknown',
@@ -810,6 +810,19 @@ export function createToolRegistry(model: string): ToolRegistry {
       networkContext: context?.networkContext!
     } as any),
     category: ToolCategory.WEB3_READ,
+    supportedNetworks: ['solana']
+  })
+
+  registry.registerTool({
+    name: 'jupiter_execute',
+    description: jupiterExecute.description || '',
+    schema: jupiterExecute.parameters,
+    execute: async (params, context) => jupiterExecute.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown', 
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3_WRITE,
     supportedNetworks: ['solana']
   })
 

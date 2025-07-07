@@ -1,25 +1,17 @@
 import {
-    getAssociatedTokenAddress,
-    createAssociatedTokenAccountInstruction,
-    TOKEN_PROGRAM_ID,
-    ASSOCIATED_TOKEN_PROGRAM_ID,
-  } from '@solana/spl-token';
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  createAssociatedTokenAccountInstruction,
+  getAssociatedTokenAddress,
+  TOKEN_PROGRAM_ID
+} from '@solana/spl-token'
 import {
-    clusterApiUrl,
-    Connection,
-    LAMPORTS_PER_SOL,
-    PublicKey,
-    SystemProgram,
-    Transaction,
-    VersionedTransaction,
-    TransactionMessage,
-    Commitment,
-    sendAndConfirmRawTransaction,
-    Message,
-    VersionedMessage
-    } from '@solana/web3.js';
-import { privy, getUserWallet, getUserSolWalletAddress } from './client';
-import { solanaConfig } from '@/lib/network/config';
+  Commitment,
+  Connection,
+  PublicKey,
+  Transaction,
+  VersionedTransaction
+} from '@solana/web3.js'
+import { getUserWallet, privy } from './client'
 
 export async function signSolanaTransaction(transaction: Transaction | VersionedTransaction,
     connection: Connection
@@ -49,6 +41,47 @@ export async function signSolanaTransaction(transaction: Transaction | Versioned
 }
 
 /**
+ * Sign a base64 encoded Solana transaction string
+ * @param transaction - The transaction string to sign
+ * @param connection - The Solana connection
+ * @returns The signed transaction string in base64 format
+ */
+
+export async function signSolanaTransactionString(
+  transaction: string,
+  connection: Connection
+) {
+  const wallet = await getUserWallet('solana')
+  if (!wallet) {
+    throw new Error('Wallet not found')
+  }
+  const rawTxBase64 = transaction // e.g. "AQAAAAA…"
+
+  const rawTxBytes = Buffer.from(rawTxBase64, 'base64')
+
+  try {
+    // Try to deserialize as a versioned transaction first
+    const vtx = VersionedTransaction.deserialize(rawTxBytes)
+
+    // For versioned transactions, we need to create a new VersionedTransaction
+    // with the message and empty signatures array
+
+    const signedTransaction = await signSolanaTransaction(vtx, connection)
+
+    // const signedBase64 = Buffer.from(signedTransaction.serialize()).toString("base64");
+    return signedTransaction
+  } catch (err) {
+    // Fall back to legacy transaction
+    const tx = Transaction.from(rawTxBytes)
+
+    const signedTransaction = await signSolanaTransaction(tx, connection)
+
+    // const signedBase64 = Buffer.from(signedTransaction.serialize()).toString("base64");
+    return signedTransaction
+  }
+}
+
+/**
  * Broadcasts a signed Solana transaction to the network and waits for confirmation
  * using the new, non-deprecated APIs.
  *
@@ -58,24 +91,24 @@ export async function signSolanaTransaction(transaction: Transaction | Versioned
  * @returns                  The transaction signature (txid).
  */
 export async function broadcastSolanaTransaction(
-    signedTransaction: Transaction | VersionedTransaction,
-    connection: Connection,
-    commitment: Commitment = 'confirmed'
-  ): Promise<string> {
-    const rawTx = signedTransaction.serialize()
+  signedTransaction: Transaction | VersionedTransaction,
+  connection: Connection,
+  commitment: Commitment = 'confirmed'
+): Promise<string> {
+  const rawTx = signedTransaction.serialize()
 
-    const txid = await connection.sendRawTransaction(rawTx)
-  
-    const { blockhash, lastValidBlockHeight } =
-      await connection.getLatestBlockhash(commitment)
-  
-    await connection.confirmTransaction(
-      { signature: txid, blockhash, lastValidBlockHeight },
-      commitment
-    )
-  
-    return txid
-  }
+  const txid = await connection.sendRawTransaction(rawTx)
+
+  const { blockhash, lastValidBlockHeight } =
+    await connection.getLatestBlockhash(commitment)
+
+  await connection.confirmTransaction(
+    { signature: txid, blockhash, lastValidBlockHeight },
+    commitment
+  )
+
+  return txid
+}
 
 /**
  * Ensure the given owner has an ATA for the given mint.
@@ -126,4 +159,5 @@ export async function ensureAta(
   
     return {ata, txid};
   }
+
 

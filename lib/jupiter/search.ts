@@ -72,4 +72,3 @@ export async function searchXStocksByName(name: string): Promise<JupiterTokenDat
   }
 }
 
-console.log(await searchXStocksByName('xstock'))

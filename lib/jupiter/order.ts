@@ -1,6 +1,8 @@
 
 import axios from 'axios'
-
+import { clusterApiUrl, Connection } from '@solana/web3.js'
+import { computeNetworkFeeFromTxString } from './utils'
+import { signSolanaTransactionString } from '../privy/solana-utils'
 // Create a new axios instance for Jupiter Ultra API
 const jupiterUltraAxios = axios.create({
   baseURL: 'https://ultra-api.jup.ag'
@@ -154,32 +156,7 @@ export async function executeJupiterOrder(
   }
 }
 
-/**
- * Complete Jupiter swap flow: get order and execute
- * @param orderParams - Order request parameters
- * @param signedTransaction - Signed transaction from the order response
- * @returns Promise with execution response
- */
-export async function completeJupiterSwap(
-  orderParams: JupiterOrderRequest,
-  signedTransaction: string
-): Promise<JupiterExecuteResponse> {
-  try {
-    // First get the order
-    const orderResponse = await getJupiterOrder(orderParams)
 
-    // Then execute with the signed transaction
-    const executeResponse = await executeJupiterOrder({
-      requestId: orderResponse.requestId,
-      signedTransaction: signedTransaction
-    })
-
-    return executeResponse
-  } catch (error) {
-    console.error('Error completing Jupiter swap:', error)
-    throw error
-  }
-}
 
 // console.log(JSON.stringify(await getJupiterOrder({
 //     inputMint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
@@ -196,4 +173,4 @@ export async function completeJupiterSwap(
 //         swapMode: "ExactIn"
 //     })
 // const connection = new Connection(clusterApiUrl('mainnet-beta'))
-// console.log(await computeNetworkFeeFromTxString(quoteResult.transaction, connection))
+// console.log(await signSolanaTransactionString(quoteResult.transaction, connection))
