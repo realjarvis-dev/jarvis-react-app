@@ -61,7 +61,7 @@ const NetworkSection = ({
       </div>
       <div className="space-y-1">
         {tokens.map(token => (
-          <TokenRow key={`${token.address}-${token.network}`} token={token} />
+          <TokenRow key={`${token.address}-${token.network}-${token.name}`} token={token} />
         ))}
       </div>
     </div>
