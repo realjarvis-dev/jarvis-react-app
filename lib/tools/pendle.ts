@@ -928,7 +928,9 @@ export const pendleMintQuoteTool = tool({
       .describe('The type of output tokens - "py" for PT+YT tokens or "sy" for SY token only.'),
     amount_in_human: z
       .string()
-      .describe('Amount of input tokens to mint from in human-readable format (e.g., "1", "100.5").'),
+      .describe(
+        getUsdSupportDescription('Amount of input tokens to mint from in human-readable format (e.g., "1", "100.5").')
+      ),
     user_wallet_address: z
       .string()
       .describe('The address of the user\'s EVM wallet'),
