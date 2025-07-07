@@ -10,6 +10,7 @@ import { executePendleRedeemSy, getRedeemSyQuote } from '../pendle/redeem-sy'
 import { executePendleSwap, getSwapQuote } from '../pendle/swap'
 import { getERC20Details } from '../privy/utils'
 import { NetworkContext } from '../types/context'
+import { parseUsdAmount, getUsdSupportDescription, getEffectiveAmount } from '../utils/usd-parser'
 
 async function resolveTokenAddress(
   tokenAddressOrName: string, 
@@ -430,7 +431,7 @@ export const pendleQuoteTool = tool({
     amount_in_human: z
       .string()
       .describe(
-        'Amount of input token to swap in human-readable format (e.g., "1", "100.5"). Default to 1'
+        getUsdSupportDescription('Amount of input token to swap in human-readable format (e.g., "1", "100.5"). Default to 1')
     ),
     token_type: z
       .enum(['pt', 'yt'])
@@ -460,6 +461,44 @@ export const pendleQuoteTool = tool({
     
     const chainId = networkContext.selectedChainId;
     
+    // Parse USD amount if needed
+    let actualAmountInHuman = amount_in_human;
+    let usdConversionResult = null;
+    
+    // Determine the input token symbol for USD conversion
+    // For Pendle swaps, if direction is 'eth_to_token', input is ETH
+    // If direction is 'token_to_eth', we need to determine the token from context
+    let inputTokenSymbol = 'ETH'; // Default assumption
+    
+    if (direction === 'tokenToEth') {
+      // The input token is not ETH, we need to infer it from the amount string or context
+      // For now, let's try common tokens that might be mentioned
+      const possibleTokens = ['LINK', 'USDT', 'USDC', 'DAI', 'WBTC', 'UNI', 'AAVE'];
+      const amountLower = amount_in_human.toLowerCase();
+      
+      for (const token of possibleTokens) {
+        if (amountLower.includes(token.toLowerCase())) {
+          inputTokenSymbol = token;
+          break;
+        }
+      }
+    }
+    
+    try {
+      usdConversionResult = await parseUsdAmount(amount_in_human, inputTokenSymbol, { 
+        chainId, 
+        throwErrors: false 
+      });
+      
+      if (usdConversionResult.isUsd) {
+        actualAmountInHuman = getEffectiveAmount(usdConversionResult);
+        console.log(`USD Conversion: $${usdConversionResult.usdAmount} -> ${actualAmountInHuman} ${inputTokenSymbol}`);
+      }
+    } catch (error) {
+      console.log('USD parsing error:', error);
+      // Continue with original amount if USD parsing fails
+    }
+    
     try {
       const { resolvedTokenAddress, resolvedMarketName } = await resolveTokenAddress(
         tokenAddressOrName, 
@@ -471,7 +510,7 @@ export const pendleQuoteTool = tool({
         resolvedTokenAddress,
         token_type,
         direction,
-        amount_in_human,
+        actualAmountInHuman,
         resolvedMarketName || market_name,
         chainId
       );
@@ -492,7 +531,7 @@ export const pendleQuoteTool = tool({
         swapData,
         direction,
         resolvedTokenAddress,
-        amount_in_human,
+        actualAmountInHuman,
         swapConfig.inputToken,
         swapConfig.outputToken,
         chainId
@@ -500,7 +539,7 @@ export const pendleQuoteTool = tool({
       
       const quoteData = {
         market: swapConfig.fullTokenName,
-        inputAmount: amount_in_human,
+        inputAmount: actualAmountInHuman,
         inputToken: swapConfig.inputToken,
         outputToken: swapConfig.outputToken,
         rate: outputData.rate,
@@ -509,7 +548,12 @@ export const pendleQuoteTool = tool({
         priceImpact: swapData.priceImpact,
         complete_time: new Date().toISOString(),
         foundMarketAddress: swapConfig.marketAddress,
-        foundTokenAddress: resolvedTokenAddress
+        foundTokenAddress: resolvedTokenAddress,
+        usd_conversion: usdConversionResult?.isUsd ? {
+          original_usd_amount: usdConversionResult.usdAmount,
+          converted_token_amount: actualAmountInHuman,
+          conversion_note: usdConversionResult.conversionNote
+        } : null
       }
       
       return {
