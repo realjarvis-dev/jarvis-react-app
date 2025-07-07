@@ -6,6 +6,7 @@
  */
 
 import { getTokenUsdPriceBatch } from '../enso/get-token-usd-price'
+import { TokenMatcher } from '../token-matcher/fuzzy-token-matcher'
 
 // Token address mapping for USD conversion (centralized)
 export const TOKEN_ADDRESS_MAP: Record<string, string> = {
@@ -19,7 +20,8 @@ export const TOKEN_ADDRESS_MAP: Record<string, string> = {
   UNI: '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984',
   AAVE: '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9',
   MKR: '0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2',
-  COMP: '0xc00e94cb662c3520282e6f5717214004a7f26888'
+  COMP: '0xc00e94cb662c3520282e6f5717214004a7f26888',
+  BERA: '0x0000000000000000000000000000000000000000' // Native BERA token on Berachain
 }
 
 export const TOKEN_DECIMAL_MAP: Record<string, number> = {
@@ -34,6 +36,7 @@ export const TOKEN_DECIMAL_MAP: Record<string, number> = {
   AAVE: 18,
   MKR: 18,
   COMP: 18,
+  BERA: 18,
 }
 
 // USD parsing patterns - supports various natural language expressions
@@ -70,6 +73,58 @@ export interface UsdParserOptions {
    * Whether to throw errors or return them in the result
    */
   throwErrors?: boolean
+}
+
+export interface ResolvedTokenInfo {
+  address: string
+  decimals: number
+  symbol: string
+  isFromHardcoded: boolean
+}
+
+/**
+ * Dynamically resolves token address and decimals using TokenMatcher as fallback
+ */
+async function resolveTokenInfo(
+  tokenSymbol: string,
+  chainId: number,
+  customTokens: Record<string, string> = {},
+  customDecimals: Record<string, number> = {}
+): Promise<ResolvedTokenInfo> {
+  const upperSymbol = tokenSymbol.toUpperCase()
+  
+  // First check hardcoded mappings
+  const tokenAddressMap = { ...TOKEN_ADDRESS_MAP, ...customTokens }
+  const tokenDecimalMap = { ...TOKEN_DECIMAL_MAP, ...customDecimals }
+  
+  if (tokenAddressMap[upperSymbol]) {
+    return {
+      address: tokenAddressMap[upperSymbol],
+      decimals: tokenDecimalMap[upperSymbol] || 18,
+      symbol: upperSymbol,
+      isFromHardcoded: true
+    }
+  }
+  
+  // Fallback to TokenMatcher for dynamic resolution
+  try {
+    const tokenMatcher = new TokenMatcher(chainId)
+    const matches = tokenMatcher.match(tokenSymbol, 1)
+    
+    if (matches.length > 0) {
+      const token = matches[0]
+      return {
+        address: token.address,
+        decimals: token.decimals,
+        symbol: token.symbol,
+        isFromHardcoded: false
+      }
+    }
+  } catch (error) {
+    // TokenMatcher failed, continue to error
+  }
+  
+  throw new Error(`Token ${tokenSymbol} not found on chain ${chainId}`)
 }
 
 /**
@@ -140,17 +195,12 @@ export async function parseUsdAmount(
         return { ...baseResult, conversionNote: error.message }
       }
 
-      // Get token address for price lookup
-      const tokenAddress = tokenAddressMap[tokenSymbol.toUpperCase()]
-      if (!tokenAddress) {
-        const error = new Error(`Token ${tokenSymbol} is not supported for USD conversion`)
-        if (throwErrors) throw error
-        return { ...baseResult, conversionNote: error.message }
-      }
-
       try {
+        // Dynamically resolve token info (address, decimals, symbol)
+        const tokenInfo = await resolveTokenInfo(tokenSymbol, chainId, customTokens, customDecimals)
+        
         // Fetch real-time token price
-        const priceData = await getTokenUsdPriceBatch([tokenAddress], chainId)
+        const priceData = await getTokenUsdPriceBatch([tokenInfo.address], chainId)
         
         if (!priceData || priceData.length === 0) {
           const error = new Error(`Market data unavailable for ${tokenSymbol}. Please specify the exact token amount instead of USD amount.`)
@@ -166,18 +216,24 @@ export async function parseUsdAmount(
         }
 
         // Calculate token amount with appropriate decimals
-        const tokenDecimals = tokenDecimalMap[tokenSymbol.toUpperCase()] || 18
-        const tokenAmount = (usdAmount / tokenPrice).toFixed(tokenDecimals)
+        const tokenAmount = (usdAmount / tokenPrice).toFixed(tokenInfo.decimals)
 
         return {
           isUsd: true,
           tokenAmount,
           usdAmount,
           originalInput: amountStr,
-          conversionNote: `Converted $${usdAmount} to ${tokenAmount} ${tokenSymbol.toUpperCase()} using real-time pricing (rate: $${tokenPrice})`
+          conversionNote: `Converted $${usdAmount} to ${tokenAmount} ${tokenInfo.symbol} using real-time pricing (rate: $${tokenPrice})${tokenInfo.isFromHardcoded ? '' : ' - dynamically resolved token'}`
         }
 
       } catch (error) {
+        // Handle token resolution errors
+        if (error instanceof Error && error.message.includes('not found on chain')) {
+          const resolutionError = new Error(`Token ${tokenSymbol} is not supported for USD conversion on chain ${chainId}`)
+          if (throwErrors) throw resolutionError
+          return { ...baseResult, conversionNote: resolutionError.message }
+        }
+        
         // Re-throw market data unavailable errors
         if (error instanceof Error && error.message.includes('Market data unavailable')) {
           if (throwErrors) throw error
@@ -199,7 +255,7 @@ export async function parseUsdAmount(
  * Convenience function for tool parameter descriptions
  */
 export function getUsdSupportDescription(baseDescription: string): string {
-  return `${baseDescription} Also supports USD amounts in various formats: "$30", "$100", "30 USD", "$100 of token", "$100 worth of token", "100 USD of token" - the system will automatically convert to the token amount using real-time market prices. If market data is unavailable for a token, the system will inform the user to specify the exact token amount instead.`
+  return `${baseDescription} Also supports USD amounts in various formats: "$30", "$100", "30 USD", "$100 of token", "$100 worth of token", "100 USD of token" - the system will automatically convert to the token amount using real-time market prices. The system can dynamically resolve token addresses and decimals for any token available on the chain, not just common tokens. If market data is unavailable for a token, the system will inform the user to specify the exact token amount instead.`
 }
 
 /**
