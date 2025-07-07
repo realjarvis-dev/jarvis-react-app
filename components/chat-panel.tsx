@@ -13,6 +13,7 @@ import { ArrowUp, ChevronDown, MessageCirclePlus, Square } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { RefObject, useEffect, useRef, useState } from 'react'
 import Textarea from 'react-textarea-autosize'
+import { AutoCompleteInput, AutoCompleteInputRef } from './autocomplete-input'
 import { toast } from 'sonner'
 import { useWalletAddresses } from '../lib/hooks/use-evm-and-sol-addresses'
 import { useArtifact } from './artifact/artifact-context'
@@ -36,7 +37,7 @@ import { WelcomeMessage } from './welcome-messages'
 function useKeyboardAvoidance({
   ref
 }: {
-  ref: RefObject<HTMLTextAreaElement>
+  ref: RefObject<AutoCompleteInputRef>
 }): void {
   useEffect(() => {
     // Check if visualViewport API is available
@@ -224,7 +225,7 @@ export function ChatPanel({
   // const [showEmptyScreen, setShowEmptyScreen] = useState(false) // Your existing state
   const [mounted, setMounted] = useState(false)
   const router = useRouter() // Your existing state
-  const inputRef = useRef<HTMLTextAreaElement>(null) // Your existing state
+  const inputRef = useRef<AutoCompleteInputRef>(null) // Updated for autocomplete
   const isFirstRender = useRef(true) // Your existing state
   const [isComposing, setIsComposing] = useState(false) // Your existing state
   const [enterDisabled, setEnterDisabled] = useState(false) // Your existing state
@@ -433,7 +434,7 @@ export function ChatPanel({
           position: 'sticky',
           bottom: 0,
           // zIndex is now on the div itself, VideoBackground is z-0
-          overflow: 'hidden'
+          overflow: 'visible'
         }}
       >
         <div className="w-full max-w-3xl">
@@ -574,29 +575,27 @@ export function ChatPanel({
                   : 'bg-muted border-input'
               )}
             >
-              <Textarea
+              <AutoCompleteInput
                 ref={inputRef}
-                name="input"
-                rows={1}
-                maxRows={5}
-                tabIndex={0}
+                value={input}
+                onChange={(value) => {
+                  handleInputChange({
+                    target: { value }
+                  } as React.ChangeEvent<HTMLTextAreaElement>)
+                }}
                 onCompositionStart={handleCompositionStart}
                 onCompositionEnd={handleCompositionEnd}
                 placeholder="Start your crypto journey with one simple prompt..."
-                spellCheck={false}
-                value={input}
                 disabled={isLoading || isToolInvocationInProgress()}
+                autoFocus={false}
+                rows={1}
                 className={cn(
-                  'resize-none w-full min-h-[38px] bg-transparent border-0 p-2 sm:p-3 md:p-4 text-xs sm:text-sm focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50',
+                  'w-full min-h-[38px] p-2 sm:p-3 md:p-4 text-xs sm:text-sm',
                   // MODIFIED: Text and placeholder color for video background
                   showVideoBg
                     ? 'text-white placeholder:text-gray-300'
                     : 'text-current placeholder:text-muted-foreground'
                 )}
-                onChange={e => {
-                  handleInputChange(e)
-                  // setShowEmptyScreen(e.target.value.length === 0) // your existing logic
-                }}
                 onKeyDown={e => {
                   if (
                     e.key === 'Enter' &&
@@ -609,29 +608,10 @@ export function ChatPanel({
                       return
                     }
                     e.preventDefault()
-                    const textarea = e.target as HTMLTextAreaElement
-                    textarea.form?.requestSubmit()
+                    const form = (e.target as HTMLElement).closest('form')
+                    form?.requestSubmit()
                   }
                 }}
-                onFocus={e => {
-                  e.preventDefault()
-                  if (e.target) {
-                    e.target.focus({ preventScroll: true })
-                  }
-
-                  requestAnimationFrame(() => {
-                    setTimeout(() => {
-                      const scrollContainer = document.getElementById('scroll-container')
-                      if (scrollContainer) {
-                        scrollContainer.scrollTo({
-                          top: scrollContainer.scrollHeight,
-                          behavior: 'smooth'
-                        })
-                      }
-                    }, 350)
-                  })
-                }}
-                // onBlur={() => setShowEmptyScreen(false)} // your existing logic
               />
               <div
                 className={cn(

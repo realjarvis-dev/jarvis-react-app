@@ -6,7 +6,7 @@ import { Message } from 'ai'
 import { ArrowUp, ChevronDown, MessageCirclePlus, Square } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { RefObject, useEffect, useRef, useState } from 'react'
-import Textarea from 'react-textarea-autosize'
+import { AutoCompleteInput, AutoCompleteInputRef } from './autocomplete-input'
 import { useArtifact } from './artifact/artifact-context'
 import { SuggestionPills } from './chat-panel/suggestion-pills'
 import { LazyWallet } from './wallet'
@@ -26,7 +26,7 @@ import { WithTooltip } from './with-tooltip'
 function useKeyboardAvoidance({
   ref
 }: {
-  ref: RefObject<HTMLTextAreaElement>
+  ref: RefObject<AutoCompleteInputRef>
 }): void {
   useEffect(() => {
     const hasVisualViewport =
@@ -197,7 +197,7 @@ export function ChatPanel({
 }: ChatPanelProps) {
   const [mounted, setMounted] = useState(false)
   const router = useRouter()
-  const inputRef = useRef<HTMLTextAreaElement>(null)
+  const inputRef = useRef<AutoCompleteInputRef>(null)
   const isFirstRender = useRef(true)
   const [isComposing, setIsComposing] = useState(false)
   const [enterDisabled, setEnterDisabled] = useState(false)
@@ -390,17 +390,17 @@ export function ChatPanel({
                   : 'bg-muted border-input'
               )}
             >
-              <Textarea
+              <AutoCompleteInput
                 ref={inputRef}
-                name="input"
-                rows={1}
-                maxRows={5}
-                tabIndex={0}
+                value={input}
+                onChange={(value) => {
+                  handleInputChange({
+                    target: { value }
+                  } as React.ChangeEvent<HTMLTextAreaElement>)
+                }}
                 onCompositionStart={handleCompositionStart}
                 onCompositionEnd={handleCompositionEnd}
                 placeholder="Start your crypto journey with one simple prompt..."
-                spellCheck={false}
-                value={input}
                 disabled={isLoading || isToolInvocationInProgress()}
                 className={cn(
                   'resize-none w-full min-h-[38px] bg-transparent border-0 p-2 sm:p-3 md:p-4 text-xs sm:text-sm focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50',
@@ -408,9 +408,6 @@ export function ChatPanel({
                     ? 'text-white placeholder:text-gray-300'
                     : 'text-current placeholder:text-muted-foreground'
                 )}
-                onChange={e => {
-                  handleInputChange(e)
-                }}
                 onKeyDown={e => {
                   if (
                     e.key === 'Enter' &&
@@ -427,23 +424,7 @@ export function ChatPanel({
                     textarea.form?.requestSubmit()
                   }
                 }}
-                onFocus={e => {
-                  e.preventDefault()
-                  if (e.target) {
-                    e.target.focus({ preventScroll: true })
-                  }
-
-                  setTimeout(() => {
-                    const scrollContainer =
-                      document.getElementById('scroll-container')
-                    if (scrollContainer) {
-                      scrollContainer.scrollTo({
-                        top: scrollContainer.scrollHeight,
-                        behavior: 'smooth'
-                      })
-                    }
-                  }, 350)
-                }}
+                rows={1}
               />
               <div
                 className={cn(
