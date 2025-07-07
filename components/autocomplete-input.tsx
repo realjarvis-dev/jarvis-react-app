@@ -32,6 +32,20 @@ export interface AutoCompleteInputRef {
   getTextareaRef: () => HTMLTextAreaElement | null
 }
 
+// Compare two suggestion arrays for equality
+const areSuggestionsEqual = (suggestions1: any[], suggestions2: any[]): boolean => {
+  if (suggestions1.length !== suggestions2.length) return false
+  
+  return suggestions1.every((suggestion1, index) => {
+    const suggestion2 = suggestions2[index]
+    return suggestion1.id === suggestion2.id &&
+           suggestion1.text === suggestion2.text &&
+           suggestion1.description === suggestion2.description &&
+           suggestion1.category === suggestion2.category &&
+           suggestion1.icon === suggestion2.icon
+  })
+}
+
 // Calculate relevance score based on user input
 const calculateRelevanceScore = (suggestionText: string, userInput: string, currentWord: string): number => {
   let score = 0
@@ -344,10 +358,17 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
     const [isOpen, setIsOpen] = useState(false)
     const [suggestions, setSuggestions] = useState<any[]>([])
     const [selectedIndex, setSelectedIndex] = useState(-1)
+    
+    // Update suggestions ref when suggestions change
+    useEffect(() => {
+      currentSuggestionsRef.current = suggestions
+    }, [suggestions])
     const [cursorPosition, setCursorPosition] = useState(0)
     const [isComposing, setIsComposing] = useState(false)
     const [isMounted, setIsMounted] = useState(false)
     const [isTyping, setIsTyping] = useState(false)
+    const [previousValue, setPreviousValue] = useState('')
+    const [isDeleting, setIsDeleting] = useState(false)
     
     const textareaRef = useRef<HTMLTextAreaElement>(null)
     const suggestionEngine = useRef<any>(null)
@@ -355,6 +376,10 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
     const typingTimeoutRef = useRef<NodeJS.Timeout>()
     const suggestionTimeoutRef = useRef<NodeJS.Timeout>()
     const selectedItemRef = useRef<HTMLDivElement>(null)
+    const currentSuggestionsRef = useRef<any[]>([])
+    
+    // Use a static message to prevent any flashing
+    const emptyStateMessage = "Continue typing for suggestions..."
     
     
     // Initialize suggestion engine on client side only
@@ -409,6 +434,36 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
             setIsOpen(false)
             setSelectedIndex(-1)
             return
+          }
+          
+          // Keep dropdown open while typing to prevent flashing
+          setIsOpen(true)
+          
+          // When user is deleting, be more conservative with suggestion updates
+          // Only update suggestions if the deletion results in a significantly different context
+          if (isDeleting && currentSuggestionsRef.current.length > 0) {
+            // Check if current suggestions are still relevant
+            const currentSuggestions = currentSuggestionsRef.current.filter(suggestion => {
+              const suggestionText = suggestion.text.toLowerCase()
+              const inputWords = input.split(/\s+/)
+              
+              // Keep suggestions that still match the current input context
+              return inputWords.some(word => 
+                word.length > 1 && (
+                  suggestionText.includes(word) || 
+                  calculateRelevanceScore(suggestion.text, input, word) > 50
+                )
+              )
+            })
+            
+            // If we still have relevant suggestions, keep them and return early
+            if (currentSuggestions.length > 0) {
+              // Only update if suggestions actually changed
+              if (!areSuggestionsEqual(currentSuggestions, currentSuggestionsRef.current)) {
+                setSuggestions(currentSuggestions)
+              }
+              return
+            }
           }
 
           // Extract the current word being typed at cursor position
@@ -465,13 +520,26 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
           // Sort by relevance score
           const sortedSuggestions = uniqueSuggestions.sort((a, b) => b.score - a.score)
           
-          setSuggestions(sortedSuggestions)
+          // Only update suggestions if they actually changed to prevent flashing
+          const suggestionsChanged = !areSuggestionsEqual(sortedSuggestions, currentSuggestionsRef.current)
+          if (suggestionsChanged) {
+            setSuggestions(sortedSuggestions)
+          }
           
           
           // Show popover when there are relevant suggestions
           if (sortedSuggestions.length > 0 && value.trim().length > 0) {
             setIsOpen(true)
-            setSelectedIndex(0) // Auto-select first item by default
+            // Only reset selection if suggestions actually changed or user is adding content
+            if (suggestionsChanged && !isDeleting) {
+              setSelectedIndex(0) // Auto-select first item by default
+            }
+          } else if (value.trim().length > 0) {
+            // Keep dropdown open even without suggestions to prevent flashing
+            setIsOpen(true)
+            if (!isDeleting) {
+              setSelectedIndex(-1)
+            }
           } else {
             setIsOpen(false)
             setSelectedIndex(-1)
@@ -484,9 +552,10 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
       }
 
       // Generate suggestions in real-time as user types
-      // Use minimal delay to keep it responsive but not overwhelming
+      // Use different delays based on whether user is typing or deleting
       if (value.trim().length > 0) {
-        suggestionTimeoutRef.current = setTimeout(generateSuggestions, 50)
+        const delay = isDeleting ? 150 : 50 // Longer delay when deleting for stability
+        suggestionTimeoutRef.current = setTimeout(generateSuggestions, delay)
       } else {
         // Hide suggestions only when input is empty
         setIsOpen(false)
@@ -499,7 +568,7 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
           clearTimeout(suggestionTimeoutRef.current)
         }
       }
-    }, [value, isMounted, networkContext, cursorPosition])
+    }, [value, isMounted, networkContext, cursorPosition, isDeleting, isTyping])
 
     // Scroll selected item into view
     const scrollItemIntoView = (index: number) => {
@@ -641,6 +710,11 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
       onChange(newValue)
       setCursorPosition(e.target.selectionStart || 0)
       
+      // Detect if user is deleting (shorter input)
+      const isDeletingContent = newValue.length < previousValue.length
+      setIsDeleting(isDeletingContent)
+      setPreviousValue(newValue)
+      
       // Set typing state to true when user types
       setIsTyping(true)
       
@@ -652,13 +726,14 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
       // Set typing to false after user stops typing for 50ms (faster response)
       typingTimeoutRef.current = setTimeout(() => {
         setIsTyping(false)
+        setIsDeleting(false) // Reset deletion state after typing stops
       }, 50)
       
-      // Reset suggestions state when user starts typing new content
-      if (suggestions.length > 0) {
-        setSuggestions([])
-        setIsOpen(false)
-        setSelectedIndex(-1)
+      // Keep dropdown open and let useEffect handle suggestion updates
+      // This prevents flashing by maintaining the dropdown state
+      // Only reset selection if user is adding new content (not deleting)
+      if (!isDeletingContent) {
+        setSelectedIndex(-1) // Reset selection only when adding content
       }
     }
 
@@ -751,7 +826,7 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
                   </CommandGroup>
                 ) : (
                   <div className="px-3 py-2 text-sm text-muted-foreground text-center">
-                    Continue typing for suggestions...
+                    {emptyStateMessage}
                   </div>
                 )}
               </CommandList>
