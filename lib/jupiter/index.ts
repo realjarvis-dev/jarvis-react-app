@@ -1,6 +1,5 @@
 // Export all Jupiter Ultra API functions and types
 export {
-  completeJupiterSwap,
   executeJupiterOrder,
   getJupiterOrder,
   type JupiterExecuteRequest,

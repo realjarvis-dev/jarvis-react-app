@@ -186,7 +186,6 @@ export async function ensureAta(
     const tx = new Transaction().add(createIx);
     const signedTransaction = await signSolanaTransaction(tx, connection)
     const txid = await broadcastSolanaTransaction(signedTransaction, connection)
-    console.log('Created ATA', ata.toBase58(), ' tx=', txid);
   
     return {ata, txid};
   }
