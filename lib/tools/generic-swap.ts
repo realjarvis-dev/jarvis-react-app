@@ -6,6 +6,7 @@ import path, { dirname } from 'path'; // Added import for path operations
 import { promisify } from 'util';
 import { z } from 'zod';
 import { ensoSwap } from '../enso/swap'; // Import ensoSwap
+import { parseUsdAmount, getUsdSupportDescription, createUsdConversionInfo, getEffectiveAmount } from '../utils/usd-parser';
 import { erc20Approval, executeTransaction } from '../privy/utils';
 import { getUserEvmWalletAddress } from '../privy/client';
 import { NetworkContext } from '../types/context';
@@ -16,33 +17,8 @@ interface ToolContext {
   networkContext?: NetworkContext
 }
 
-const tokenAddressMap: Record<string, string> = {
-  ETH: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-  USDT: '0xdac17f958d2ee523a2206206994597c13d831ec7',
-  USDC: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-  DAI: '0x6b175474e89094c44da98b954eedeac495271d0f',
-  WETH: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-  WBTC: '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599',
-  LINK: '0x514910771af9ca656af840dff83e8264ecf986ca',
-  UNI: '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984',
-  AAVE: '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9',
-  MKR: '0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2',
-  COMP: '0xc00e94cb662c3520282e6f5717214004a7f26888'
-}
-
-const tokenDecimalMap: Record<string, number> = {
-    ETH: 18,
-    USDT: 6,
-    USDC: 6,
-    DAI: 18,
-    WETH: 18,
-    WBTC: 8,
-    LINK: 18,
-    UNI: 18,
-    AAVE: 18,
-    MKR: 18,
-    COMP: 18,
-  };
+// Import token mappings from common USD parser
+import { TOKEN_ADDRESS_MAP as tokenAddressMap, TOKEN_DECIMAL_MAP as tokenDecimalMap } from '../utils/usd-parser';
 
 const parameters = z.object({
   tokenInSymbol: z
@@ -61,7 +37,7 @@ const parameters = z.object({
   amountInHuman: z
     .string()
     .describe(
-      'Amount of input token to swap in human-readable format (e.g., "1", "100.5") in the unit of Input Token. Notify user if output amount is supplied.'
+      getUsdSupportDescription('Amount of input token to swap in human-readable format (e.g., "1", "100.5") in the unit of Input Token. Notify user if output amount is supplied.')
     ),
   slippage: z
     .number()
@@ -127,13 +103,21 @@ export const genericSwapTool = tool({
       let actualTokenInAddress: string
       const upperTokenInSymbol = tokenInSymbol.toUpperCase()
 
+      // Parse USD amount using common utility
+      const usdConversionResult = await parseUsdAmount(amountInHuman, upperTokenInSymbol, { chainId: effectiveChainId })
+      const actualAmountInHuman = getEffectiveAmount(usdConversionResult)
+      
+      if (usdConversionResult.isUsd) {
+        logContent += `USD Conversion: $${usdConversionResult.usdAmount} -> ${actualAmountInHuman} ${upperTokenInSymbol}\n`
+      }
+
       if (upperTokenInSymbol === 'ETH') {
         try {
-          amountInBaseUnits = ethers.parseEther(amountInHuman).toString()
+          amountInBaseUnits = ethers.parseEther(actualAmountInHuman).toString()
           actualTokenInAddress = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee' // Zero address for ETH
         } catch (error) {
           throw new Error(
-            `Invalid ETH amount: ${amountInHuman}. ${
+            `Invalid ETH amount: ${actualAmountInHuman}. ${
               error instanceof Error ? error.message : ''
             }`
           )
@@ -149,7 +133,7 @@ export const genericSwapTool = tool({
         try {
           actualTokenInAddress = ethers.getAddress(tokenInAddress) // Validate and checksum
           amountInBaseUnits = ethers
-            .parseUnits(amountInHuman, tokenInDecimals)
+            .parseUnits(actualAmountInHuman, tokenInDecimals)
             .toString()
         
 
@@ -218,7 +202,8 @@ export const genericSwapTool = tool({
           amount_in_human: amountInHuman,
           amount_in_base_units: amountInBaseUnits,
           chain_id: effectiveChainId,
-          complete_time: completeTime
+          complete_time: completeTime,
+          usd_conversion: createUsdConversionInfo(usdConversionResult)
         }
       }
     } catch (error: any) {
