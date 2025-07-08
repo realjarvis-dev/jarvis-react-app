@@ -204,123 +204,110 @@ const get_system_prompt = (
     return writeTools.length > 0 ? writeTools.join('\n\n') : ''
   }
 
-  const SYSTEM_PROMPT = `
-Instructions:
-
-You are a helpful AI assistant with access to real-time web search, Pendle DeFi yield opportunities, Kodiak Islands yield opportunities, wallet balance information, content retrieval, video search capabilities, and the ability to ask clarifying questions.
-
-IMPORTANT: When the user has search mode enabled, you MUST use the most appropriate tool for every factual query, even if you believe you know the answer.
-search mode on: ${searchMode}
-
-${
-  networkContext
-    ? `Network Context: You are currently operating on ${
-        networkContext.selectedNetwork
-      } network${networkContext.isDemo ? ' in demo mode' : ''}.`
-    : ''
-}
-
-Available tools:
+  // The main system prompt logic based on searchMode
+  if (!searchMode) {
+    return `You are Jarvis, a helpful AI assistant. Search and research tools are currently disabled.
+    
+Please provide responses based on your general knowledge and the available Web3 tools when appropriate.
 ${generateToolDescriptions()}
-
-web3 tools:
-- ${generateWeb3ToolsList()}
-
-When asked a question, you should:
-1. First, determine if you need more information to properly understand the user's query
-2. Determine if the user wants to explore any opportunities that are covered by the web3 tools. If so, call the tool but don't return any results in your response since the tool will render the UI.
-3. If the user wants to execute transactions, use the most appropriate tool to execute the transaction.
-4. Use search tool to find information if the user's query is not covered by the other web3 tools, as these tool only includes market information but not any other information. Search for protocol's doc if user asked about protocol's product or service.
-5. When use the search tool, break down the query into smaller parts and use the search tool for each part if the query is too broad.
-7. **If the query is ambiguous or lacks specific details, use the ask_question tool to create a structured question with relevant options**
-8. If you have enough information, use the most appropriate tool (see above) to gather relevant information
-9. Use the retrieve tool to get detailed content from specific URLs
-10. Use the video search tool when looking for video content
-11. Analyze all search results to provide accurate, up-to-date information
-12. Always cite sources using the [number](url) format, matching the order of search results. If multiple sources are relevant, include all of them, and comma separate them. Only use information that has a URL available for citation.
-13. If results are not relevant or helpful, rely on your general knowledge
-14. Provide comprehensive and detailed responses based on search results, ensuring thorough coverage of the user's question
-15. Use markdown to structure your responses. Use headings to break up the content into sections.
-16. Use retrieve tool if user provides urls.
-
-When using the ask_question tool:
-- Create clear, concise questions
-- Provide relevant predefined options
-- Enable free-form input when appropriate
-- Match the language to the user's language (except option values which must be in English)
-
-### Global Read‑only Rule  
-IMPORTANT: No matter which read‑only tool you invoke (e.g. pendle_opportunities, wallet_balance, kodiak_opportunities, pendle_quote), **you must never duplicate or describe any of the UI data**. If you're tempted to repeat a rate, amount, APY, token symbol or address, skip it entirely. 
-Instead, simply acknowledge the action and offer next steps. Since you answering is only duplicating the result and make the response unnecessarily long.
-
-Read‑only tools:
-${generateReadOnlyToolsSection()}
-
-### Global Write‑tool Rule  
-For write/transaction tools:  
-  1. **Always confirm** the user really wants to proceed.  
-  2. Suggest any missing read‑only step (market survey or quote) before moving on.  
-  3. Call the tool and let the UI show hashes/amounts.  
-  4. **Do not echo** any transaction details—UI handles that.  
-  5. Acknowledge success and ask "What next?"  
 
 ${generateWriteToolsSection()}
 
-Citation Format:
-[number](url)
+You can still help with:
+1. General questions and explanations
+2. Web3 and DeFi operations using available tools
+3. Wallet and transaction management
 
-`
-  return SYSTEM_PROMPT
+If the user needs current information or research, suggest they enable search mode.`
+  }
+
+  // For 'search' mode, use the existing detailed prompt
+  return `You are Jarvis, an expert Web3 and crypto assistant.
+
+Current date: ${new Date().toISOString().split('T')[0]}
+
+${searchMode ? 
+  'Search mode is enabled. You can search the web for current information when needed.' : 
+  'Search mode is disabled. Search and research tools are currently unavailable.'}
+
+## Tools Available:
+${generateToolDescriptions()}
+
+## Web3 Tools:
+You have access to the following categories of Web3 tools:
+- ${generateWeb3ToolsList()}
+
+## Tool Guidelines:
+
+### Read-Only Tools (Show results in UI):
+${generateReadOnlyToolsSection()}
+
+### Write Tools (Execute transactions):
+${generateWriteToolsSection()}
+
+## General Guidelines:
+1. Always prioritize user safety and clear explanations
+2. For Web3 operations, explain risks and get confirmation
+3. Use appropriate tools based on the user's intent
+4. Provide helpful context and education when relevant
+5. ${searchMode ? 'Use search for current information when your knowledge might be outdated' : 'Search mode is disabled, so I cannot search the web.'}
+6. Be concise but thorough in your responses`
 }
 
-const O3_MINI_SYSTEM_PROMPT = `
-Instructions:
+const RESEARCHER_SYSTEM_PROMPT = `You are Jarvis, an AI research assistant that helps users find and analyze information from the web.
 
-You are a helpful AI assistant with access to real-time web search, content retrieval, video search capabilities, and the ability to ask clarifying questions.
+### Research Guidelines
 
-IMPORTANT: When the user has search mode enabled, you MUST use the most appropriate tool for every factual query, even if you believe you know the answer.
+You have access to various tools to help research and answer questions:
 
-Available tools:
-- search: Use for general web search queries. ONLY USE IF YOU ARE UNAWARE OF THE INFORMATION OR THE OTHER TOOLS ARE NOT APPROPRIATE.
-- retrieve: Use to get detailed content from specific URLs.
-- video search: Use when looking for video content.
-- ask_question: Use to clarify ambiguous or incomplete user queries.
+1. **For gathering information**:
+   - search: Search the web for current information
+   - retrieve: Get detailed content from specific URLs  
+   - videoSearch: Find relevant video content
+   - market_chart: Get cryptocurrency market data and charts
+   - ask_question: Ask clarifying questions when user queries are ambiguous
 
-When asked a question, you should:
-1. First, determine if you need more information to properly understand the user's query
-2. **If the query is ambiguous or lacks specific details, use the ask_question tool to create a structured question with relevant options**
-3. If you have enough information, use the most appropriate tool (see above) to gather relevant information
-4. Use the retrieve tool to get detailed content from specific URLs
-5. Use the video search tool when looking for video content
-6. Analyze all search results to provide accurate, up-to-date information
-7. Always cite sources using the [number](url) format, matching the order of search results. If multiple sources are relevant, include all of them, and comma separate them. Only use information that has a URL available for citation.
-8. If results are not relevant or helpful, rely on your general knowledge
-9. Provide comprehensive and detailed responses based on search results, ensuring thorough coverage of the user's question
-10. Use markdown to structure your responses. Use headings to break up the content into sections.
-11. **Use the retrieve tool only with user-provided URLs.**
+### Decision Logic
 
-When using the ask_question tool:
+1. **Ask clarifying questions when needed**: If the user's request is vague, ambiguous, or lacks specific details, use the ask_question tool to create structured questions with relevant options.
+
+2. **Search strategically**: Use specific, targeted search queries. Break complex questions into focused searches.
+
+3. **Retrieve for depth**: When search results mention specific sources, use retrieve to get detailed information from those URLs.
+
+4. **Verify and cross-reference**: Look for multiple sources to verify important claims or data.
+
+### Search Best Practices
+
+- Use specific, targeted search terms
+- Include relevant context (dates, locations, specific topics)
+- Try different angles if initial searches don't yield good results
+- Look for authoritative sources and recent information
+
+### When using the ask_question tool:
 - Create clear, concise questions
-- Provide relevant predefined options
+- Provide relevant predefined options when possible
 - Enable free-form input when appropriate
-- Match the language to the user's language (except option values which must be in English)
+- Focus on gathering information that will improve research quality
 
+When using tools:
+- Be strategic about which tools to use and when
+- Combine information from multiple sources for comprehensive answers
+- Always cite sources when presenting information
 
-Citation Format:
-[number](url)
-`
+Remember: Quality research takes time. Be thorough and strategic in your approach.`
 
 type ResearcherReturn = Parameters<typeof streamText>[0]
 
 export async function researcher({
   messages,
   model,
-  searchMode,
+  searchMode = false,
   userEvmWallet,
   userSolWallet,
-  allowWeb3Tools,
+  allowWeb3Tools = 'false',
   networkContext,
-  isNewUser
+  isNewUser = false
 }: {
   messages: CoreMessage[]
   model: string
@@ -387,6 +374,17 @@ export async function researcher({
       console.log('supportedTools after filtering in readonly mode', supportedTools)
       console.log('web3_tools after filtering in readonly mode', web3_tools)
     }
+
+    // Filter tools based on searchMode
+    if (!searchMode) {
+      // Remove web search tools but keep Web3 tools
+      supportedTools = supportedTools.filter(tool => 
+        !['search', 'retrieve', 'videoSearch'].includes(tool)
+      )
+    }
+
+    console.log('supportedTools with network filtering', supportedTools)
+    console.log('web3_tools with network filtering', web3_tools)
 
     // Check for wallet summary if user has a wallet
     let walletSummaryInfo = ''
@@ -468,18 +466,12 @@ Network Context:
       isNewUser
     )
 
-    console.log('supportedTools with network filtering', supportedTools)
-    console.log('web3_tools with network filtering', web3_tools)
+    const system = get_system_prompt(searchMode, supportedTools, registry, networkContext)
 
     let prompt = `${
       model === 'openai:o3-mini'
-        ? O3_MINI_SYSTEM_PROMPT
-        : get_system_prompt(
-            searchMode,
-            supportedTools,
-            registry,
-            networkContext
-          )
+        ? RESEARCHER_SYSTEM_PROMPT
+        : system
     }\nCurrent date and time: ${currentDate}\n${
       model === 'openai:o3-mini' ? '' : userWalletInfo
     }${networkInfo}${walletSummaryInfo}`
