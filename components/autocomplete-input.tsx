@@ -95,6 +95,10 @@ const getNetworkAwareSuggestions = (input: string, network: string, currentWord:
   
   const currentProtocols = networkProtocols[network?.toLowerCase() as keyof typeof networkProtocols] || networkProtocols.ethereum
   
+  // Don't suggest similar token actions when user has already chosen a specific token action
+  const hasTokenAction = input.includes('swap') || input.includes('bridge') || input.includes('transfer') || 
+                         input.includes('mint') || input.includes('redeem') || input.includes('stake')
+  
   // Context-aware suggestions based on input
   if (input.includes('find') || input.includes('discover') || input.includes('explore')) {
     currentProtocols.forEach((protocol, index) => {
@@ -127,6 +131,40 @@ const getNetworkAwareSuggestions = (input: string, network: string, currentWord:
         icon: 'BarChart3',
         score: baseScore + relevanceScore
       })
+    })
+  }
+  
+  // Only suggest protocol-specific actions if user hasn't chosen a specific token action
+  if (!hasTokenAction && input.length > 2) {
+    // Suggest vault/yield opportunities when user hasn't specified an action
+    const vaultSuggestions = [
+      {
+        text: 'Find high-yield vaults',
+        description: 'Discover yield farming opportunities',
+        category: 'opportunity',
+        icon: 'TrendingUp',
+        score: 70
+      },
+      {
+        text: 'Show liquidity pools',
+        description: 'View available LP opportunities',
+        category: 'opportunity',
+        icon: 'Waves',
+        score: 65
+      }
+    ]
+    
+    vaultSuggestions.forEach((suggestion, index) => {
+      if (!isSuggestionAlreadyUsed(suggestion.text, input)) {
+        suggestions.push({
+          id: `vault-${index}`,
+          text: suggestion.text,
+          description: suggestion.description,
+          category: suggestion.category,
+          icon: suggestion.icon,
+          score: suggestion.score + calculateRelevanceScore(suggestion.text, input, currentWord)
+        })
+      }
     })
   }
   
@@ -169,7 +207,13 @@ const isSuggestionAlreadyUsed = (suggestionText: string, userInput: string): boo
     { pattern: /check (balance|wallet)/, blockSimilar: /check (price|yield|rates?|cost)/ },
     { pattern: /check (yield|farm|earning)/, blockSimilar: /check (price|balance|wallet)/ },
     { pattern: /swap \w+/, blockSimilar: /check|find|show/ },
-    { pattern: /find \w+ opportunities/, blockSimilar: /check|swap/ }
+    { pattern: /find \w+ opportunities/, blockSimilar: /check|swap/ },
+    // Block similar token actions when user has already chosen one
+    { pattern: /swap.*(token|eth|usdc|btc)/, blockSimilar: /bridge.*(token|eth|usdc|btc)|transfer.*(token|eth|usdc|btc)|mint.*(token|eth|usdc|btc)|redeem.*(token|eth|usdc|btc)/ },
+    { pattern: /bridge.*(token|eth|usdc|btc)/, blockSimilar: /swap.*(token|eth|usdc|btc)|transfer.*(token|eth|usdc|btc)|mint.*(token|eth|usdc|btc)|redeem.*(token|eth|usdc|btc)/ },
+    { pattern: /transfer.*(token|eth|usdc|btc)/, blockSimilar: /swap.*(token|eth|usdc|btc)|bridge.*(token|eth|usdc|btc)|mint.*(token|eth|usdc|btc)|redeem.*(token|eth|usdc|btc)/ },
+    { pattern: /mint.*(token|eth|usdc|btc)/, blockSimilar: /swap.*(token|eth|usdc|btc)|bridge.*(token|eth|usdc|btc)|transfer.*(token|eth|usdc|btc)|redeem.*(token|eth|usdc|btc)/ },
+    { pattern: /redeem.*(token|eth|usdc|btc)/, blockSimilar: /swap.*(token|eth|usdc|btc)|bridge.*(token|eth|usdc|btc)|transfer.*(token|eth|usdc|btc)|mint.*(token|eth|usdc|btc)/ }
   ]
   
   for (const { pattern, blockSimilar } of userActionPatterns) {
@@ -301,6 +345,89 @@ const getContextualSuggestions = (input: string, currentWord: string, network: s
           category: 'token',
           icon: 'DollarSign',
           score: 90 - index + calculateRelevanceScore(priceSuggestion, input, currentWord)
+        })
+      }
+    })
+  } else if (input.includes('swap') && input.includes('token')) {
+    // User has mentioned swapping tokens - suggest post-swap actions
+    const postSwapSuggestions = [
+      {
+        text: 'Deposit tokens into yield vault',
+        description: 'Earn passive income on your tokens',
+        category: 'next-step',
+        icon: 'Vault',
+        score: 95
+      },
+      {
+        text: 'Provide liquidity to earn fees',
+        description: 'Add tokens to liquidity pool for trading fees',
+        category: 'next-step',
+        icon: 'Waves',
+        score: 90
+      },
+      {
+        text: 'Stake tokens for rewards',
+        description: 'Lock tokens to earn staking rewards',
+        category: 'next-step',
+        icon: 'Lock',
+        score: 85
+      },
+      {
+        text: 'Check gas fees before transaction',
+        description: 'View current network gas prices',
+        category: 'next-step',
+        icon: 'Fuel',
+        score: 80
+      }
+    ]
+    
+    postSwapSuggestions.forEach((suggestion, index) => {
+      if (!isSuggestionAlreadyUsed(suggestion.text, input)) {
+        suggestions.push({
+          id: `post-swap-${index}`,
+          text: suggestion.text,
+          description: suggestion.description,
+          category: suggestion.category,
+          icon: suggestion.icon,
+          score: suggestion.score + calculateRelevanceScore(suggestion.text, input, currentWord)
+        })
+      }
+    })
+  } else if (input.includes('bridge') && input.includes('token')) {
+    // User has mentioned bridging tokens - suggest post-bridge actions
+    const postBridgeSuggestions = [
+      {
+        text: 'Check bridge transaction status',
+        description: 'Monitor your cross-chain transaction',
+        category: 'next-step',
+        icon: 'Clock',
+        score: 95
+      },
+      {
+        text: 'Add bridged tokens to wallet',
+        description: 'Import tokens to your wallet on destination chain',
+        category: 'next-step',
+        icon: 'Plus',
+        score: 90
+      },
+      {
+        text: 'Find yield opportunities on destination chain',
+        description: 'Explore earning options on the new network',
+        category: 'next-step',
+        icon: 'TrendingUp',
+        score: 85
+      }
+    ]
+    
+    postBridgeSuggestions.forEach((suggestion, index) => {
+      if (!isSuggestionAlreadyUsed(suggestion.text, input)) {
+        suggestions.push({
+          id: `post-bridge-${index}`,
+          text: suggestion.text,
+          description: suggestion.description,
+          category: suggestion.category,
+          icon: suggestion.icon,
+          score: suggestion.score + calculateRelevanceScore(suggestion.text, input, currentWord)
         })
       }
     })
