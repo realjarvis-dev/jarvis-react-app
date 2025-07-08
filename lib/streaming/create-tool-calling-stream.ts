@@ -1,7 +1,7 @@
+import { deepResearcher } from '@/lib/agents/deep-researcher'
 import { researcher } from '@/lib/agents/researcher'
 import {
     convertToCoreMessages,
-    CoreMessage,
     createDataStreamResponse,
     DataStreamWriter,
     streamText
@@ -11,23 +11,10 @@ import { isReasoningModel } from '../utils/registry'
 import { handleStreamFinish } from './handle-stream-finish'
 import { BaseStreamConfig } from './types'
 
-// Function to check if a message contains ask_question tool invocation
-function containsAskQuestionTool(message: CoreMessage) {
-  // For CoreMessage format, we check the content array
-  if (message.role !== 'assistant' || !Array.isArray(message.content)) {
-    return false
-  }
-
-  // Check if any content item is a tool-call with ask_question tool
-  return message.content.some(
-    item => item.type === 'tool-call' && item.toolName === 'ask_question'
-  )
-}
-
 export function createToolCallingStreamResponse(config: BaseStreamConfig) {
   return createDataStreamResponse({
     execute: async (dataStream: DataStreamWriter) => {
-      const { messages, model, chatId, searchMode, userId, allowWeb3Tools, isNewUser } = config
+      const { messages, model, chatId, searchMode, deepResearchMode, userId, allowWeb3Tools, isNewUser } = config
       const modelId = `${model.providerId}:${model.id}`
 
       try {
@@ -37,31 +24,35 @@ export function createToolCallingStreamResponse(config: BaseStreamConfig) {
           getMaxAllowedTokens(model)
         )
 
-        let researcherConfig = await researcher({
-          messages: truncatedMessages,
-          model: modelId,
-          searchMode,
-          userEvmWallet: config.userEvmWallet,
-          userSolWallet: config.userSolWallet,
-          allowWeb3Tools,
-          networkContext: config.networkContext,
-          isNewUser: config.isNewUser
-        })
+        let researcherConfig
+
+        // If deep research mode is enabled, use deep researcher instead
+        if (deepResearchMode) {
+          researcherConfig = deepResearcher({
+            messages: truncatedMessages,
+            model: modelId
+          })
+        } else {
+          researcherConfig = await researcher({
+            messages: truncatedMessages,
+            model: modelId,
+            searchMode,
+            userEvmWallet: config.userEvmWallet,
+            userSolWallet: config.userSolWallet,
+            allowWeb3Tools,
+            networkContext: config.networkContext,
+            isNewUser: config.isNewUser
+          })
+        }
 
         // console.log('researcherConfig', researcherConfig)
 
         const result = streamText({
           ...researcherConfig,
           onFinish: async result => {
-            // Check if the last message contains an ask_question tool invocation
+            // Skip related questions for reasoning models and deep research mode
             const shouldSkipRelatedQuestions =
-              isReasoningModel(modelId) ||
-              (result.response.messages.length > 0 &&
-                containsAskQuestionTool(
-                  result.response.messages[
-                    result.response.messages.length - 1
-                  ] as CoreMessage
-                ))
+              isReasoningModel(modelId) || deepResearchMode
 
             await handleStreamFinish({
               responseMessages: result.response.messages,
