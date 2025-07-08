@@ -14,7 +14,7 @@ import {
   VersionedTransaction
 } from '@solana/web3.js'
 import { getUserWallet, privy } from './client'
-import { AddressLookupTableAccount } from "@solana/web3.js";
+
 
 export async function signSolanaTransaction(transaction: Transaction | VersionedTransaction,
     connection: Connection
@@ -38,38 +38,53 @@ export async function signSolanaTransaction(transaction: Transaction | Versioned
       return signedTransaction
 
     } else {
-      const acctKeys = transaction.message.getAccountKeys();
+      console.log("transaction.message.addressTableLookups.length", transaction.message.addressTableLookups.length)
+      console.log("transaction.message.staticAccountKeys[0]", transaction.message.staticAccountKeys[0])
+      if (transaction.message.addressTableLookups.length == 0) {
+        const acctKeys = transaction.message.getAccountKeys();
     
-      const ixns = transaction.message.compiledInstructions.map(ci =>
-        new TransactionInstruction({
-          programId: acctKeys.get(ci.programIdIndex)!,
-          keys: ci.accountKeyIndexes.map(i => ({
-            pubkey: acctKeys.get(i)!,
-            isSigner: transaction.message.isAccountSigner(i),
-            isWritable: transaction.message.isAccountWritable(i),
-          })),
-          data: Buffer.from(ci.data),
-        })
-      )
-        const userWalletPubkey = new PublicKey(wallet.address)
-        const { blockhash } = await connection.getLatestBlockhash()
-        // 3) Build & compile a new V0 message
-        const newMsg = new TransactionMessage({
-          payerKey: userWalletPubkey,
-          recentBlockhash: blockhash,
-          instructions: ixns,
-        }).compileToV0Message();
+        const ixns = transaction.message.compiledInstructions.map(ci =>
+          new TransactionInstruction({
+            programId: acctKeys.get(ci.programIdIndex)!,
+            keys: ci.accountKeyIndexes.map(i => ({
+              pubkey: acctKeys.get(i)!,
+              isSigner: transaction.message.isAccountSigner(i),
+              isWritable: transaction.message.isAccountWritable(i),
+            })),
+            data: Buffer.from(ci.data),
+          })
+        )
+          const userWalletPubkey = new PublicKey(wallet.address)
+          const { blockhash } = await connection.getLatestBlockhash()
+          // 3) Build & compile a new V0 message
+          const newMsg = new TransactionMessage({
+            payerKey: userWalletPubkey,
+            recentBlockhash: blockhash,
+            instructions: ixns,
+          }).compileToV0Message();
 
-        // For versioned transactions, we need to create a new VersionedTransaction
-        // with the message and empty signatures array
-        const newVtx = new VersionedTransaction(newMsg);
-              // Get the signed transaction object from the response
-        const { signedTransaction } = await privy.walletApi.solana.signTransaction({
-          walletId: wallet.id!,
-          transaction: newVtx
-        });
+  
+          // For versioned transactions, we need to create a new VersionedTransaction
+          // with the message and empty signatures array
+          const newVtx = new VersionedTransaction(newMsg);
+          const { signedTransaction } = await privy.walletApi.solana.signTransaction({
+            walletId: wallet.id!,
+            transaction: newVtx
+          });
+          return signedTransaction
+      } else {
+            // Get the signed transaction object from the response
+          const { signedTransaction } = await privy.walletApi.solana.signTransaction({
+            walletId: wallet.id!,
+            transaction: transaction
+          });
 
-        return signedTransaction
+          
+
+          return signedTransaction 
+      }
+
+
     }
 
 

@@ -8,6 +8,10 @@ const jupiterUltraAxios = axios.create({
   baseURL: 'https://ultra-api.jup.ag'
 })
 
+const jupiterLiteAxios = axios.create({
+  baseURL: "https://lite-api.jup.ag/ultra/v1"
+})
+
 // Types for Jupiter Ultra API
 export interface JupiterOrderRequest {
   inputMint: string
@@ -15,6 +19,7 @@ export interface JupiterOrderRequest {
   amount: string
   taker?: string
   swapMode: "ExactIn" | "ExactOut"
+  excludeRouters?: "metis" | "jupiterz" | "hashflow" | "dflow" | "pyth" | "okx"
 }
 
 export interface JupiterOrderResponse {
@@ -102,8 +107,9 @@ export interface JupiterExecuteResponse {
 export async function getJupiterOrder(
   params: JupiterOrderRequest
 ): Promise<JupiterOrderResponse> {
+  params.excludeRouters = "jupiterz"
   try {
-    const response = await jupiterUltraAxios.get<JupiterOrderResponse>(
+    const response = await jupiterLiteAxios.get<JupiterOrderResponse>(
       '/order',
       {
         params
@@ -135,8 +141,8 @@ export async function executeJupiterOrder(
   params: JupiterExecuteRequest
 ): Promise<JupiterExecuteResponse> {
   try {
-    const response = await jupiterUltraAxios.post<JupiterExecuteResponse>(
-      '/ultra/v1/execute',
+    const response = await jupiterLiteAxios.post<JupiterExecuteResponse>(
+      '/execute',
       params
     )
 
