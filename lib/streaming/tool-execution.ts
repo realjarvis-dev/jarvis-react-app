@@ -1,8 +1,8 @@
 import {
-  CoreMessage,
-  DataStreamWriter
+    CoreMessage,
+    DataStreamWriter
 } from 'ai'
-import { executeToolCall as unifiedExecuteToolCall } from './unified-tool-execution'
+import { executeToolCall as executeUnifiedToolCall } from './unified-tool-execution'
 
 interface ToolExecutionResult {
   toolCallDataAnnotation: any
@@ -16,5 +16,5 @@ export async function executeToolCall(
   searchMode: boolean,
   isNewUser?: boolean
 ): Promise<ToolExecutionResult> {
-  return await unifiedExecuteToolCall(coreMessages, dataStream, model, searchMode, isNewUser)
+  return await executeUnifiedToolCall(coreMessages, dataStream, model, searchMode, isNewUser)
 }
