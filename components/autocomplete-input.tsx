@@ -623,10 +623,14 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
               e.preventDefault()
               applySuggestion(suggestions[selectedIndex])
               return
-            } else if (suggestions.length > 0) {
-              // Auto-select first suggestion when Enter is pressed without selection
+            }
+            // Allow Enter to pass through for form submission
+            break
+          case ' ':
+            // Space key accepts first suggestion if available
+            if (suggestions.length > 0) {
               e.preventDefault()
-              applySuggestion(suggestions[0])
+              applySuggestion(suggestions[selectedIndex >= 0 ? selectedIndex : 0])
               return
             }
             break
