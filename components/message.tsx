@@ -15,15 +15,18 @@ export function BotMessage({
   message: string
   className?: string
 }) {
+  // Ensure message is a string and handle edge cases
+  const safeMessage = typeof message === 'string' ? message : String(message || '')
+  
   // Check if the content contains LaTeX patterns
   // const containsLaTeX = /\\\[([\s\S]*?)\\\]|\\\(([\s\S]*?)\\\)/.test(
-  //   message || ''
+  //   safeMessage
   // )
 
   // Modify the content to render LaTeX equations if LaTeX patterns are found
-  const processedData = preprocessLaTeX(message || '')
+  const processedData = preprocessLaTeX(safeMessage)
 
-  // For now, we'll just use the same rendering for all content
+  // For now, we'll use the processed content for rendering
   return (
     <MemoizedReactMarkdown
       rehypePlugins={[[rehypeExternalLinks, { target: '_blank' }]]}
@@ -99,7 +102,7 @@ export function BotMessage({
         }
       }}
     >
-      {message}
+      {processedData}
     </MemoizedReactMarkdown>
   )
 }
@@ -107,7 +110,10 @@ export function BotMessage({
 // Preprocess LaTeX equations to be rendered by KaTeX
 // ref: https://github.com/remarkjs/react-markdown/issues/785
 const preprocessLaTeX = (content: string) => {
-  const blockProcessedContent = content.replace(
+  // Ensure content is a string
+  const safeContent = typeof content === 'string' ? content : String(content || '')
+  
+  const blockProcessedContent = safeContent.replace(
     /\\\[([\s\S]*?)\\\]/g,
     (_, equation) => `$$${equation}$$`
   )
