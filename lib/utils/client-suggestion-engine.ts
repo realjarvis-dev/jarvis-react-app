@@ -1,5 +1,7 @@
 'use client'
 
+import { createSimilarityEngine } from './similarity-engine'
+
 /**
  * Client-safe suggestion engine for autocomplete
  * This version doesn't import server-only dependencies
@@ -27,6 +29,8 @@ export interface ClientSuggestionContext {
  * Client-safe suggestion engine class
  */
 export class ClientSuggestionEngine {
+  private similarityEngine = createSimilarityEngine()
+  
   // Common DeFi tokens
   private commonTokens = [
     'ETH', 'WETH', 'USDC', 'USDT', 'DAI', 'BTC', 'WBTC',
@@ -67,6 +71,7 @@ export class ClientSuggestionEngine {
       input.includes('check') && input.includes('balance') ||
       input.includes('swap') && input.includes('for') ||
       input.includes('find') && input.includes('opportunities') ||
+      input.includes('find') && (input.includes('yield') || input.includes('vault') || input.includes('farm')) ||
       input.includes('get') && input.includes('price') ||
       input.includes('compare') && input.includes('returns') ||
       input.split(' ').length >= 4 // 4+ words likely indicates a complete query
@@ -96,12 +101,14 @@ export class ClientSuggestionEngine {
     const protocolSuggestions = this.getProtocolSuggestions(input, context)
     suggestions.push(...protocolSuggestions)
     
-    // Sort by score and return top 8
-    const finalSuggestions = suggestions
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 8)
+    // Use similarity engine for intelligent filtering and ranking
+    if (suggestions.length > 0) {
+      const filteredSuggestions = this.similarityEngine.filterSuggestions(userInput, suggestions)
+      const rankedSuggestions = this.similarityEngine.rankSuggestions(userInput, filteredSuggestions)
+      return rankedSuggestions.slice(0, 8)
+    }
     
-    return finalSuggestions
+    return suggestions
   }
 
   /**
@@ -290,6 +297,9 @@ export class ClientSuggestionEngine {
     context: ClientSuggestionContext
   ): number {
     const actionLower = action.toLowerCase()
+    
+    // Let similarity engine handle redundancy filtering
+    // This allows for more intelligent semantic analysis
     
     if (actionLower.startsWith(input)) {
       return 80

@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Textarea } from '@/components/ui/textarea'
 import { useNetwork } from '@/lib/network/context'
 import { cn } from '@/lib/utils'
+import { createSimilarityEngine } from '@/lib/utils/similarity-engine'
 import * as Icons from 'lucide-react'
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 
@@ -101,6 +102,7 @@ const getNetworkAwareSuggestions = (input: string, network: string, currentWord:
   
   // Context-aware suggestions based on input
   if (input.includes('find') || input.includes('discover') || input.includes('explore')) {
+    // Generate protocol-specific suggestions - let similarity engine filter redundant ones
     currentProtocols.forEach((protocol, index) => {
       const suggestionText = `Find ${protocol} opportunities`
       const baseScore = 100 - index
@@ -118,6 +120,7 @@ const getNetworkAwareSuggestions = (input: string, network: string, currentWord:
   }
   
   if (input.includes('yield') || input.includes('earn') || input.includes('farm')) {
+    // Generate yield-specific suggestions - let similarity engine filter redundant ones
     currentProtocols.slice(0, 3).forEach((protocol, index) => {
       const suggestionText = `Show ${protocol} yield opportunities`
       const baseScore = 95 - index
@@ -155,16 +158,14 @@ const getNetworkAwareSuggestions = (input: string, network: string, currentWord:
     ]
     
     vaultSuggestions.forEach((suggestion, index) => {
-      if (!isSuggestionAlreadyUsed(suggestion.text, input)) {
-        suggestions.push({
-          id: `vault-${index}`,
-          text: suggestion.text,
-          description: suggestion.description,
-          category: suggestion.category,
-          icon: suggestion.icon,
-          score: suggestion.score + calculateRelevanceScore(suggestion.text, input, currentWord)
-        })
-      }
+      suggestions.push({
+        id: `vault-${index}`,
+        text: suggestion.text,
+        description: suggestion.description,
+        category: suggestion.category,
+        icon: suggestion.icon,
+        score: suggestion.score + calculateRelevanceScore(suggestion.text, input, currentWord)
+      })
     })
   }
   
@@ -228,6 +229,16 @@ const isSuggestionAlreadyUsed = (suggestionText: string, userInput: string): boo
     if (input.includes('find ') && input.includes(' opportunities')) {
       return true
     }
+    // Also block if input has "find" + any yield/vault/farming related terms
+    if (input.includes('find ') && (input.includes('yield') || input.includes('vault') || input.includes('farm') || input.includes('earn'))) {
+      return true
+    }
+  }
+  
+  // Block similar yield/opportunity suggestions if user already mentioned yield/vault/farming
+  if ((suggestion.includes('yield') || suggestion.includes('vault') || suggestion.includes('farm') || suggestion.includes('earn')) &&
+      (input.includes('yield') || input.includes('vault') || input.includes('farm') || input.includes('earn'))) {
+    return true
   }
   
   // Special handling for protocol-specific suggestions
@@ -519,6 +530,7 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
     
     const textareaRef = useRef<HTMLTextAreaElement>(null)
     const suggestionEngine = useRef<any>(null)
+    const similarityEngine = useRef<any>(null)
     const networkContext = useNetwork()
     const typingTimeoutRef = useRef<NodeJS.Timeout>()
     const suggestionTimeoutRef = useRef<NodeJS.Timeout>()
@@ -538,6 +550,9 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
       }).catch((error) => {
         console.error('Failed to load client suggestion engine:', error)
       })
+      
+      // Initialize similarity engine
+      similarityEngine.current = createSimilarityEngine()
       
       // Cleanup function to clear timeouts
       return () => {
@@ -654,28 +669,38 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
             }
           }
             
-          // Filter out suggestions that are already used and remove duplicates
-          const filteredSuggestions = newSuggestions.filter(suggestion => 
-            !isSuggestionAlreadyUsed(suggestion.text, value)
-          )
+          // Use similarity engine for intelligent filtering and ranking
+          let finalSuggestions = newSuggestions
           
-          // Remove duplicates by text
-          const uniqueSuggestions = filteredSuggestions.filter((suggestion, index, self) => 
-            index === self.findIndex(s => s.text === suggestion.text)
-          )
-          
-          // Sort by relevance score
-          const sortedSuggestions = uniqueSuggestions.sort((a, b) => b.score - a.score)
+          if (similarityEngine.current && newSuggestions.length > 0) {
+            // Filter out redundant suggestions using similarity analysis
+            const filteredSuggestions = similarityEngine.current.filterSuggestions(value, newSuggestions)
+            
+            // Rank suggestions by relevance and diversity
+            finalSuggestions = similarityEngine.current.rankSuggestions(value, filteredSuggestions)
+          } else {
+            // Fallback to original filtering if similarity engine not available
+            const filteredSuggestions = newSuggestions.filter(suggestion => 
+              !isSuggestionAlreadyUsed(suggestion.text, value)
+            )
+            
+            // Remove duplicates by text
+            const uniqueSuggestions = filteredSuggestions.filter((suggestion, index, self) => 
+              index === self.findIndex(s => s.text === suggestion.text)
+            )
+            
+            finalSuggestions = uniqueSuggestions.sort((a, b) => b.score - a.score)
+          }
           
           // Only update suggestions if they actually changed to prevent flashing
-          const suggestionsChanged = !areSuggestionsEqual(sortedSuggestions, currentSuggestionsRef.current)
+          const suggestionsChanged = !areSuggestionsEqual(finalSuggestions, currentSuggestionsRef.current)
           if (suggestionsChanged) {
-            setSuggestions(sortedSuggestions)
+            setSuggestions(finalSuggestions)
           }
           
           
           // Show popover when there are relevant suggestions
-          if (sortedSuggestions.length > 0 && value.trim().length > 0) {
+          if (finalSuggestions.length > 0 && value.trim().length > 0) {
             setIsOpen(true)
             // Only reset selection if suggestions actually changed or user is adding content
             if (suggestionsChanged && !isDeleting) {
