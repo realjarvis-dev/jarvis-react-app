@@ -121,6 +121,7 @@ export const jupiterQuote = tool({
                 priceImpactPct: quoteResult.priceImpact,
                 amountInUsd: quoteResult.inUsdValue,
                 amountOutUsd: quoteResult.outUsdValue,
+                feeBps: quoteResult.feeBps,
                 completeTime: new Date().toISOString()
                 
             }

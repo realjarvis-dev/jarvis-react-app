@@ -28,6 +28,7 @@ interface JupiterSwapDetails {
   amountInUsd: number
   amountOutUsd: number
   completeTime: number
+  feeBps: number
 }
 
 interface JupiterQuoteData {
@@ -247,6 +248,15 @@ export function JupiterSwapQuoteSection({
                     {swapDetails.priceImpactPct.toFixed(4)}%
                   </div>
                 </div>
+                <div className="flex items-center gap-2">
+                  <div className="text-gray-600 dark:text-gray-300 min-w-[90px] flex items-center gap-1">
+                    Fee
+                  </div>
+                  <div className="font-medium text-gray-800 dark:text-gray-100">
+                    {swapDetails.feeBps || 0}%
+                  </div>
+                </div>
+         
                 {/* Router */}
                 <div className="flex items-center gap-2">
                   <div className="text-gray-600 dark:text-gray-300 min-w-[90px] flex items-center gap-1">
