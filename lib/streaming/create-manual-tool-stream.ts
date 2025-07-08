@@ -5,6 +5,7 @@ import {
   JSONValue,
   streamText
 } from 'ai'
+import { deepResearcher } from '../agents/deep-researcher'
 import { manualResearcher } from '../agents/manual-researcher'
 import { ExtendedCoreMessage } from '../types'
 import { getMaxAllowedTokens, truncateMessages } from '../utils/context-window'
@@ -15,7 +16,7 @@ import { BaseStreamConfig } from './types'
 export function createManualToolStreamResponse(config: BaseStreamConfig) {
   return createDataStreamResponse({
     execute: async (dataStream: DataStreamWriter) => {
-      const { messages, model, chatId, searchMode, userId, isNewUser } = config
+      const { messages, model, chatId, searchMode, deepResearchMode, userId, isNewUser } = config
       const modelId = `${model.providerId}:${model.id}`
       let toolCallModelId = model.toolCallModel
         ? `${model.providerId}:${model.toolCallModel}`
@@ -28,6 +29,72 @@ export function createManualToolStreamResponse(config: BaseStreamConfig) {
           getMaxAllowedTokens(model)
         )
 
+        // If deep research mode is enabled, use deep researcher instead
+        if (deepResearchMode) {
+          const researcherConfig = deepResearcher({
+            messages: truncatedMessages,
+            model: modelId
+          })
+
+          // Variables to track the reasoning timing.
+          let reasoningStartTime: number | null = null
+          let reasoningDuration: number | null = null
+
+          const result = streamText({
+            ...researcherConfig,
+            onFinish: async result => {
+              const annotations: ExtendedCoreMessage[] = [
+                {
+                  role: 'data',
+                  content: {
+                    type: 'reasoning',
+                    data: {
+                      time: reasoningDuration ?? 0,
+                      reasoning: result.reasoning
+                    }
+                  } as JSONValue
+                }
+              ]
+
+              await handleStreamFinish({
+                responseMessages: result.response.messages,
+                originalMessages: messages,
+                model: modelId,
+                chatId,
+                dataStream,
+                userId,
+                skipRelatedQuestions: true,
+                annotations
+              })
+            },
+            onChunk(event) {
+              const chunkType = event.chunk?.type
+
+              if (chunkType === 'reasoning') {
+                if (reasoningStartTime === null) {
+                  reasoningStartTime = Date.now()
+                }
+              } else {
+                if (reasoningStartTime !== null) {
+                  const elapsedTime = Date.now() - reasoningStartTime
+                  reasoningDuration = elapsedTime
+                  dataStream.writeMessageAnnotation({
+                    type: 'reasoning',
+                    data: { time: elapsedTime }
+                  } as JSONValue)
+                  reasoningStartTime = null
+                }
+              }
+            }
+          })
+
+          result.mergeIntoDataStream(dataStream, {
+            sendReasoning: true
+          })
+          return
+        }
+
+        // Regular flow for non-deep-research mode
         const { toolCallDataAnnotation, toolCallMessages } =
           await executeToolCall(
             truncatedMessages,
