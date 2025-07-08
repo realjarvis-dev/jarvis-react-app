@@ -12,11 +12,10 @@ import { Message } from 'ai'
 import { ArrowUp, ChevronDown, MessageCirclePlus, Square } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { RefObject, useEffect, useRef, useState } from 'react'
-import Textarea from 'react-textarea-autosize'
-import { AutoCompleteInput, AutoCompleteInputRef } from './autocomplete-input'
 import { toast } from 'sonner'
 import { useWalletAddresses } from '../lib/hooks/use-evm-and-sol-addresses'
 import { useArtifact } from './artifact/artifact-context'
+import { AutoCompleteInput, AutoCompleteInputRef } from './autocomplete-input'
 import { SuggestionPills } from './chat-panel/suggestion-pills'
 import { CopyableWalletAddress } from './copyable-wallet-address'
 import { CopyableWalletAddressSkeleton } from './copyable-wallet-address-skeleton'
@@ -25,6 +24,7 @@ import { MarketPulse } from './market-pulse'
 
 import { useNetwork } from '@/lib/network/context'
 import { ChainSelector } from './chain-selector'
+import { DeepResearchToggle } from './deep-research-toggle'
 import { DemoToggle } from './demo-toggle'
 import { SearchModeToggle } from './search-mode-toggle'
 import { Button } from './ui/button'
@@ -622,6 +622,7 @@ export function ChatPanel({
               >
                 <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto hide-scrollbar">
                   <SearchModeToggle />
+                  <DeepResearchToggle />
                   <ChainSelector
                     // selectedChain={selectedChain}
                     // onChainChange={setSelectedChain}
