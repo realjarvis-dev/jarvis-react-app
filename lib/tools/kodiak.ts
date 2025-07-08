@@ -11,6 +11,7 @@ import { tickToPrice } from '../kodiak/utils';
 import { getUserWallet } from '../privy/client';
 import { NetworkContext } from '../types/context';
 import { FormattedKodiakIsland } from '../types/kodiak';
+import { parseUsdAmount, getEffectiveAmount, createUsdConversionInfo, getUsdSupportDescription } from '../utils/usd-parser';
 
 interface ToolContext {
   toolCallId?: string
@@ -435,7 +436,7 @@ export const kodiakDepositTool = tool({
       .describe('The address of the Kodiak Island to deposit into'),
     amount: z
       .string()
-      .describe('Amount of token to deposit in human-readable format (e.g., "1", "0.5")'),
+      .describe(getUsdSupportDescription('Amount of token to deposit in human-readable format (e.g., "1", "0.5")')),
     is_token0: z
       .boolean()
       .default(true)
@@ -463,10 +464,57 @@ export const kodiakDepositTool = tool({
     const networkContext = context?.networkContext;
 
     try {
+      // Get island details to determine token symbol for USD conversion
+      const islandDetails = await getIslandDetails(island_address);
+      if (!islandDetails) {
+        throw new Error(`Island details not found for address: ${island_address}`);
+      }
+      
+      // Determine which token we're depositing
+      const targetToken = is_token0 ? islandDetails.token0 : islandDetails.token1;
+      
+      // Parse USD amount if applicable (using Berachain chainId 80094)
+      let usdConversionResult;
+      let actualAmount = amount;
+      
+      try {
+        usdConversionResult = await parseUsdAmount(amount, targetToken.symbol, {
+          chainId: 80094, // Berachain
+          throwErrors: false
+        });
+        
+        if (usdConversionResult.isUsd) {
+          actualAmount = getEffectiveAmount(usdConversionResult);
+          console.log(`USD Conversion: $${usdConversionResult.usdAmount} -> ${actualAmount} ${targetToken.symbol}`);
+        }
+      } catch (error) {
+        console.log('USD parsing error:', error);
+        // Continue with original amount if USD parsing fails
+      }
+      
+      // Check for conversion errors
+      if (usdConversionResult?.conversionNote && !usdConversionResult.isUsd) {
+        return {
+          _uiDisplayTool: true,
+          summary: `USD conversion failed: ${usdConversionResult.conversionNote}`,
+          data: { 
+            success: false,
+            error: usdConversionResult.conversionNote,
+            deposit_parameters: {
+              island_address,
+              amount,
+              is_token0,
+              slippage_bps,
+              min_shares_received
+            }
+          }
+        };
+      }
+
       // Prepare deposit parameters
       const depositParams: IslandSingleDepositParams = {
         islandAddress: island_address,
-        totalAmount: amount,
+        totalAmount: actualAmount,
         isToken0: is_token0,
         slippageBPS: slippage_bps,
         minSharesReceived: min_shares_received
@@ -481,18 +529,24 @@ export const kodiakDepositTool = tool({
           transaction_hash: result.hash,
           deposit_details: {
             island_address,
-            amount_deposited: `${amount} ${is_token0 ? 'Token0' : 'Token1'}`,
+            amount_deposited: `${actualAmount} ${targetToken.symbol}`,
+            original_amount: amount,
             slippage_bps,
             min_shares_received,
             complete_time: new Date().toISOString()
-          }
+          },
+          usd_conversion: createUsdConversionInfo(usdConversionResult || { isUsd: false, originalInput: amount })
         };
 
         console.log('[Kodiak Deposit Tool] Returning success data:', depositData);
 
+        const summaryAmount = usdConversionResult?.isUsd 
+          ? `$${usdConversionResult.usdAmount} (${actualAmount} ${targetToken.symbol})`
+          : `${actualAmount} ${targetToken.symbol}`;
+
         return {
           _uiDisplayTool: true,
-          summary: `Deposit successful: ${amount} ${is_token0 ? 'Token0' : 'Token1'} deposited to Kodiak Island`,
+          summary: `Deposit successful: ${summaryAmount} deposited to Kodiak Island`,
           data: depositData
         };
       } else {
@@ -501,11 +555,14 @@ export const kodiakDepositTool = tool({
           error: result.error_message || 'Deposit failed',
           deposit_parameters: {
             island_address,
-            amount,
+            amount: actualAmount,
+            original_amount: amount,
+            token_symbol: targetToken.symbol,
             is_token0,
             slippage_bps,
             min_shares_received
-          }
+          },
+          usd_conversion: createUsdConversionInfo(usdConversionResult || { isUsd: false, originalInput: amount })
         };
 
         console.log('[Kodiak Deposit Tool] Returning error data:', errorData);
@@ -525,6 +582,7 @@ export const kodiakDepositTool = tool({
         deposit_parameters: {
           island_address,
           amount,
+          original_amount: amount,
           is_token0,
           slippage_bps,
           min_shares_received
