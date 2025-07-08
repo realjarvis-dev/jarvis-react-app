@@ -2,64 +2,63 @@
 
 import { cn } from '@/lib/utils'
 import { getCookie, setCookie } from '@/lib/utils/cookies'
-import { Globe } from 'lucide-react'
+import { Globe, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Toggle } from './ui/toggle'
 
 export function SearchModeToggle() {
-  const [isSearchMode, setIsSearchMode] = useState(false)
+  const [searchEnabled, setSearchEnabled] = useState(true)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true)
     const savedMode = getCookie('search-mode')
     if (savedMode !== null) {
-      setIsSearchMode(savedMode === 'true')
+      setSearchEnabled(savedMode === 'true')
     } else {
       setCookie('search-mode', 'true')
-      setIsSearchMode(true)
+      setSearchEnabled(true)
     }
   }, [])
 
-  const handleSearchModeChange = (pressed: boolean) => {
-    setIsSearchMode(pressed)
-    setCookie('search-mode', pressed.toString())
+  const handleToggle = () => {
+    const newMode = !searchEnabled
+    setSearchEnabled(newMode)
+    setCookie('search-mode', newMode.toString())
   }
 
   if (!mounted) {
     return (
-      <Toggle
-        aria-label="Toggle search mode"
-        variant="outline"
-        className={cn(
-          'gap-1 px-3 border border-input text-muted-foreground bg-background',
-          'hover:bg-accent hover:text-accent-foreground rounded-full',
-          'h-8 sm:h-10'
-        )}
-      >
+      <div className={cn(
+        'gap-1 px-3 border border-input text-muted-foreground bg-background',
+        'rounded-full min-w-20 h-8 sm:h-10 flex items-center justify-center'
+      )}>
         <Globe className="size-4" />
         <span className="text-xs">Search</span>
-      </Toggle>
+      </div>
     )
   }
 
   return (
-    <Toggle
-      aria-label="Toggle search mode"
-      pressed={isSearchMode}
-      onPressedChange={handleSearchModeChange}
-      variant="outline"
+    <button
+      onClick={handleToggle}
       className={cn(
         'gap-1 px-3 border border-input text-muted-foreground bg-background',
-        'data-[state=on]:bg-accent-blue',
-        'data-[state=on]:text-accent-blue-foreground',
-        'data-[state=on]:border-accent-blue-border',
         'hover:bg-accent hover:text-accent-foreground rounded-full',
-        'h-8 sm:h-10'
+        'h-8 sm:h-10 min-w-20 flex items-center justify-center transition-colors',
+        searchEnabled && 'bg-accent-blue text-accent-blue-foreground border-accent-blue-border'
       )}
     >
-      <Globe className="size-4" />
-      <span className="text-xs">Search</span>
-    </Toggle>
+      {searchEnabled ? (
+        <>
+          <Globe className="size-4" />
+          <span className="text-xs">Search</span>
+        </>
+      ) : (
+        <>
+          <Search className="size-4" />
+          <span className="text-xs">Off</span>
+        </>
+      )}
+    </button>
   )
 }
