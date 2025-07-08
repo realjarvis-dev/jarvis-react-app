@@ -138,7 +138,26 @@ const isSuggestionAlreadyUsed = (suggestionText: string, userInput: string): boo
   const suggestion = suggestionText.toLowerCase().trim()
   const input = userInput.toLowerCase().trim()
   
+  // If input is empty, no suggestions are "used"
+  if (!input) {
+    return false
+  }
+  
   // Check if the exact suggestion text appears in the input
+  if (input === suggestion) {
+    return true
+  }
+  
+  // Check if user input is a partial match of the suggestion (very close match)
+  if (suggestion.startsWith(input) && input.length > 0) {
+    // Only consider it "used" if the input is very close to the suggestion (80% or more)
+    const similarity = input.length / suggestion.length
+    if (similarity >= 0.8) {
+      return true
+    }
+  }
+  
+  // Check if suggestion is a subset of the input (user already typed more than the suggestion)
   if (input.includes(suggestion)) {
     return true
   }
@@ -190,7 +209,7 @@ const isSuggestionAlreadyUsed = (suggestionText: string, userInput: string): boo
     inputWords.some(inputWord => inputWord.includes(word) || word.includes(inputWord))
   )
   
-  return usedWords.length >= Math.max(1, suggestionWords.length * 0.7)
+  return usedWords.length >= Math.max(1, suggestionWords.length * 0.8)
 }
 
 // Contextual suggestion helper
@@ -369,6 +388,7 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
     const [isTyping, setIsTyping] = useState(false)
     const [previousValue, setPreviousValue] = useState('')
     const [isDeleting, setIsDeleting] = useState(false)
+    const [justAppliedSuggestion, setJustAppliedSuggestion] = useState(false)
     
     const textareaRef = useRef<HTMLTextAreaElement>(null)
     const suggestionEngine = useRef<any>(null)
@@ -412,7 +432,7 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
 
     // Generate suggestions when input changes
     useEffect(() => {
-      if (!isMounted || !networkContext) {
+      if (!isMounted || !networkContext || justAppliedSuggestion) {
         return
       }
 
@@ -568,7 +588,7 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
           clearTimeout(suggestionTimeoutRef.current)
         }
       }
-    }, [value, isMounted, networkContext, cursorPosition, isDeleting, isTyping])
+    }, [value, isMounted, networkContext, cursorPosition, isDeleting, isTyping, justAppliedSuggestion])
 
     // Scroll selected item into view
     const scrollItemIntoView = (index: number) => {
@@ -612,27 +632,15 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
             })
             return
           case 'Tab':
-            if (selectedIndex >= 0) {
-              e.preventDefault()
-              applySuggestion(suggestions[selectedIndex])
-              return
-            }
-            break
-          case 'Enter':
-            if (selectedIndex >= 0) {
-              e.preventDefault()
-              applySuggestion(suggestions[selectedIndex])
-              return
-            }
-            // Allow Enter to pass through for form submission
-            break
-          case ' ':
-            // Space key accepts first suggestion if available
+            // Tab key accepts selected suggestion or first suggestion if none selected
             if (suggestions.length > 0) {
               e.preventDefault()
               applySuggestion(suggestions[selectedIndex >= 0 ? selectedIndex : 0])
               return
             }
+            break
+          case 'Enter':
+            // Enter key should not affect suggestions - let it pass through for form submission
             break
           case 'Escape':
             e.preventDefault()
@@ -665,24 +673,35 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
       const beforeCursor = currentValue.slice(0, start)
       const afterCursor = currentValue.slice(end)
       
-      // Find the start of the current word
-      const words = beforeCursor.split(/\s+/)
-      const currentWord = words[words.length - 1] || ''
-      const wordStart = beforeCursor.lastIndexOf(currentWord)
-      
-      // Handle different types of suggestions
+      // Smart text replacement: find the best match position
       let newValue = ''
       let newCursorPos = 0
       
-      if (suggestion.category === 'completion') {
-        // For completion suggestions, append to current word
-        const spaceAfter = afterCursor.startsWith(' ') ? '' : ' '
-        newValue = beforeCursor + suggestion.text + spaceAfter + afterCursor
-        newCursorPos = beforeCursor.length + suggestion.text.length + spaceAfter.length
+      const suggestionText = suggestion.text
+      const suggestionLower = suggestionText.toLowerCase()
+      const inputLower = currentValue.toLowerCase()
+      
+      // Check if current input is a partial match of the suggestion
+      if (suggestionLower.startsWith(inputLower.trim()) && inputLower.trim().length > 0) {
+        // Replace entire input with suggestion (avoiding duplication)
+        newValue = suggestionText
+        newCursorPos = suggestionText.length
       } else {
-        // For full suggestions, replace the current word
-        newValue = currentValue.slice(0, wordStart) + suggestion.text + afterCursor
-        newCursorPos = wordStart + suggestion.text.length
+        // Find the current word being typed
+        const words = beforeCursor.split(/\s+/)
+        const currentWord = words[words.length - 1] || ''
+        const wordStart = beforeCursor.lastIndexOf(currentWord)
+        
+        // Check if suggestion starts with the current word
+        if (currentWord && suggestionLower.startsWith(currentWord.toLowerCase())) {
+          // Replace from the start of current word to avoid duplication
+          newValue = currentValue.slice(0, wordStart) + suggestionText + afterCursor
+          newCursorPos = wordStart + suggestionText.length
+        } else {
+          // Default behavior: replace current word
+          newValue = currentValue.slice(0, wordStart) + suggestionText + afterCursor
+          newCursorPos = wordStart + suggestionText.length
+        }
       }
 
       onChange(newValue)
@@ -703,8 +722,14 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
         setCursorPosition(newCursorPos)
         textarea.focus() // Keep focus on textarea for continuous typing
         
-        // Allow immediate re-generation of suggestions for continuous context
+        // Prevent immediate re-generation of suggestions after selection
         setIsTyping(false)
+        setJustAppliedSuggestion(true)
+        
+        // Add a longer delay before allowing new suggestions to prevent over-active behavior
+        setTimeout(() => {
+          setJustAppliedSuggestion(false)
+        }, 1000)
       }, 0)
     }
 
