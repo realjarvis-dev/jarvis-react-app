@@ -34,7 +34,11 @@ export async function POST(request: Request) {
     }
 
     const cookieStore = await cookies()
-    const searchMode = cookieStore.get('search-mode')?.value === 'true'
+    const searchModeValue = cookieStore.get('search-mode')?.value || 'true'
+    const searchMode = searchModeValue === 'true'
+    
+    const deepResearchModeValue = cookieStore.get('deep-research-mode')?.value || 'false'
+    const deepResearchMode = deepResearchModeValue === 'true'
 
     const selectedModel = DEFAULT_MODEL
 
@@ -97,6 +101,7 @@ export async function POST(request: Request) {
           model: selectedModel,
           chatId,
           searchMode,
+          deepResearchMode,
           userId,
           userEvmWallet,
           userSolWallet,
@@ -109,6 +114,7 @@ export async function POST(request: Request) {
           model: selectedModel,
           chatId,
           searchMode,
+          deepResearchMode,
           userId,
           userEvmWallet,
           userSolWallet,
