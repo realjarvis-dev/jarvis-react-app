@@ -29,7 +29,7 @@ export function SimpleQuoteDisplay({
       <Card className="bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800">
         <CardContent className="pt-4">
           <div className="text-red-600 dark:text-red-400 font-medium mb-1">
-           Whoops—we couldn't get your quote just now.
+           Whoops—we couldn&apos;t get your quote just now.
           </div>
           <div className="text-sm text-red-600/80 dark:text-red-400/80">
             {result.error}
