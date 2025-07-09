@@ -9,8 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
-    "generate:pendle-tokens": "node scripts/generate-pendle-tokens.js",
-    "test:chat-creation": "bun scripts/test-chat-creation.ts"
+    "generate:pendle-tokens": "node scripts/generate-pendle-tokens.js"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.2.10",
