@@ -2,15 +2,13 @@ import { tool } from 'ai'
 import z from 'zod'
 import { ToolContext } from '../types/context'
 import { executeJupiterOrder, getJupiterOrder } from '../jupiter/order'
-import { searchXStocksByName } from '../jupiter/search'
+import { searchVerifiedTokensByName, searchXStocksByName } from '../jupiter/search'
 import { formatUnits, parseUnits } from 'viem'
 import { computeNetworkFeeFromTxString } from '../jupiter/utils'
 import { clusterApiUrl, Connection, SendTransactionError } from '@solana/web3.js'
 import { getUserSolWalletAddress } from '../privy/client'
 import * as _ from "lodash";
-import { excelonMainnet } from 'viem/chains'
 import { broadcastSolanaTransaction, signSolanaTransactionString } from '../privy/solana-utils'
-import { solanaConfig } from "../network/config"
 
 const commonTokenMap = {
   SOL: 'So11111111111111111111111111111111111111112',
@@ -21,8 +19,39 @@ const commonTokenDecimals = {
   USDC: 6,
 }
 
+// Helper function to resolve token address and decimals
+async function resolveToken(token: string) {
+  if (token === "SOL" || token === "USDC") {
+    return {
+      address: commonTokenMap[token],
+      decimals: commonTokenDecimals[token]
+    }
+  } else {
+    const xStock = await searchVerifiedTokensByName(token)
+    if (xStock.length === 0) {
+      return {
+        error: `Token ${token} not found`
+      }
+    }
+    if (xStock.length > 1) {
+      return {
+        error: `Multiple tokens found for ${token}`,
+        tokenOptions: xStock.map((token) => ({
+          name: token.name,
+          symbol: token.symbol,
+          address: token.id
+        }))
+      }
+    }
+    return {
+      address: xStock[0].id,
+      decimals: xStock[0].decimals
+    }
+  }
+}
+
 export const jupiterQuote = tool({
-    description: `Get the quote for a given trade on jupiter dex, can only trade SOL, USDC, or any xStock. You should always give a quote if user wants to trade without ask.`,
+    description: `Get the quote for a given trade on jupiter dex. Use this tool when user wants a swap. You should always give a quote if user wants to trade without ask.`,
     parameters: z.object({
         // userSolanaAddress: z.string().describe('The user\'s solana address'),
         tokenInDisplayName: z.string().describe('The name or symbol of the token to sell, for displaying purpose'),
@@ -35,32 +64,30 @@ export const jupiterQuote = tool({
     execute: async (params, context: ToolContext) => {
         const { tokenIn, tokenOut, amountIn } = params
         const userSolanaAddress = await getUserSolWalletAddress()
-        let tokenInAddress;
-        let tokenOutAddress;
-        let tokenInDecimals;
-        let tokenOutDecimals;
-        if (tokenIn === "SOL" || tokenIn === "USDC") {
-            tokenInAddress = commonTokenMap[tokenIn]
-            tokenInDecimals = commonTokenDecimals[tokenIn]
-        } else {
-            const xStockIn = await searchXStocksByName(tokenIn)
-            if (xStockIn.length === 0) {
-                throw new Error(`Token ${tokenIn} not found`)
+        
+        // Resolve tokenIn
+        const tokenInResult = await resolveToken(tokenIn)
+        if ('error' in tokenInResult) {
+            return {
+                status: "Failed",
+                instruction: tokenInResult.tokenOptions ? "User can choose one of the following tokens" : undefined,
+                tokenOptions: tokenInResult.tokenOptions,
+                error: tokenInResult.error
             }
-            tokenInAddress = xStockIn[0].id
-            tokenInDecimals = xStockIn[0].decimals
         }
-        if (tokenOut === "SOL" || tokenOut === "USDC") {
-            tokenOutAddress = commonTokenMap[tokenOut]
-            tokenOutDecimals = commonTokenDecimals[tokenOut]
-        } else {
-            const xStockOut = await searchXStocksByName(tokenOut)
-            if (xStockOut.length === 0) {
-                throw new Error(`Token ${tokenOut} not found`)
+        const { address: tokenInAddress, decimals: tokenInDecimals } = tokenInResult
+
+        // Resolve tokenOut
+        const tokenOutResult = await resolveToken(tokenOut)
+        if ('error' in tokenOutResult) {
+            return {
+                status: "Failed",
+                instruction: tokenOutResult.tokenOptions ? "User can choose one of the following tokens" : undefined,
+                tokenOptions: tokenOutResult.tokenOptions,
+                error: tokenOutResult.error
             }
-            tokenOutAddress = xStockOut[0].id
-            tokenOutDecimals = xStockOut[0].decimals
         }
+        const { address: tokenOutAddress, decimals: tokenOutDecimals } = tokenOutResult
 
         const amountInLamports = parseUnits(amountIn.toString(), tokenInDecimals)
         let quoteResult;

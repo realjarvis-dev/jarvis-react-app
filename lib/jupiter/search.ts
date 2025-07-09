@@ -50,6 +50,27 @@ export async function searchTokens(mintAddress: string) {
   }
 }
 
+export async function searchVerifiedTokensByName(name: string): Promise<JupiterTokenData[]> {
+  try {
+    const response = await cachedJupiterAxios.get(
+      'https://lite-api.jup.ag/tokens/v2/search',
+      {
+        params: { query: name }
+      }
+    )
+
+    const tokens = response.data
+    const verifiedTokens = tokens.filter(
+      (token: any) => token.tags && token.tags.includes('verified')
+    )
+
+    return verifiedTokens
+  } catch (error) {
+    console.error('Error searching verified tokens by name:', error)
+    throw error
+  }
+}
+
 export async function searchXStocksByName(name: string): Promise<JupiterTokenData[]> {
   try {
     const response = await cachedJupiterAxios.get(
@@ -71,4 +92,3 @@ export async function searchXStocksByName(name: string): Promise<JupiterTokenDat
     throw error
   }
 }
-

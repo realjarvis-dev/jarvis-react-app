@@ -2,15 +2,19 @@
 
 import { useArtifact } from '@/components/artifact/artifact-context'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { CHAT_ID } from '@/lib/constants'
 import { useChat } from '@ai-sdk/react'
 import { faGasPump } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { ToolInvocation } from 'ai'
+import { Check, Copy } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { CollapsibleMessage } from '../collapsible-message'
 import { DefaultSkeleton } from '../default-skeleton'
 import { ToolArgsSection } from '../section'
+import { CopyButton } from '../copy-button'
 
 interface JupiterSwapDetails {
   amountOut: string
@@ -53,6 +57,9 @@ export function JupiterSwapQuoteSection({
     id: CHAT_ID
   })
 
+  const [hasCopiedTokenIn, setHasCopiedTokenIn] = useState(false)
+  const [hasCopiedTokenOut, setHasCopiedTokenOut] = useState(false)
+
   const isLoading = status === 'submitted' || status === 'streaming'
   const isToolLoading = tool.state === 'call'
 
@@ -74,6 +81,46 @@ export function JupiterSwapQuoteSection({
       <ToolArgsSection tool="jupiter-quote">{`${text} ${tool.args.amountIn} ${tool.args.tokenInDisplayName} to ${tool.args.tokenOutDisplayName}`}</ToolArgsSection>
     </button>
   )
+
+  const onCopyTokenIn = () => {
+    if (
+      typeof navigator !== 'undefined' &&
+      navigator.clipboard &&
+      quoteData?.swapDetails?.tokenInAddress
+    ) {
+      navigator.clipboard.writeText(quoteData.swapDetails.tokenInAddress)
+      setHasCopiedTokenIn(true)
+    }
+  }
+
+  useEffect(() => {
+    if (hasCopiedTokenIn) {
+      const timer = setTimeout(() => {
+        setHasCopiedTokenIn(false)
+      }, 2000)
+      return () => clearTimeout(timer)
+    }
+  }, [hasCopiedTokenIn])
+
+  const onCopyTokenOut = () => {
+    if (
+      typeof navigator !== 'undefined' &&
+      navigator.clipboard &&
+      quoteData?.swapDetails?.tokenOutAddress
+    ) {
+      navigator.clipboard.writeText(quoteData.swapDetails.tokenOutAddress)
+      setHasCopiedTokenOut(true)
+    }
+  }
+
+  useEffect(() => {
+    if (hasCopiedTokenOut) {
+      const timer = setTimeout(() => {
+        setHasCopiedTokenOut(false)
+      }, 2000)
+      return () => clearTimeout(timer)
+    }
+  }, [hasCopiedTokenOut])
 
   if (isLoading && isToolLoading) {
     return (
@@ -187,8 +234,12 @@ export function JupiterSwapQuoteSection({
         <CardContent className="p-6">
           <div className="flex flex-col gap-4">
             <div className="pb-3 border-b border-purple-100 dark:border-purple-900">
-              <div className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">
-                From: {tool.args.tokenInDisplayName}
+              <div className="flex items-center gap-2 mb-1">
+                <div className="text-sm font-semibold text-gray-500 dark:text-gray-400">
+                  From: {tool.args.tokenInDisplayName + " "}                 
+                  {quoteData?.swapDetails?.tokenInAddress && <CopyButton text={quoteData?.swapDetails?.tokenInAddress} className="h-4 w-4 shrink-0" />}
+                </div>
+
               </div>
               <div className="text-lg font-bold text-purple-800 dark:text-purple-300">
                 {swapDetails.amountIn} {tool.args.tokenInDisplayName}
@@ -202,7 +253,8 @@ export function JupiterSwapQuoteSection({
 
             <div className="pb-3 border-b border-purple-100 dark:border-purple-900">
               <div className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">
-                To: {tool.args.tokenOutDisplayName}
+                To: {tool.args.tokenOutDisplayName + " "}
+                {quoteData?.swapDetails?.tokenOutAddress && <CopyButton text={quoteData?.swapDetails?.tokenOutAddress} className="h-4 w-4 shrink-0" />}
               </div>
               <div className="text-lg font-bold text-green-700 dark:text-green-400">
                 {swapDetails.amountOut} {tool.args.tokenOutDisplayName}
@@ -256,7 +308,7 @@ export function JupiterSwapQuoteSection({
                     {swapDetails.feeBps || 0}%
                   </div>
                 </div>
-         
+
                 {/* Router */}
                 <div className="flex items-center gap-2">
                   <div className="text-gray-600 dark:text-gray-300 min-w-[90px] flex items-center gap-1">
