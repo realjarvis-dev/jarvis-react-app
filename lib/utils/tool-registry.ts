@@ -1,122 +1,60 @@
+// Memory-optimized tool registry with lazy loading
+export * from './tool-registry-lazy'
+
+// Legacy imports for backward compatibility
 import { ChainType } from '@/lib/network/types'
 import { z } from 'zod'
-import { searchSchema } from '../schema/search'
-import { defiProtocolsTool } from '../tools/defillama-protocols'
-import { defiYieldsTool } from '../tools/defillama-yields'
-import { getGasPriceTool } from '../tools/gas-price'
-import {
-  kodiakBaultProfitabilityTool,
-  kodiakCompoundBaultTool,
-  kodiakDepositTool,
-  kodiakOpportunitiesTool
-} from '../tools/kodiak'
-import { bridgeExecuteTool, bridgeQuoteTool } from '../tools/lifi-bridge'
-import { marketChartTool } from '../tools/market-chart'
-import {
-  pendleMintQuoteTool,
-  pendleMintTool,
-  pendleOpportunitiesTool,
-  pendleQuoteTool,
-  pendleRedeemQuoteTool,
-  pendleRedeemTool,
-  pendleSwapTool
-} from '../tools/pendle'
-import {
-  pendleZapInExecuteTool,
-  pendleZapInQuoteTool
-} from '../tools/pendle-liquidity'
-import {
-  pendleZapOutExecuteTool,
-  pendleZapOutQuoteTool
-} from '../tools/pendle-remove-liquidity'
-import { privyTransferTool } from '../tools/privy-transfer'
-import { createQuestionTool } from '../tools/question'
-import { retrieveTool } from '../tools/retrieve'
-import { createSearchTool } from '../tools/search'
-import { createVideoSearchTool } from '../tools/video-search'
-import {
-  fundWalletTool,
-  initialWalletRewardTool,
-  walletBalanceTool
-} from '../tools/wallet'
 import { NetworkContext, ToolContext } from '../types/context'
+import { 
+  LazyToolRegistry, 
+  createLazyToolRegistry, 
+  getLazyToolRegistry,
+  ToolCategory,
+  ToolDefinition,
+  ModelCapability 
+} from './tool-registry-lazy'
 
 /**
- * Interface for tool definition with schema and execution function
- */
-export interface ToolDefinition<T = any> {
-  name: string
-  description: string
-  schema: z.ZodType<T>
-  execute?: (
-    params: T,
-    context?: ToolContext
-  ) => Promise<any> | PromiseLike<any>
-  category: ToolCategory
-  supportedNetworks?: (ChainType | 'demo')[]
-}
-
-/**
- * Tool categories for organization and filtering
- */
-export enum ToolCategory {
-  WEB = 'web',
-  WEB3_READ = 'web3_read',
-  WEB3_WRITE = 'web3_write',
-  UTILITY = 'utility'
-}
-
-/**
- * Model capability configuration
- */
-export interface ModelCapability {
-  supportedCategories: ToolCategory[]
-  maxSteps: number
-}
-
-/**
- * Tool registry for centralized tool management
+ * Legacy ToolRegistry wrapper for backward compatibility
+ * Wraps the new LazyToolRegistry with the old interface
  */
 export class ToolRegistry {
-  private tools: Map<string, ToolDefinition> = new Map()
-  private modelCapabilities: Map<string, ModelCapability> = new Map()
+  private lazyRegistry: LazyToolRegistry
 
-  constructor() {
-    this.modelCapabilities.set('default', {
-      supportedCategories: [
-        ToolCategory.WEB,
-        ToolCategory.WEB3_READ,
-        ToolCategory.WEB3_WRITE,
-        ToolCategory.UTILITY
-      ],
-      maxSteps: 10
-    })
-
-    this.modelCapabilities.set('openai:o3-mini', {
-      supportedCategories: [ToolCategory.WEB, ToolCategory.UTILITY],
-      maxSteps: 5
-    })
+  constructor(model?: string) {
+    this.lazyRegistry = createLazyToolRegistry(model || 'openai:gpt-4o-mini')
   }
 
   /**
    * Register a tool with the registry
    */
   registerTool(tool: ToolDefinition): void {
-    this.tools.set(tool.name, tool)
+    // Convert to lazy loader for compatibility
+    this.lazyRegistry.registerToolLoader({
+      name: tool.name,
+      description: tool.description,
+      category: tool.category,
+      supportedNetworks: tool.supportedNetworks,
+      loader: async () => ({
+        schema: tool.schema,
+        execute: tool.execute
+      })
+    })
   }
 
   /**
    * Get a tool by name
    */
-  getTool(name: string): ToolDefinition | undefined {
-    return this.tools.get(name)
+  async getTool(name: string): Promise<ToolDefinition | undefined> {
+    return await this.lazyRegistry.getTool(name)
   }
 
   /**
-   * Get all registered tools
+   * Get all registered tools (WARNING: loads all tools)
    */
   getAllTools(): ToolDefinition[] {
-    return Array.from(this.tools.values())
+    console.warn('getAllTools() loads all tools - consider using lazy alternatives')
+    return this.lazyRegistry.getAllLoadedTools()
   }
 
   /**
@@ -130,41 +68,35 @@ export class ToolRegistry {
    * Get tool names by category
    */
   getToolNamesByCategory(category: ToolCategory): string[] {
-    return this.getToolsByCategory(category).map(tool => tool.name)
+    return this.lazyRegistry.getToolNamesByCategory(category)
   }
 
   /**
    * Get all tool names
    */
   getAllToolNames(): string[] {
-    return Array.from(this.tools.keys())
+    return this.lazyRegistry.getAllToolNames()
   }
 
   /**
    * Register model capabilities
    */
   registerModelCapability(modelId: string, capability: ModelCapability): void {
-    this.modelCapabilities.set(modelId, capability)
+    this.lazyRegistry.registerModelCapability(modelId, capability)
   }
 
   /**
    * Get model capabilities
    */
   getModelCapability(modelId: string): ModelCapability {
-    return (
-      this.modelCapabilities.get(modelId) ||
-      this.modelCapabilities.get('default')!
-    )
+    return this.lazyRegistry.getModelCapability(modelId)
   }
 
   /**
    * Get supported tool names for a model
    */
   getSupportedToolNames(modelId: string): string[] {
-    const capability = this.getModelCapability(modelId)
-    return this.getAllTools()
-      .filter(tool => capability.supportedCategories.includes(tool.category))
-      .map(tool => tool.name)
+    return this.lazyRegistry.getSupportedToolNames(modelId)
   }
 
   /**
@@ -174,622 +106,37 @@ export class ToolRegistry {
     modelId: string,
     networkContext: NetworkContext
   ): string[] {
-    const capability = this.getModelCapability(modelId)
-    return this.getAllTools()
-      .filter(tool => capability.supportedCategories.includes(tool.category))
-      .filter(tool => {
-        // If tool doesn't specify supported networks, it supports all networks
-        if (!tool.supportedNetworks) return true
-        // Otherwise, check if current network is supported
-        return tool.supportedNetworks.includes(networkContext.selectedNetwork)
-      })
-      .map(tool => tool.name)
+    return this.lazyRegistry.getSupportedToolNamesForNetwork(modelId, networkContext)
   }
 
   /**
    * Get max steps for a model
    */
   getMaxSteps(modelId: string, searchMode: boolean): number {
-    const capability = this.getModelCapability(modelId)
-    return searchMode ? capability.maxSteps : Math.min(capability.maxSteps, 5)
+    return this.lazyRegistry.getMaxSteps(modelId, searchMode)
+  }
+
+  /**
+   * Get the underlying lazy registry for advanced usage
+   */
+  getLazyRegistry(): LazyToolRegistry {
+    return this.lazyRegistry
   }
 }
 
 /**
- * Create and initialize the tool registry with all available tools
+ * Create and initialize the tool registry using lazy loading
  */
 export function createToolRegistry(model: string): ToolRegistry {
-  const registry = new ToolRegistry()
-
-  const searchTool = createSearchTool(model)
-  const videoSearchTool = createVideoSearchTool(model)
-  const askQuestionTool = createQuestionTool(model)
-
-  registry.registerTool({
-    name: 'get_gas_price',
-    description: 'Get the proposed gas price',
-    schema: getGasPriceTool.parameters,
-    execute: async (params, context) =>
-      getGasPriceTool.execute(params, {
-        toolCallId: context?.toolCallId || 'unknown',
-        messages: context?.messages || [],
-        networkContext: context?.networkContext!
-      } as any),
-    category: ToolCategory.WEB3_WRITE,
-    supportedNetworks: [
-      'ethereum',
-      'berachain',
-      'demo',
-      'base',
-      'arbitrum',
-      'polygon',
-      'optimism',
-      'unichain',
-      'bsc',
-      'sonic'
-    ]
-  })
-
-  registry.registerTool({
-    name: 'search',
-    description: 'Search the web for information',
-    schema: searchSchema,
-    execute: async (params, context) =>
-      searchTool.execute(params, {
-        toolCallId: context?.toolCallId || 'unknown',
-        messages: context?.messages || [],
-        networkContext: context?.networkContext!
-      } as any),
-    category: ToolCategory.WEB
-  })
-
-  registry.registerTool({
-    name: 'retrieve',
-    description: 'Get detailed content from specific URLs',
-    schema: retrieveTool.parameters,
-    execute: async (params, context) =>
-      retrieveTool.execute(params, {
-        toolCallId: context?.toolCallId || 'unknown',
-        messages: context?.messages || [],
-        networkContext: context?.networkContext!
-      } as any),
-    category: ToolCategory.WEB
-  })
-
-  registry.registerTool({
-    name: 'videoSearch',
-    description: 'Search for video content',
-    schema: videoSearchTool.parameters,
-    execute: async (params, context) =>
-      videoSearchTool.execute(params, {
-        toolCallId: context?.toolCallId || 'unknown',
-        messages: context?.messages || [],
-        networkContext: context?.networkContext!
-      } as any),
-    category: ToolCategory.WEB
-  })
-
-  registry.registerTool({
-    name: 'ask_question',
-    description: 'Ask clarifying questions to the user',
-    schema: askQuestionTool.parameters,
-    category: ToolCategory.UTILITY
-  })
-
-  registry.registerTool({
-    name: 'market_chart',
-    description: 'Fetch and display cryptocurrency market chart data',
-    schema: marketChartTool.parameters,
-    execute: async (params, context) =>
-      marketChartTool.execute(params, {
-        toolCallId: context?.toolCallId || 'unknown',
-        messages: context?.messages || [],
-        networkContext: context?.networkContext!
-      } as any),
-    category: ToolCategory.WEB
-  })
-
-  registry.registerTool({
-    name: 'pendle_opportunities',
-    description: 'Get Pendle yield opportunities',
-    schema: pendleOpportunitiesTool.parameters,
-    execute: async (params, context) =>
-      pendleOpportunitiesTool.execute(params, {
-        toolCallId: context?.toolCallId || 'unknown',
-        messages: context?.messages || [],
-        networkContext: context?.networkContext!
-      } as any),
-    category: ToolCategory.WEB3_READ,
-    supportedNetworks: [
-      'ethereum',
-      'bsc',
-      'arbitrum',
-      'base',
-      'sonic',
-      'berachain',
-      'optimism',
-      'mantle',
-      'demo'
-    ]
-  })
-
-  registry.registerTool({
-    name: 'pendle_quote',
-    description: 'Get a quote for swapping ETH to a Pendle token',
-    schema: pendleQuoteTool.parameters,
-    execute: async (params, context) =>
-      pendleQuoteTool.execute(params, {
-        toolCallId: context?.toolCallId || 'unknown',
-        messages: context?.messages || [],
-        networkContext: context?.networkContext!
-      } as any),
-    category: ToolCategory.WEB3_READ,
-    supportedNetworks: [
-      'ethereum',
-      'bsc',
-      'arbitrum',
-      'base',
-      'sonic',
-      'berachain',
-      'optimism',
-      'mantle',
-      'demo'
-    ]
-  })
-
-  registry.registerTool({
-    name: 'pendle_swap',
-    description: pendleSwapTool.description || '',
-    schema: pendleSwapTool.parameters,
-    execute: async (params, context) =>
-      pendleSwapTool.execute(params, {
-        toolCallId: context?.toolCallId || 'unknown',
-        messages: context?.messages || [],
-        networkContext: context?.networkContext!
-      } as any),
-    category: ToolCategory.WEB3_WRITE,
-    supportedNetworks: [
-      'ethereum',
-      'bsc',
-      'arbitrum',
-      'base',
-      'sonic',
-      'berachain',
-      'optimism',
-      'mantle',
-      'demo'
-    ]
-  })
-
-  registry.registerTool({
-    name: 'pendle_redeem',
-    description: pendleRedeemTool.description || '',
-    schema: pendleRedeemTool.parameters,
-    execute: async (params, context) =>
-      pendleRedeemTool.execute(params, {
-        toolCallId: context?.toolCallId || 'unknown',
-        messages: context?.messages || [],
-        networkContext: context?.networkContext!
-      } as any),
-    category: ToolCategory.WEB3_WRITE,
-    supportedNetworks: [
-      'ethereum',
-      'bsc',
-      'arbitrum',
-      'base',
-      'sonic',
-      'berachain',
-      'optimism',
-      'mantle',
-      'demo'
-    ]
-  })
-
-  registry.registerTool({
-    name: 'pendle_mint',
-    description: pendleMintTool.description || '',
-    schema: pendleMintTool.parameters,
-    execute: async (params, context) =>
-      pendleMintTool.execute(params, {
-        toolCallId: context?.toolCallId || 'unknown',
-        messages: context?.messages || [],
-        networkContext: context?.networkContext!
-      } as any),
-    category: ToolCategory.WEB3_WRITE,
-    supportedNetworks: [
-      'ethereum',
-      'bsc',
-      'arbitrum',
-      'base',
-      'sonic',
-      'berachain',
-      'optimism',
-      'mantle',
-      'demo'
-    ]
-  })
-
-  registry.registerTool({
-    name: 'pendle_redeem_quote',
-    description: pendleRedeemQuoteTool.description || '',
-    schema: pendleRedeemQuoteTool.parameters,
-    execute: async (params, context) =>
-      pendleRedeemQuoteTool.execute(params, {
-        toolCallId: context?.toolCallId || 'unknown',
-        messages: context?.messages || [],
-        networkContext: context?.networkContext!
-      } as any),
-    category: ToolCategory.WEB3_READ,
-    supportedNetworks: [
-      'ethereum',
-      'bsc',
-      'arbitrum',
-      'base',
-      'sonic',
-      'berachain',
-      'optimism',
-      'mantle',
-      'demo'
-    ]
-  })
-
-  registry.registerTool({
-    name: 'pendle_mint_quote',
-    description: pendleMintQuoteTool.description || '',
-    schema: pendleMintQuoteTool.parameters,
-    execute: async (params, context) =>
-      pendleMintQuoteTool.execute(params, {
-        toolCallId: context?.toolCallId || 'unknown',
-        messages: context?.messages || [],
-        networkContext: context?.networkContext!
-      } as any),
-    category: ToolCategory.WEB3_READ,
-    supportedNetworks: [
-      'ethereum',
-      'bsc',
-      'arbitrum',
-      'base',
-      'sonic',
-      'berachain',
-      'optimism',
-      'mantle',
-      'demo'
-    ]
-  })
-
-  registry.registerTool({
-    name: 'wallet_balance',
-    description: 'Get wallet balance information',
-    schema: walletBalanceTool.parameters,
-    execute: async (params, context) =>
-      walletBalanceTool.execute(params, {
-        toolCallId: context?.toolCallId || 'unknown',
-        messages: context?.messages || [],
-        networkContext: context?.networkContext!
-      } as any),
-    category: ToolCategory.WEB3_READ,
-    supportedNetworks: [
-      'ethereum',
-      'berachain',
-      'demo',
-      'base',
-      'arbitrum',
-      'polygon',
-      'optimism',
-      'unichain',
-      'bsc',
-      'sonic'
-    ]
-  })
-
-  registry.registerTool({
-    name: 'privy_transfer',
-    description: privyTransferTool.description || '',
-    schema: privyTransferTool.parameters,
-    execute: async (params, context) =>
-      privyTransferTool.execute(params, {
-        toolCallId: context?.toolCallId || 'unknown',
-        messages: context?.messages || [],
-        networkContext: context?.networkContext!
-      } as any),
-    category: ToolCategory.WEB3_WRITE,
-    supportedNetworks: [
-      'ethereum',
-      'berachain',
-      'demo',
-      'base',
-      'arbitrum',
-      'polygon',
-      'optimism',
-      'unichain',
-      'bsc',
-      'sonic'
-    ]
-  })
-
-  registry.registerTool({
-    name: 'kodiak_opportunities',
-    description: 'Get Kodiak Island yield opportunities on Berachain',
-    schema: kodiakOpportunitiesTool.parameters,
-    execute: async (params, context) =>
-      kodiakOpportunitiesTool.execute(params, {
-        toolCallId: context?.toolCallId || 'unknown',
-        messages: context?.messages || [],
-        networkContext: context?.networkContext!
-      } as any),
-    category: ToolCategory.WEB3_READ,
-    supportedNetworks: ['berachain']
-  })
-
-  registry.registerTool({
-    name: 'kodiak_deposit',
-    description:
-      'Deposit a single token into a Kodiak Island yield opportunity on Berachain',
-    schema: kodiakDepositTool.parameters,
-    execute: async (params, context) =>
-      kodiakDepositTool.execute(params, {
-        toolCallId: context?.toolCallId || 'unknown',
-        messages: context?.messages || [],
-        networkContext: context?.networkContext!
-      } as any),
-    category: ToolCategory.WEB3_WRITE,
-    supportedNetworks: ['berachain']
-  })
-
-  registry.registerTool({
-    name: 'kodiak_bault_profitability',
-    description: 'Check the profitability of Kodiak Baults for compounding',
-    schema: kodiakBaultProfitabilityTool.parameters,
-    execute: async (params, context) =>
-      kodiakBaultProfitabilityTool.execute(params, {
-        toolCallId: context?.toolCallId || 'unknown',
-        messages: context?.messages || [],
-        networkContext: context?.networkContext!
-      } as any),
-    category: ToolCategory.WEB3_READ,
-    supportedNetworks: ['berachain']
-  })
-
-  registry.registerTool({
-    name: 'kodiak_compound_bault',
-    description:
-      'Compound a profitable Kodiak Bault using the BountyHelper contract',
-    schema: kodiakCompoundBaultTool.parameters,
-    execute: async (params, context) =>
-      kodiakCompoundBaultTool.execute(params, {
-        toolCallId: context?.toolCallId || 'unknown',
-        messages: context?.messages || [],
-        networkContext: context?.networkContext!
-      } as any),
-    category: ToolCategory.WEB3_WRITE,
-    supportedNetworks: ['berachain']
-  })
-
-  // Disabled enso swap as lifi bridge is used instead, it covers both cross-chain bridging and non cross-chain swap
-
-  // registry.registerTool({
-  //   name: 'generic_swap',
-  //   description: 'Execute a swap transaction between two arbitrary tokens',
-  //   schema: genericSwapTool.parameters,
-  //   execute: async (params, context) => genericSwapTool.execute(params, {
-  //     toolCallId: context?.toolCallId || 'unknown',
-  //     messages: context?.messages || [],
-  //     networkContext: context?.networkContext!
-  //   } as any),
-  //   category: ToolCategory.WEB3,
-  //   supportedNetworks: ['ethereum', 'berachain', 'demo']
-  // })
-
-  registry.registerTool({
-    name: 'lifi_bridge_quote',
-    description: bridgeQuoteTool.description || '',
-    schema: bridgeQuoteTool.parameters,
-    execute: async (params, context) =>
-      bridgeQuoteTool.execute(params, {
-        toolCallId: context?.toolCallId || 'unknown',
-        messages: context?.messages || [],
-        networkContext: context?.networkContext!
-      } as any),
-    category: ToolCategory.WEB3_READ,
-    supportedNetworks: [
-      'ethereum',
-      'berachain',
-      'demo',
-      'base',
-      'arbitrum',
-      'polygon',
-      'optimism',
-      'unichain',
-      'bsc',
-      'sonic'
-    ]
-  })
-
-  registry.registerTool({
-    name: 'lifi_bridge_execute',
-    description: bridgeExecuteTool.description || '',
-    schema: bridgeExecuteTool.parameters,
-    execute: async (params, context) =>
-      bridgeExecuteTool.execute(params, {
-        toolCallId: context?.toolCallId || 'unknown',
-        messages: context?.messages || [],
-        networkContext: context?.networkContext!
-      } as any),
-    category: ToolCategory.WEB3_WRITE,
-    supportedNetworks: [
-      'ethereum',
-      'berachain',
-      'demo',
-      'base',
-      'arbitrum',
-      'polygon',
-      'optimism',
-      'unichain',
-      'bsc',
-      'sonic'
-    ]
-  })
-
-  registry.registerTool({
-    name: 'fund_wallet',
-    description: 'Fund a wallet with ETH (only available in Demo mode)',
-    schema: fundWalletTool.parameters,
-    execute: async (params, context) =>
-      fundWalletTool.execute(params, {
-        toolCallId: context?.toolCallId || 'unknown',
-        messages: context?.messages || [],
-        networkContext: context?.networkContext!,
-        isNewUser: context?.isNewUser
-      } as any),
-    category: ToolCategory.WEB3_WRITE,
-    supportedNetworks: ['demo']
-  })
-
-  registry.registerTool({
-    name: 'initial_wallet_reward',
-    description:
-      'Grant initial wallet reward of 1 ETH to new users (only available in Demo mode)',
-    schema: initialWalletRewardTool.parameters,
-    execute: async (params, context) =>
-      initialWalletRewardTool.execute(params, {
-        toolCallId: context?.toolCallId || 'unknown',
-        messages: context?.messages || [],
-        networkContext: context?.networkContext!,
-        isNewUser: context?.isNewUser
-      } as any),
-    category: ToolCategory.WEB3_WRITE,
-    supportedNetworks: ['demo']
-  })
-
-  registry.registerTool({
-    name: 'pendle_zap_in_quote',
-    description: pendleZapInQuoteTool.description || '',
-    schema: pendleZapInQuoteTool.parameters,
-    execute: async (params, context) =>
-      pendleZapInQuoteTool.execute(params, {
-        toolCallId: context?.toolCallId || 'unknown',
-        messages: context?.messages || [],
-        networkContext: context?.networkContext!
-      } as any),
-    category: ToolCategory.WEB3_READ,
-    supportedNetworks: [
-      'ethereum',
-      'bsc',
-      'arbitrum',
-      'base',
-      'sonic',
-      'berachain',
-      'optimism',
-      'mantle',
-      'demo'
-    ]
-  })
-
-  registry.registerTool({
-    name: 'pendle_zap_in_execute',
-    description: pendleZapInExecuteTool.description || '',
-    schema: pendleZapInExecuteTool.parameters,
-    execute: async (params, context) =>
-      pendleZapInExecuteTool.execute(params, {
-        toolCallId: context?.toolCallId || 'unknown',
-        messages: context?.messages || [],
-        networkContext: context?.networkContext!
-      } as any),
-    category: ToolCategory.WEB3_WRITE,
-    supportedNetworks: [
-      'ethereum',
-      'bsc',
-      'arbitrum',
-      'base',
-      'sonic',
-      'berachain',
-      'optimism',
-      'mantle',
-      'demo'
-    ]
-  })
-  registry.registerTool({
-    name: 'pendle_zap_out_quote',
-    description: pendleZapOutQuoteTool.description || '',
-    schema: pendleZapOutQuoteTool.parameters,
-    execute: async (params, context) =>
-      pendleZapOutQuoteTool.execute(params, {
-        toolCallId: context?.toolCallId || 'unknown',
-        messages: context?.messages || [],
-        networkContext: context?.networkContext!
-      } as any),
-    category: ToolCategory.WEB3_READ,
-    supportedNetworks: [
-      'ethereum',
-      'bsc',
-      'arbitrum',
-      'base',
-      'sonic',
-      'berachain',
-      'optimism',
-      'mantle',
-      'demo'
-    ]
-  })
-
-  registry.registerTool({
-    name: 'pendle_zap_out_execute',
-    description: pendleZapOutExecuteTool.description || '',
-    schema: pendleZapOutExecuteTool.parameters,
-    execute: async (params, context) =>
-      pendleZapOutExecuteTool.execute(params, {
-        toolCallId: context?.toolCallId || 'unknown',
-        messages: context?.messages || [],
-        networkContext: context?.networkContext!
-      } as any),
-    category: ToolCategory.WEB3_WRITE,
-    supportedNetworks: [
-      'ethereum',
-      'bsc',
-      'arbitrum',
-      'base',
-      'sonic',
-      'berachain',
-      'optimism',
-      'mantle',
-      'demo'
-    ]
-  })
-
-
-  // DeFiLlama Tools
-  registry.registerTool({
-    name: 'defillama_protocols',
-    description: 'Get DeFi protocol data with TVL rankings, 7-day gainers, and filtering options for hunting opportunities',
-    schema: defiProtocolsTool.parameters,
-    execute: async (params, context) => defiProtocolsTool.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!
-    } as any),
-    category: ToolCategory.WEB
-  })
-
-  registry.registerTool({
-    name: 'defillama_yields',
-    description: 'Discover high-yield DeFi opportunities across different protocols and chains',
-    schema: defiYieldsTool.parameters,
-    execute: async (params, context) => defiYieldsTool.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!
-    } as any),
-    category: ToolCategory.WEB
-  })
-
-
-  return registry
+  console.log('🚀 Creating lazy-loaded tool registry for memory optimization')
+  return new ToolRegistry(model)
 }
 
 let toolRegistryInstance: ToolRegistry | null = null
 
 export function getToolRegistry(model: string): ToolRegistry {
   if (!toolRegistryInstance) {
+    console.log('📦 Initializing tool registry with lazy loading')
     toolRegistryInstance = createToolRegistry(model)
   }
   return toolRegistryInstance

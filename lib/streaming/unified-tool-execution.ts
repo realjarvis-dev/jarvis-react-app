@@ -154,9 +154,9 @@ async function executeNativeToolCall(
   const availableTools = registry.getSupportedToolNames(model)
   const toolDefinitions: Record<string, any> = {}
   
-  // Prepare tool definitions for OpenAI native tool calling
+  // Prepare tool definitions for OpenAI native tool calling (async loading)
   for (const toolName of availableTools) {
-    const tool = registry.getTool(toolName)
+    const tool = await registry.getTool(toolName)
     if (tool && tool.execute) {
       toolDefinitions[toolName] = {
         description: tool.description,
@@ -194,14 +194,19 @@ async function executeManualToolCall(
 ): Promise<ToolExecutionResult> {
   const availableTools = registry.getSupportedToolNames(model)
   
-  const toolSchemasString = availableTools
-    .map(toolName => {
-      const tool = registry.getTool(toolName)
-      if (!tool) return ''
-      return `${toolName} parameters:\n${JSON.stringify(tool.schema, null, 2)}`
-    })
-    .join('\n\n')
+  const toolSchemasPromises = availableTools.map(async toolName => {
+    const tool = await registry.getTool(toolName)
+    if (!tool) return ''
+    return `${toolName} parameters:\n${JSON.stringify(tool.schema, null, 2)}`
+  })
+  const toolSchemasString = (await Promise.all(toolSchemasPromises)).join('\n\n')
   
+  const toolDescriptionsPromises = availableTools.map(async name => {
+    const tool = await registry.getTool(name)
+    return `- ${name}: ${tool?.description || ''}`
+  })
+  const toolDescriptions = (await Promise.all(toolDescriptionsPromises)).join('\n')
+
   const toolSelectionResponse = await executeWithRetry(
     () => generateText({
       model: getModel(model),
@@ -219,10 +224,7 @@ async function executeManualToolCall(
               </tool_call>
 
               Available tools:
-              ${availableTools.map(name => {
-                const tool = registry.getTool(name)
-                return `- ${name}: ${tool?.description || ''}`
-              }).join('\n')}
+              ${toolDescriptions}
               
               ${toolSchemasString}
 
@@ -238,8 +240,8 @@ async function executeManualToolCall(
   let toolCall, toolName, toolParams
   
   for (const availableTool of availableTools) {
-    const tool = registry.getTool(availableTool)
-    if (!tool) continue
+    const tool = await registry.getTool(availableTool)
+    if (!tool || !tool.schema) continue
     
     toolCall = parseToolCallXml(toolSelectionResponse.text, tool.schema)
     toolName = toolCall.tool
@@ -266,7 +268,7 @@ async function executeManualToolCall(
   }
   dataStream.writeData(toolCallAnnotation)
 
-  const tool = registry.getTool(toolName)
+  const tool = await registry.getTool(toolName)
   if (!tool) {
     const errorResponse = createErrorResponse(
       ErrorType.NOT_FOUND,

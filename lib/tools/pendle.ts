@@ -25,7 +25,7 @@ async function resolveTokenAddress(
   if (!isAddress) {
     const { TokenMatcher } = await import('../token-matcher/fuzzy-token-matcher');
     const tokenMatcher = new TokenMatcher(chainId);
-    const matches = tokenMatcher.match(tokenAddressOrName, 5);
+    const matches = await tokenMatcher.match(tokenAddressOrName, 5);
     
     const pendleMatches = matches.filter(token => {
       const symbol = token.symbol.toLowerCase();
@@ -65,7 +65,7 @@ async function resolveTokenAddress(
       resolvedMarketName = pendleMatches[0].name.replace(/^(PT|YT)\s+/, '');
     } else {
       const { pendleTokenMatcher } = await import('../token-matcher/pendle-token-matcher');
-      const allPendleTokens = pendleTokenMatcher.getAllTokensForChain(chainId);
+      const allPendleTokens = await pendleTokenMatcher.getAllTokensForChain(chainId);
       
       const similarTokens = allPendleTokens
         .filter(token => {
@@ -149,7 +149,7 @@ async function findMarketByTokenAddress(tokenAddress: string, tokenType: 'pt' | 
   
   const { pendleTokenMatcher } = await import('../token-matcher/pendle-token-matcher');
   
-  const market = pendleTokenMatcher.findMarketByTokenAddress(tokenAddress, tokenType, chainId);
+  const market = await pendleTokenMatcher.findMarketByTokenAddress(tokenAddress, tokenType, chainId);
   
   if (!market) {
     throw new Error(`Could not find a Pendle market with ${tokenType.toUpperCase()} token address ${tokenAddress} on chain ${chainId}`);

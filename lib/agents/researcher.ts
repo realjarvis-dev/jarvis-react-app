@@ -5,15 +5,15 @@ import { NetworkContext } from '../types/context'
 import { getModel } from '../utils/registry'
 import { getToolRegistry, ToolCategory } from '../utils/tool-registry'
 
-const createToolList = (
+const createToolList = async (
   toolNames: string[],
   registry: any,
   networkContext?: NetworkContext,
   isNewUser?: boolean
-): Record<string, any> => {
+): Promise<Record<string, any>> => {
   const toolList: Record<string, any> = {}
   for (const toolName of toolNames) {
-    const toolDef = registry.getTool(toolName)
+    const toolDef = await registry.getTool(toolName)
     if (toolDef && toolDef.execute) {
       toolList[toolName] = {
         description: toolDef.description,
@@ -358,13 +358,9 @@ export async function researcher({
 
     // Apply network filtering to web3 tools if networkContext is provided
     if (networkContext) {
-      web3_tools = web3_tools.filter(toolName => {
-        const toolDef = registry.getTool(toolName)
-        if (!toolDef || !toolDef.supportedNetworks) return true
-        return toolDef.supportedNetworks.includes(
-          networkContext.selectedNetwork
-        )
-      })
+      // Use the new getSupportedToolNamesForNetwork method to avoid async issues
+      const networkFilteredTools = registry.getSupportedToolNamesForNetwork(model, networkContext)
+      web3_tools = web3_tools.filter(toolName => networkFilteredTools.includes(toolName))
     }
 
     // remove web3 tools from supported tools if allowWeb3Tools is false
@@ -448,7 +444,7 @@ Network Context:
     }
 
     // Create tool list from registry with network context and user context
-    const tool_lst = createToolList(
+    const tool_lst = await createToolList(
       supportedTools,
       registry,
       networkContext,
@@ -461,7 +457,7 @@ Network Context:
           networkContext
         )
       : registry.getSupportedToolNames('openai:o3-mini')
-    const o3_mini_tool_lst = createToolList(
+    const o3_mini_tool_lst = await createToolList(
       o3MiniTools,
       registry,
       networkContext,

@@ -1,7 +1,9 @@
 import axios from 'axios'
 
 // Cache for protocol lookups to avoid repeated API calls
-const protocolCache = new Map<string, string | null>()
+const protocolCache = new Map<string, { value: string | null; timestamp: number }>()
+const PROTOCOL_CACHE_TTL = 60 * 60 * 1000 // 1 hour
+const MAX_PROTOCOL_CACHE_SIZE = 500 // Limit cache size
 
 export interface DeFiLlamaProtocolData {
   id: string
@@ -39,9 +41,16 @@ export interface DeFiLlamaProtocolData {
 export async function lookupProtocolUrl(protocolName: string): Promise<string | null> {
   const normalizedName = protocolName.toLowerCase().trim()
   
-  // Check cache first
-  if (protocolCache.has(normalizedName)) {
-    return protocolCache.get(normalizedName)!
+  // Check cache first with TTL
+  const cachedEntry = protocolCache.get(normalizedName)
+  if (cachedEntry) {
+    // Check if cache entry is still valid
+    if (Date.now() - cachedEntry.timestamp < PROTOCOL_CACHE_TTL) {
+      return cachedEntry.value
+    } else {
+      // Remove expired entry
+      protocolCache.delete(normalizedName)
+    }
   }
 
   try {
@@ -72,16 +81,27 @@ export async function lookupProtocolUrl(protocolName: string): Promise<string | 
 
     if (protocol?.url) {
       console.log(`✅ Found protocol URL: ${protocolName} = ${protocol.url}`)
-      protocolCache.set(normalizedName, protocol.url)
+      
+      // Cache with size limit
+      if (protocolCache.size >= MAX_PROTOCOL_CACHE_SIZE) {
+        // Remove oldest entry
+        const firstKey = protocolCache.keys().next().value
+        if (firstKey) {
+          protocolCache.delete(firstKey)
+          console.log(`🧹 Evicted protocol cache entry: ${firstKey}`)
+        }
+      }
+      
+      protocolCache.set(normalizedName, { value: protocol.url, timestamp: Date.now() })
       return protocol.url
     }
 
     console.log(`❌ No URL found for protocol: ${protocolName}`)
-    protocolCache.set(normalizedName, null)
+    protocolCache.set(normalizedName, { value: null, timestamp: Date.now() })
     return null
   } catch (error) {
     console.warn(`⚠️ Failed to lookup protocol ${protocolName}:`, error instanceof Error ? error.message : error)
-    protocolCache.set(normalizedName, null)
+    protocolCache.set(normalizedName, { value: null, timestamp: Date.now() })
     return null
   }
 }
@@ -97,8 +117,16 @@ export async function lookupProtocolUrlsBatch(protocolNames: string[]): Promise<
   for (const protocolName of protocolNames) {
     const normalizedName = protocolName.toLowerCase().trim()
     
-    if (protocolCache.has(normalizedName)) {
-      results.set(protocolName, protocolCache.get(normalizedName)!)
+    const cachedEntry = protocolCache.get(normalizedName)
+    if (cachedEntry) {
+      // Check if cache entry is still valid
+      if (Date.now() - cachedEntry.timestamp < PROTOCOL_CACHE_TTL) {
+        results.set(protocolName, cachedEntry.value)
+      } else {
+        // Remove expired entry
+        protocolCache.delete(normalizedName)
+        unknownProtocols.push(protocolName)
+      }
     } else {
       unknownProtocols.push(protocolName)
     }
@@ -140,11 +168,11 @@ export async function lookupProtocolUrlsBatch(protocolNames: string[]): Promise<
 
       if (protocol?.url) {
         results.set(protocolName, protocol.url)
-        protocolCache.set(normalizedName, protocol.url)
+        protocolCache.set(normalizedName, { value: protocol.url, timestamp: Date.now() })
         console.log(`✅ Batch found: ${protocolName} = ${protocol.url}`)
       } else {
         results.set(protocolName, null)
-        protocolCache.set(normalizedName, null)
+        protocolCache.set(normalizedName, { value: null, timestamp: Date.now() })
       }
     }
 
@@ -156,7 +184,7 @@ export async function lookupProtocolUrlsBatch(protocolNames: string[]): Promise<
     for (const protocolName of unknownProtocols) {
       if (!results.has(protocolName)) {
         results.set(protocolName, null)
-        protocolCache.set(protocolName.toLowerCase().trim(), null)
+        protocolCache.set(protocolName.toLowerCase().trim(), { value: null, timestamp: Date.now() })
       }
     }
   }

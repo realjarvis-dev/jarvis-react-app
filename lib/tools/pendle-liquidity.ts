@@ -92,7 +92,7 @@ export const pendleZapInQuoteTool = tool({
       if (!marketAddress) {
         // First try static markets from JSON config
         const { pendleTokenMatcher } = await import('../token-matcher/pendle-token-matcher')
-        const staticMarkets = pendleTokenMatcher.getAllMarketsForChain(chainId)
+        const staticMarkets = await pendleTokenMatcher.getAllMarketsForChain(chainId)
         
         console.log(`[DEBUG] Looking for market: "${marketName}"`)
         console.log(`[DEBUG] Available static markets:`, staticMarkets.map(m => ({ name: m.name, address: m.address })))
@@ -173,7 +173,8 @@ export const pendleZapInQuoteTool = tool({
         }
       } else {
         const { pendleTokenMatcher } = await import('../token-matcher/pendle-token-matcher')
-        const staticMarket = pendleTokenMatcher.getAllMarketsForChain(chainId).find(
+        const staticMarkets = await pendleTokenMatcher.getAllMarketsForChain(chainId)
+        const staticMarket = staticMarkets.find(
           m => m.address.toLowerCase() === (marketAddress as string).toLowerCase()
         )
         
@@ -235,7 +236,7 @@ export const pendleZapInQuoteTool = tool({
       // Check if PT token is expired (market inactive)
       if (tokenInType === 'pt') {
         const { pendleTokenMatcher } = await import('../token-matcher/pendle-token-matcher')
-        const ptToken = pendleTokenMatcher.findTokenByAddress(tokenInAddress!, chainId)
+        const ptToken = await pendleTokenMatcher.findTokenByAddress(tokenInAddress!, chainId)
         
         if (ptToken && ptToken.expiry) {
           const expiryDate = new Date(ptToken.expiry)
@@ -464,7 +465,7 @@ export const pendleZapInExecuteTool = tool({
     // Check if PT token is expired (market inactive) before execution
     if (tokenInType === 'pt') {
       const { pendleTokenMatcher } = await import('../token-matcher/pendle-token-matcher')
-      const ptToken = pendleTokenMatcher.findTokenByAddress(tokenInAddress, chainId)
+      const ptToken = await pendleTokenMatcher.findTokenByAddress(tokenInAddress, chainId)
       
       if (ptToken && ptToken.expiry) {
         const expiryDate = new Date(ptToken.expiry)

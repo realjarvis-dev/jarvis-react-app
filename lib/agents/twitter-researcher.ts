@@ -2,13 +2,13 @@ import { CoreMessage, smoothStream, streamText } from 'ai'
 import { getModel } from '../utils/registry'
 import { getToolRegistry, ToolCategory } from '../utils/tool-registry'
 
-const createToolList = (
+const createToolList = async (
   toolNames: string[],
   registry: any
-): Record<string, any> => {
+): Promise<Record<string, any>> => {
   const toolList: Record<string, any> = {}
   for (const toolName of toolNames) {
-    const toolDef = registry.getTool(toolName)
+    const toolDef = await registry.getTool(toolName)
     if (toolDef && toolDef.execute) {
       toolList[toolName] = {
         description: toolDef.description,
@@ -151,13 +151,13 @@ ${generateReadOnlyToolsSection()}
 
 type ResearcherReturn = Parameters<typeof streamText>[0]
 
-export function twitterResearcher({
+export async function twitterResearcher({
   messages,
   model
 }: {
   messages: CoreMessage[]
   model: string
-}): ResearcherReturn {
+}): Promise<ResearcherReturn> {
   try {
     const currentDate = new Date().toLocaleString()
 
@@ -176,7 +176,7 @@ export function twitterResearcher({
     const maxSteps = registry.getMaxSteps(model, true) // Always use search mode for Twitter
 
     // Create tool list from registry (no network context or user context needed)
-    const tool_lst = createToolList(supportedTools, registry)
+    const tool_lst = await createToolList(supportedTools, registry)
 
     console.log('Twitter supported tools', supportedTools)
 

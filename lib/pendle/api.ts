@@ -9,7 +9,7 @@ import {
 // Base URLs for Pendle APIs
 const BASE_URL = 'https://api-v2.pendle.finance/core'
 
-// Create cached axios instance
+// Create cached axios instance with memory limits
 const cachedAxios = setupCache(axios, {
   ttl: 60 * 60 * 1000, // 1 hour cache
   interpretHeader: false, // Don't use cache-control headers

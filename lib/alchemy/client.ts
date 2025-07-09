@@ -1,5 +1,6 @@
 import { TENDERLY_DEMO_CONFIG, allNetworkConfigs } from '@/lib/network/config'
 import { Alchemy, AlchemySettings, Network } from 'alchemy-sdk'
+import { alchemyConnectionPool } from './connection-pool'
 
 // 1. Define your shared defaults
 const API_KEY = process.env.ALCHEMY_API_KEY!
@@ -32,7 +33,8 @@ export const demoAlchemy = makeAlchemyClient(
   }
 )
 
-// 3. Instantiate clients dynamically from allNetworkConfigs
+// 3. LEGACY: Instantiate clients dynamically from allNetworkConfigs
+// This is kept for backward compatibility but deprecated
 export const chainIdToAlchemyClient: Record<number, Alchemy> = {}
 
 Object.values(allNetworkConfigs).forEach(config => {
@@ -43,6 +45,7 @@ Object.values(allNetworkConfigs).forEach(config => {
   }
 })
 
+// 4. NEW: Memory-optimized client getter with connection pooling
 export const getAlchemyClient = (
   chainId: number,
   isDemo = false
@@ -55,9 +58,20 @@ export const getAlchemyClient = (
       `Demo mode requested for chainId ${chainId}, but demo is configured for ${TENDERLY_DEMO_CONFIG.chainId}.`
     )
   }
-  const client = chainIdToAlchemyClient[chainId]
-  if (!client) {
-    throw new Error(`No Alchemy client found for chainId ${chainId}`)
+  
+  // Use connection pool for memory optimization
+  try {
+    return alchemyConnectionPool.getClient(chainId)
+  } catch (error) {
+    console.error(`Failed to get Alchemy client for chainId ${chainId}:`, error)
+    // Fallback to legacy client
+    const client = chainIdToAlchemyClient[chainId]
+    if (!client) {
+      throw new Error(`No Alchemy client found for chainId ${chainId}`)
+    }
+    return client
   }
-  return client
 }
+
+// Export connection pool stats for monitoring
+export const getAlchemyPoolStats = () => alchemyConnectionPool.getStats()

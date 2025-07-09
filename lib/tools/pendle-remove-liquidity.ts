@@ -67,7 +67,7 @@ export const pendleZapOutQuoteTool = tool({
     // also if tokenOutType is sy and tokenOutAddress is not provided, fetch the sy from the market
     if (!marketAddress || (tokenOutType === "sy" && !tokenOutAddress)) {
       const { pendleTokenMatcher } = await import('../token-matcher/pendle-token-matcher')
-      const allMarkets = pendleTokenMatcher.getAllMarketsForChain(chainId)
+      const allMarkets = await pendleTokenMatcher.getAllMarketsForChain(chainId)
       
       console.log(`[DEBUG] Looking for remove liquidity market: "${marketName}"`)
       console.log(`[DEBUG] Available static markets:`, allMarkets.map(m => ({ name: m.name, address: m.address })))

@@ -1,7 +1,9 @@
 import axios from 'axios'
 
 // Cache for token lookups to avoid repeated API calls
-const tokenCache = new Map<string, string>()
+const tokenCache = new Map<string, { value: string; timestamp: number }>()
+const TOKEN_CACHE_TTL = 60 * 60 * 1000 // 1 hour
+const MAX_TOKEN_CACHE_SIZE = 1000 // Limit cache size
 
 export interface TokenInfo {
   decimals: number
@@ -45,10 +47,17 @@ function normalizeChainName(chain: string): string {
 export async function lookupToken(tokenAddress: string, chain: string = 'ethereum'): Promise<string | null> {
   const normalizedChain = normalizeChainName(chain)
   
-  // Check cache first
+  // Check cache first with TTL
   const cacheKey = `${normalizedChain}:${tokenAddress.toLowerCase()}`
-  if (tokenCache.has(cacheKey)) {
-    return tokenCache.get(cacheKey)!
+  const cachedEntry = tokenCache.get(cacheKey)
+  if (cachedEntry) {
+    // Check if cache entry is still valid
+    if (Date.now() - cachedEntry.timestamp < TOKEN_CACHE_TTL) {
+      return cachedEntry.value
+    } else {
+      // Remove expired entry
+      tokenCache.delete(cacheKey)
+    }
   }
 
   try {
@@ -68,8 +77,17 @@ export async function lookupToken(tokenAddress: string, chain: string = 'ethereu
       const symbol = tokenData.symbol.toUpperCase()
       console.log(`✅ Found token: ${cacheKey} = ${symbol}`)
       
-      // Cache the result
-      tokenCache.set(cacheKey, symbol)
+      // Cache the result with TTL and size limit
+      if (tokenCache.size >= MAX_TOKEN_CACHE_SIZE) {
+        // Remove oldest entry
+        const firstKey = tokenCache.keys().next().value
+        if (firstKey) {
+          tokenCache.delete(firstKey)
+          console.log(`🧹 Evicted token cache entry: ${firstKey}`)
+        }
+      }
+      
+      tokenCache.set(cacheKey, { value: symbol, timestamp: Date.now() })
       return symbol
     }
 
@@ -93,8 +111,16 @@ export async function lookupTokensBatch(tokens: { address: string; chain?: strin
     const normalizedChain = normalizeChainName(token.chain || 'ethereum')
     const cacheKey = `${normalizedChain}:${token.address.toLowerCase()}`
     
-    if (tokenCache.has(cacheKey)) {
-      results.set(token.address, tokenCache.get(cacheKey)!)
+    const cachedEntry = tokenCache.get(cacheKey)
+    if (cachedEntry) {
+      // Check if cache entry is still valid
+      if (Date.now() - cachedEntry.timestamp < TOKEN_CACHE_TTL) {
+        results.set(token.address, cachedEntry.value)
+      } else {
+        // Remove expired entry
+        tokenCache.delete(cacheKey)
+        unknownTokens.push({ address: token.address, chain: normalizedChain, cacheKey })
+      }
     } else {
       unknownTokens.push({ address: token.address, chain: normalizedChain, cacheKey })
     }
@@ -126,7 +152,7 @@ export async function lookupTokensBatch(tokens: { address: string; chain?: strin
       if (tokenData?.symbol) {
         const symbol = tokenData.symbol.toUpperCase()
         results.set(unknownToken.address, symbol)
-        tokenCache.set(unknownToken.cacheKey, symbol)
+        tokenCache.set(unknownToken.cacheKey, { value: symbol, timestamp: Date.now() })
         console.log(`✅ Batch found: ${unknownToken.cacheKey} = ${symbol}`)
       }
     }

@@ -121,10 +121,30 @@ async function cleanupExpiredCache() {
   }
 }
 
-// Set up periodic cache cleanup
-setInterval(cleanupExpiredCache, CACHE_EXPIRATION_CHECK_INTERVAL)
+// Cache cleanup timer (lazy initialization)
+let cleanupTimer: NodeJS.Timeout | null = null
+
+// Set up periodic cache cleanup (lazy initialization)
+function initializeCacheCleanup() {
+  if (!cleanupTimer) {
+    cleanupTimer = setInterval(cleanupExpiredCache, CACHE_EXPIRATION_CHECK_INTERVAL)
+    console.log('🧹 Initialized cache cleanup timer')
+  }
+}
+
+// Clean up timer on process exit
+process.on('exit', () => {
+  if (cleanupTimer) {
+    clearInterval(cleanupTimer)
+    cleanupTimer = null
+    console.log('🧹 Cleared cache cleanup timer')
+  }
+})
 
 export async function POST(request: Request) {
+  // Initialize cache cleanup on first use
+  initializeCacheCleanup()
+  
   const { query, maxResults, searchDepth, includeDomains, excludeDomains } =
     await request.json()
 

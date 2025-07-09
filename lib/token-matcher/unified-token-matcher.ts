@@ -11,19 +11,19 @@ export class UnifiedTokenMatcher {
     this.tokenMatcher = new TokenMatcher(chainId, threshold)
   }
 
-  public match(query: string, limit = 5): ScoredToken[] {
+  public async match(query: string, limit = 5): Promise<ScoredToken[]> {
     return this.tokenMatcher.match(query, limit)
   }
 
-  public findPendleToken(tokenAddress: string): PendleToken | null {
+  public async findPendleToken(tokenAddress: string): Promise<PendleToken | null> {
     return pendleTokenMatcher.findTokenByAddress(tokenAddress, this.chainId)
   }
 
-  public findPendleMarket(tokenAddress: string, tokenType: 'pt' | 'yt' | 'sy') {
+  public async findPendleMarket(tokenAddress: string, tokenType: 'pt' | 'yt' | 'sy') {
     return pendleTokenMatcher.findMarketByTokenAddress(tokenAddress, tokenType, this.chainId)
   }
 
-  public getAllPendleTokens(): PendleToken[] {
+  public async getAllPendleTokens(): Promise<PendleToken[]> {
     return pendleTokenMatcher.getAllTokensForChain(this.chainId)
   }
 }

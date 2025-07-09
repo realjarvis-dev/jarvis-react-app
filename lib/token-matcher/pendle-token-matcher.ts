@@ -1,4 +1,5 @@
-import { pendleTokensByChain, type PendleToken } from './config/pendle/tokens'
+import { lazyPendleTokenLoader } from './config/pendle/lazy-tokens'
+import { type PendleToken } from './config/pendle/tokens'
 
 export type { PendleToken }
 
@@ -16,9 +17,10 @@ export class PendleTokenMatcher {
   private static instance: PendleTokenMatcher
   private tokensByAddress: Map<string, PendleToken> = new Map()
   private marketsByAddress: Map<string, PendleMarketInfo> = new Map()
+  private chainInitialized: Set<string> = new Set()
 
   private constructor() {
-    this.buildTokenMaps()
+    // No longer build maps eagerly
   }
 
   public static getInstance(): PendleTokenMatcher {
@@ -28,8 +30,14 @@ export class PendleTokenMatcher {
     return PendleTokenMatcher.instance
   }
 
-  private buildTokenMaps(): void {
-    for (const [chainId, tokens] of Object.entries(pendleTokensByChain)) {
+  private async initializeChain(chainId: string): Promise<void> {
+    if (this.chainInitialized.has(chainId)) {
+      return
+    }
+
+    try {
+      const tokens = await lazyPendleTokenLoader.getTokensForChain(chainId)
+      
       for (const token of tokens) {
         const key = `${chainId}-${token.address.toLowerCase()}`
         this.tokensByAddress.set(key, token)
@@ -54,29 +62,39 @@ export class PendleTokenMatcher {
           }
         }
       }
+      
+      this.chainInitialized.add(chainId)
+    } catch (error) {
+      console.error(`Failed to initialize Pendle tokens for chain ${chainId}:`, error)
     }
   }
 
-  public findTokenByAddress(tokenAddress: string, chainId: number): PendleToken | null {
+  public async findTokenByAddress(tokenAddress: string, chainId: number): Promise<PendleToken | null> {
+    const chainKey = chainId.toString()
+    await this.initializeChain(chainKey)
+    
     const key = `${chainId}-${tokenAddress.toLowerCase()}`
     return this.tokensByAddress.get(key) || null
   }
 
-  public findMarketByTokenAddress(tokenAddress: string, tokenType: 'pt' | 'yt' | 'sy', chainId: number): PendleMarketInfo | null {
-    const token = this.findTokenByAddress(tokenAddress, chainId)
+  public async findMarketByTokenAddress(tokenAddress: string, tokenType: 'pt' | 'yt' | 'sy', chainId: number): Promise<PendleMarketInfo | null> {
+    const token = await this.findTokenByAddress(tokenAddress, chainId)
     if (!token) return null
     
     const marketKey = `${chainId}-${token.marketAddress.toLowerCase()}`
     return this.marketsByAddress.get(marketKey) || null
   }
 
-  public getAllTokensForChain(chainId: number): PendleToken[] {
-    return pendleTokensByChain[chainId.toString()] || []
+  public async getAllTokensForChain(chainId: number): Promise<PendleToken[]> {
+    const chainKey = chainId.toString()
+    return lazyPendleTokenLoader.getTokensForChain(chainKey)
   }
 
-  public getAllMarketsForChain(chainId: number): PendleMarketInfo[] {
-    const markets: PendleMarketInfo[] = []
+  public async getAllMarketsForChain(chainId: number): Promise<PendleMarketInfo[]> {
     const chainKey = chainId.toString()
+    await this.initializeChain(chainKey)
+    
+    const markets: PendleMarketInfo[] = []
     
     for (const [key, market] of this.marketsByAddress.entries()) {
       if (key.startsWith(`${chainKey}-`)) {

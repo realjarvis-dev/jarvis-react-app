@@ -170,7 +170,7 @@ export class SuggestionEngine {
     const suggestions: Suggestion[] = []
     
     for (const toolName of tools) {
-      const tool = this.toolRegistry.getTool(toolName)
+      const tool = await this.toolRegistry.getTool(toolName)
       if (!tool) continue
       
       const score = this.calculateToolScore(tool, input, context)

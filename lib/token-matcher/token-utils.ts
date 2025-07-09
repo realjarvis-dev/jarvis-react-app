@@ -129,7 +129,7 @@ export async function findTokenInUserWalletByIdentifier(
   }))
 
   const tokenMatcher = new TokenMatcher(chainId, 0.5, tokenForMatcher)
-  const tokenMatches = tokenMatcher.match(identifier)
+  const tokenMatches = await tokenMatcher.match(identifier)
 
   const result = processTokenMatches(tokenMatches, identifier)
   if (result.status === 'fail' && result.error_message === 'Token not found') {
@@ -143,7 +143,7 @@ export async function findTokenInFullListByIdentifier(
   chainId: number
 ): Promise<TokenMatchResult> {
   const tokenMatcher = new TokenMatcher(chainId, 0.5)
-  const tokenMatches = tokenMatcher.match(identifier)
+  const tokenMatches = await tokenMatcher.match(identifier)
 
   const result = processTokenMatches(tokenMatches, identifier)
   if (result.status === 'fail' && result.error_message === 'Token not found') {

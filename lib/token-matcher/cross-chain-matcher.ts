@@ -77,8 +77,8 @@ class CrossChainMatcher {
     const fromTokenMatcher = this.getTokenMatcher(fromChainId)
     const toTokenMatcher = this.getTokenMatcher(toChainId)
 
-    const fromTokenMatches = fromTokenMatcher.match(fromToken)
-    const toTokenMatches = toTokenMatcher.match(toToken)
+    const fromTokenMatches = await fromTokenMatcher.match(fromToken)
+    const toTokenMatches = await toTokenMatcher.match(toToken)
 
     if (fromTokenMatches.length === 0) {
       throw new MissingTokenError(

@@ -7,7 +7,7 @@ export async function processTwitterQuery(
 ): Promise<string> {
   try {
 
-    const researcherResult = twitterResearcher({
+    const researcherResult = await twitterResearcher({
       messages: [{ role: 'user', content: query }],
       model: 'openai:gpt-4o'
     })

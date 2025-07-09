@@ -109,7 +109,7 @@ async function resolveTokenInfo(
   // Fallback to TokenMatcher for dynamic resolution
   try {
     const tokenMatcher = new TokenMatcher(chainId)
-    const matches = tokenMatcher.match(tokenSymbol, 1)
+    const matches = await tokenMatcher.match(tokenSymbol, 1)
     
     if (matches.length > 0) {
       const token = matches[0]
