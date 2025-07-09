@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Textarea } from '@/components/ui/textarea'
 import { useNetwork } from '@/lib/network/context'
 import { cn } from '@/lib/utils'
+import { createSimilarityEngine } from '@/lib/utils/similarity-engine'
 import * as Icons from 'lucide-react'
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 
@@ -95,8 +96,13 @@ const getNetworkAwareSuggestions = (input: string, network: string, currentWord:
   
   const currentProtocols = networkProtocols[network?.toLowerCase() as keyof typeof networkProtocols] || networkProtocols.ethereum
   
+  // Don't suggest similar token actions when user has already chosen a specific token action
+  const hasTokenAction = input.includes('swap') || input.includes('bridge') || input.includes('transfer') || 
+                         input.includes('mint') || input.includes('redeem') || input.includes('stake')
+  
   // Context-aware suggestions based on input
   if (input.includes('find') || input.includes('discover') || input.includes('explore')) {
+    // Generate protocol-specific suggestions - let similarity engine filter redundant ones
     currentProtocols.forEach((protocol, index) => {
       const suggestionText = `Find ${protocol} opportunities`
       const baseScore = 100 - index
@@ -114,6 +120,7 @@ const getNetworkAwareSuggestions = (input: string, network: string, currentWord:
   }
   
   if (input.includes('yield') || input.includes('earn') || input.includes('farm')) {
+    // Generate yield-specific suggestions - let similarity engine filter redundant ones
     currentProtocols.slice(0, 3).forEach((protocol, index) => {
       const suggestionText = `Show ${protocol} yield opportunities`
       const baseScore = 95 - index
@@ -130,6 +137,38 @@ const getNetworkAwareSuggestions = (input: string, network: string, currentWord:
     })
   }
   
+  // Only suggest protocol-specific actions if user hasn't chosen a specific token action
+  if (!hasTokenAction && input.length > 2) {
+    // Suggest vault/yield opportunities when user hasn't specified an action
+    const vaultSuggestions = [
+      {
+        text: 'Find high-yield vaults',
+        description: 'Discover yield farming opportunities',
+        category: 'opportunity',
+        icon: 'TrendingUp',
+        score: 70
+      },
+      {
+        text: 'Show liquidity pools',
+        description: 'View available LP opportunities',
+        category: 'opportunity',
+        icon: 'Waves',
+        score: 65
+      }
+    ]
+    
+    vaultSuggestions.forEach((suggestion, index) => {
+      suggestions.push({
+        id: `vault-${index}`,
+        text: suggestion.text,
+        description: suggestion.description,
+        category: suggestion.category,
+        icon: suggestion.icon,
+        score: suggestion.score + calculateRelevanceScore(suggestion.text, input, currentWord)
+      })
+    })
+  }
+  
   return suggestions
 }
 
@@ -138,7 +177,26 @@ const isSuggestionAlreadyUsed = (suggestionText: string, userInput: string): boo
   const suggestion = suggestionText.toLowerCase().trim()
   const input = userInput.toLowerCase().trim()
   
+  // If input is empty, no suggestions are "used"
+  if (!input) {
+    return false
+  }
+  
   // Check if the exact suggestion text appears in the input
+  if (input === suggestion) {
+    return true
+  }
+  
+  // Check if user input is a partial match of the suggestion (very close match)
+  if (suggestion.startsWith(input) && input.length > 0) {
+    // Only consider it "used" if the input is very close to the suggestion (80% or more)
+    const similarity = input.length / suggestion.length
+    if (similarity >= 0.8) {
+      return true
+    }
+  }
+  
+  // Check if suggestion is a subset of the input (user already typed more than the suggestion)
   if (input.includes(suggestion)) {
     return true
   }
@@ -150,7 +208,13 @@ const isSuggestionAlreadyUsed = (suggestionText: string, userInput: string): boo
     { pattern: /check (balance|wallet)/, blockSimilar: /check (price|yield|rates?|cost)/ },
     { pattern: /check (yield|farm|earning)/, blockSimilar: /check (price|balance|wallet)/ },
     { pattern: /swap \w+/, blockSimilar: /check|find|show/ },
-    { pattern: /find \w+ opportunities/, blockSimilar: /check|swap/ }
+    { pattern: /find \w+ opportunities/, blockSimilar: /check|swap/ },
+    // Block similar token actions when user has already chosen one
+    { pattern: /swap.*(token|eth|usdc|btc)/, blockSimilar: /bridge.*(token|eth|usdc|btc)|transfer.*(token|eth|usdc|btc)|mint.*(token|eth|usdc|btc)|redeem.*(token|eth|usdc|btc)/ },
+    { pattern: /bridge.*(token|eth|usdc|btc)/, blockSimilar: /swap.*(token|eth|usdc|btc)|transfer.*(token|eth|usdc|btc)|mint.*(token|eth|usdc|btc)|redeem.*(token|eth|usdc|btc)/ },
+    { pattern: /transfer.*(token|eth|usdc|btc)/, blockSimilar: /swap.*(token|eth|usdc|btc)|bridge.*(token|eth|usdc|btc)|mint.*(token|eth|usdc|btc)|redeem.*(token|eth|usdc|btc)/ },
+    { pattern: /mint.*(token|eth|usdc|btc)/, blockSimilar: /swap.*(token|eth|usdc|btc)|bridge.*(token|eth|usdc|btc)|transfer.*(token|eth|usdc|btc)|redeem.*(token|eth|usdc|btc)/ },
+    { pattern: /redeem.*(token|eth|usdc|btc)/, blockSimilar: /swap.*(token|eth|usdc|btc)|bridge.*(token|eth|usdc|btc)|transfer.*(token|eth|usdc|btc)|mint.*(token|eth|usdc|btc)/ }
   ]
   
   for (const { pattern, blockSimilar } of userActionPatterns) {
@@ -165,6 +229,16 @@ const isSuggestionAlreadyUsed = (suggestionText: string, userInput: string): boo
     if (input.includes('find ') && input.includes(' opportunities')) {
       return true
     }
+    // Also block if input has "find" + any yield/vault/farming related terms
+    if (input.includes('find ') && (input.includes('yield') || input.includes('vault') || input.includes('farm') || input.includes('earn'))) {
+      return true
+    }
+  }
+  
+  // Block similar yield/opportunity suggestions if user already mentioned yield/vault/farming
+  if ((suggestion.includes('yield') || suggestion.includes('vault') || suggestion.includes('farm') || suggestion.includes('earn')) &&
+      (input.includes('yield') || input.includes('vault') || input.includes('farm') || input.includes('earn'))) {
+    return true
   }
   
   // Special handling for protocol-specific suggestions
@@ -190,7 +264,7 @@ const isSuggestionAlreadyUsed = (suggestionText: string, userInput: string): boo
     inputWords.some(inputWord => inputWord.includes(word) || word.includes(inputWord))
   )
   
-  return usedWords.length >= Math.max(1, suggestionWords.length * 0.7)
+  return usedWords.length >= Math.max(1, suggestionWords.length * 0.8)
 }
 
 // Contextual suggestion helper
@@ -285,6 +359,89 @@ const getContextualSuggestions = (input: string, currentWord: string, network: s
         })
       }
     })
+  } else if (input.includes('swap') && input.includes('token')) {
+    // User has mentioned swapping tokens - suggest post-swap actions
+    const postSwapSuggestions = [
+      {
+        text: 'Deposit tokens into yield vault',
+        description: 'Earn passive income on your tokens',
+        category: 'next-step',
+        icon: 'Vault',
+        score: 95
+      },
+      {
+        text: 'Provide liquidity to earn fees',
+        description: 'Add tokens to liquidity pool for trading fees',
+        category: 'next-step',
+        icon: 'Waves',
+        score: 90
+      },
+      {
+        text: 'Stake tokens for rewards',
+        description: 'Lock tokens to earn staking rewards',
+        category: 'next-step',
+        icon: 'Lock',
+        score: 85
+      },
+      {
+        text: 'Check gas fees before transaction',
+        description: 'View current network gas prices',
+        category: 'next-step',
+        icon: 'Fuel',
+        score: 80
+      }
+    ]
+    
+    postSwapSuggestions.forEach((suggestion, index) => {
+      if (!isSuggestionAlreadyUsed(suggestion.text, input)) {
+        suggestions.push({
+          id: `post-swap-${index}`,
+          text: suggestion.text,
+          description: suggestion.description,
+          category: suggestion.category,
+          icon: suggestion.icon,
+          score: suggestion.score + calculateRelevanceScore(suggestion.text, input, currentWord)
+        })
+      }
+    })
+  } else if (input.includes('bridge') && input.includes('token')) {
+    // User has mentioned bridging tokens - suggest post-bridge actions
+    const postBridgeSuggestions = [
+      {
+        text: 'Check bridge transaction status',
+        description: 'Monitor your cross-chain transaction',
+        category: 'next-step',
+        icon: 'Clock',
+        score: 95
+      },
+      {
+        text: 'Add bridged tokens to wallet',
+        description: 'Import tokens to your wallet on destination chain',
+        category: 'next-step',
+        icon: 'Plus',
+        score: 90
+      },
+      {
+        text: 'Find yield opportunities on destination chain',
+        description: 'Explore earning options on the new network',
+        category: 'next-step',
+        icon: 'TrendingUp',
+        score: 85
+      }
+    ]
+    
+    postBridgeSuggestions.forEach((suggestion, index) => {
+      if (!isSuggestionAlreadyUsed(suggestion.text, input)) {
+        suggestions.push({
+          id: `post-bridge-${index}`,
+          text: suggestion.text,
+          description: suggestion.description,
+          category: suggestion.category,
+          icon: suggestion.icon,
+          score: suggestion.score + calculateRelevanceScore(suggestion.text, input, currentWord)
+        })
+      }
+    })
   } else if (input.includes('swap') && !input.includes(' for ')) {
     // User wants to swap but hasn't specified tokens yet
     const swapSuggestions = ['Swap ETH for USDC', 'Swap USDC for ETH', 'Swap ETH for ARB']
@@ -369,9 +526,11 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
     const [isTyping, setIsTyping] = useState(false)
     const [previousValue, setPreviousValue] = useState('')
     const [isDeleting, setIsDeleting] = useState(false)
+    const [justAppliedSuggestion, setJustAppliedSuggestion] = useState(false)
     
     const textareaRef = useRef<HTMLTextAreaElement>(null)
     const suggestionEngine = useRef<any>(null)
+    const similarityEngine = useRef<any>(null)
     const networkContext = useNetwork()
     const typingTimeoutRef = useRef<NodeJS.Timeout>()
     const suggestionTimeoutRef = useRef<NodeJS.Timeout>()
@@ -391,6 +550,9 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
       }).catch((error) => {
         console.error('Failed to load client suggestion engine:', error)
       })
+      
+      // Initialize similarity engine
+      similarityEngine.current = createSimilarityEngine()
       
       // Cleanup function to clear timeouts
       return () => {
@@ -412,7 +574,7 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
 
     // Generate suggestions when input changes
     useEffect(() => {
-      if (!isMounted || !networkContext) {
+      if (!isMounted || !networkContext || justAppliedSuggestion) {
         return
       }
 
@@ -507,28 +669,38 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
             }
           }
             
-          // Filter out suggestions that are already used and remove duplicates
-          const filteredSuggestions = newSuggestions.filter(suggestion => 
-            !isSuggestionAlreadyUsed(suggestion.text, value)
-          )
+          // Use similarity engine for intelligent filtering and ranking
+          let finalSuggestions = newSuggestions
           
-          // Remove duplicates by text
-          const uniqueSuggestions = filteredSuggestions.filter((suggestion, index, self) => 
-            index === self.findIndex(s => s.text === suggestion.text)
-          )
-          
-          // Sort by relevance score
-          const sortedSuggestions = uniqueSuggestions.sort((a, b) => b.score - a.score)
+          if (similarityEngine.current && newSuggestions.length > 0) {
+            // Filter out redundant suggestions using similarity analysis
+            const filteredSuggestions = similarityEngine.current.filterSuggestions(value, newSuggestions)
+            
+            // Rank suggestions by relevance and diversity
+            finalSuggestions = similarityEngine.current.rankSuggestions(value, filteredSuggestions)
+          } else {
+            // Fallback to original filtering if similarity engine not available
+            const filteredSuggestions = newSuggestions.filter(suggestion => 
+              !isSuggestionAlreadyUsed(suggestion.text, value)
+            )
+            
+            // Remove duplicates by text
+            const uniqueSuggestions = filteredSuggestions.filter((suggestion, index, self) => 
+              index === self.findIndex(s => s.text === suggestion.text)
+            )
+            
+            finalSuggestions = uniqueSuggestions.sort((a, b) => b.score - a.score)
+          }
           
           // Only update suggestions if they actually changed to prevent flashing
-          const suggestionsChanged = !areSuggestionsEqual(sortedSuggestions, currentSuggestionsRef.current)
+          const suggestionsChanged = !areSuggestionsEqual(finalSuggestions, currentSuggestionsRef.current)
           if (suggestionsChanged) {
-            setSuggestions(sortedSuggestions)
+            setSuggestions(finalSuggestions)
           }
           
           
           // Show popover when there are relevant suggestions
-          if (sortedSuggestions.length > 0 && value.trim().length > 0) {
+          if (finalSuggestions.length > 0 && value.trim().length > 0) {
             setIsOpen(true)
             // Only reset selection if suggestions actually changed or user is adding content
             if (suggestionsChanged && !isDeleting) {
@@ -568,7 +740,7 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
           clearTimeout(suggestionTimeoutRef.current)
         }
       }
-    }, [value, isMounted, networkContext, cursorPosition, isDeleting, isTyping])
+    }, [value, isMounted, networkContext, cursorPosition, isDeleting, isTyping, justAppliedSuggestion])
 
     // Scroll selected item into view
     const scrollItemIntoView = (index: number) => {
@@ -612,23 +784,15 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
             })
             return
           case 'Tab':
-            if (selectedIndex >= 0) {
+            // Tab key accepts selected suggestion or first suggestion if none selected
+            if (suggestions.length > 0) {
               e.preventDefault()
-              applySuggestion(suggestions[selectedIndex])
+              applySuggestion(suggestions[selectedIndex >= 0 ? selectedIndex : 0])
               return
             }
             break
           case 'Enter':
-            if (selectedIndex >= 0) {
-              e.preventDefault()
-              applySuggestion(suggestions[selectedIndex])
-              return
-            } else if (suggestions.length > 0) {
-              // Auto-select first suggestion when Enter is pressed without selection
-              e.preventDefault()
-              applySuggestion(suggestions[0])
-              return
-            }
+            // Enter key should not affect suggestions - let it pass through for form submission
             break
           case 'Escape':
             e.preventDefault()
@@ -661,24 +825,35 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
       const beforeCursor = currentValue.slice(0, start)
       const afterCursor = currentValue.slice(end)
       
-      // Find the start of the current word
-      const words = beforeCursor.split(/\s+/)
-      const currentWord = words[words.length - 1] || ''
-      const wordStart = beforeCursor.lastIndexOf(currentWord)
-      
-      // Handle different types of suggestions
+      // Smart text replacement: find the best match position
       let newValue = ''
       let newCursorPos = 0
       
-      if (suggestion.category === 'completion') {
-        // For completion suggestions, append to current word
-        const spaceAfter = afterCursor.startsWith(' ') ? '' : ' '
-        newValue = beforeCursor + suggestion.text + spaceAfter + afterCursor
-        newCursorPos = beforeCursor.length + suggestion.text.length + spaceAfter.length
+      const suggestionText = suggestion.text
+      const suggestionLower = suggestionText.toLowerCase()
+      const inputLower = currentValue.toLowerCase()
+      
+      // Check if current input is a partial match of the suggestion
+      if (suggestionLower.startsWith(inputLower.trim()) && inputLower.trim().length > 0) {
+        // Replace entire input with suggestion (avoiding duplication)
+        newValue = suggestionText
+        newCursorPos = suggestionText.length
       } else {
-        // For full suggestions, replace the current word
-        newValue = currentValue.slice(0, wordStart) + suggestion.text + afterCursor
-        newCursorPos = wordStart + suggestion.text.length
+        // Find the current word being typed
+        const words = beforeCursor.split(/\s+/)
+        const currentWord = words[words.length - 1] || ''
+        const wordStart = beforeCursor.lastIndexOf(currentWord)
+        
+        // Check if suggestion starts with the current word
+        if (currentWord && suggestionLower.startsWith(currentWord.toLowerCase())) {
+          // Replace from the start of current word to avoid duplication
+          newValue = currentValue.slice(0, wordStart) + suggestionText + afterCursor
+          newCursorPos = wordStart + suggestionText.length
+        } else {
+          // Default behavior: replace current word
+          newValue = currentValue.slice(0, wordStart) + suggestionText + afterCursor
+          newCursorPos = wordStart + suggestionText.length
+        }
       }
 
       onChange(newValue)
@@ -699,8 +874,14 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
         setCursorPosition(newCursorPos)
         textarea.focus() // Keep focus on textarea for continuous typing
         
-        // Allow immediate re-generation of suggestions for continuous context
+        // Prevent immediate re-generation of suggestions after selection
         setIsTyping(false)
+        setJustAppliedSuggestion(true)
+        
+        // Add a longer delay before allowing new suggestions to prevent over-active behavior
+        setTimeout(() => {
+          setJustAppliedSuggestion(false)
+        }, 1000)
       }, 0)
     }
 
