@@ -96,14 +96,6 @@ const bridgeQuoteTool = tool({
       console.log(`USD Conversion: $${usdConversionResult.usdAmount} -> ${actualAmountIn} ${fromToken.toUpperCase()}`)
     }
     
-    console.log('fromChain', fromChain)
-    console.log('toChain', toChain)
-    console.log('fromToken', fromToken)
-    console.log('toToken', toToken)
-    console.log('original amountIn', amountIn)
-    console.log('actual amountIn', actualAmountIn)
-    console.log('slippage', slippage)
-    console.log('recipient', recipient)
     const userEvmAddress = await getUserEvmWalletAddress()
     if (!userEvmAddress) {
       return {
