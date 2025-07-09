@@ -54,6 +54,34 @@ const calculateRelevanceScore = (suggestionText: string, userInput: string, curr
   const input = userInput.toLowerCase()
   const word = currentWord.toLowerCase()
   
+  // Define contextual keyword groups for better relevance scoring
+  const contextualKeywords = {
+    financial: ['dollar', 'money', 'cash', 'balance', 'amount', 'fund', 'budget', 'cost', 'price', 'value', 'worth'],
+    action: ['find', 'show', 'check', 'get', 'search', 'discover', 'explore', 'view', 'see', 'lookup'],
+    crypto: ['yield', 'pool', 'farm', 'stake', 'swap', 'trade', 'token', 'coin', 'crypto', 'defi', 'vault'],
+    quantity: ['have', 'got', 'own', 'hold', 'possess', 'available', 'with', 'using']
+  }
+  
+  // Check if input contains contextual keywords that might relate to suggestions
+  const inputWords = input.split(' ')
+  const suggestionWords = suggestion.split(' ')
+  
+  let hasFinancialContext = false
+  let hasActionContext = false
+  let hasCryptoContext = false
+  
+  for (const inputWord of inputWords) {
+    if (contextualKeywords.financial.includes(inputWord)) hasFinancialContext = true
+    if (contextualKeywords.action.includes(inputWord)) hasActionContext = true
+    if (contextualKeywords.crypto.includes(inputWord)) hasCryptoContext = true
+  }
+  
+  for (const suggWord of suggestionWords) {
+    if (contextualKeywords.financial.includes(suggWord)) hasFinancialContext = true
+    if (contextualKeywords.action.includes(suggWord)) hasActionContext = true
+    if (contextualKeywords.crypto.includes(suggWord)) hasCryptoContext = true
+  }
+  
   // Exact match with current word gets highest score
   if (suggestion.includes(word) && word.length > 1) {
     score += 100
@@ -64,9 +92,6 @@ const calculateRelevanceScore = (suggestionText: string, userInput: string, curr
   }
   
   // Check for partial matches in suggestion text
-  const suggestionWords = suggestion.split(' ')
-  const inputWords = input.split(' ')
-  
   suggestionWords.forEach(suggWord => {
     if (word && suggWord.startsWith(word)) {
       score += 75
@@ -78,7 +103,22 @@ const calculateRelevanceScore = (suggestionText: string, userInput: string, curr
     })
   })
   
-  return score
+  // Context bonus: if both input and suggestion share contextual themes
+  if (hasFinancialContext && hasCryptoContext) {
+    score += 15 // Financial + crypto context = relevant
+  } else if (hasActionContext && hasCryptoContext) {
+    score += 20 // Action + crypto context = highly relevant
+  }
+  
+  // Penalty for completely unrelated input
+  // If input has no crypto/action context but suggestion does, reduce score
+  if (!hasFinancialContext && !hasActionContext && !hasCryptoContext && 
+      (suggestion.includes('find') || suggestion.includes('show') || suggestion.includes('yield') || 
+       suggestion.includes('pool') || suggestion.includes('opportunities'))) {
+    score -= 50
+  }
+  
+  return Math.max(0, score) // Ensure score is never negative
 }
 
 // Network-aware suggestion helper
@@ -691,6 +731,14 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
             
             finalSuggestions = uniqueSuggestions.sort((a, b) => b.score - a.score)
           }
+          
+          // Add minimum relevance threshold to prevent showing irrelevant suggestions
+          // Only show suggestions if they meet a minimum relevance score of 25
+          const MINIMUM_RELEVANCE_SCORE = 25
+          finalSuggestions = finalSuggestions.filter(suggestion => {
+            const relevanceScore = calculateRelevanceScore(suggestion.text, input, currentWordLower)
+            return relevanceScore >= MINIMUM_RELEVANCE_SCORE
+          })
           
           // Only update suggestions if they actually changed to prevent flashing
           const suggestionsChanged = !areSuggestionsEqual(finalSuggestions, currentSuggestionsRef.current)
