@@ -7,9 +7,7 @@ import {
 } from '../lifi/actions'
 import { parseUsdAmount, getUsdSupportDescription, createUsdConversionInfo, getEffectiveAmount } from '../utils/usd-parser'
 import { getUserEvmWalletAddress } from '../privy/client'
-import { chainsById } from '../token-matcher/fuzzy-chain-matcher'
 import { ToolContext } from '../types/context'
-import { bus } from '../pubsub/simple-pubsub'
 import { getUserId } from '../privy/client'
 import { balanceChangePub } from '../pubsub/balance-change-pub'
 import { ChainType } from '../network/types'
@@ -17,7 +15,7 @@ import { ChainType } from '../network/types'
 
 const bridgeQuoteTool = tool({
   description:
-    "Get a quote for a cross-chain bridge transfer from user's wallet. can also be single chain swap. It automatically renders UI on success.",
+    "Get a quote for a cross-chain bridge transfer from user's wallet. can also be single chain swap. You must ask user whether they prefer fastest or cheapest route. It automatically renders UI on success.",
   parameters: z.object({
     fromChain: z
       .string()
@@ -50,6 +48,11 @@ const bridgeQuoteTool = tool({
       .describe(
         'The slippage tolerance for the transaction, 0.005 represents 0.5% slippage. Default to 0.005'
       ),
+    preference: z
+      .enum(['FASTEST', 'CHEAPEST'])
+      .describe(
+        'The preference for the transaction, FASTEST represents the fastest route, CHEAPEST represents the cheapest route. Ask user their preference.'
+      ),
     recipient: z
       .string()
       .optional()
@@ -60,7 +63,7 @@ const bridgeQuoteTool = tool({
     // enableAutoFuel: z.boolean().describe('Whether to auto fuel the destination chain when the native balance is low, default to true')
   }),
   execute: async (params, context: ToolContext) => {
-    let {fromChain, toChain, fromToken, toToken, amountIn, slippage, recipient } = params
+    let {fromChain, toChain, fromToken, toToken, amountIn, slippage, recipient, preference } = params
     // const fromChain = context?.networkContext?.selectedNetwork || 'ethereum'
     const fromChainInContext = context?.networkContext?.selectedNetwork
     // if (fromChainInContext?.toLowerCase() === 'demo') {
@@ -122,7 +125,8 @@ const bridgeQuoteTool = tool({
       actualAmountIn,
       slippage,
       recipient,
-      false
+      false,
+      preference
     )
     
     // Add USD conversion info to the result if applicable
@@ -175,6 +179,11 @@ const bridgeExecuteTool = tool({
       .describe(
         "The address to send the bridged tokens to. Default to user's wallet address"
       ),
+    preference: z
+      .enum(['FASTEST', 'CHEAPEST'])
+      .describe(
+        'The preference for the transaction, FASTEST represents the fastest route, CHEAPEST represents the cheapest route. '
+      ),
     // autoFuel: z.boolean().describe('Whether to auto fuel the destination chain, decision made by quote tool')
   }),
 
@@ -191,6 +200,7 @@ const bridgeExecuteTool = tool({
     isFromNativeToken,
     fromChainName,
     toChainName,
+    preference,
     // autoFuel
   }, context: ToolContext) => {
     const fromChainIdInContext = context?.networkContext?.selectedChainId
@@ -226,7 +236,8 @@ const bridgeExecuteTool = tool({
       isFromNativeToken,
       fromChainName,
       toChainName,
-      isDemo
+      isDemo,
+      preference
     )
     const userId = await getUserId()
     balanceChangePub(userId, [fromChainId.toString() as ChainType, toChainId.toString() as ChainType], isDemo || false)

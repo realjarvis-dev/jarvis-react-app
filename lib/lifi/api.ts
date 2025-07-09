@@ -21,7 +21,8 @@ export async function getLifiQuote(
     fromAmount: string,
     fromAddress: string,
     toAddress: string,
-    slippage: string
+    slippage: string,
+    preference: "FASTEST" | "CHEAPEST"
   ): Promise<LifiQuoteResponse> {
     const baseUrl = 'https://li.quest/v1/quote'
     const params = new URLSearchParams({
@@ -33,7 +34,7 @@ export async function getLifiQuote(
       fromAddress: fromAddress,
       toAddress: toAddress,
       slippage: slippage,
-      // order: 'FASTEST'
+      order: preference
     })
 
     const response = await fetch(`${baseUrl}?${params.toString()}`)
