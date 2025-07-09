@@ -1,6 +1,16 @@
-import { TwitterApi } from 'twitter-api-v2';
 import { createChatWithShareableLink } from './chat-creator';
 import { processTwitterQuery } from './twitter-query-processor';
+
+// Dynamic import for TwitterApi to avoid initialization issues
+let TwitterApi: any = null;
+
+async function getTwitterApi() {
+  if (!TwitterApi) {
+    const twitterModule = await import('twitter-api-v2');
+    TwitterApi = twitterModule.TwitterApi;
+  }
+  return TwitterApi;
+}
 
 interface TwitterMention {
   id: string;
@@ -285,62 +295,48 @@ export async function processMention(mention: TwitterMention, users: TwitterUser
     const authorUsername = author?.username || 'unknown';
 
     if (hasRepliedToMention(mention.id)) {
-      console.log(`Skipping mention ${mention.id} from @${authorUsername} - already replied`);
       return;
     }
     if (authorUsername === 'JarvisCryptoAI') {
-      console.log(`Skipping mention ${mention.id} from @${authorUsername} - it's the bot itself`);
       return;
     }
 
     const filterResult = shouldFilterMention(mention, author);
     if (filterResult.shouldFilter) {
-      console.log(`🚫 Filtered mention ${mention.id} from @${authorUsername}: ${filterResult.reason}`);
-      console.log(`   Tweet: "${mention.text.substring(0, 100)}${mention.text.length > 100 ? '...' : ''}"`);
-      markMentionAsReplied(mention.id); // Mark as processed to avoid reprocessing
+      console.log(`🚫 Filtered mention from @${authorUsername}: ${filterResult.reason}`);
+      markMentionAsReplied(mention.id);
       return;
     }
 
-    console.log(`✅ Processing genuine mention from @${authorUsername} (${author?.public_metrics?.followers_count || 'unknown'} followers)`);
-    console.log(`   Account age: ${author?.created_at ? Math.round((Date.now() - new Date(author.created_at).getTime()) / (24 * 60 * 60 * 1000)) : 'unknown'} days`);
-    console.log(`   Verified: ${author?.verified || false}`);
-    console.log(`   Tweet: "${mention.text}"`);
-    console.log(`   Engagement: ${mention.public_metrics.like_count} likes, ${mention.public_metrics.retweet_count} retweets`);
-    console.log(`   Mentions count: ${(mention.text.match(/@\w+/g) || []).length}`);
-    console.log('---');
+    console.log(`✅ Processing mention from @${authorUsername}`);
 
     const now = Date.now();
-    recentReplies = recentReplies.filter(time => now - time < 900000); // Last 15 minutes
+    recentReplies = recentReplies.filter(time => now - time < 900000);
     if (recentReplies.length >= 10) {
       console.log('Circuit breaker: Reached mention processing limit (10/15min), pausing');
       return;
     }
 
     if (botTweetIds.has(mention.id)) {
-      console.log('Skipping own tweet');
       return;
     }
 
     const timeSinceLastProcess = now - lastMentionProcessTime;
     if (timeSinceLastProcess < MENTION_PROCESSING_DELAY) {
       const waitTime = MENTION_PROCESSING_DELAY - timeSinceLastProcess;
-      console.log(`Rate limiting: waiting ${waitTime}ms before processing next mention`);
       await sleep(waitTime);
     }
     lastMentionProcessTime = Date.now();
-
-    console.log(`Processing mention from @${authorUsername}: "${mention.text}"`);
 
     let botUserId: string;
     try {
       botUserId = await getJarvisUserId();
     } catch (error) {
       console.warn('Could not verify bot user ID, skipping mention processing to prevent recursive loops');
-      return; // Exit instead of continuing
+      return;
     }
 
     if (mention.author_id === botUserId) {
-      console.log('Skipping own mention - author ID matches bot ID');
       return;
     }
 
@@ -365,7 +361,7 @@ export async function processMention(mention: TwitterMention, users: TwitterUser
     const isReportRequest = /^REPORT\b/i.test(baseQuery);
     
     if (isReportRequest) {
-      console.log(`📊 REPORT request detected from @${authorUsername}`);
+      console.log(`📊 REPORT request from @${authorUsername}`);
       
       // Extract the actual query after "REPORT"
       const reportQuery = baseQuery.replace(/^REPORT\s*/i, '').trim();
@@ -380,8 +376,6 @@ export async function processMention(mention: TwitterMention, users: TwitterUser
       }
 
       try {
-        console.log(`🔬 Processing REPORT query: "${reportQuery}"`);
-        
         // Use the new chat creation workflow
         const result = await createChatWithShareableLink(reportQuery, {
           userId: `twitter-${authorUsername}`,
@@ -442,8 +436,6 @@ export async function processMention(mention: TwitterMention, users: TwitterUser
       } catch (replyError) {
         console.log(`Could not send error reply due to rate limiting for mention ${mention.id}`);
       }
-    } else {
-      console.log(`Skipping error reply due to rate limiting for mention ${mention.id}`);
     }
   }
 }
@@ -461,8 +453,10 @@ async function postTweetReply(tweetId: string, message: string) {
     console.log('To enable replies, set TWITTER_API_KEY, TWITTER_API_SECRET, TWITTER_ACCESS_TOKEN, and TWITTER_ACCESS_TOKEN_SECRET');
     return { success: false, reason: 'OAuth credentials not configured' };
   }
-  // const bearerClient = new TwitterApi(bearerToken);
-  const oauthClient = new TwitterApi({
+  
+  // Get TwitterApi dynamically
+  const TwitterApiClass = await getTwitterApi();
+  const oauthClient = new TwitterApiClass({
     appKey: apiKey,
     appSecret: apiSecret,
     accessToken: accessToken,
@@ -525,48 +519,6 @@ async function postTweetReply(tweetId: string, message: string) {
       }
         return { success: false, reason: errorDetail };
       }
-
-      // const requestBodyParams: Record<string, string> = {
-      //   text: message,
-      //   'reply.in_reply_to_tweet_id': tweetId,
-      //   'reply.exclude_reply_user_ids': botUserId
-      // };
-
-      // const allParams: Record<string, string> = {
-      //   ...oauthParams,
-      //   ...requestBodyParams
-      // };
-      // const sortedParams = Object.keys(allParams).sort().map(key => `${key}=${encodeURIComponent(allParams[key])}`).join('&');
-
-      // const baseString = `POST&${encodeURIComponent(url)}&${encodeURIComponent(sortedParams)}`;
-      // const signingKey = `${encodeURIComponent(apiSecret)}&${encodeURIComponent(accessTokenSecret)}`;
-      // const signature = crypto.createHmac('sha1', signingKey).update(baseString).digest('base64');
-
-      // oauthParams.oauth_signature = signature;
-
-      // const authHeader = 'OAuth ' + Object.keys(oauthParams).sort().map(key => `${key}="${encodeURIComponent(oauthParams[key])}"`).join(', ');
-
-      // const response = await fetch(url, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Authorization': authHeader,
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify(requestBody)
-      // });
-
-      // if (response.ok) {
-      //   return await response.json();
-      // }
-
-      // if (await handleRateLimit(response, 'postTweetReply')) {
-      //   retryCount++;
-      //   continue;
-      // }
-
-      // const errorData = await response.text();
-      // console.log(`Twitter API error: ${response.status} - ${errorData}`);
-      // return { success: false, reason: `API error: ${response.status}` };
 
     } catch (error) {
       console.error('Error posting tweet reply:', error);

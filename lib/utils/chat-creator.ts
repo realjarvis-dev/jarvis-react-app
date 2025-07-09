@@ -37,8 +37,6 @@ export async function createChatWithShareableLink(
   } = options
 
   try {
-    console.log('📝 Generating AI response for:', userQuery)
-    
     // Generate chat ID
     const chatId = generateId()
     
@@ -63,8 +61,6 @@ export async function createChatWithShareableLink(
 
     // Use the same streaming infrastructure as normal chat
     const supportsToolCalling = selectedModel.toolCallType === 'native'
-    
-    console.log('🔧 Using tool calling mode:', supportsToolCalling ? 'native' : 'manual')
     
     // Create a promise to collect the streamed data
     let collectedMessages: any[] = []
@@ -97,11 +93,6 @@ export async function createChatWithShareableLink(
           isNewUser: false
         })
 
-    console.log('💾 Processing stream and saving to Redis...')
-
-    // The streaming functions automatically save the chat to Redis with all tool annotations
-    // We just need to wait for it to complete and then create the shareable link
-    
     // Read the response stream to ensure it completes
     const reader = streamResponse.body?.getReader()
     if (reader) {
@@ -128,8 +119,6 @@ export async function createChatWithShareableLink(
       }
     }
 
-    console.log('🔗 Creating shareable link...')
-    
     // Create shareable link
     const sharedChat = await shareChat(chatId, userId)
     
@@ -139,8 +128,6 @@ export async function createChatWithShareableLink(
 
     // Construct full URL
     const shareUrl = `${baseUrl}${sharedChat.sharePath}`
-
-    console.log('✅ Chat created successfully:', shareUrl)
 
     // Extract the final response text from collected data
     let aiResponse = 'Response generated with tool calls.'
