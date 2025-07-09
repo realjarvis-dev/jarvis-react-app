@@ -1,5 +1,6 @@
-import { processTwitterQuery } from './twitter-query-processor';
 import { TwitterApi } from 'twitter-api-v2';
+import { createChatWithShareableLink } from './chat-creator';
+import { processTwitterQuery } from './twitter-query-processor';
 
 interface TwitterMention {
   id: string;
@@ -345,12 +346,13 @@ export async function processMention(mention: TwitterMention, users: TwitterUser
 
     recentReplies.push(now);
 
-    const query = mention.text
+    // Extract the base query (remove mentions)
+    const baseQuery = mention.text
       .replace(/@jarviscryptoai\s*/gi, '')
       .replace(/@\w+\s*/g, '')
       .trim();
 
-    if (!query) {
+    if (!baseQuery) {
       await replyToTweet(
         mention.id,
         `GM @${authorUsername}! 🚀 Drop your crypto research question after tagging @JarvisCryptoAI and I'll alpha you up! 📈`
@@ -359,18 +361,69 @@ export async function processMention(mention: TwitterMention, users: TwitterUser
       return;
     }
 
-    const response = await processTwitterQuery(query, mention.author_id);
-
-    const result = await replyToTweet(mention.id, `@${authorUsername} ${response}`);
+    // Check if this is a REPORT request
+    const isReportRequest = /^REPORT\b/i.test(baseQuery);
     
-    if (result && result.data?.id) {
-      botTweetIds.add(result.data.id);
-      if (botTweetIds.size > 1000) {
-        const tweetIdsArray = Array.from(botTweetIds);
-        botTweetIds = new Set(tweetIdsArray.slice(-500));
+    if (isReportRequest) {
+      console.log(`📊 REPORT request detected from @${authorUsername}`);
+      
+      // Extract the actual query after "REPORT"
+      const reportQuery = baseQuery.replace(/^REPORT\s*/i, '').trim();
+      
+      if (!reportQuery) {
+        await replyToTweet(
+          mention.id,
+          `@${authorUsername} Please provide a query after REPORT! Example: "@JarvisCryptoAI REPORT What are the top DeFi yields?" 📊`
+        );
+        markMentionAsReplied(mention.id);
+        return;
+      }
+
+      try {
+        console.log(`🔬 Processing REPORT query: "${reportQuery}"`);
+        
+        // Use the new chat creation workflow
+        const result = await createChatWithShareableLink(reportQuery, {
+          userId: `twitter-${authorUsername}`,
+          baseUrl: process.env.NEXT_PUBLIC_BASE_URL || 'https://jarvis-investment-agent.vercel.app'
+        });
+
+        const reportResponse = `@${authorUsername} 📊 Here's your comprehensive research report: ${result.shareUrl} 
+
+🔗 This detailed analysis includes live data, charts, and actionable insights. Bookmark it for later! 📈`;
+
+        const result_tweet = await replyToTweet(mention.id, reportResponse);
+        console.log(`✅ REPORT response sent to @${authorUsername}: ${result.shareUrl}`);
+        
+        if (result_tweet && result_tweet.data?.id) {
+          botTweetIds.add(result_tweet.data.id);
+          if (botTweetIds.size > 1000) {
+            const tweetIdsArray = Array.from(botTweetIds);
+            botTweetIds = new Set(tweetIdsArray.slice(-500));
+          }
+        }
+        
+      } catch (error) {
+        console.error('Error processing REPORT request:', error);
+        await replyToTweet(
+          mention.id,
+          `@${authorUsername} Sorry, I encountered an error generating your report. Please try again later. 📊`
+        );
+      }
+    } else {
+      // Use existing Twitter bot workflow for regular queries
+      const response = await processTwitterQuery(baseQuery, mention.author_id);
+      const result = await replyToTweet(mention.id, `@${authorUsername} ${response}`);
+      
+      if (result && result.data?.id) {
+        botTweetIds.add(result.data.id);
+        if (botTweetIds.size > 1000) {
+          const tweetIdsArray = Array.from(botTweetIds);
+          botTweetIds = new Set(tweetIdsArray.slice(-500));
+        }
       }
     }
-    
+
     markMentionAsReplied(mention.id);
 
   } catch (error) {
