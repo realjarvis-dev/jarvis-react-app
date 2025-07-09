@@ -56,8 +56,8 @@ export const jupiterQuote = tool({
         // userSolanaAddress: z.string().describe('The user\'s solana address'),
         tokenInDisplayName: z.string().describe('The name or symbol of the token to sell, for displaying purpose'),
         tokenOutDisplayName: z.string().describe('The name or symbol of the token to buy, for displaying purpose'),
-        tokenIn: z.string().describe('The token to sell, can be SOL or USDC, or any xStock. For xStock, use symbol or name or address'),
-        tokenOut: z.string().describe('The token to buy, can be SOL or USDC, or any xStock. For xStock, use symbol or name or address'),
+        tokenIn: z.string().describe('The token to sell. You should prefer address if available. Name or symbol is also acceptable.'),
+        tokenOut: z.string().describe('The token to buy. You should prefer address if available. Name or symbol is also acceptable.'),
         amountIn: z.number().describe('The amount of tokenIn in human readable format'),
 
     }),
