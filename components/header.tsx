@@ -1,27 +1,33 @@
 'use client'
 
+import { Button } from '@/components/ui/button'
 import { useSidebar } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
 import {
-  useHeadlessDelegatedActions,
-  useLogin,
-  usePrivy,
-  WalletWithMetadata,
-  type LinkedAccountWithMetadata,
-  type User
+    useHeadlessDelegatedActions,
+    useLogin,
+    usePrivy,
+    WalletWithMetadata,
+    type LinkedAccountWithMetadata,
+    type User
 } from '@privy-io/react-auth'
-import { useRouter } from 'next/navigation'
+import { ArrowLeft } from 'lucide-react'
+import { usePathname, useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 import GuestMenu from './guest-menu'
 import UserMenu from './user-menu'
-import WelcomePopup from './welcome-popup'
 import WalletMenu from './wallet-menu'
+import WelcomePopup from './welcome-popup'
 
 export const Header: React.FC = () => {
   const { open } = useSidebar()
   const { authenticated, ready } = usePrivy()
   const router = useRouter()
+  const pathname = usePathname()
   const [showWelcomePopup, setShowWelcomePopup] = useState(false)
+  
+  const isWalletSummaryPage = pathname === '/wallet/summary'
+  
   const handleCloseWelcomePopup = () => {
     setShowWelcomePopup(false)
     router.push('/')
@@ -84,6 +90,16 @@ export const Header: React.FC = () => {
       </div>
 
       <div className="flex items-center gap-2">
+        {ready && authenticated && isWalletSummaryPage && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => router.back()}
+            className="ring-0 outline-none focus:ring-0 focus:outline-none focus:shadow-none active:ring-0 active:outline-none active:shadow-none bg-transparent hover:bg-transparent active:bg-transparent rounded-md"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+        )}
         {ready && authenticated && <WalletMenu />}
         {ready && authenticated ? <UserMenu /> : <GuestMenu login={login} />}
       </div>

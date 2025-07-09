@@ -262,7 +262,13 @@ export async function signTransaction(
   let gasLimit: `0x${string}`
   let estimateGas = gasOptions?.estimateGas !== false // Default to true if not specified
 
-  if (isDemo) {
+  // Check if we're using Anvil fork (which has reliable gas estimation)
+  // vs Tenderly (which had issues with gas estimation)
+  const rpcUrl = process.env.TEST_RPC_URL || getConfigByChainId(chainId, isDemo).rpcUrl
+  const isAnvilFork = rpcUrl.includes('127.0.0.1') || rpcUrl.includes('anvil-fork')
+  
+  if (isDemo && !isAnvilFork) {
+    // Only disable gas estimation for non-Anvil demo environments (e.g., Tenderly)
     estimateGas = false
   }
 
@@ -280,8 +286,10 @@ export async function signTransaction(
       gasEstimate + gasEstimate / BigInt(5)
     ) as `0x${string}`
   } else {
+    // Use higher gas limit for complex transactions when estimation is disabled
+    const fallbackGasLimit = isDemo ? 3000000 : 1000000
     gasLimit =
-      gasOptions?.gasLimit ?? (ethers.toQuantity(1000000) as `0x${string}`)
+      gasOptions?.gasLimit ?? (ethers.toQuantity(fallbackGasLimit) as `0x${string}`)
   }
 
   // Convert value to hex quantity

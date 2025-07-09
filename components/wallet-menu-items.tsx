@@ -1,23 +1,18 @@
 'use client'
 
-import { DropdownMenuItem } from '@/components/ui/dropdown-menu'
-import { useFundWallet } from '@privy-io/react-auth';
-import { useFundWallet as useFundWalletSolana } from '@privy-io/react-auth/solana';
-import { ArrowRightCircle, Unlink2, Wallet } from 'lucide-react'
-import {
-    usePrivy,
-    useSolanaWallets,
-    useWallets,
-    useDelegatedActions,
-    useHeadlessDelegatedActions,
-    type WalletWithMetadata,
-    type ConnectedSolanaWallet,
-    type ConnectedWallet,
-    } from '@privy-io/react-auth';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import useIsMobile from '@/lib/hooks/use-is-mobile';
 import { useNetwork } from '@/lib/network/context';
+import {
+    useFundWallet, useHeadlessDelegatedActions, usePrivy,
+    useSolanaWallets,
+    useWallets, type ConnectedSolanaWallet,
+    type ConnectedWallet, type WalletWithMetadata
+} from '@privy-io/react-auth';
+import { useFundWallet as useFundWalletSolana } from '@privy-io/react-auth/solana';
+import { ArrowRightCircle, Brain, Unlink2, Wallet } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 const desktopEvmText = 'Delegate EVM wallet'
 const desktopSolText = 'Delegate Sol wallet'
@@ -46,7 +41,6 @@ export function WalletMenuItems() {
   const { wallets: evmWallets, ready: evmReady } = useWallets()
   const [evmWalletToDelegate, setEvmWalletToDelegate] = useState<ConnectedWallet | undefined>(undefined);
   const [evmWalletAlreadyDelegated, setEvmWalletAlreadyDelegated] = useState<boolean>(false);
-
 
   useEffect(() => {
     if (solanaReady) {
@@ -120,6 +114,10 @@ export function WalletMenuItems() {
       <DropdownMenuItem onClick={handleFundWallet} disabled={!evmReady || !evmWalletToDelegate}>
         <Wallet className="mr-2 h-4 w-4" />
         <span>Fund Wallet</span>
+      </DropdownMenuItem>
+      <DropdownMenuItem onClick={() => router.push('/wallet/summary')}>
+        <Brain className="mr-2 h-4 w-4" />
+        <span>Wallet Intelligence</span>
       </DropdownMenuItem>
       <DropdownMenuItem onClick={handleDelegateEVMWallet} disabled={evmWalletAlreadyDelegated || !evmReady || !userReady}>
         <ArrowRightCircle className="mr-2 h-4 w-4" />

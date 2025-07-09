@@ -5,6 +5,7 @@ import {
   // executeLifiBridgeTransactionWithAutoFuel,
   generateLifiBridgeQuote
 } from '../lifi/actions'
+import { parseUsdAmount, getUsdSupportDescription, createUsdConversionInfo, getEffectiveAmount } from '../utils/usd-parser'
 import { getUserEvmWalletAddress } from '../privy/client'
 import { chainsById } from '../token-matcher/fuzzy-chain-matcher'
 import { ToolContext } from '../types/context'
@@ -12,6 +13,8 @@ import { bus } from '../pubsub/simple-pubsub'
 import { getUserId } from '../privy/client'
 import { balanceChangePub } from '../pubsub/balance-change-pub'
 import { ChainType } from '../network/types'
+
+
 const bridgeQuoteTool = tool({
   description:
     "Get a quote for a cross-chain bridge transfer from user's wallet. can also be single chain swap. It automatically renders UI on success.",
@@ -39,7 +42,7 @@ const bridgeQuoteTool = tool({
     amountIn: z
       .string()
       .describe(
-        'The amount of input tokens to bridge, in human readable format'
+        getUsdSupportDescription('The amount of input tokens to bridge, in human readable format.')
       ),
     slippage: z
       .string()
@@ -67,11 +70,35 @@ const bridgeQuoteTool = tool({
     //   }
     // }
     const isDemo = context?.networkContext?.isDemo
+    
+    // Parse USD amount using common utility
+    const chainId = context?.networkContext?.selectedChainId || 1 // Default to Ethereum mainnet
+    const usdConversionResult = await parseUsdAmount(amountIn, fromToken, { 
+      chainId, 
+      throwErrors: false // Return errors in result instead of throwing
+    })
+    
+    // Check for conversion errors
+    if (usdConversionResult.conversionNote && !usdConversionResult.isUsd) {
+      return {
+        _uiDisplayTool: true,
+        summary: `USD conversion failed: ${usdConversionResult.conversionNote}`,
+        data: { error: usdConversionResult.conversionNote }
+      }
+    }
+    
+    const actualAmountIn = getEffectiveAmount(usdConversionResult)
+    
+    if (usdConversionResult.isUsd) {
+      console.log(`USD Conversion: $${usdConversionResult.usdAmount} -> ${actualAmountIn} ${fromToken.toUpperCase()}`)
+    }
+    
     console.log('fromChain', fromChain)
     console.log('toChain', toChain)
     console.log('fromToken', fromToken)
     console.log('toToken', toToken)
-    console.log('amountIn', amountIn)
+    console.log('original amountIn', amountIn)
+    console.log('actual amountIn', actualAmountIn)
     console.log('slippage', slippage)
     console.log('recipient', recipient)
     const userEvmAddress = await getUserEvmWalletAddress()
@@ -86,17 +113,27 @@ const bridgeQuoteTool = tool({
       fromChain = 'Ethereum'
       toChain = 'Ethereum'
     }
-    return await generateLifiBridgeQuote(
+    const result = await generateLifiBridgeQuote(
       fromChain,
       toChain,
       fromToken,
       toToken,
       userEvmAddress,
-      amountIn,
+      actualAmountIn,
       slippage,
       recipient,
       false
     )
+    
+    // Add USD conversion info to the result if applicable
+    if (result && typeof result === 'object' && usdConversionResult.isUsd) {
+      return {
+        ...result,
+        usd_conversion: createUsdConversionInfo(usdConversionResult)
+      }
+    }
+    
+    return result
   }
 })
 

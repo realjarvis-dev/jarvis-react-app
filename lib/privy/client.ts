@@ -1,6 +1,5 @@
 // lib/privy.ts
 import { AuthTokenClaims, LinkedAccountWithMetadata, PrivyClient, User, WalletWithMetadata } from '@privy-io/server-auth'
-import { cookies } from 'next/headers'
 import Privy from '@privy-io/js-sdk-core'
 
 const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID!
@@ -19,6 +18,7 @@ export function isPrivyUserId(userId: string): boolean {
 }
 
 export async function verifyAccessToken(): Promise<AuthTokenClaims> {
+  const { cookies } = await import('next/headers')
   const cookieStore = await cookies()
   const token = cookieStore.get("privy-token")?.value
   if (!token) {
@@ -29,6 +29,7 @@ export async function verifyAccessToken(): Promise<AuthTokenClaims> {
 
 // Return user data in an identity token has to be turned on in the Privy dashboard
 export async function getUser(): Promise<User> {
+  const { cookies } = await import('next/headers')
   const cookieStore = await cookies()
   // const idToken = cookieStore.get("privy-id-token")?.value
   // if (!idToken) {
@@ -59,6 +60,7 @@ export async function getUser(): Promise<User> {
 }
 
 export async function getUserId(): Promise<string> {
+  const { cookies } = await import('next/headers')
   const cookieStore = await cookies()
   const idToken = cookieStore.get("privy-id-token")?.value
   if (!idToken) {

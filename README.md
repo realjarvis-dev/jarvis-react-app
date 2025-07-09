@@ -63,12 +63,17 @@ Jarvis: "Strategy deployed! I'll manage this 24/7 and notify you of any
 
 ## 🗂️ Overview
 
+- 📐 [Architecture](#-architecture)
 - 🛠 [Features](#-features)
 - 🧱 [Stack](#-stack)
 - 🚀 [Quickstart](#-quickstart)
 - ✅ [Verified models](#-verified-models)
 - 🌟 [Why Jarvis?](#-why-jarvis)
 - 👥 [Contributing](#-contributing)
+
+## 📐 Architecture
+
+<img width="1288" alt="Screenshot 2025-07-06 at 17 43 26" src="https://github.com/user-attachments/assets/e12bbc46-f221-4503-84c3-c96f5b21db0d" />
 
 ## 🛠 Features
 

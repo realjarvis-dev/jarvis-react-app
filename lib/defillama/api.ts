@@ -1,5 +1,4 @@
 import axios from 'axios'
-import fs from 'fs'
 import path from 'path'
 import type { 
   DeFiLlamaProtocol, 
@@ -74,7 +73,8 @@ export async function fetchProtocols(): Promise<DeFiLlamaProtocol[]> {
     // Try to read from local JSON file first
     const dataPath = path.join(process.cwd(), 'data', 'defillama-protocols.json')
     
-    if (fs.existsSync(dataPath)) {
+    const fs = typeof window === 'undefined' ? require('fs') : null
+    if (fs && fs.existsSync(dataPath)) {
       console.log('📁 Reading DeFiLlama protocols from local JSON file...')
       const fileContent = fs.readFileSync(dataPath, 'utf-8')
       const protocols = JSON.parse(fileContent) as DeFiLlamaProtocol[]
@@ -139,7 +139,8 @@ export async function fetchYields(): Promise<DeFiLlamaYield[]> {
     // Try to read from local JSON file first
     const dataPath = path.join(process.cwd(), 'data', 'defillama-yields.json')
     
-    if (fs.existsSync(dataPath)) {
+    const fs = typeof window === 'undefined' ? require('fs') : null
+    if (fs && fs.existsSync(dataPath)) {
       console.log('📁 Reading DeFiLlama yields from local JSON file...')
       const fileContent = fs.readFileSync(dataPath, 'utf-8')
       const jsonData = JSON.parse(fileContent) as { status: string, data: DeFiLlamaYield[] }

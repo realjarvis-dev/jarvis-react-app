@@ -1,3 +1,4 @@
+import { getWalletSummary } from '@/lib/alchemy/transfers-sdk'
 import { WalletWithMetadata } from '@privy-io/server-auth'
 import { CoreMessage, smoothStream, streamText } from 'ai'
 import { NetworkContext } from '../types/context'
@@ -311,7 +312,7 @@ Citation Format:
 
 type ResearcherReturn = Parameters<typeof streamText>[0]
 
-export function researcher({
+export async function researcher({
   messages,
   model,
   searchMode,
@@ -329,7 +330,7 @@ export function researcher({
   allowWeb3Tools: string
   networkContext?: NetworkContext
   isNewUser?: boolean
-}): ResearcherReturn {
+}): Promise<ResearcherReturn> {
   // console.log('searchMode', searchMode)
   // console.log('networkContext', networkContext)
   try {
@@ -385,6 +386,35 @@ export function researcher({
 
       console.log('supportedTools after filtering in readonly mode', supportedTools)
       console.log('web3_tools after filtering in readonly mode', web3_tools)
+    }
+
+    // Check for wallet summary if user has a wallet
+    let walletSummaryInfo = ''
+    if (userEvmWallet?.address) {
+      try {
+        const walletSummary = await getWalletSummary(userEvmWallet.address)
+        if (walletSummary) {
+          walletSummaryInfo = `
+
+Here's a summary of user's wallet transactions for your reference:
+WALLET INTELLIGENCE SUMMARY:
+- Risk Profile: ${walletSummary.userPersona.riskProfile} (${Math.round(walletSummary.userPersona.confidence * 100)}% confidence)
+- Reasoning: ${walletSummary.userPersona.reasoning}
+- Trading Frequency: ${walletSummary.behavioralPatterns.tradingFrequency}
+- Activity Pattern: ${walletSummary.portfolioInsights.activityPattern}
+- Average Transaction: ${walletSummary.behavioralPatterns.averageTransactionSize.eth} ETH (~$${walletSummary.behavioralPatterns.averageTransactionSize.usd_estimate})
+- Primary Assets: ${walletSummary.portfolioInsights.primaryAssets.join(', ')}
+- Top Protocols: ${walletSummary.protocolPreferences.topProtocols.map((p: any) => `${p.name} (${p.frequency} txns)`).join(', ')}
+- DeFi Categories: ${walletSummary.protocolPreferences.defiCategories.join(', ')}
+- Summary: ${walletSummary.summary}
+
+Use this wallet intelligence to provide personalized recommendations and understand the user's DeFi experience level and preferences.
+`
+        }
+      } catch (error) {
+        console.log('No wallet summary found or error retrieving it:', error)
+        // Continue without wallet summary - this is optional enhancement
+      }
     }
 
     let userWalletInfo
@@ -449,7 +479,7 @@ Network Context:
           )
     }\nCurrent date and time: ${currentDate}\n${
       model === 'openai:o3-mini' ? '' : userWalletInfo
-    }${networkInfo}`
+    }${networkInfo}${walletSummaryInfo}`
     return {
       model: getModel(model),
       system: prompt,
