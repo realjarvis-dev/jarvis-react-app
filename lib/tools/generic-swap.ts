@@ -80,8 +80,9 @@ const parameters = z.object({
 
 export const genericSwapTool = tool({
   description:
-    `Execute a swap transaction from a source token to a target token using a specified protocol or a general router.
-    Use this tool when user request and swap and no protocol is in the context
+    `Execute a swap transaction to exchange one token for another token (e.g., ETH for USDC, ETH for DAI). 
+    Use this tool when users want to swap, exchange, convert, or trade tokens. This includes requests like 
+    "swap ETH to USDC", "convert ETH to DAI", "trade ETH for tokens", or "exchange ETH for BERA".
     `,
   parameters: parameters,
   execute: async (params, context: ToolContext) => {

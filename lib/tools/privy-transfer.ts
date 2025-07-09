@@ -12,7 +12,7 @@ import { findTokenInUserWalletByIdentifier } from '../token-matcher/token-utils'
 import { erc20Transfer, executeTransaction } from '../privy/utils'
 
 export const privyTransferTool = tool({
-  description: 'Transfer native token or erc20 token to a specified address',
+  description: 'Transfer native token or erc20 token to a specific wallet address. Use this only when the user wants to send tokens to another wallet address, not for swapping tokens or converting between different token types.',
   parameters: z.object({
     address: z.string().describe('The address to transfer funds to'),
     identifier: z
@@ -72,14 +72,22 @@ export const privyTransferTool = tool({
             gasLimit: ethers.toQuantity(21000) as `0x${string}`,
             eip1559GasPriceFunction: getGasPriceByChainId
           },
-          isDemo
+          isDemo,
+          60000 // 60 second timeout
         )
         const explorerLink = getConfigByChainId(chainId, isDemo).scanLink
         const explorerLinkWithHash = `https://${explorerLink}/tx/${tx.hash}`
         const userId = await getUserId()
         balanceChangePub(userId, [networkContext.config.id], isDemo)
+        
+        // Handle timeout case
+        const status = (tx as any).timeout ? 'pending' : 'success'
+        const statusMessage = (tx as any).timeout 
+          ? 'Transaction submitted but confirmation timed out. Check explorer for status.'
+          : 'Transaction confirmed successfully.'
+        
         return {
-          status: 'success',
+          status: status,
           hash: tx.hash,
           transaction_details: {
             to: address,
@@ -89,7 +97,8 @@ export const privyTransferTool = tool({
             chain_explorer_name: `${
               getConfigByChainId(chainId, isDemo).displayName
             } explorer`,
-            explorer_link: explorerLink ? explorerLinkWithHash : undefined
+            explorer_link: explorerLink ? explorerLinkWithHash : undefined,
+            status_message: statusMessage
           },
           error_message: ''
         }
@@ -118,13 +127,14 @@ export const privyTransferTool = tool({
           token.decimals
         ).toString()
 
-        const { status, hash, message } = await erc20Transfer(
+        const { status, hash, message, timeout } = await erc20Transfer(
           token.address,
           address,
           amountInWei,
           evmWallet.address,
           networkContext.selectedChainId,
-          isDemo
+          isDemo,
+          60000 // 60 second timeout
         )
         const explorerLink = getConfigByChainId(
           networkContext.selectedChainId,
@@ -132,12 +142,16 @@ export const privyTransferTool = tool({
         ).scanLink
         const explorerLinkWithHash = `https://${explorerLink}/tx/${hash}`
 
-        if (status === 'success') {
+        if (status === 'success' || status === 'pending') {
           const userId = await getUserId()
           balanceChangePub(userId, [networkContext.config.id], isDemo)
 
+          const statusMessage = timeout 
+            ? 'Transaction submitted but confirmation timed out. Check explorer for status.'
+            : 'Transaction confirmed successfully.'
+
           return {
-            status: 'success',
+            status: status,
             hash: hash,
             transaction_details: {
               to: address,
@@ -148,7 +162,8 @@ export const privyTransferTool = tool({
                 getConfigByChainId(networkContext.selectedChainId, isDemo)
                   .displayName
               } explorer`,
-              explorer_link: explorerLink ? explorerLinkWithHash : undefined
+              explorer_link: explorerLink ? explorerLinkWithHash : undefined,
+              status_message: statusMessage
             },
             error_message: ''
           }
