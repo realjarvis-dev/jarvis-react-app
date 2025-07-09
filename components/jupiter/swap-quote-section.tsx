@@ -182,7 +182,7 @@ export function JupiterSwapQuoteSection({
           <Card className="bg-yellow-50 border-yellow-200 dark:bg-yellow-950 dark:border-yellow-800 w-full">
             <CardContent className="pt-4">
               <div className="text-yellow-600 dark:text-yellow-400 font-medium mb-1">
-                Warning: Could not retrieve Jupiter Swap Quote
+              Oops! We couldn’t fetch your Jupiter swap quote just now.
               </div>
               <div className="text-sm text-yellow-600/80 dark:text-yellow-400/80 whitespace-pre-wrap break-all">
                 {errorMessage}
@@ -215,7 +215,7 @@ export function JupiterSwapQuoteSection({
         <Card className="bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800 w-full">
           <CardContent className="pt-4">
             <div className="text-red-600 dark:text-red-400 font-medium mb-1">
-              Error: Could not retrieve Jupiter Swap Quote
+             Uh-oh, we ran into trouble getting your Jupiter quote
             </div>
             <div className="text-sm text-red-600/80 dark:text-red-400/80 whitespace-pre-wrap break-all">
               {errorMessage}
