@@ -702,9 +702,9 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
           // Show popover when there are relevant suggestions
           if (finalSuggestions.length > 0 && value.trim().length > 0) {
             setIsOpen(true)
-            // Only reset selection if suggestions actually changed or user is adding content
-            if (suggestionsChanged && !isDeleting) {
-              setSelectedIndex(0) // Auto-select first item by default
+            // Auto-select first item when dropdown opens or suggestions change
+            if (!isDeleting) {
+              setSelectedIndex(0) // Always select first item
             }
           } else if (value.trim().length > 0) {
             // Keep dropdown open even without suggestions to prevent flashing
@@ -977,18 +977,20 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
               <CommandList className="max-h-[200px] overflow-y-auto" role="listbox">
                 {suggestions.length > 0 ? (
                   <CommandGroup className="p-0">
-                    {suggestions.map((suggestion, index) => (
-                      <CommandItem
-                        key={suggestion.id}
-                        value={suggestion.text}
-                        onSelect={() => applySuggestion(suggestion)}
-                        data-item-index={index}
-                        className={cn(
-                          "flex items-center gap-2 px-3 py-2 cursor-pointer border-0",
-                          "hover:bg-accent hover:text-accent-foreground",
-                          "data-[selected=true]:bg-transparent data-[selected=true]:text-inherit",
-                          index === selectedIndex && "!bg-accent !text-accent-foreground"
-                        )}
+                    {suggestions.map((suggestion, index) => {
+                      const isSelected = index === selectedIndex
+                      return (
+                        <CommandItem
+                          key={suggestion.id}
+                          value={suggestion.text}
+                          onSelect={() => applySuggestion(suggestion)}
+                          data-item-index={index}
+                          className={cn(
+                            "flex items-center gap-2 px-3 py-2 cursor-pointer border-0",
+                            "hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-800 dark:hover:text-gray-100",
+                            "data-[selected=true]:!bg-transparent data-[selected=true]:!text-inherit",
+                            isSelected && "!bg-gray-200 !text-gray-900 dark:!bg-gray-700 dark:!text-gray-100"
+                          )}
                       >
                         {suggestion.icon && getIcon(suggestion.icon)}
                         <div className="flex flex-col items-start gap-0.5 flex-1 min-w-0">
@@ -1003,7 +1005,8 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
                           {suggestion.category}
                         </div>
                       </CommandItem>
-                    ))}
+                      )
+                    })}
                   </CommandGroup>
                 ) : (
                   <div className="px-3 py-2 text-sm text-muted-foreground text-center">
