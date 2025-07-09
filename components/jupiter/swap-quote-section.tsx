@@ -163,6 +163,37 @@ export function JupiterSwapQuoteSection({
     )
   }
 
+  const isWarning =
+    (instruction &&
+      (instruction.includes('User can choose one of the following tokens'))) ||
+    quoteData?.status === 'Warning'
+    if (isWarning) {
+      const errorMessage =
+        quoteData?.error || 'Failed to get quote. Please check the details.'
+      return (
+        <CollapsibleMessage
+          role="assistant"
+          isCollapsible={true}
+          header={header(headerFailText)}
+          isOpen={isOpen === undefined ? true : isOpen}
+          onOpenChange={onOpenChange}
+          showIcon={false}
+        >
+          <Card className="bg-yellow-50 border-yellow-200 dark:bg-yellow-950 dark:border-yellow-800 w-full">
+            <CardContent className="pt-4">
+              <div className="text-yellow-600 dark:text-yellow-400 font-medium mb-1">
+                Warning: Could not retrieve Jupiter Swap Quote
+              </div>
+              <div className="text-sm text-yellow-600/80 dark:text-yellow-400/80 whitespace-pre-wrap break-all">
+                {errorMessage}
+              </div>
+            </CardContent>
+          </Card>
+        </CollapsibleMessage>
+      )
+    }
+
+
   const isError =
     (instruction &&
       (instruction.includes('error') || instruction.includes('fail'))) ||

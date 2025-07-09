@@ -69,7 +69,7 @@ export const jupiterQuote = tool({
         const tokenInResult = await resolveToken(tokenIn)
         if ('error' in tokenInResult) {
             return {
-                status: "Failed",
+                status: tokenInResult.tokenOptions ? "Warning" : "Failed",
                 instruction: tokenInResult.tokenOptions ? "User can choose one of the following tokens" : undefined,
                 tokenOptions: tokenInResult.tokenOptions,
                 error: tokenInResult.error
@@ -81,7 +81,7 @@ export const jupiterQuote = tool({
         const tokenOutResult = await resolveToken(tokenOut)
         if ('error' in tokenOutResult) {
             return {
-                status: "Failed",
+                status: tokenOutResult.tokenOptions ? "Warning" : "Failed",
                 instruction: tokenOutResult.tokenOptions ? "User can choose one of the following tokens" : undefined,
                 tokenOptions: tokenOutResult.tokenOptions,
                 error: tokenOutResult.error
