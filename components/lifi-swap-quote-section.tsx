@@ -154,7 +154,7 @@ export function LifiSwapQuoteSection({
         <Card className="bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800 w-full">
           <CardContent className="pt-4">
             <div className="text-red-600 dark:text-red-400 font-medium mb-1">
-              Error: Could not retrieve LI.FI Swap Quote
+             Hmm… we’re unable to pull your Li.Fi swap quote at the moment.
             </div>
             <div className="text-sm text-red-600/80 dark:text-red-400/80 whitespace-pre-wrap break-all">
               {errorMessage}
@@ -233,7 +233,7 @@ export function LifiSwapQuoteSection({
                 displayData.otherFeeUSD !== undefined) && (
                 <div className="relative pt-2">
                   <div className="flex justify-between items-center gap-8 text-sm">
-                    <span className="text-xs text-grey-500 dark:text-grey-400">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
                       1 {displayData.toToken} ≈{' '}
                       {(
                         parseFloat(displayData.fromAmountToken || '0') /
@@ -389,6 +389,12 @@ export function LifiSwapQuoteSection({
                   This amount was automatically swapped to the native token of
                   the destination chain to cover future transaction fees.
                 </div>
+              </div>
+            )}
+
+          {tool.args.preference && (
+              <div className="text-xs text-grey-500 dark:text-grey-400">
+                Route preference: {tool.args.preference.toLowerCase()}
               </div>
             )}
 

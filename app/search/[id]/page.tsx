@@ -36,14 +36,7 @@ export default async function SearchPage(props: {
   params: Promise<{ id: string }>
 }) {
   const cookiesList = await cookies()
-  // console.log(
-  //   'Privy token from cookies:',
-  //   cookiesList.get('privy-token')?.value
-  // )
-  const headersList = await headers()
-  // console.log('All headers:', Object.fromEntries(headersList.entries()))
-
-  const authToken = headersList.get('authorization')?.replace(/^Bearer /, '')
+  const authToken = cookiesList.get('privy-token')?.value
 
   let userId = 'anonymous'
   if (authToken) {
@@ -52,7 +45,8 @@ export default async function SearchPage(props: {
       userId = claims.userId
     } catch (error) {
       console.error('Failed to verify auth token:', error)
-    }
+      redirect('/')
+    } 
   } else {
     console.log('No auth token found in headers')
   }

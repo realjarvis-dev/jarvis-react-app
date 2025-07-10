@@ -38,7 +38,8 @@ export const generateLifiBridgeQuote = async (
   amountIn: string,
   slippage: string,
   recipient?: string,
-  autoFuelDestChain?: boolean
+  autoFuelDestChain?: boolean,
+  preference: "FASTEST" | "CHEAPEST" = "FASTEST"
 ) => {
   // const fromAddress = await getUserEvmWalletAddress()
   // if (autoFuelDestChain === undefined) {
@@ -123,7 +124,8 @@ export const generateLifiBridgeQuote = async (
         inputAmount,
         fromAddress,
         recipient,
-        slippage
+        slippage,
+        preference
       )
     } catch (error) {
       return {
@@ -221,7 +223,8 @@ export const executeLifiBridgeTransaction = async (
   isFromNativeToken: boolean,
   fromChainName: string,
   toChainName: string,
-  isDemo: boolean = false
+  isDemo: boolean = false,
+  preference: "FASTEST" | "CHEAPEST" = "FASTEST"
 ) => {
   let result: { hash: string }
   result = { hash: '' }
@@ -246,7 +249,8 @@ export const executeLifiBridgeTransaction = async (
     inputAmount,
     fromAddress,
     recipient,
-    slippage
+    slippage,
+    preference
   )
   if (!quote.transactionRequest.to) {
     return {

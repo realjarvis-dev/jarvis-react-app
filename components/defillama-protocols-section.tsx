@@ -79,7 +79,7 @@ export function DeFiLlamaProtocolsSection({
       >
         <div className="p-4 text-red-600 dark:text-red-400">
           <div className="font-medium mb-2">
-            {isSearchError ? 'Protocol Not Found' : 'Error fetching DeFi protocols'}
+            {isSearchError ? 'Hmm, we couldn’t find that protocol—mind trying a different name?' : "Uh-oh, protocols failed to load. Give it another shot?"}
           </div>
           <div className="text-sm">{result.error}</div>
           {isSearchError && (

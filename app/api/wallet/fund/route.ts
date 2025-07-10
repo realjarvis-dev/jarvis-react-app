@@ -1,5 +1,5 @@
 import { getTokenBalances } from '@/lib/alchemy/get-token-balance';
-import { TokenData } from '@/lib/alchemy/types';
+import { TokenData } from '@/lib/types/wallet-token';
 import { addBalanceAnvilFork } from '@/lib/anvil-fork/fund';
 import { getUserEvmWalletAddress, verifyAccessToken } from '@/lib/privy/client';
 import { ethToWei, setBalanceVnet } from '@/lib/tenderly/fund';

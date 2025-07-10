@@ -28,7 +28,7 @@ export class ProtocolMatcher {
   private fuse: Fuse<Protocol>
   private protocols: Protocol[]
 
-  constructor(protocols: Protocol[], threshold = 0.4) {
+  constructor(protocols: Protocol[], threshold = 0.3) {
     this.protocols = protocols
     
     this.fuse = new Fuse(protocols, {
@@ -37,7 +37,7 @@ export class ProtocolMatcher {
         { name: 'slug', weight: 0.4 },
         { name: 'symbol', weight: 0.3 }
       ],
-      threshold,
+      threshold: threshold,
       ignoreLocation: true,
       minMatchCharLength: 2,
       includeScore: true
@@ -128,7 +128,6 @@ export class ProtocolMatcher {
         score: 0
       }))
     }
-
     // Use fuzzy search for approximate matches
     const fuseResults = this.fuse.search(query, { limit: limit * 2 })
     
@@ -185,5 +184,5 @@ export function createProtocolMatcherFromYields(yields: Array<{ project: string 
     slug: projectName
   }))
   
-  return new ProtocolMatcher(uniqueProtocols, 0.4)
+  return new ProtocolMatcher(uniqueProtocols, 0.2)
 }
