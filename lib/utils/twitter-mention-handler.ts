@@ -436,8 +436,10 @@ async function postTweetReply(tweetId: string, message: string) {
         }
       };
 
-      // Create signature base string
+      // Create signature base string (OAuth 1.0a for POST with JSON body)
       const bodyString = JSON.stringify(requestBody);
+      
+      // For OAuth 1.0a, only OAuth parameters are included in signature base string
       const encodedParams = Object.keys(oauthParams)
         .sort()
         .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(oauthParams[key])}`)
@@ -454,6 +456,12 @@ async function postTweetReply(tweetId: string, message: string) {
         .map(key => `${key}="${encodeURIComponent(oauthParams[key])}"`)
         .join(', ');
 
+      console.log('OAuth Debug Info:');
+      console.log('Base String:', baseString);
+      console.log('Signing Key:', signingKey);
+      console.log('Authorization Header:', authHeader);
+      console.log('Request Body:', bodyString);
+
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -465,6 +473,7 @@ async function postTweetReply(tweetId: string, message: string) {
 
       if (response.ok) {
         const data = await response.json();
+        console.log('Twitter API Response:', JSON.stringify(data, null, 2));
         return { success: true, data };
       }
 
@@ -474,8 +483,10 @@ async function postTweetReply(tweetId: string, message: string) {
       }
 
       const errorData = await response.text();
-      console.error(`Twitter API error: ${response.status} - ${errorData}`);
-      return { success: false, reason: `API error: ${response.status}` };
+      console.error(`Twitter API error: ${response.status}`);
+      console.error('Response Headers:', Object.fromEntries(response.headers.entries()));
+      console.error('Error Response Body:', errorData);
+      return { success: false, reason: `API error: ${response.status}`, error: errorData };
 
     } catch (error) {
       console.error('Error posting tweet reply:', error);
