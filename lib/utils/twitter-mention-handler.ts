@@ -1,5 +1,55 @@
 import { processTwitterQuery } from './twitter-query-processor';
 
+// Lazy loader for TwitterApi to avoid initialization issues
+let cachedTwitterApi: any = null;
+let isLoadingTwitterApi = false;
+
+async function getTwitterApi() {
+  if (cachedTwitterApi) {
+    return cachedTwitterApi;
+  }
+  
+  if (isLoadingTwitterApi) {
+    // Wait for the current loading to complete
+    while (isLoadingTwitterApi) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    return cachedTwitterApi;
+  }
+  
+  isLoadingTwitterApi = true;
+  
+  try {
+    // Try different import strategies
+    let TwitterApi;
+    
+    try {
+      // First try ESM import
+      const module = await import('twitter-api-v2');
+      TwitterApi = module.TwitterApi || module.default?.TwitterApi || module.default;
+    } catch (esmError) {
+      console.log('ESM import failed, trying CommonJS require');
+      try {
+        // Fallback to CommonJS require
+        const module = require('twitter-api-v2');
+        TwitterApi = module.TwitterApi || module.default;
+      } catch (cjsError) {
+        console.error('Both ESM and CommonJS imports failed:', { esmError, cjsError });
+        throw new Error('Unable to import TwitterApi');
+      }
+    }
+    
+    if (!TwitterApi) {
+      throw new Error('TwitterApi not found in module exports');
+    }
+    
+    cachedTwitterApi = TwitterApi;
+    return TwitterApi;
+  } finally {
+    isLoadingTwitterApi = false;
+  }
+}
+
 interface TwitterMention {
   id: string;
   text: string;
@@ -408,19 +458,12 @@ async function postTweetReply(tweetId: string, message: string) {
     return { success: false, reason: 'OAuth credentials not configured' };
   }
   
-  // Import TwitterApi locally to avoid initialization issues
+  // Get TwitterApi using lazy loader to avoid initialization issues
   let TwitterApi;
   try {
-    // Use CommonJS require to avoid ESM initialization issues
-    const twitterApiV2 = require('twitter-api-v2');
-    TwitterApi = twitterApiV2.TwitterApi || twitterApiV2.default;
-    
-    if (!TwitterApi) {
-      console.error('TwitterApi not found in module exports');
-      return { success: false, reason: 'Twitter API import failed - TwitterApi not found' };
-    }
+    TwitterApi = await getTwitterApi();
   } catch (error) {
-    console.error('Error importing TwitterApi:', error);
+    console.error('Error loading TwitterApi:', error);
     return { success: false, reason: 'Twitter API import failed' };
   }
   

@@ -79,7 +79,7 @@
         "sonner": "^1.4.41",
         "tailwind-merge": "^2.6.0",
         "tailwindcss-animate": "^1.0.7",
-        "twitter-api-v2": "^1.23.2",
+        "twitter-api-v2": "1.17.0",
         "use-local-storage-state": "^19.5.0",
         "vaul": "^1.1.2",
         "viem": "^2.29.1",
@@ -2747,7 +2747,7 @@
 
     "tweetnacl-util": ["tweetnacl-util@0.15.1", "", {}, "sha512-RKJBIj8lySrShN4w6i/BonWp2Z/uxwC3h4y7xsRrpP59ZboCd0GpEVsOnMDYLMmKBpYhb5TgHzZXy7wTfYFBRw=="],
 
-    "twitter-api-v2": ["twitter-api-v2@1.23.2", "", {}, "sha512-m0CGXmfGwUhWBOOTVCIXIoSEXwGCQV3Es9yraCwUxaVrjJT2CQcqDrQsQTpBhtiAvVL2HS1cCEGsotNjfX9log=="],
+    "twitter-api-v2": ["twitter-api-v2@1.17.0", "", {}, "sha512-znu5Lvu+2KGmjWfOgwtnzNBq8CtaCft5+1+MootxOOEQ2vhmgHa3eAo0tFAJ7M8M0eXDKldY0DNcndn8gGdAIw=="],
 
     "type": ["type@2.7.3", "", {}, "sha512-8j+1QmAbPvLZow5Qpi6NCaN8FB60p/6x8/vfNqOk/hC+HuvFZhL4+WfekuhQLiqFZXOgQdrs3B+XxEmCc6b3FQ=="],
 
