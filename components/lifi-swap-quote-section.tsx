@@ -233,7 +233,7 @@ export function LifiSwapQuoteSection({
                 displayData.otherFeeUSD !== undefined) && (
                 <div className="relative pt-2">
                   <div className="flex justify-between items-center gap-8 text-sm">
-                    <span className="text-xs text-grey-500 dark:text-grey-400">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
                       1 {displayData.toToken} ≈{' '}
                       {(
                         parseFloat(displayData.fromAmountToken || '0') /
@@ -389,6 +389,12 @@ export function LifiSwapQuoteSection({
                   This amount was automatically swapped to the native token of
                   the destination chain to cover future transaction fees.
                 </div>
+              </div>
+            )}
+
+          {tool.args.preference && (
+              <div className="text-xs text-grey-500 dark:text-grey-400">
+                Route preference: {tool.args.preference.toLowerCase()}
               </div>
             )}
 
