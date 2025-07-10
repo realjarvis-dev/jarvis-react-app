@@ -101,11 +101,15 @@ export function Chat({
     headers,
     onFinish: () => {
       setIsSaving(true)
-      router.replace(`/search/${id}`)
-      startTransition(() => {
-        router.refresh()
-        setIsSaving(false)
-      })
+      // Update URL without triggering re-render using History API
+      setTimeout(() => {
+        if (typeof window !== 'undefined' && window.location.pathname !== `/search/${id}`) {
+          window.history.replaceState(null, '', `/search/${id}`)
+        }
+        startTransition(() => {
+          setIsSaving(false)
+        })
+      }, 100) // Minimal delay just to ensure proper timing
     },
     onError: error => {
       toast.error(`Error in chat: ${error.message}`)
@@ -123,7 +127,8 @@ export function Chat({
     dependency: messages.length,
     isStreaming: () => status === 'streaming',
     scrollContainer: scrollContainerRef,
-    threshold: 50
+    threshold: 50,
+    lastMessageId: messages.length > 0 ? messages[messages.length - 1].id : undefined
   })
 
   useEffect(() => {
