@@ -1,12 +1,7 @@
 import { createChatWithShareableLink } from './chat-creator';
 import { processTwitterQuery } from './twitter-query-processor';
-
-
-async function getTwitterApiClient() {
-  const { TwitterApi } = await import('twitter-api-v2');
-  return TwitterApi;
-}
-
+const twitterApiModule = await import('twitter-api-v2');
+const TwitterApi = twitterApiModule.TwitterApi;
 
 interface TwitterMention {
   id: string;
@@ -398,8 +393,6 @@ async function postTweetReply(tweetId: string, message: string) {
   try {
     // Correctly and safely import the library only when this function is called.
     // This avoids the Next.js/Bun hoisting issue during startup.
-
-    const TwitterApi = await getTwitterApiClient();
 
     const oauthClient = new TwitterApi({
       appKey: apiKey,
