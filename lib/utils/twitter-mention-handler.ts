@@ -1,16 +1,12 @@
 import { createChatWithShareableLink } from './chat-creator';
 import { processTwitterQuery } from './twitter-query-processor';
 
-// Dynamic import for TwitterApi to avoid initialization issues
-let TwitterApi: any = null;
 
-async function getTwitterApi() {
-  if (!TwitterApi) {
-    const twitterModule = await import('twitter-api-v2');
-    TwitterApi = twitterModule.TwitterApi;
-  }
+async function getTwitterApiClient() {
+  const { TwitterApi } = await import('twitter-api-v2');
   return TwitterApi;
 }
+
 
 interface TwitterMention {
   id: string;
@@ -100,34 +96,19 @@ async function handleRateLimit(response: Response, operation: string): Promise<b
     const remainingRequests = response.headers.get('x-rate-limit-remaining');
 
     console.log(`Rate limit hit for ${operation}. Remaining: ${remainingRequests}, Reset: ${resetTime}`);
-
-    if (resetTime) {
-      const resetTimestamp = parseInt(resetTime) * 1000;
-      const waitTime = Math.max(resetTimestamp - Date.now(), 60000); // Wait at least 1 minute
-      console.log(`Waiting ${Math.round(waitTime / 1000)}s for rate limit reset...`);
-
-      const maxWaitTime = operation === 'postTweetReply' ? 20 * 60 * 1000 : 15 * 60 * 1000;
-
-      if (waitTime <= maxWaitTime) {
-        setRateLimitReset(resetTimestamp);
-        await sleep(waitTime);
-        return true; // Indicate we should retry
-      } else {
-        console.log(`Wait time too long (${Math.round(waitTime / 1000)}s), skipping retry for ${operation}`);
-        setRateLimitReset(resetTimestamp);
-        return false;
-      }
-    } else {
-      console.log('No reset time provided, waiting 5 minutes...');
-      await sleep(5 * 60 * 1000);
-      return true;
-    }
+    console.log('Response status:', response.status);
+    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+    
+    // Temporary bypass for testing - just log and skip
+    console.log('⚠️ BYPASSING RATE LIMIT FOR TESTING - Will try to process anyway');
+    return false; // Don't retry, just continue
   }
   return false; // Don't retry
 }
 
 export async function getJarvisUserId(): Promise<string> {
   const KNOWN_BOT_USER_ID = '1930617094195798016';
+  
   
   const envUserId = process.env.TWITTER_USER_ID;
   if (envUserId) {
@@ -248,44 +229,7 @@ function shouldFilterMention(mention: TwitterMention, author: TwitterUser | unde
     return { shouldFilter: true, reason: 'Author not found' };
   }
 
-  const isBotReply = mention.text.includes('@') &&   
-                    mention.text.match(/^@\w+\s+/) && // Starts with @username  
-                    (mention.text.includes('🚀') || mention.text.includes('📊') || mention.text.includes('📈')); // Contains bot emojis
-  
-  if (isBotReply) {
-    return { shouldFilter: true, reason: 'Potential bot reply based on content pattern' };
-  }
-
-  if (author.created_at) {
-    const accountAge = Date.now() - new Date(author.created_at).getTime();
-    const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
-    if (accountAge < sevenDaysMs) {
-      return { shouldFilter: true, reason: `Account too new (${Math.round(accountAge / (24 * 60 * 60 * 1000))} days old)` };
-    }
-  }
-
-  // if (author.public_metrics && author.public_metrics.followers_count < 5) {
-  //   return { shouldFilter: true, reason: `Too few followers (${author.public_metrics.followers_count})` };
-  // }
-
-  const mentionCount = (mention.text.match(/@\w+/g) || []).length;
-  if (mentionCount > 3) {
-    return { shouldFilter: true, reason: `Too many mentions (${mentionCount})` };
-  }
-
-  const spamKeywords = [
-    'check out', 'follow me', 'dm me', 'link in bio', 'check my profile',
-    'follow for follow', 'f4f', 'follow back', 'check this out',
-    'visit my page', 'click link', 'see my bio', 'promotion', 'giveaway'
-  ];
-  
-  const lowerText = mention.text.toLowerCase();
-  for (const keyword of spamKeywords) {
-    if (lowerText.includes(keyword)) {
-      return { shouldFilter: true, reason: `Contains spam keyword: "${keyword}"` };
-    }
-  }
-
+  // All filters disabled for testing
   return { shouldFilter: false, reason: '' };
 }
 
@@ -445,92 +389,47 @@ async function postTweetReply(tweetId: string, message: string) {
   const apiSecret = process.env.TWITTER_API_SECRET;
   const accessToken = process.env.TWITTER_ACCESS_TOKEN;
   const accessTokenSecret = process.env.TWITTER_ACCESS_TOKEN_SECRET;
-  const bearerToken = process.env.TWITTER_API_BEARER_TOKEN;
-  
 
-  if (!apiKey || !apiSecret || !accessToken || !accessTokenSecret || !bearerToken) {
-    console.log('Twitter OAuth credentials not configured for posting replies. Mention detected but cannot reply.');
-    console.log('To enable replies, set TWITTER_API_KEY, TWITTER_API_SECRET, TWITTER_ACCESS_TOKEN, and TWITTER_ACCESS_TOKEN_SECRET');
+  if (!apiKey || !apiSecret || !accessToken || !accessTokenSecret) {
+    console.log('Twitter OAuth credentials not configured for posting replies.');
     return { success: false, reason: 'OAuth credentials not configured' };
   }
-  
-  // Get TwitterApi dynamically
-  const TwitterApiClass = await getTwitterApi();
-  const oauthClient = new TwitterApiClass({
-    appKey: apiKey,
-    appSecret: apiSecret,
-    accessToken: accessToken,
-    accessSecret: accessTokenSecret,
-  });
 
-  
-  const crypto = require('crypto');
-  const url = 'https://api.twitter.com/2/tweets';
+  try {
+    // Correctly and safely import the library only when this function is called.
+    // This avoids the Next.js/Bun hoisting issue during startup.
 
-  let retryCount = 0;
-  const maxRetries = 3; // Increased retries for better reliability
+    const TwitterApi = await getTwitterApiClient();
 
-  while (retryCount < maxRetries) {
-    try {
-      
-      const oauthParams: Record<string, string> = {
-        oauth_consumer_key: apiKey,
-        oauth_token: accessToken,
-        oauth_signature_method: 'HMAC-SHA1',
-        oauth_timestamp: Math.floor(Date.now() / 1000).toString(),
-        oauth_nonce: crypto.randomBytes(16).toString('hex'),
-        oauth_version: '1.0'
-      };
+    const oauthClient = new TwitterApi({
+      appKey: apiKey,
+      appSecret: apiSecret,
+      accessToken: accessToken,
+      accessSecret: accessTokenSecret,
+    });
 
-      const botUserId = await getJarvisUserId();
-      const requestBody = {
-        text: message,
-        reply: {
-          in_reply_to_tweet_id: tweetId,
-          exclude_reply_user_ids: [botUserId]
-        }
-      };
-
-      try {
-      const { data } = await oauthClient.v2.tweet({
-        text: message,
-        reply: {
-          in_reply_to_tweet_id: tweetId,
-          exclude_reply_user_ids: [botUserId]
-        }
-      });
-      return {success: true, data};
-    }
-      
-      catch (error: any) {
-
-        console.error('Error posting tweet reply:', error);
-        if (error.data?.status === 429) {
-          if (await handleRateLimit(error, 'postTweetReply')) {
-            retryCount++;
-            continue;
-          }
-        }
-        const errorDetail = {
-          title: error.data?.title,
-          detail: error.data?.detail,
-          type: error.data?.type,
-          status: error.data?.status
+    const botUserId = await getJarvisUserId();
+    
+    const { data } = await oauthClient.v2.tweet({
+      text: message,
+      reply: {
+        in_reply_to_tweet_id: tweetId,
+        exclude_reply_user_ids: [botUserId]
       }
-        return { success: false, reason: errorDetail };
-      }
+    });
+    
+    return { success: true, data };
 
-    } catch (error) {
-      console.error('Error posting tweet reply:', error);
-      if (retryCount === maxRetries - 1) {
-        return { success: false, reason: 'Network error' };
-      }
-      retryCount++;
-      await sleep(2000 * retryCount);
-    }
+  } catch (error: any) {
+    console.error('Error posting tweet reply:', error);
+    const errorDetail = {
+      title: error.data?.title,
+      detail: error.data?.detail,
+      type: error.data?.type,
+      status: error.data?.status
+    };
+    return { success: false, reason: errorDetail };
   }
-
-  return { success: false, reason: 'Failed after all retries' };
 }
 
 async function replyToTweet(tweetId: string, message: string) {
@@ -541,7 +440,7 @@ async function replyToTweet(tweetId: string, message: string) {
       const result = await postTweetReply(tweetId, message);
 
       if (result.success === false) {
-        console.log(`Could not reply to tweet ${tweetId}: ${result.reason}`);
+        console.log(`Could not reply to tweet ${tweetId}: ${JSON.stringify(result.reason)}`);
         return result;
       }
 
@@ -554,7 +453,7 @@ async function replyToTweet(tweetId: string, message: string) {
     const result = await postTweetReply(tweetId, truncatedMessage);
 
     if (result.success === false) {
-      console.log(`Could not reply to tweet ${tweetId}: ${result.reason}`);
+      console.log(`Could not reply to tweet ${tweetId}: ${JSON.stringify(result.reason)}`);
       return result;
     }
 
