@@ -1,5 +1,4 @@
 import { processTwitterQuery } from './twitter-query-processor';
-import { TwitterApi } from 'twitter-api-v2';
 
 interface TwitterMention {
   id: string;
@@ -408,6 +407,10 @@ async function postTweetReply(tweetId: string, message: string) {
     console.log('To enable replies, set TWITTER_API_KEY, TWITTER_API_SECRET, TWITTER_ACCESS_TOKEN, and TWITTER_ACCESS_TOKEN_SECRET');
     return { success: false, reason: 'OAuth credentials not configured' };
   }
+  
+  // Import TwitterApi locally to avoid initialization issues
+  const { TwitterApi } = await import('twitter-api-v2');
+  
   // const bearerClient = new TwitterApi(bearerToken);
   const oauthClient = new TwitterApi({
     appKey: apiKey,
