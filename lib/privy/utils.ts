@@ -312,14 +312,6 @@ export async function signTransaction(
   let encoding: string
 
   if (isLegacyGasModeChain) {
-    console.log('gasLimit', gasLimit)
-    console.log('fixGasPrice', fixGasPrice)
-    console.log('correctNonce', nonce)
-    console.log('chainId', chainId)
-    console.log(
-      'rpc url',
-      process.env.TEST_RPC_URL || getConfigByChainId(chainId, isDemo).rpcUrl
-    )
 
     const res = await privy.walletApi.ethereum.signTransaction({
       walletId: evmWallet.id,

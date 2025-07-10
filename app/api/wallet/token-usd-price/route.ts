@@ -1,5 +1,5 @@
 import { getServerSideNetworkConfig } from '@/lib/network/gateway'
-import { getUser, getUserEvmWalletAddress } from '@/lib/privy/client'
+import { getUser, getUserEvmWalletAddress, getUserSolWalletAddress } from '@/lib/privy/client'
 import { computeUserUsdBalance } from '@/lib/use-cases/compute-user-usd-balance'
 import { NextResponse } from 'next/server'
 
@@ -16,9 +16,15 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: 'User not authenticated' }, { status: 401 })
     }
     const walletAddress = await getUserEvmWalletAddress()
-    if (!walletAddress) {
+    const solanaWalletAddress = await getUserSolWalletAddress()
+    if (!walletAddress || !solanaWalletAddress) {
         return NextResponse.json({ error: 'User does not have an Ethereum wallet' }, { status: 400 })
     }
-    const usdBalance = await computeUserUsdBalance(walletAddress, networkConfig.chainId, networkConfig.isDemo)
+    let usdBalance = 0
+    if (networkConfig.id === 'solana') {
+        usdBalance = await computeUserUsdBalance(solanaWalletAddress, networkConfig.chainId, networkConfig.isDemo)
+    } else {
+        usdBalance = await computeUserUsdBalance(walletAddress, networkConfig.chainId, networkConfig.isDemo)
+    }
     return NextResponse.json({ usdBalance })
 }

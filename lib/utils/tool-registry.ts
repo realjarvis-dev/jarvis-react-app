@@ -40,6 +40,8 @@ import {
   walletBalanceTool
 } from '../tools/wallet'
 import { NetworkContext, ToolContext } from '../types/context'
+import { xStockList } from '../tools/xstock-search'
+import { jupiterExecute, jupiterQuote } from '../tools/jupiter-trade'
 
 /**
  * Interface for tool definition with schema and execution function
@@ -478,7 +480,9 @@ export function createToolRegistry(model: string): ToolRegistry {
       'optimism',
       'unichain',
       'bsc',
-      'sonic'
+      'sonic',
+      'solana',
+      'mantle'
     ]
   })
 
@@ -503,7 +507,8 @@ export function createToolRegistry(model: string): ToolRegistry {
       'optimism',
       'unichain',
       'bsc',
-      'sonic'
+      'sonic',
+      'mantle'
     ]
   })
 
@@ -782,6 +787,44 @@ export function createToolRegistry(model: string): ToolRegistry {
     category: ToolCategory.WEB
   })
 
+  registry.registerTool({
+    name: 'xstock_list',
+    description: 'List all the xstocks available on solana',
+    schema: xStockList.parameters,
+    execute: async (params, context) => xStockList.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3_READ,
+    supportedNetworks: ['solana']
+  })
+
+  registry.registerTool({
+    name: 'jupiter_quote',
+    description: jupiterQuote.description || '',
+    schema: jupiterQuote.parameters,
+    execute: async (params, context) => jupiterQuote.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3_READ,
+    supportedNetworks: ['solana']
+  })
+
+  registry.registerTool({
+    name: 'jupiter_execute',
+    description: jupiterExecute.description || '',
+    schema: jupiterExecute.parameters,
+    execute: async (params, context) => jupiterExecute.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown', 
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3_WRITE,
+    supportedNetworks: ['solana']
+  })
 
   return registry
 }

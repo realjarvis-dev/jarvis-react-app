@@ -423,15 +423,12 @@ Use this wallet intelligence to provide personalized recommendations and underst
       // userWalletInfo =
       //   "The user is not logged in. Don't use any web3 write tools. If the user wants to use web3 write tools, ask them to login friendly"
     } else {
+
       userWalletInfo = `
-User EVM wallet address: ${userEvmWallet?.address}, delegated status: ${userEvmWallet?.delegated}
-You can only execute on behalf of the user if they have wallets and have delegated you access to their wallet.
-`
-      // userWalletInfo = `
-      // User EVM wallet address: ${userEvmWallet?.address}, delegated status: ${userEvmWallet?.delegated}
-      // User Solana wallet address: ${userSolWallet?.address}, delegated status: ${userSolWallet?.delegated}
-      // You can only execute on behalf of the user if they have wallets and have delegated you access to their wallet.
-      // `
+      User EVM wallet address: ${userEvmWallet?.address}, delegated status: ${userEvmWallet?.delegated}
+      User Solana wallet address: ${userSolWallet?.address}, delegated status: ${userSolWallet?.delegated}
+      You can only execute on behalf of the user if they have wallets and have delegated you access to their wallet.
+      `
     }
 
     // Add network context info to the prompt

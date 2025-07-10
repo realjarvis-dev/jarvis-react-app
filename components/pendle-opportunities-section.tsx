@@ -34,7 +34,7 @@ export function PendleOpportunitiesSection({
       onOpenChange={onOpenChange}
       showIcon={false}
     >
-      {results.length === 0 && <div>No opportunities found.</div>}
+      {results.length === 0 && <div>We didn&apos;t find any opportunities at this time. Mind to try again later?</div>}
       <PendleOpportunitiesTable opportunities={results} />
     </CollapsibleMessage>
   )

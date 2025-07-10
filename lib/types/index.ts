@@ -1,4 +1,7 @@
-import { CoreMessage, JSONValue, Message } from 'ai'
+import { CoreMessage, JSONValue } from 'ai'
+
+// Export token price types
+export type { PriceApiResponse, TokenPrice } from './token-price'
 
 export type SearchResults = {
   images: SearchResultImage[]
