@@ -484,7 +484,7 @@ Network Context:
       model: getModel(model),
       system: prompt,
       messages,
-      temperature: 0.1,
+      temperature: 0,
       tools: model === 'openai:o3-mini' ? o3_mini_tool_lst : tool_lst,
       experimental_activeTools: searchMode ? supportedTools : web3_tools,
       maxSteps: maxSteps,
