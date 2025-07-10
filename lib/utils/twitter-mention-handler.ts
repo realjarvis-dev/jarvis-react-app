@@ -362,8 +362,9 @@ export async function processMention(mention: TwitterMention, users: TwitterUser
 
     const result = await replyToTweet(mention.id, `@${authorUsername} ${response}`);
     
-    if (result && result.data?.id) {
-      botTweetIds.add(result.data.id);
+    const tweetId = result?.data?.data?.id || result?.data?.id;
+    if (result && tweetId) {
+      botTweetIds.add(tweetId);
       if (botTweetIds.size > 1000) {
         const tweetIdsArray = Array.from(botTweetIds);
         botTweetIds = new Set(tweetIdsArray.slice(-500));
@@ -456,11 +457,7 @@ async function postTweetReply(tweetId: string, message: string) {
         .map(key => `${key}="${encodeURIComponent(oauthParams[key])}"`)
         .join(', ');
 
-      console.log('OAuth Debug Info:');
-      console.log('Base String:', baseString);
-      console.log('Signing Key:', signingKey);
-      console.log('Authorization Header:', authHeader);
-      console.log('Request Body:', bodyString);
+      // OAuth signature generated successfully
 
       const response = await fetch(url, {
         method: 'POST',
@@ -473,7 +470,6 @@ async function postTweetReply(tweetId: string, message: string) {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Twitter API Response:', JSON.stringify(data, null, 2));
         return { success: true, data };
       }
 
@@ -513,7 +509,7 @@ async function replyToTweet(tweetId: string, message: string) {
         return result;
       }
 
-      console.log(`Successfully replied to tweet ${tweetId} with ID: ${result.data?.id}`);
+      console.log(`Successfully replied to tweet ${tweetId} with ID: ${result.data?.data?.id || result.data?.id}`);
       return result;
     }
 
@@ -526,7 +522,7 @@ async function replyToTweet(tweetId: string, message: string) {
       return result;
     }
 
-    console.log(`Successfully replied to tweet ${tweetId} with ID: ${result.data?.id} (truncated from ${message.length} to ${truncatedMessage.length} chars)`);
+    console.log(`Successfully replied to tweet ${tweetId} with ID: ${result.data?.data?.id || result.data?.id} (truncated from ${message.length} to ${truncatedMessage.length} chars)`);
     return result;
   } catch (error) {
     console.error('Error replying to tweet:', error);
