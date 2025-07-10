@@ -409,7 +409,20 @@ async function postTweetReply(tweetId: string, message: string) {
   }
   
   // Import TwitterApi locally to avoid initialization issues
-  const { TwitterApi } = await import('twitter-api-v2');
+  let TwitterApi;
+  try {
+    // Use CommonJS require to avoid ESM initialization issues
+    const twitterApiV2 = require('twitter-api-v2');
+    TwitterApi = twitterApiV2.TwitterApi || twitterApiV2.default;
+    
+    if (!TwitterApi) {
+      console.error('TwitterApi not found in module exports');
+      return { success: false, reason: 'Twitter API import failed - TwitterApi not found' };
+    }
+  } catch (error) {
+    console.error('Error importing TwitterApi:', error);
+    return { success: false, reason: 'Twitter API import failed' };
+  }
   
   // const bearerClient = new TwitterApi(bearerToken);
   const oauthClient = new TwitterApi({
