@@ -238,7 +238,44 @@ function shouldFilterMention(mention: TwitterMention, author: TwitterUser | unde
     return { shouldFilter: true, reason: 'Author not found' };
   }
 
-  // All filters disabled for testing
+  const isBotReply = mention.text.includes('@') &&   
+                    mention.text.match(/^@\w+\s+/) && // Starts with @username  
+                    (mention.text.includes('🚀') || mention.text.includes('📊') || mention.text.includes('📈')); // Contains bot emojis
+  
+  if (isBotReply) {
+    return { shouldFilter: true, reason: 'Potential bot reply based on content pattern' };
+  }
+
+  if (author.created_at) {
+    const accountAge = Date.now() - new Date(author.created_at).getTime();
+    const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+    if (accountAge < sevenDaysMs) {
+      return { shouldFilter: true, reason: `Account too new (${Math.round(accountAge / (24 * 60 * 60 * 1000))} days old)` };
+    }
+  }
+
+  // if (author.public_metrics && author.public_metrics.followers_count < 5) {
+  //   return { shouldFilter: true, reason: `Too few followers (${author.public_metrics.followers_count})` };
+  // }
+
+  const mentionCount = (mention.text.match(/@\w+/g) || []).length;
+  if (mentionCount > 3) {
+    return { shouldFilter: true, reason: `Too many mentions (${mentionCount})` };
+  }
+
+  const spamKeywords = [
+    'check out', 'follow me', 'dm me', 'link in bio', 'check my profile',
+    'follow for follow', 'f4f', 'follow back', 'check this out',
+    'visit my page', 'click link', 'see my bio', 'promotion', 'giveaway'
+  ];
+  
+  const lowerText = mention.text.toLowerCase();
+  for (const keyword of spamKeywords) {
+    if (lowerText.includes(keyword)) {
+      return { shouldFilter: true, reason: `Contains spam keyword: "${keyword}"` };
+    }
+  }
+
   return { shouldFilter: false, reason: '' };
 }
 
