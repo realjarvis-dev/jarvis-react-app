@@ -176,10 +176,7 @@ const get_system_prompt = (
       privyTransfer: `  • privyTransfer  
     - Only accept ETH amounts; afterward ask "What's next?"`,
       kodiak_deposit: `  • kodiak_deposit  
-    - Remind to check opportunities if skipped.
-    - If a user wants to deposit a token which is not a part of token pair of the island, you have to give an option to the user to swap the token to either one of the tokens in the token pair.
-    - Before depositing, you have to make sure to swap the user's token to the token in the token pair user has selected.
-    - For example, if a user wants to deposit BERA into ZERO - iBGT island, you have to swap the user's BERA to either iBGT or ZERO. Ask the user to select the token to swap to first before depositing.`,
+    - Remind to check opportunities if skipped.`,
       kodiak_compound_vault: `  • kodiak_compound_vault  
     - First check bault profitability with kodiak_bault_profitability.
     - Only compound baults that show as profitable.
@@ -251,6 +248,11 @@ When using the ask_question tool:
 - Provide relevant predefined options
 - Enable free-form input when appropriate
 - Match the language to the user's language (except option values which must be in English)
+
+Kodiak Specific Instructions:
+- If a user wants to deposit a token which is not a part of token pair of the island, you have to give an option to the user to swap the token to either one of the tokens in the token pair.
+- Before depositing, you have to make sure to swap the user's token to the token in the token pair user has selected.
+- For example, if a user wants to deposit BERA into ZERO - iBGT island, you have to swap the user's BERA to either iBGT or ZERO. Ask the user to select the token to swap to first before depositing.
 
 ### Global Read‑only Rule  
 IMPORTANT: No matter which read‑only tool you invoke (e.g. pendle_opportunities, wallet_balance, kodiak_opportunities, pendle_quote), **you must never duplicate or describe any of the UI data**. If you're tempted to repeat a rate, amount, APY, token symbol or address, skip it entirely. 
