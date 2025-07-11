@@ -1,7 +1,5 @@
 import { createChatWithShareableLink } from './chat-creator';
 import { processTwitterQuery } from './twitter-query-processor';
-const twitterApiModule = await import('twitter-api-v2');
-const TwitterApi = twitterApiModule.TwitterApi;
 
 interface TwitterMention {
   id: string;
@@ -91,12 +89,28 @@ async function handleRateLimit(response: Response, operation: string): Promise<b
     const remainingRequests = response.headers.get('x-rate-limit-remaining');
 
     console.log(`Rate limit hit for ${operation}. Remaining: ${remainingRequests}, Reset: ${resetTime}`);
-    console.log('Response status:', response.status);
-    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-    
-    // Temporary bypass for testing - just log and skip
-    console.log('⚠️ BYPASSING RATE LIMIT FOR TESTING - Will try to process anyway');
-    return false; // Don't retry, just continue
+
+    if (resetTime) {
+      const resetTimestamp = parseInt(resetTime, 10) * 1000;
+      const waitTime = Math.max(resetTimestamp - Date.now(), 60000); // Wait at least 1 minute
+      console.log(`Waiting ${Math.round(waitTime / 1000)}s for rate limit reset...`);
+
+      const maxWaitTime = operation === 'postTweetReply' ? 20 * 60 * 1000 : 15 * 60 * 1000;
+
+      if (waitTime <= maxWaitTime) {
+        setRateLimitReset(resetTimestamp);
+        await sleep(waitTime);
+        return true; // Indicate we should retry
+      } else {
+        console.log(`Wait time too long (${Math.round(waitTime / 1000)}s), skipping retry for ${operation}`);
+        setRateLimitReset(resetTimestamp);
+        return false;
+      }
+    } else {
+      console.log('No reset time provided, waiting 5 minutes...');
+      await sleep(5 * 60 * 1000);
+      return true;
+    }
   }
   return false; // Don't retry
 }
@@ -318,7 +332,7 @@ export async function processMention(mention: TwitterMention, users: TwitterUser
         // Use the new chat creation workflow
         const result = await createChatWithShareableLink(reportQuery, {
           userId: `twitter-${authorUsername}`,
-          baseUrl: process.env.NEXT_PUBLIC_BASE_URL || 'https://jarvis-investment-agent.vercel.app'
+          baseUrl: 'https://app.thejarvis.xyz'
         });
 
         const reportResponse = `@${authorUsername} 📊 Here's your comprehensive research report: ${result.shareUrl} 
@@ -386,43 +400,91 @@ async function postTweetReply(tweetId: string, message: string) {
   const accessTokenSecret = process.env.TWITTER_ACCESS_TOKEN_SECRET;
 
   if (!apiKey || !apiSecret || !accessToken || !accessTokenSecret) {
-    console.log('Twitter OAuth credentials not configured for posting replies.');
+    console.log('Twitter OAuth credentials not configured for posting replies. Mention detected but cannot reply.');
+    console.log('To enable replies, set TWITTER_API_KEY, TWITTER_API_SECRET, TWITTER_ACCESS_TOKEN, and TWITTER_ACCESS_TOKEN_SECRET');
     return { success: false, reason: 'OAuth credentials not configured' };
   }
+  
+  const crypto = require('crypto');
+  const url = 'https://api.twitter.com/2/tweets';
 
-  try {
-    // Correctly and safely import the library only when this function is called.
-    // This avoids the Next.js/Bun hoisting issue during startup.
+  let retryCount = 0;
+  const maxRetries = 3; 
 
-    const oauthClient = new TwitterApi({
-      appKey: apiKey,
-      appSecret: apiSecret,
-      accessToken: accessToken,
-      accessSecret: accessTokenSecret,
-    });
+  while (retryCount < maxRetries) {
+    try {
+      const oauthParams: Record<string, string> = {
+        oauth_consumer_key: apiKey,
+        oauth_token: accessToken,
+        oauth_signature_method: 'HMAC-SHA1',
+        oauth_timestamp: Math.floor(Date.now() / 1000).toString(),
+        oauth_nonce: crypto.randomBytes(16).toString('hex'),
+        oauth_version: '1.0'
+      };
 
-    const botUserId = await getJarvisUserId();
-    
-    const { data } = await oauthClient.v2.tweet({
-      text: message,
-      reply: {
-        in_reply_to_tweet_id: tweetId,
-        exclude_reply_user_ids: [botUserId]
+      const botUserId = await getJarvisUserId();
+      const requestBody = {
+        text: message,
+        reply: {
+          in_reply_to_tweet_id: tweetId,
+          exclude_reply_user_ids: [botUserId]
+        }
+      };
+
+      const bodyString = JSON.stringify(requestBody);
+      
+      const encodedParams = Object.keys(oauthParams)
+        .sort()
+        .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(oauthParams[key])}`)
+        .join('&');
+
+      const baseString = `POST&${encodeURIComponent(url)}&${encodeURIComponent(encodedParams)}`;
+      const signingKey = `${encodeURIComponent(apiSecret)}&${encodeURIComponent(accessTokenSecret)}`;
+      const signature = crypto.createHmac('sha1', signingKey).update(baseString).digest('base64');
+
+      oauthParams.oauth_signature = signature;
+
+      const authHeader = 'OAuth ' + Object.keys(oauthParams)
+        .sort()
+        .map(key => `${key}="${encodeURIComponent(oauthParams[key])}"`)
+        .join(', ');
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': authHeader,
+          'Content-Type': 'application/json',
+        },
+        body: bodyString
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return { success: true, data };
       }
-    });
-    
-    return { success: true, data };
 
-  } catch (error: any) {
-    console.error('Error posting tweet reply:', error);
-    const errorDetail = {
-      title: error.data?.title,
-      detail: error.data?.detail,
-      type: error.data?.type,
-      status: error.data?.status
-    };
-    return { success: false, reason: errorDetail };
+      if (await handleRateLimit(response, 'postTweetReply')) {
+        retryCount++;
+        continue;
+      }
+
+      const errorData = await response.text();
+      console.error(`Twitter API error: ${response.status}`);
+      console.error('Response Headers:', Object.fromEntries(response.headers.entries()));
+      console.error('Error Response Body:', errorData);
+      return { success: false, reason: `API error: ${response.status}`, error: errorData };
+
+    } catch (error) {
+      console.error('Error posting tweet reply:', error);
+      if (retryCount === maxRetries - 1) {
+        return { success: false, reason: 'Network error' };
+      }
+      retryCount++;
+      await sleep(2000 * retryCount);
+    }
   }
+
+  return { success: false, reason: 'Failed after all retries' };
 }
 
 async function replyToTweet(tweetId: string, message: string) {
@@ -433,11 +495,11 @@ async function replyToTweet(tweetId: string, message: string) {
       const result = await postTweetReply(tweetId, message);
 
       if (result.success === false) {
-        console.log(`Could not reply to tweet ${tweetId}: ${JSON.stringify(result.reason)}`);
+        console.log(`Could not reply to tweet ${tweetId}: ${result.reason}`);
         return result;
       }
 
-      console.log(`Successfully replied to tweet ${tweetId} with ID: ${result.data?.id}`);
+      console.log(`Successfully replied to tweet ${tweetId} with ID: ${result.data?.data?.id || result.data?.id}`);
       return result;
     }
 
@@ -446,11 +508,11 @@ async function replyToTweet(tweetId: string, message: string) {
     const result = await postTweetReply(tweetId, truncatedMessage);
 
     if (result.success === false) {
-      console.log(`Could not reply to tweet ${tweetId}: ${JSON.stringify(result.reason)}`);
+      console.log(`Could not reply to tweet ${tweetId}: ${result.reason}`);
       return result;
     }
 
-    console.log(`Successfully replied to tweet ${tweetId} with ID: ${result.data?.id} (truncated from ${message.length} to ${truncatedMessage.length} chars)`);
+    console.log(`Successfully replied to tweet ${tweetId} with ID: ${result.data?.data?.id || result.data?.id} (truncated from ${message.length} to ${truncatedMessage.length} chars)`);
     return result;
   } catch (error) {
     console.error('Error replying to tweet:', error);
