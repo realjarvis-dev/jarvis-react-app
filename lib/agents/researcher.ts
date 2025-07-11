@@ -176,7 +176,10 @@ const get_system_prompt = (
       privyTransfer: `  • privyTransfer  
     - Only accept ETH amounts; afterward ask "What's next?"`,
       kodiak_deposit: `  • kodiak_deposit  
-    - Remind to check opportunities if skipped.`,
+    - Remind to check opportunities if skipped.
+    - If a user wants to deposit a token which is not a part of token pair of the island, you have to give an option to the user to swap the token to either one of the tokens in the token pair.
+    - Before depositing, you have to make sure to swap the user's token to the token in the token pair user has selected.
+    - For example, if a user wants to deposit BERA into ZERO - iBGT island, you have to swap the user's BERA to either iBGT or ZERO. Ask the user to select the token to swap to first before depositing.`,
       kodiak_compound_vault: `  • kodiak_compound_vault  
     - First check bault profitability with kodiak_bault_profitability.
     - Only compound baults that show as profitable.
