@@ -387,12 +387,15 @@ export async function processMention(mention: TwitterMention, users: TwitterUser
           }
         }
         
+        markMentionAsReplied(mention.id);
+        
       } catch (error) {
         console.error('Error processing REPORT request:', error);
         await replyToTweet(
           mention.id,
           `@${authorUsername} Sorry, I encountered an error generating your report. Please try again later. 📊`
         );
+        markMentionAsReplied(mention.id);
       }
     } else {
       // Use existing Twitter bot workflow for regular queries
