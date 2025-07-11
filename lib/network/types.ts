@@ -43,11 +43,12 @@ export interface NetworkConfig {
   /** Flag indicating if this configuration represents a demo/test environment. */
   readonly isDemo: boolean
   /** Optional: The corresponding network enum from alchemy-sdk, if applicable. */
-  readonly alchemyNetwork?: Network
+  readonly alchemyNetwork: Network
   /** The native asset information for this network. */
   readonly nativeAsset: NativeAsset
   /** Optional: Icon for the chain */
   readonly icon?: string // Added as per chain-selector.tsx's ChainIcons
   readonly disabled?: boolean // Added optional disabled field
   readonly viemChain: Chain
+  readonly coingeckoNetworkId: string
 }

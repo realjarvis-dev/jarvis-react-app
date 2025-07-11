@@ -5,6 +5,7 @@ import { TokenPrice } from '@/lib/types/token-price'
 import { getTokenBalances as getTokenBalancesSolana } from '../helius/get-token-balance'
 import { SOLANA_CHAIN_ID } from '../network/config'
 import { TokenData } from '../types/wallet-token'
+import { getTokenUsdPrice } from './get-token-usd-price'
 export async function computeUserUsdBalance(
   walletAddress: string,
   chainId: number,
@@ -26,7 +27,7 @@ export async function computeUserUsdBalance(
       return 0
     }
     const tokenAddresses = tokenBalances.map(token => token.address)
-    tokenPrices = await getTokenUsdPriceBatch(tokenAddresses, chainId)
+    tokenPrices = await getTokenUsdPrice(tokenAddresses, chainId)
   }
 
   const tokenUsdPrices = tokenPrices.reduce((acc, singleTokenPrice) => {

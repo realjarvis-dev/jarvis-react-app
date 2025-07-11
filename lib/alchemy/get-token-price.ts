@@ -18,6 +18,8 @@ export async function getTokenUsdPriceBatch(addresses: string[], alchemyNetwork:
     const responses = await Promise.all(addresses.map(address => fetchSinglePriceAlchemy(address)))
     const data = await Promise.all(responses.map(response => response.json()))
     const result = await Promise.all(data.map(async (item) => {
+        console.log("alchemy", item)
+        console.log("alchemy", item.data[0].prices[0])
         const price = Number(item.data[0].prices[0].value)
         return {
             address: item.data[0].address,

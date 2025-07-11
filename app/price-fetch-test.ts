@@ -1,5 +1,5 @@
 import { getTokenUsdPriceBatch } from "@/lib/enso/get-token-usd-price";
-
+import { getTokenUsdPriceBatch as getTokenUsdPriceBatchCoingecko } from "@/lib/coingecko/get-token-price";
 const commonlyUsedTokens = {
     USDT: '0xdac17f958d2ee523a2206206994597c13d831ec7',
     USDC: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
@@ -50,66 +50,68 @@ async function fetchBatchPriceCoingecko(addresses: string[]) {
     return data;
 }
 
-// Timing function
-async function timeFunction<T>(fn: () => Promise<T>, name: string): Promise<{ result: T, time: number }> {
-    const start = performance.now();
-    const result = await fn();
-    const end = performance.now();
-    const time = end - start;
-    console.log(`${name}: ${time.toFixed(2)}ms`);
-    return { result, time };
-}
+// // Timing function
+// async function timeFunction<T>(fn: () => Promise<T>, name: string): Promise<{ result: T, time: number }> {
+//     const start = performance.now();
+//     const result = await fn();
+//     const end = performance.now();
+//     const time = end - start;
+//     console.log(`${name}: ${time.toFixed(2)}ms`);
+//     return { result, time };
+// }
 
-// Run timing tests
-async function runTimingTests() {
-    const rounds = 5;
-    const alchemyTimes: number[] = [];
-    const ensoTimes: number[] = [];
-    const coingeckoTimes: number[] = [];
+// // Run timing tests
+// async function runTimingTests() {
+//     const rounds = 5;
+//     const alchemyTimes: number[] = [];
+//     const ensoTimes: number[] = [];
+//     const coingeckoTimes: number[] = [];
 
-    console.log(`Running ${rounds} rounds of timing tests...\n`);
+//     console.log(`Running ${rounds} rounds of timing tests...\n`);
 
-    for (let i = 1; i <= rounds; i++) {
-        console.log(`Round ${i}:`);
+//     for (let i = 1; i <= rounds; i++) {
+//         console.log(`Round ${i}:`);
         
-        // Time Alchemy
-        const alchemyResult = await timeFunction(
-            () => fetchBatchPriceAlchemy(commonlyUsedTokensArray),
-            'Alchemy'
-        );
-        alchemyTimes.push(alchemyResult.time);
+//         // Time Alchemy
+//         const alchemyResult = await timeFunction(
+//             () => fetchBatchPriceAlchemy(commonlyUsedTokensArray),
+//             'Alchemy'
+//         );
+//         alchemyTimes.push(alchemyResult.time);
 
-        // Time Enso
-        const ensoResult = await timeFunction(
-            () => getTokenUsdPriceBatch(commonlyUsedTokensArray, 1),
-            'Enso'
-        );
-        ensoTimes.push(ensoResult.time);
+//         // Time Enso
+//         const ensoResult = await timeFunction(
+//             () => getTokenUsdPriceBatch(commonlyUsedTokensArray, 1),
+//             'Enso'
+//         );
+//         ensoTimes.push(ensoResult.time);
 
-        // Time CoinGecko
-        const coingeckoResult = await timeFunction(
-            () => fetchBatchPriceCoingecko(commonlyUsedTokensArray),
-            'CoinGecko'
-        );
-        coingeckoTimes.push(coingeckoResult.time);
+//         // Time CoinGecko
+//         const coingeckoResult = await timeFunction(
+//             () => fetchBatchPriceCoingecko(commonlyUsedTokensArray),
+//             'CoinGecko'
+//         );
+//         coingeckoTimes.push(coingeckoResult.time);
 
-        console.log(''); // Empty line between rounds
-    }
+//         console.log(''); // Empty line between rounds
+//     }
 
-    // Calculate averages
-    const alchemyAvg = alchemyTimes.reduce((a, b) => a + b, 0) / alchemyTimes.length;
-    const ensoAvg = ensoTimes.reduce((a, b) => a + b, 0) / ensoTimes.length;
-    const coingeckoAvg = coingeckoTimes.reduce((a, b) => a + b, 0) / coingeckoTimes.length;
+//     // Calculate averages
+//     const alchemyAvg = alchemyTimes.reduce((a, b) => a + b, 0) / alchemyTimes.length;
+//     const ensoAvg = ensoTimes.reduce((a, b) => a + b, 0) / ensoTimes.length;
+//     const coingeckoAvg = coingeckoTimes.reduce((a, b) => a + b, 0) / coingeckoTimes.length;
 
-    console.log('=== AVERAGE TIMES ===');
-    console.log(`Alchemy: ${alchemyAvg.toFixed(2)}ms`);
-    console.log(`Enso: ${ensoAvg.toFixed(2)}ms`);
-    console.log(`CoinGecko: ${coingeckoAvg.toFixed(2)}ms`);
-    console.log('\n=== DETAILED TIMES ===');
-    console.log(`Alchemy times: [${alchemyTimes.map(t => t.toFixed(2)).join(', ')}]`);
-    console.log(`Enso times: [${ensoTimes.map(t => t.toFixed(2)).join(', ')}]`);
-    console.log(`CoinGecko times: [${coingeckoTimes.map(t => t.toFixed(2)).join(', ')}]`);
-}
+//     console.log('=== AVERAGE TIMES ===');
+//     console.log(`Alchemy: ${alchemyAvg.toFixed(2)}ms`);
+//     console.log(`Enso: ${ensoAvg.toFixed(2)}ms`);
+//     console.log(`CoinGecko: ${coingeckoAvg.toFixed(2)}ms`);
+//     console.log('\n=== DETAILED TIMES ===');
+//     console.log(`Alchemy times: [${alchemyTimes.map(t => t.toFixed(2)).join(', ')}]`);
+//     console.log(`Enso times: [${ensoTimes.map(t => t.toFixed(2)).join(', ')}]`);
+//     console.log(`CoinGecko times: [${coingeckoTimes.map(t => t.toFixed(2)).join(', ')}]`);
+// }
 
-// Run the timing tests
-runTimingTests().catch(console.error);
+// // Run the timing tests
+// runTimingTests().catch(console.error);
+
+// console.log(JSON.stringify(await getTokenUsdPriceBatchCoingecko(commonlyUsedTokensArray), null, 2))

@@ -19,7 +19,8 @@ export const ethereumConfig: NetworkConfig = {
   alchemyNetwork: Network.ETH_MAINNET,
   icon: '/icons/chains/ethereum-eth.svg',
   nativeAsset: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-  viemChain: mainnet
+  viemChain: mainnet,
+  coingeckoNetworkId: 'eth'
 }
 
 export const unichainConfig: NetworkConfig = {
@@ -32,7 +33,8 @@ export const unichainConfig: NetworkConfig = {
   alchemyNetwork: Network.UNICHAIN_MAINNET,
   icon: '/icons/chains/unichain.svg',
   nativeAsset: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-  viemChain: unichain
+  viemChain: unichain,
+  coingeckoNetworkId: "unichain"
 }
 
 export const bnbSmartChainConfig: NetworkConfig = {
@@ -45,7 +47,8 @@ export const bnbSmartChainConfig: NetworkConfig = {
   alchemyNetwork: Network.BNB_MAINNET,
   icon: 'https://altcoinsbox.com/wp-content/uploads/2023/01/bnb-chain-binance-smart-chain-logo.svg',
   nativeAsset: { name: 'BNB', symbol: 'BNB', decimals: 18 },
-  viemChain: bsc
+  viemChain: bsc,
+  coingeckoNetworkId: 'bsc'
 }
 
 export const sonicConfig: NetworkConfig = {
@@ -58,7 +61,8 @@ export const sonicConfig: NetworkConfig = {
   alchemyNetwork: Network.SONIC_MAINNET,
   icon: '/icons/chains/sonic-light.svg',
   nativeAsset: { name: 'S', symbol: 'S', decimals: 18 },
-  viemChain: sonic
+  viemChain: sonic,
+  coingeckoNetworkId: "sonic"
 }
 
 
@@ -73,7 +77,8 @@ export const berachainConfig: NetworkConfig = {
   isDemo: false,
   icon: '/icons/chains/berachain.svg',
   nativeAsset: { name: 'BERA Token', symbol: 'BERA', decimals: 18 },
-  viemChain: berachain
+  viemChain: berachain,
+  coingeckoNetworkId: "berachain"
 }
 
 export const baseConfig: NetworkConfig = {
@@ -87,7 +92,8 @@ export const baseConfig: NetworkConfig = {
   alchemyNetwork: Network.BASE_MAINNET,
   icon: 'https://raw.githubusercontent.com/Aero25x/Cryptocurrencies-Logo/main/Base.svg',
   nativeAsset: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-  viemChain: base
+  viemChain: base,
+  coingeckoNetworkId: 'base'
 }
 
 export const arbitrumConfig: NetworkConfig = {
@@ -101,7 +107,8 @@ export const arbitrumConfig: NetworkConfig = {
   alchemyNetwork: Network.ARB_MAINNET,
   icon: 'https://raw.githubusercontent.com/Aero25x/Cryptocurrencies-Logo/main/Arbitrum.svg',
   nativeAsset: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-  viemChain: arbitrum
+  viemChain: arbitrum,
+  coingeckoNetworkId: "arbitrum"
 }
 
 export const polygonConfig: NetworkConfig = {
@@ -115,7 +122,8 @@ export const polygonConfig: NetworkConfig = {
   alchemyNetwork: Network.MATIC_MAINNET,
   icon: 'https://upload.wikimedia.org/wikipedia/commons/2/21/Polygon_Icon.svg',
   nativeAsset: { name: 'POL', symbol: 'POL', decimals: 18 },
-  viemChain: polygon
+  viemChain: polygon,
+  coingeckoNetworkId: "polygon_pos"
 }
 
 export const optimismConfig: NetworkConfig = {
@@ -129,7 +137,8 @@ export const optimismConfig: NetworkConfig = {
   alchemyNetwork: Network.OPT_MAINNET,
   icon: 'https://raw.githubusercontent.com/Aero25x/Cryptocurrencies-Logo/main/Optimism.svg',
   nativeAsset: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-  viemChain: optimism
+  viemChain: optimism,
+  coingeckoNetworkId: "optimism"
 }
 
 export const mantleConfig: NetworkConfig = {
@@ -142,7 +151,8 @@ export const mantleConfig: NetworkConfig = {
   alchemyNetwork: Network.MANTLE_MAINNET,
   icon: '/icons/chains/mantle.png',
   nativeAsset: { name: 'Mantle', symbol: 'MNT', decimals: 18 },
-  viemChain: mantle
+  viemChain: mantle,
+  coingeckoNetworkId: 'mantle'
 }
 
 export const solanaConfig: NetworkConfig = {
@@ -155,7 +165,8 @@ export const solanaConfig: NetworkConfig = {
   alchemyNetwork: Network.SOLANA_MAINNET,
   icon: '/icons/chains/solana.svg',
   nativeAsset: { name: 'Solana', symbol: 'SOL', decimals: 9 },
-  viemChain: solana
+  viemChain: solana,
+  coingeckoNetworkId: "solana"
 }
 
 /**
@@ -197,7 +208,8 @@ export const TENDERLY_DEMO_CONFIG: NetworkConfig = {
   alchemyNetwork: Network.ETH_MAINNET,
   icon: '/icons/chains/ethereum-eth.svg', // Use Ethereum icon for demo
   nativeAsset: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-  viemChain: mainnet
+  viemChain: mainnet,
+  coingeckoNetworkId: "eth"
 }
 
 /**
