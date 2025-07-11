@@ -2,6 +2,8 @@ import { Cacheable } from '@type-cacheable/core'
 import { ChainMatcher, type Chain } from './fuzzy-chain-matcher'
 import { TokenMatcher, type Token } from './fuzzy-token-matcher'
 
+export const LIFI_SOLANA_CHAIN_ID = 1151111081099710
+
 export class MissingChainError extends Error {
   constructor(message: string) {
     super(message)
@@ -36,6 +38,57 @@ class CrossChainMatcher {
     return CrossChainMatcher.instance
   }
 
+  private getSolanaToken(token: string): Token[] {
+    const solanaCommonTokenMap = {
+      "SOL": {
+        "address": '11111111111111111111111111111111',
+        "decimals": 9,
+        "chainId": LIFI_SOLANA_CHAIN_ID,
+        "symbol": "SOL",
+        "name": "Solana",
+      },
+      "USDC": {
+        "address": 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+        "decimals": 6,
+        "chainId": LIFI_SOLANA_CHAIN_ID,
+        "symbol": "USDC",
+        "name": "USDC",
+      },
+    }
+    if (token in solanaCommonTokenMap) {
+      return [solanaCommonTokenMap[token as keyof typeof solanaCommonTokenMap]]
+    }
+    throw new MissingTokenError(`Oops, we only support bridging to/from SOL and USDC on Solana.`)
+  }
+
+  private validateChainMatches(chainMatches: Chain[], chainString: string, chainType: 'from' | 'to'): Chain {
+    if (chainMatches.length === 0) {
+      throw new MissingChainError(
+        `No chain matches found for ${chainType}ChainString ${chainString}`
+      )
+    }
+    return chainMatches[0]
+  }
+
+  private validateTokenMatches(tokenMatches: Token[], token: string, chainName: string, tokenType: 'from' | 'to'): Token[] {
+    if (tokenMatches.length === 0) {
+      throw new MissingTokenError(
+        `No token matches found for ${tokenType}Token ${token} on chain ${chainName}`
+      )
+    }
+
+    const topMatch = tokenMatches[0]
+    
+    // if top one is an exact match, only keep the top one
+    if (
+      topMatch.symbol.toLowerCase() === token.toLowerCase() ||
+      topMatch.name.toLowerCase() === token.toLowerCase()
+    ) {
+      return [topMatch]
+    } else {
+      return tokenMatches
+    }
+  }
 
   @Cacheable({
     ttlSeconds: 60 * 60 * 24, // 1 day
@@ -50,78 +103,40 @@ class CrossChainMatcher {
     toChain: Chain
     fromTokenList: Token[]
     toTokenList: Token[]
-  }> {
+  }> { 
+
     // match the chains and tokens
-    const fromChainMatches: Chain[] =
-      this.matcher.match(fromChainString)
-    const toChainMatches: Chain[] = this.matcher.match(toChainString)
-
-    if (fromChainMatches.length === 0) {
-      throw new MissingChainError(
-        `No chain matches found for fromChainString ${fromChainString}`
-      )
+    let toChain: Chain
+    let toTokenList: Token[]
+    if (toChainString.toLowerCase() === "solana") {
+      toChain = {
+        "name": "SOL",
+        "coin": "SOL",
+        "id": LIFI_SOLANA_CHAIN_ID,
+      } as Chain
+      toTokenList = this.getSolanaToken(toToken)
+    } else {
+      const toChainMatches: Chain[] = this.matcher.match(toChainString)
+      toChain = this.validateChainMatches(toChainMatches, toChainString, 'to')
+      const toChainId = toChain.id
+      const toTokenMatcher = this.getTokenMatcher(toChainId)
+      const toTokenMatches = toTokenMatcher.match(toToken)
+      toTokenList = this.validateTokenMatches(toTokenMatches, toToken, toChain.name, 'to')
     }
 
-    if (toChainMatches.length === 0) {
-      throw new MissingChainError(
-        `No chain matches found for toChainString ${toChainString}`
-      )
-    }
-
-    // take the top 1 chain id
-    const fromChain = fromChainMatches[0]
-    const toChain = toChainMatches[0]
+    const fromChainMatches: Chain[] = this.matcher.match(fromChainString)
+    const fromChain = this.validateChainMatches(fromChainMatches, fromChainString, 'from')
     const fromChainId = fromChain.id
-    const toChainId = toChain.id
-
     const fromTokenMatcher = this.getTokenMatcher(fromChainId)
-    const toTokenMatcher = this.getTokenMatcher(toChainId)
-
     const fromTokenMatches = fromTokenMatcher.match(fromToken)
-    const toTokenMatches = toTokenMatcher.match(toToken)
-
-    if (fromTokenMatches.length === 0) {
-      throw new MissingTokenError(
-        `No token matches found for fromToken ${fromToken} on chain ${fromChain.name}`
-      )
-    }
-
-    if (toTokenMatches.length === 0) {
-      throw new MissingTokenError(
-        `No token matches found for toToken ${toToken} on chain ${toChain.name}`
-      )
-    }
-
-    // if top one is an exact match, only keep the top one
-    const fromTokenMatch = fromTokenMatches[0]
-    const toTokenMatch = toTokenMatches[0]
-
-    let resultFromToken
-    let resultToToken
-
-    if (
-      fromTokenMatch.symbol.toLowerCase() === fromToken.toLowerCase() ||
-      fromTokenMatch.name.toLowerCase() === fromToken.toLowerCase()
-    ) {
-      resultFromToken = [fromTokenMatch]
-    } else {
-      resultFromToken = fromTokenMatches
-    }
-
-    if (
-      toTokenMatch.symbol.toLowerCase() === toToken.toLowerCase() ||
-      toTokenMatch.name.toLowerCase() === toToken.toLowerCase()
-    ) {
-      resultToToken = [toTokenMatch]
-    } else {
-      resultToToken = toTokenMatches
-    }
+    const fromTokenList = this.validateTokenMatches(fromTokenMatches, fromToken, fromChain.name, 'from')
+    
 
     return {
       fromChain,
       toChain,
-      fromTokenList: resultFromToken,
-      toTokenList: resultToToken
+      fromTokenList,
+      toTokenList
     }
   }
 

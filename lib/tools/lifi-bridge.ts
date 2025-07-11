@@ -6,11 +6,12 @@ import {
   generateLifiBridgeQuote
 } from '../lifi/actions'
 import { parseUsdAmount, getUsdSupportDescription, createUsdConversionInfo, getEffectiveAmount } from '../utils/usd-parser'
-import { getUserEvmWalletAddress } from '../privy/client'
+import { getUserEvmWalletAddress, getUserSolWalletAddress } from '../privy/client'
 import { ToolContext } from '../types/context'
 import { getUserId } from '../privy/client'
 import { balanceChangePub } from '../pubsub/balance-change-pub'
 import { ChainType } from '../network/types'
+import { LIFI_SOLANA_CHAIN_ID } from '../token-matcher/cross-chain-matcher'
 
 
 const bridgeQuoteTool = tool({
@@ -64,14 +65,7 @@ const bridgeQuoteTool = tool({
   }),
   execute: async (params, context: ToolContext) => {
     let {fromChain, toChain, fromToken, toToken, amountIn, slippage, recipient, preference } = params
-    // const fromChain = context?.networkContext?.selectedNetwork || 'ethereum'
-    const fromChainInContext = context?.networkContext?.selectedNetwork
-    // if (fromChainInContext?.toLowerCase() === 'demo') {
-    //   fromChain = 'Ethereum'
-    //   if (toChain.toLowerCase() === 'demo') {
-    //     toChain = 'Ethereum'
-    //   }
-    // }
+
     const isDemo = context?.networkContext?.isDemo
     
     // Parse USD amount using common utility
@@ -95,9 +89,19 @@ const bridgeQuoteTool = tool({
     if (usdConversionResult.isUsd) {
       console.log(`USD Conversion: $${usdConversionResult.usdAmount} -> ${actualAmountIn} ${fromToken.toUpperCase()}`)
     }
-    
-    const userEvmAddress = await getUserEvmWalletAddress()
-    if (!userEvmAddress) {
+    let fromUserAddress;
+    let toUserAddress = recipient;
+    if (!toUserAddress && toChain.toLowerCase() === "solana") {
+      toUserAddress = await getUserSolWalletAddress()
+    } else {
+      toUserAddress = await getUserEvmWalletAddress()
+    }
+    if (fromChain.toLowerCase() === "solana") {
+      fromUserAddress = await getUserSolWalletAddress()
+    } else {
+      fromUserAddress = await getUserEvmWalletAddress()
+    }
+    if (!fromUserAddress || !toUserAddress) {
       return {
         instruction: 'notify user',
         details: "User's embedded wallet not found"
@@ -105,18 +109,18 @@ const bridgeQuoteTool = tool({
     }
     if (isDemo) {
       slippage = '0.3'
-      fromChain = 'Ethereum'
-      toChain = 'Ethereum'
+      // fromChain = 'Ethereum'
+      // toChain = 'Ethereum'
     }
     const result = await generateLifiBridgeQuote(
       fromChain,
       toChain,
       fromToken,
       toToken,
-      userEvmAddress,
+      fromUserAddress,
       actualAmountIn,
       slippage,
-      recipient,
+      toUserAddress,
       false,
       preference
     )
@@ -202,8 +206,19 @@ const bridgeExecuteTool = tool({
     //     details: "Please use the correct fromChain for the tool, or switch to the correct network"
     //   }
     // }
-    const userEvmAddress = await getUserEvmWalletAddress()
-    if (!userEvmAddress) {
+    let fromUserAddress;
+    let toUserAddress = recipient;
+    if (!toUserAddress && toChainId === LIFI_SOLANA_CHAIN_ID) {
+      toUserAddress = await getUserSolWalletAddress()
+    } else {
+      toUserAddress = await getUserEvmWalletAddress()
+    }
+    if (fromChainId === LIFI_SOLANA_CHAIN_ID) {
+      fromUserAddress = await getUserSolWalletAddress()
+    } else {
+      fromUserAddress = await getUserEvmWalletAddress()
+    }
+    if (!fromUserAddress || !toUserAddress) {
       return {
         instruction: 'notify user',
         details: "User's embedded wallet not found"
@@ -215,7 +230,7 @@ const bridgeExecuteTool = tool({
     }
     
     const result =  await executeLifiBridgeTransaction(
-      userEvmAddress,
+      fromUserAddress,
       fromChainId,
       fromToken,
       fromTokenDecimals,
@@ -224,7 +239,7 @@ const bridgeExecuteTool = tool({
       toToken,
       amountIn,
       slippage,
-      recipient,
+      toUserAddress,
       isFromNativeToken,
       fromChainName,
       toChainName,

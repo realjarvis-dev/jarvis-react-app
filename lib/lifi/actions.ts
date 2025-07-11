@@ -26,7 +26,14 @@ import {
 } from './utils'
 import { getConfigByChainId } from '@/lib/network/config'
 
-
+const solanaCommonTokenMap = {
+  SOL: '11111111111111111111111111111111',
+  USDC: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+}
+const solanaCommonTokenDecimals = {
+  SOL: 9,
+  USDC: 6,
+}
 const NATIVE_TOKEN_STRING = '0x0000000000000000000000000000000000000000'
 
 export const generateLifiBridgeQuote = async (
@@ -41,23 +48,12 @@ export const generateLifiBridgeQuote = async (
   autoFuelDestChain?: boolean,
   preference: "FASTEST" | "CHEAPEST" = "FASTEST"
 ) => {
-  // const fromAddress = await getUserEvmWalletAddress()
-  // if (autoFuelDestChain === undefined) {
-  //   autoFuelDestChain = true
-  // }
   autoFuelDestChain = false
 
   if (!recipient) {
     recipient = fromAddress
   }
   try {
-    console.log('fromChain', fromChain)
-    console.log('toChain', toChain)
-    console.log('fromToken', fromToken)
-    console.log('toToken', toToken)
-    console.log('fromAddress', fromAddress)
-    console.log('amountIn', amountIn)
-    console.log('slippage', slippage)
     const {
       fromChain: fromChainMatch,
       toChain: toChainMatch,
@@ -113,7 +109,13 @@ export const generateLifiBridgeQuote = async (
     const inputDecimals = fromTokenSingle.decimals
     const outputDecimals = toTokenSingle.decimals
     const inputAmount = parseUnits(amountIn, inputDecimals).toString()
-
+    console.log(fromChainMatch.id, toChainMatch.id)
+    console.log(fromTokenSingle.symbol, toTokenSingle.symbol)
+    console.log(inputAmount)
+    console.log(fromAddress)
+    console.log(recipient)
+    console.log(slippage)
+    console.log(preference)
     let quote: LifiQuoteResponse
     try {
       quote = await getLifiQuote(
