@@ -109,13 +109,6 @@ export const generateLifiBridgeQuote = async (
     const inputDecimals = fromTokenSingle.decimals
     const outputDecimals = toTokenSingle.decimals
     const inputAmount = parseUnits(amountIn, inputDecimals).toString()
-    console.log(fromChainMatch.id, toChainMatch.id)
-    console.log(fromTokenSingle.symbol, toTokenSingle.symbol)
-    console.log(inputAmount)
-    console.log(fromAddress)
-    console.log(recipient)
-    console.log(slippage)
-    console.log(preference)
     let quote: LifiQuoteResponse
     try {
       quote = await getLifiQuote(
