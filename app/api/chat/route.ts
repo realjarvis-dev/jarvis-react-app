@@ -1,4 +1,5 @@
 import { getServerSideNetworkConfig } from '@/lib/network/gateway'
+import { ChainType } from '@/lib/network/types'
 import { getUser, getUserWallet } from '@/lib/privy/client'
 import { createManualToolStreamResponse } from '@/lib/streaming/create-manual-tool-stream'
 import { createToolCallingStreamResponse } from '@/lib/streaming/create-tool-calling-stream'
@@ -79,8 +80,11 @@ export async function POST(request: Request) {
 
       console.log('serverDeterminedNetworkConfig', serverDeterminedNetworkConfig)
 
+      // Get the selected chain from cookie to pass to createNetworkContext
+      const selectedChain = cookieStore.get('user_selected_network')?.value as ChainType || 'ethereum'
+      
       networkContext = createNetworkContext(
-        serverDeterminedNetworkConfig.id, // Use chainId from the config
+        selectedChain, // Use the selected chain from cookie, not the config ID
         serverDeterminedNetworkConfig.isDemo, // Use isDemo from the config
         serverDeterminedNetworkConfig // Pass the full config as activeNetwork
       )
