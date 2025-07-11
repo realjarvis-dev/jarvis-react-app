@@ -1,8 +1,8 @@
 import { TENDERLY_DEMO_CONFIG } from "@/lib/network/config";
 import { Alchemy } from "alchemy-sdk";
 import { ethers } from "ethers";
+import { TokenData } from "@/lib/types/wallet-token";
 import { SimpleRedisCache } from "./cache/simple-redis-cache";
-import { TokenData } from "./types";
 
 const commonlyUsedTokens = {
     USDT: '0xdac17f958d2ee523a2206206994597c13d831ec7',

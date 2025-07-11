@@ -56,8 +56,9 @@ export async function erc20Transfer(
   amount: string,
   userAddress: string,
   chainId: number,
-  isDemo: boolean = false
-): Promise<{ status: string; hash?: string; message?: string }> {
+  isDemo: boolean = false,
+  timeoutMs: number = 60000
+): Promise<{ status: string; hash?: string; message?: string; timeout?: boolean }> {
   const provider = new ethers.JsonRpcProvider(
     process.env.TEST_RPC_URL || getConfigByChainId(chainId, isDemo).rpcUrl
   )
@@ -79,7 +80,8 @@ export async function erc20Transfer(
       chainId, {
         estimateGas: true
       },
-      isDemo
+      isDemo,
+      timeoutMs
       )
     } else {
       txData = await executeTransaction(
@@ -94,11 +96,23 @@ export async function erc20Transfer(
           estimateGas: false,
           gasLimit: ethers.toQuantity(1000000) as `0x${string}`
         },
-        isDemo
+        isDemo,
+        timeoutMs
       )
     }
 
-    return { status: 'success', hash: txData.hash }
+    // Handle timeout case
+    const status = (txData as any).timeout ? 'pending' : 'success'
+    const message = (txData as any).timeout 
+      ? 'Transaction submitted but confirmation timed out. Check explorer for status.'
+      : undefined
+    
+    return { 
+      status: status, 
+      hash: txData.hash, 
+      message: message,
+      timeout: (txData as any).timeout
+    }
   } catch (error: any) {
     if (error instanceof TransactionError) {
       return { status: 'fail', message: error.message, hash: error.hash }
@@ -312,14 +326,6 @@ export async function signTransaction(
   let encoding: string
 
   if (isLegacyGasModeChain) {
-    console.log('gasLimit', gasLimit)
-    console.log('fixGasPrice', fixGasPrice)
-    console.log('correctNonce', nonce)
-    console.log('chainId', chainId)
-    console.log(
-      'rpc url',
-      process.env.TEST_RPC_URL || getConfigByChainId(chainId, isDemo).rpcUrl
-    )
 
     const res = await privy.walletApi.ethereum.signTransaction({
       walletId: evmWallet.id,
@@ -369,15 +375,17 @@ export async function signTransaction(
 }
 
 /**
- * Broadcast signed transaction and wait for confirmation
+ * Broadcast signed transaction and wait for confirmation with timeout
  *
  * @param signedTransaction Signed transaction from signTransaction
  * @param provider Ethereum provider
+ * @param timeoutMs Timeout in milliseconds (default: 60000ms = 1 minute)
  * @returns Transaction response with hash
  */
 export async function broadcastTransaction(
   signedTransaction: string,
-  provider: ethers.JsonRpcProvider
+  provider: ethers.JsonRpcProvider,
+  timeoutMs: number = 60000
 ) {
   let hash: string | null = null
   try {
@@ -385,8 +393,13 @@ export async function broadcastTransaction(
     const txResponse = await provider.broadcastTransaction(signedTransaction)
     hash = txResponse.hash
 
-    // Wait for confirmation
-    const receipt = await txResponse.wait()
+    // Wait for confirmation with timeout
+    const receipt = await Promise.race([
+      txResponse.wait(),
+      new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Transaction confirmation timeout')), timeoutMs)
+      )
+    ])
 
     return {
       hash: txResponse.hash
@@ -394,6 +407,14 @@ export async function broadcastTransaction(
   } catch (error: any) {
     console.error('Error executing transaction:', error.message)
     if (hash) {
+      // If we have a hash but confirmation failed/timed out, still return the hash
+      if (error.message.includes('Transaction confirmation timeout')) {
+        console.warn(`Transaction ${hash} timed out waiting for confirmation, but may still be valid`)
+        return {
+          hash: hash,
+          timeout: true
+        }
+      }
       throw new TransactionError(
         `Failed to execute transaction (hash: ${hash}): ${error.message}`,
         hash
@@ -463,14 +484,15 @@ export async function executeTransaction(
       }>;
       legacyGasPriceFunction?: (chainId: number) => Promise<number>;
     },
-    isDemo: boolean = false
+    isDemo: boolean = false,
+    timeoutMs: number = 60000
   ) {
     
     // Sign the transaction
     const { signedTransaction, provider } = await signTransaction(txData, chainId, gasOptions, isDemo);
     
     // Broadcast the transaction
-    return await broadcastTransaction(signedTransaction, provider);
+    return await broadcastTransaction(signedTransaction, provider, timeoutMs);
   }
 
 /**

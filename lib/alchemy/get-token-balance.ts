@@ -1,8 +1,8 @@
 import { TokenBalance } from 'alchemy-sdk'
 import { ethers } from 'ethers'
 import { getConfigByChainId, TENDERLY_DEMO_CONFIG } from '../network/config'
+import { TokenData } from '../types/wallet-token'
 import { getAlchemyClient } from './client'
-import { TokenData } from './types'
 import {
   commonlyUsedPTTokensArray,
   commonlyUsedTokensArray,
@@ -51,10 +51,13 @@ export async function getTokenBalances(
 
       const allTokenData: TokenData[] = resolvedTokenData
         .filter(
-          (tokenData): tokenData is NonNullable<typeof tokenData> =>
-            (tokenData !== null) && (tokenData.decimals !== 0) && (tokenData.symbol !== '') && (tokenData.name !== '')
+          (tokenData: TokenData | null): tokenData is TokenData =>
+            tokenData !== null &&
+            tokenData.decimals !== 0 &&
+            tokenData.symbol !== '' &&
+            tokenData.name !== ''
         )
-        .map(tokenData => ({
+        .map((tokenData: TokenData) => ({
           ...tokenData,
           network: networkConfig.displayName
         }))
@@ -157,7 +160,9 @@ export async function getTokenBalances(
       network: networkConfig.displayName,
       decimals: Number(nativeDetails.decimals)
     }
-    erc20Tokens = erc20Tokens.filter(token => {return (token.decimals !== 0) && (token.symbol !== '') && (token.name !== '')})
+    erc20Tokens = erc20Tokens.filter(token => {
+      return token.decimals !== 0 && token.symbol !== '' && token.name !== ''
+    })
     return [nativeTokenData, ...erc20Tokens]
   } catch (error) {
     console.error(`Error in getTokenBalances for chainId ${chainId}:`, error)

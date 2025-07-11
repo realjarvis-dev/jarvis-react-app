@@ -1,6 +1,6 @@
 'use client'
 
-import { TokenData } from '@/lib/alchemy/types'
+import { TokenData } from '@/lib/types/wallet-token'
 import { ToolInvocation } from 'ai'
 import { useEffect, useState } from 'react'
 import { CollapsibleMessage } from './collapsible-message'
@@ -32,7 +32,9 @@ export function WalletBalanceSection({
   const [tokenSymbolArg, setTokenSymbolArg] = useState<string | undefined>(
     undefined
   )
-
+  const [solanaWalletAddressArg, setSolanaWalletAddressArg] = useState<string | undefined>(
+    undefined
+  )
   const [tokens, setTokens] = useState<TokenData[] | undefined>(undefined)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isFilteredView, setIsFilteredView] = useState(false)
@@ -45,9 +47,10 @@ export function WalletBalanceSection({
     if (tool.args) {
       const args = (
         typeof tool.args === 'string' ? JSON.parse(tool.args) : tool.args
-      ) as { wallet_address?: string; token_symbol?: string } // Type assertion
+      ) as { wallet_address?: string; token_symbol?: string; solana_wallet_address?: string } // Type assertion
 
       setWalletAddressArg(args.wallet_address)
+      setSolanaWalletAddressArg(args.solana_wallet_address)
       setTokenSymbolArg(args.token_symbol) // This is the symbol requested by the user
     }
 
@@ -103,6 +106,7 @@ export function WalletBalanceSection({
         <WalletBalance
           title={''} // Pass the determined title to WalletBalance
           walletAddress={walletAddressArg} // Pass the wallet address from args for display
+          solanaWalletAddress={solanaWalletAddressArg}
           tokens={tokens}
           isLoading={isLoading}
           error={errorMessage}

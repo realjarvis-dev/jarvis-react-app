@@ -1,15 +1,21 @@
 import { WalletBalance } from '@/components/wallet-balance'
 import { getUserEvmWalletAddress } from '@/lib/privy/client'
 import { getWalletBalances } from '@/lib/utils/wallet'
+import { redirect } from 'next/navigation'
+import { toast } from 'sonner'
 
 export default async function WalletPage() {
   // Sample wallet address (from the script)
+  let walletAddress;
+  try {
+    walletAddress = await getUserEvmWalletAddress()
 
-  const walletAddress = await getUserEvmWalletAddress()
+  } catch (error) {
+    // not found, redirect to home
+    redirect('/')
+  }
 
   const balances = await getWalletBalances(walletAddress)
-
-  // const primaryWallet = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
 
   return (
     <div className="container mx-auto py-12 ">

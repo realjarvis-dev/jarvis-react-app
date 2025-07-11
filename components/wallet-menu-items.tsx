@@ -9,6 +9,7 @@ import {
     useWallets, type ConnectedSolanaWallet,
     type ConnectedWallet, type WalletWithMetadata
 } from '@privy-io/react-auth';
+import { useFundWallet as useFundWalletSolana } from '@privy-io/react-auth/solana';
 import { ArrowRightCircle, Brain, Unlink2, Wallet } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -78,9 +79,15 @@ export function WalletMenuItems() {
     router.push('/wallet')
   }
   const { fundWallet }= useFundWallet();
+  const { fundWallet: fundWalletSolana } = useFundWalletSolana();
   const handleFundWallet = async () => {
-    if (!evmReady || !evmWalletToDelegate) return;
-    await fundWallet(evmWalletToDelegate.address, {chain: activeNetwork.viemChain});
+    if (!evmReady || !evmWalletToDelegate || !solanaReady || !solanaWalletToDelegate) return;
+    if (activeNetwork.id === 'solana') {
+      
+      await fundWalletSolana(solanaWalletToDelegate.address);
+    } else {
+      await fundWallet(evmWalletToDelegate.address, {chain: activeNetwork.viemChain});
+    }
   }
 
   const handleDelegateEVMWallet = async () => {
@@ -116,10 +123,10 @@ export function WalletMenuItems() {
         <ArrowRightCircle className="mr-2 h-4 w-4" />
         <span>{(isMobile ? (evmWalletAlreadyDelegated ? mobileEvmAlreadyDelegatedText : mobileEvmText) : (evmWalletAlreadyDelegated ? desktopEvmAlreadyDelegatedText : desktopEvmText))}</span>
       </DropdownMenuItem>
-      {/* <DropdownMenuItem onClick={handleDelegateSolWallet} disabled={solanaWalletAlreadyDelegated || !solanaReady || !userReady}>
+      <DropdownMenuItem onClick={handleDelegateSolWallet} disabled={solanaWalletAlreadyDelegated || !solanaReady || !userReady}>
         <ArrowRightCircle className="mr-2 h-4 w-4" />
         <span>{(isMobile ? (solanaWalletAlreadyDelegated ? mobileSolAlreadyDelegatedText : mobileSolText) : (solanaWalletAlreadyDelegated ? desktopSolAlreadyDelegatedText : desktopSolText))}</span>
-      </DropdownMenuItem> */}
+      </DropdownMenuItem>
       <DropdownMenuItem onClick={handleRevokeAllDelegations} disabled={!(solanaWalletAlreadyDelegated || evmWalletAlreadyDelegated) || !solanaReady || !userReady}>
         <Unlink2 className="mr-2 h-4 w-4" />
         <span>{(isMobile ? (solanaWalletAlreadyDelegated || evmWalletAlreadyDelegated ? mobileRevokeText : mobileNoDelegationsText) : (solanaWalletAlreadyDelegated || evmWalletAlreadyDelegated ? desktopRevokeText : desktopNoDelegationsText))}</span>

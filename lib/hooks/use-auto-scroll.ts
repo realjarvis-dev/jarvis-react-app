@@ -1,5 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+// Simple debounce utility
+function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout | null = null
+  return (...args: Parameters<T>) => {
+    if (timeout) clearTimeout(timeout)
+    timeout = setTimeout(() => func(...args), wait)
+  }
+}
+
 interface UseAutoScrollOptions {
   isLoading: boolean
   dependency: number
@@ -7,6 +19,8 @@ interface UseAutoScrollOptions {
   scrollContainer?: React.RefObject<HTMLElement>
   threshold?: number
   intervalMs?: number
+  preventScrollOnAnnotations?: boolean
+  lastMessageId?: string
 }
 
 interface UseAutoScrollReturn {
@@ -23,10 +37,29 @@ export function useAutoScroll({
   isStreaming,
   scrollContainer,
   threshold = 70,
-  intervalMs = 100
+  intervalMs = 100,
+  preventScrollOnAnnotations = false,
+  lastMessageId
 }: UseAutoScrollOptions): UseAutoScrollReturn {
   const anchorRef = useRef<HTMLDivElement>(null)
   const [isAutoScroll, setIsAutoScroll] = useState(true)
+  const lastMessageIdRef = useRef<string | undefined>(lastMessageId)
+  const [isAnnotationUpdate, setIsAnnotationUpdate] = useState(false)
+
+  // Track if this is an annotation-only update
+  useEffect(() => {
+    if (lastMessageId && lastMessageIdRef.current === lastMessageId) {
+      // Same message ID means this is likely an annotation update
+      setIsAnnotationUpdate(true)
+      // Reset after a short delay
+      const timeout = setTimeout(() => setIsAnnotationUpdate(false), 1000)
+      return () => clearTimeout(timeout)
+    } else {
+      // Different message ID means new message
+      setIsAnnotationUpdate(false)
+      lastMessageIdRef.current = lastMessageId
+    }
+  }, [lastMessageId])
 
   // Detect user scroll to toggle auto-scroll
   const handleScroll = useCallback(() => {
@@ -60,8 +93,24 @@ export function useAutoScroll({
     return undefined
   }, [handleScroll, scrollContainer])
 
-  // Scroll to anchor element
+  // Scroll to bottom using scrollHeight for more reliable behavior
   const scrollToBottom = useCallback(() => {
+    if (scrollContainer?.current) {
+      const element = scrollContainer.current
+      element.scrollTo({
+        top: element.scrollHeight,
+        behavior: dependency > 5 ? 'instant' : 'smooth'
+      })
+    } else if (typeof window !== 'undefined') {
+      window.scrollTo({
+        top: document.documentElement.scrollHeight,
+        behavior: dependency > 5 ? 'instant' : 'smooth'
+      })
+    }
+  }, [dependency, scrollContainer])
+
+  // Fallback scroll to anchor element (kept for compatibility)
+  const scrollToAnchor = useCallback(() => {
     if (anchorRef.current) {
       if (scrollContainer?.current) {
         anchorRef.current.scrollIntoView({
@@ -76,10 +125,35 @@ export function useAutoScroll({
     }
   }, [dependency, scrollContainer])
 
+  // Debounced scroll to prevent rapid adjustments
+  const debouncedScrollToBottom = useCallback(() => {
+    const debouncedFn = debounce(scrollToBottom, 200)
+    debouncedFn()
+  }, [scrollToBottom])
+
   // Auto-scroll on updates and during streaming
   useEffect(() => {
     if (!isAutoScroll) return
-    scrollToBottom()
+    
+    // Skip auto-scroll if we're preventing scroll on annotations
+    if (preventScrollOnAnnotations && !isStreaming() && !isLoading) {
+      return
+    }
+    
+    // Skip auto-scroll if this is an annotation update (like related questions)
+    if (isAnnotationUpdate && !isStreaming() && !isLoading) {
+      return
+    }
+    
+    // Use debounced scroll for content updates to prevent jarring movements
+    // Only during non-streaming content additions (like related questions)
+    if (!isStreaming() && !isLoading) {
+      debouncedScrollToBottom()
+    } else {
+      // Use immediate scroll during active streaming for responsiveness
+      scrollToBottom()
+    }
+    
     let intervalId: ReturnType<typeof setInterval> | undefined
     if (isAutoScroll && isStreaming() && isLoading) {
       intervalId = setInterval(scrollToBottom, intervalMs)
@@ -93,6 +167,9 @@ export function useAutoScroll({
     isAutoScroll,
     isStreaming,
     intervalMs,
+    preventScrollOnAnnotations,
+    isAnnotationUpdate,
+    debouncedScrollToBottom,
     scrollToBottom
   ])
 

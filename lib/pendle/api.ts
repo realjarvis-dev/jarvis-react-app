@@ -9,8 +9,9 @@ import {
 // Base URLs for Pendle APIs
 const BASE_URL = 'https://api-v2.pendle.finance/core'
 
-// Create cached axios instance
-const cachedAxios = setupCache(axios, {
+// Create a new axios instance for Pendle API with its own cache
+const pendleAxios = axios.create()
+const cachedPendleAxios = setupCache(pendleAxios, {
   ttl: 60 * 60 * 1000, // 1 hour cache
   interpretHeader: false, // Don't use cache-control headers
   methods: ['get'] // Only cache GET requests
@@ -21,9 +22,11 @@ const cachedAxios = setupCache(axios, {
  * @param chainId - The chain ID to fetch markets for
  * @returns Promise<PendleResponse>
  */
-export async function fetchPendleMarkets(chainId: number): Promise<PendleResponse> {
+export async function fetchPendleMarkets(
+  chainId: number
+): Promise<PendleResponse> {
   try {
-    const response = await cachedAxios.get(
+    const response = await cachedPendleAxios.get(
       `${BASE_URL}/v1/${chainId}/markets/active`,
       {
         timeout: 10000 // 10 seconds timeout
@@ -46,9 +49,11 @@ export async function fetchPendleMarkets(chainId: number): Promise<PendleRespons
  * @param chainId - The chain ID to fetch markets for
  * @returns Promise<PendleResponse>
  */
-export async function fetchInactivePendleMarkets(chainId: number): Promise<PendleResponse> {
+export async function fetchInactivePendleMarkets(
+  chainId: number
+): Promise<PendleResponse> {
   try {
-    const response = await cachedAxios.get(
+    const response = await cachedPendleAxios.get(
       `${BASE_URL}/v1/${chainId}/markets/inactive`,
       {
         timeout: 10000 // 10 seconds timeout
@@ -77,17 +82,16 @@ export function processPendleMarkets(
   active: boolean = true
 ): SimplifiedPendleMarket[] {
   return markets.map(market => {
-    
     // Helper function to remove "1-" prefix from addresses if present
     const cleanAddress = (address: string): string => {
-      return address.startsWith('1-') ? address.substring(2) : address;
-    };
+      return address.startsWith('1-') ? address.substring(2) : address
+    }
 
     // Clean all addresses that might have the "1-" prefix
-    const ptAddress = cleanAddress(market.pt);
-    const ytAddress = cleanAddress(market.yt);
-    const syAddress = cleanAddress(market.sy);
-    const underlyingAssetAddress = cleanAddress(market.underlyingAsset);
+    const ptAddress = cleanAddress(market.pt)
+    const ytAddress = cleanAddress(market.yt)
+    const syAddress = cleanAddress(market.sy)
+    const underlyingAssetAddress = cleanAddress(market.underlyingAsset)
 
     return {
       name: market.name,

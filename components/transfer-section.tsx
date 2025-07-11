@@ -20,7 +20,7 @@ interface PrivyTransferArgs {
 }
 
 interface PrivyTransferResult {
-  status: 'success' | 'fail'
+  status: 'success' | 'fail' | 'pending'
   hash?: string
   error_message?: any
   transaction_details?: {
@@ -30,6 +30,7 @@ interface PrivyTransferResult {
     chain_id?: number
     chain_explorer_name?: string
     explorer_link?: string
+    status_message?: string
   }
 }
 
@@ -53,13 +54,17 @@ export function TransferSection({
       break
     case 'result':
       const toolResult = tool.result as PrivyTransferResult
-      if (toolResult.status === 'success' || toolResult.hash) {
+      if (toolResult.status === 'success' || toolResult.status === 'pending' || toolResult.hash) {
         // const chainId = toolResult.transaction_details?.chain_id || 1 // Default to 1 if not provided
         // const scanLink = getConfigByChainId(chainId, isDemoMode).scanLink
         // console.log('toolResult.transaction_details', toolResult.transaction_details)
+        const statusMessage = toolResult.transaction_details?.status_message || 
+                              (toolResult.status === 'pending' ? 'Transaction submitted but confirmation timed out' : 'Transaction completed!')
+        const statusColor = toolResult.status === 'pending' ? 'text-yellow-600' : 'text-green-600'
+        
         statusDisplay = (
           <div>
-            <p className="text-black-600">Transaction completed!</p>
+            <p className={statusColor}>{statusMessage}</p>
             {toolResult.hash && toolResult.transaction_details?.explorer_link && (
               <p>
                 View on{' '}
