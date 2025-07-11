@@ -45,6 +45,7 @@ export function useAutoScroll({
   const [isAutoScroll, setIsAutoScroll] = useState(true)
   const lastMessageIdRef = useRef<string | undefined>(lastMessageId)
   const [isAnnotationUpdate, setIsAnnotationUpdate] = useState(false)
+  const userScrolledAwayDuringStreaming = useRef(false)
 
   // Track if this is an annotation-only update
   useEffect(() => {
@@ -58,6 +59,8 @@ export function useAutoScroll({
       // Different message ID means new message
       setIsAnnotationUpdate(false)
       lastMessageIdRef.current = lastMessageId
+      // Reset the scroll-away flag when a new message starts
+      userScrolledAwayDuringStreaming.current = false
     }
   }, [lastMessageId])
 
@@ -68,14 +71,54 @@ export function useAutoScroll({
       const atBottom =
         element.scrollHeight - element.scrollTop - element.clientHeight <=
         threshold
-      setIsAutoScroll(atBottom)
+      
+      // If user scrolls away during streaming, mark it to prevent re-enabling
+      if (isStreaming() && isLoading && !atBottom && isAutoScroll) {
+        userScrolledAwayDuringStreaming.current = true
+      }
+      
+      // Only re-enable auto-scroll if we're not in the middle of streaming
+      // or if streaming has finished
+      if (!isStreaming() || !isLoading) {
+        setIsAutoScroll(atBottom)
+        // Reset the flag when streaming stops
+        if (!isStreaming()) {
+          userScrolledAwayDuringStreaming.current = false
+        }
+      } else if (atBottom && !userScrolledAwayDuringStreaming.current) {
+        // Only enable auto-scroll during streaming if user hasn't scrolled away
+        setIsAutoScroll(true)
+      } else if (!atBottom) {
+        // Always disable auto-scroll when user is not at bottom
+        setIsAutoScroll(false)
+      }
     } else if (typeof window !== 'undefined') {
       const scrollHeight = document.documentElement.scrollHeight
       const atBottom =
         window.innerHeight + window.scrollY >= scrollHeight - threshold
-      setIsAutoScroll(atBottom)
+      
+      // If user scrolls away during streaming, mark it to prevent re-enabling
+      if (isStreaming() && isLoading && !atBottom && isAutoScroll) {
+        userScrolledAwayDuringStreaming.current = true
+      }
+      
+      // Only re-enable auto-scroll if we're not in the middle of streaming
+      // or if streaming has finished
+      if (!isStreaming() || !isLoading) {
+        setIsAutoScroll(atBottom)
+        // Reset the flag when streaming stops
+        if (!isStreaming()) {
+          userScrolledAwayDuringStreaming.current = false
+        }
+      } else if (atBottom && !userScrolledAwayDuringStreaming.current) {
+        // Only enable auto-scroll during streaming if user hasn't scrolled away
+        setIsAutoScroll(true)
+      } else if (!atBottom) {
+        // Always disable auto-scroll when user is not at bottom
+        setIsAutoScroll(false)
+      }
     }
-  }, [threshold, scrollContainer])
+  }, [threshold, scrollContainer, isStreaming, isLoading, isAutoScroll])
 
   useEffect(() => {
     if (scrollContainer?.current) {
@@ -133,8 +176,6 @@ export function useAutoScroll({
 
   // Auto-scroll on updates and during streaming
   useEffect(() => {
-    if (!isAutoScroll) return
-    
     // Skip auto-scroll if we're preventing scroll on annotations
     if (preventScrollOnAnnotations && !isStreaming() && !isLoading) {
       return
@@ -148,15 +189,37 @@ export function useAutoScroll({
     // Use debounced scroll for content updates to prevent jarring movements
     // Only during non-streaming content additions (like related questions)
     if (!isStreaming() && !isLoading) {
-      debouncedScrollToBottom()
-    } else {
+      if (isAutoScroll) {
+        debouncedScrollToBottom()
+      }
+    } else if (isAutoScroll) {
       // Use immediate scroll during active streaming for responsiveness
       scrollToBottom()
     }
     
     let intervalId: ReturnType<typeof setInterval> | undefined
+    // Only start interval if user is still at bottom and wants auto-scroll
     if (isAutoScroll && isStreaming() && isLoading) {
-      intervalId = setInterval(scrollToBottom, intervalMs)
+      intervalId = setInterval(() => {
+        // Double-check if user is still at bottom before each scroll
+        // This prevents auto-scroll if user scrolled away during streaming
+        if (scrollContainer?.current) {
+          const element = scrollContainer.current
+          const atBottom =
+            element.scrollHeight - element.scrollTop - element.clientHeight <=
+            threshold
+          if (atBottom) {
+            scrollToBottom()
+          }
+        } else if (typeof window !== 'undefined') {
+          const scrollHeight = document.documentElement.scrollHeight
+          const atBottom =
+            window.innerHeight + window.scrollY >= scrollHeight - threshold
+          if (atBottom) {
+            scrollToBottom()
+          }
+        }
+      }, intervalMs)
     }
     return () => {
       if (intervalId) clearInterval(intervalId)
@@ -170,7 +233,9 @@ export function useAutoScroll({
     preventScrollOnAnnotations,
     isAnnotationUpdate,
     debouncedScrollToBottom,
-    scrollToBottom
+    scrollToBottom,
+    scrollContainer,
+    threshold
   ])
 
   return { anchorRef, isAutoScroll }
