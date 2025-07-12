@@ -317,7 +317,9 @@ export async function processMention(mention: TwitterMention, users: TwitterUser
       return;
     }
 
+    // Filter 3: Check if this is bot's own tweet by ID
     if (botTweetIds.has(mention.id)) {
+      console.log(`🛑 FILTER 3 - Skipping bot's own tweet: ${mention.id} (stored in botTweetIds set of ${botTweetIds.size} IDs)`);
       return;
     }
 
@@ -392,8 +394,10 @@ export async function processMention(mention: TwitterMention, users: TwitterUser
         const result_tweet = await replyToTweet(mention.id, reportResponse);
         console.log(`✅ REPORT response sent to @${authorUsername}: ${result.shareUrl}`);
         
-        if (result_tweet && result_tweet.data?.id) {
-          botTweetIds.add(result_tweet.data.id);
+        if (result_tweet && (result_tweet.data?.data?.id || result_tweet.data?.id)) {
+          const tweetId = result_tweet.data?.data?.id || result_tweet.data?.id;
+          console.log(`📝 Storing bot tweet ID for REPORT: ${tweetId}`);
+          botTweetIds.add(tweetId);
           if (botTweetIds.size > 1000) {
             const tweetIdsArray = Array.from(botTweetIds);
             botTweetIds = new Set(tweetIdsArray.slice(-500));
@@ -418,9 +422,10 @@ export async function processMention(mention: TwitterMention, users: TwitterUser
       const response = await processTwitterQuery(baseQuery, mention.author_id);
       const result = await replyToTweet(mention.id, `@${authorUsername} ${response}`);
       
-      if (result && result.data?.id) {
-        console.log(`📤 Regular reply posted with ID: ${result.data.id}`);
-        botTweetIds.add(result.data.id);
+      if (result && (result.data?.data?.id || result.data?.id)) {
+        const tweetId = result.data?.data?.id || result.data?.id;
+        console.log(`📤 Regular reply posted with ID: ${tweetId}`);
+        botTweetIds.add(tweetId);
         if (botTweetIds.size > 1000) {
           const tweetIdsArray = Array.from(botTweetIds);
           botTweetIds = new Set(tweetIdsArray.slice(-500));
