@@ -19,10 +19,24 @@ async function getTokenBalancesWithErrorHandling(
     return { tokens, network: networkName }
   } catch (error) {
     console.error(`Error fetching balances for ${networkName}:`, error)
+    
+    // Provide more user-friendly error messages for common issues
+    let userFriendlyError = error instanceof Error ? error.message : String(error)
+    
+    if (userFriendlyError.includes('EAPIs not enabled')) {
+      userFriendlyError = 'Enhanced APIs not enabled for this network on current plan'
+    } else if (userFriendlyError.includes('not enabled for this app')) {
+      userFriendlyError = 'Network not enabled in API configuration'
+    } else if (userFriendlyError.includes('HTTP error! status: 401')) {
+      userFriendlyError = 'API authentication failed'
+    } else if (userFriendlyError.includes('HTTP error! status: 403')) {
+      userFriendlyError = 'API access forbidden - check network permissions'
+    }
+    
     return {
       tokens: [],
       network: networkName,
-      error: error instanceof Error ? error.message : String(error)
+      error: userFriendlyError
     }
   }
 }

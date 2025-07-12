@@ -76,7 +76,13 @@ export async function getTokenBalances(
     }
 
     // Path 2: Standard Alchemy Network (or networks with an Alchemy client)
-    const alchemy = getAlchemyClient(chainId, false) // isDemo is false here
+    let alchemy: any
+    try {
+      alchemy = getAlchemyClient(chainId, false) // isDemo is false here
+    } catch (clientError) {
+      console.warn(`Alchemy client creation failed for chainId ${chainId}:`, clientError)
+      alchemy = null
+    }
 
     if (!alchemy) {
       // Fallback to RPC for native balance if Alchemy client is not found but RPC URL exists
@@ -147,6 +153,12 @@ export async function getTokenBalances(
         `Error fetching ERC20 balances via Alchemy for chainId ${chainId}:`,
         err
       )
+      
+      // Check if this is a known API configuration issue
+      const errorMessage = err instanceof Error ? err.message : String(err)
+      if (errorMessage.includes('EAPIs not enabled')) {
+        console.warn(`Enhanced APIs not enabled for chainId ${chainId} on current Alchemy plan - will only fetch native balance`)
+      }
       // Continue to fetch native balance even if ERC20 fails
     }
 
