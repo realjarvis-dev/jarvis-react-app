@@ -1,4 +1,4 @@
-import { getJarvisUserId, fetchMentions, processMention, setLastProcessedMentionId, fetchRecentMentionsForInitialization } from './twitter-mention-handler';
+import { fetchMentions, fetchRecentMentionsForInitialization, getJarvisUserId, processMention, setLastProcessedMentionId } from './twitter-mention-handler';
 
 let isInitialized = false;
 let pollingInterval: NodeJS.Timeout | null = null;

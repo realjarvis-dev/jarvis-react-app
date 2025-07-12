@@ -231,6 +231,20 @@ export async function getSharedChat(id: string) {
     return null
   }
 
+  // Parse the messages if they're stored as a string (same logic as getChat)
+  if (typeof chat.messages === 'string') {
+    try {
+      chat.messages = JSON.parse(chat.messages)
+    } catch (error) {
+      chat.messages = []
+    }
+  }
+
+  // Ensure messages is always an array
+  if (!Array.isArray(chat.messages)) {
+    chat.messages = []
+  }
+
   return chat
 }
 
