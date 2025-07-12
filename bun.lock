@@ -13,6 +13,7 @@
         "@ai-sdk/openai": "^1.3.12",
         "@ai-sdk/xai": "^1.1.10",
         "@chainlink/contracts": "^1.4.0",
+        "@ensofinance/sdk": "^1.1.6",
         "@fortawesome/free-solid-svg-icons": "^6.7.2",
         "@fortawesome/react-fontawesome": "^0.2.2",
         "@hpke/chacha20poly1305": "^1.6.2",
@@ -42,6 +43,7 @@
         "@solana/web3.js": "^1.98.2",
         "@tailwindcss/typography": "^0.5.12",
         "@tanstack/react-query": "^5.80.6",
+        "@tenderly/sdk": "^0.3.1",
         "@type-cacheable/core": "^14.1.0",
         "@upstash/redis": "^1.34.0",
         "@vercel/analytics": "^1.5.0",
@@ -264,6 +266,8 @@
     "@emotion/memoize": ["@emotion/memoize@0.8.1", "", {}, "sha512-W2P2c/VRW1/1tLox0mVUalvnWXxavmv/Oum2aPsRcoDJuob75FC3Y8FbpfLwUegRcxINtGUMPq0tFCvYNTBXNA=="],
 
     "@emotion/unitless": ["@emotion/unitless@0.8.1", "", {}, "sha512-KOEGMu6dmJZtpadb476IsZBclKvILjopjUii3V+7MnXIQCYh8W3NgNcgwo21n9LXZX6EDIKvqfjYxXebDwxKmQ=="],
+
+    "@ensofinance/sdk": ["@ensofinance/sdk@1.1.6", "", { "dependencies": { "axios": ">=1.8.2" } }, "sha512-9eckI5lS8pjdndnRIwm1FIOVf5mhSi3uCb1Drfcm3Eaagu1ICbih1CyFFkTpN1b8z7x9sBS4xIemxVullgQhLg=="],
 
     "@eslint-community/eslint-utils": ["@eslint-community/eslint-utils@4.7.0", "", { "dependencies": { "eslint-visitor-keys": "^3.4.3" }, "peerDependencies": { "eslint": "^6.0.0 || ^7.0.0 || >=8.0.0" } }, "sha512-dyybb3AcajC7uha6CvhdVRJqaKyn7w2YKqKyAN37NKYgZT36w+iRb0Dymmc5qEJ549c/S31cMMSFd75bteCpCw=="],
 
@@ -790,6 +794,8 @@
     "@tanstack/react-virtual": ["@tanstack/react-virtual@3.13.8", "", { "dependencies": { "@tanstack/virtual-core": "3.13.8" }, "peerDependencies": { "react": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0", "react-dom": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0" } }, "sha512-meS2AanUg50f3FBSNoAdBSRAh8uS0ue01qm7zrw65KGJtiXB9QXfybqZwkh4uFpRv2iX/eu5tjcH5wqUpwYLPg=="],
 
     "@tanstack/virtual-core": ["@tanstack/virtual-core@3.13.8", "", {}, "sha512-BT6w89Hqy7YKaWewYzmecXQzcJh6HTBbKYJIIkMaNU49DZ06LoTV3z32DWWEdUsgW6n1xTmwTLs4GtWrZC261w=="],
+
+    "@tenderly/sdk": ["@tenderly/sdk@0.3.1", "", { "dependencies": { "axios": "^1.3.4" } }, "sha512-5WJjOqew7sYJNjVnNrqYbecqahBF+dEctk75G2ZO2JuDMUaLbbiloEYMelaPAMkBifNbN1w1qppG2KWBnt3Pkg=="],
 
     "@tootallnate/once": ["@tootallnate/once@2.0.0", "", {}, "sha512-XCuKFP5PS55gnMVu3dty8KPatLqUoy/ZYzDzAGCQ8JNFCkLXzmI7vNHCR+XpbZaMWQK/vQubr7PkYq8g470J/A=="],
 

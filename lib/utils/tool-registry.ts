@@ -42,6 +42,15 @@ import {
 import { NetworkContext, ToolContext } from '../types/context'
 import { xStockList } from '../tools/xstock-search'
 import { jupiterExecute, jupiterQuote } from '../tools/jupiter-trade'
+import { 
+  ensoYieldMaximizer, 
+  ensoExecuteStrategy 
+} from '../tools/enso-yield-maximizer'
+import { 
+  ensoCrossChainOptimizer, 
+  ensoLPOptimizer, 
+  ensoStablecoinOptimizer 
+} from '../tools/enso-cross-chain-optimizer'
 
 /**
  * Interface for tool definition with schema and execution function
@@ -824,6 +833,112 @@ export function createToolRegistry(model: string): ToolRegistry {
     } as any),
     category: ToolCategory.WEB3_WRITE,
     supportedNetworks: ['solana']
+  })
+
+  // Enso Alpha Strategy Tools
+  registry.registerTool({
+    name: 'enso_yield_maximizer',
+    description: 'Find and execute the highest yielding DeFi opportunities across 140+ protocols using Enso',
+    schema: ensoYieldMaximizer.parameters,
+    execute: async (params, context) => ensoYieldMaximizer.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3_READ,
+    supportedNetworks: [
+      'ethereum',
+      'base', 
+      'arbitrum',
+      'polygon',
+      'optimism',
+      'bsc',
+      'demo'
+    ]
+  })
+
+  registry.registerTool({
+    name: 'enso_cross_chain_optimizer',
+    description: 'Find and execute the best yield opportunities across multiple blockchain networks',
+    schema: ensoCrossChainOptimizer.parameters,
+    execute: async (params, context) => ensoCrossChainOptimizer.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3_READ,
+    supportedNetworks: [
+      'ethereum',
+      'base',
+      'arbitrum', 
+      'polygon',
+      'optimism',
+      'bsc',
+      'demo'
+    ]
+  })
+
+  registry.registerTool({
+    name: 'enso_lp_optimizer',
+    description: 'Find and enter the best liquidity provider positions for maximum yield',
+    schema: ensoLPOptimizer.parameters,
+    execute: async (params, context) => ensoLPOptimizer.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3_READ,
+    supportedNetworks: [
+      'ethereum',
+      'base',
+      'arbitrum',
+      'polygon', 
+      'optimism',
+      'bsc',
+      'demo'
+    ]
+  })
+
+  registry.registerTool({
+    name: 'enso_stablecoin_optimizer',
+    description: 'Optimize stablecoin yields by finding the highest APY opportunities across lending protocols',
+    schema: ensoStablecoinOptimizer.parameters,
+    execute: async (params, context) => ensoStablecoinOptimizer.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3_READ,
+    supportedNetworks: [
+      'ethereum',
+      'base',
+      'arbitrum',
+      'polygon',
+      'optimism', 
+      'bsc',
+      'demo'
+    ]
+  })
+
+  registry.registerTool({
+    name: 'enso_execute_strategy',
+    description: 'Execute a previously simulated Enso strategy after user confirmation',
+    schema: ensoExecuteStrategy.parameters,
+    execute: async (params, context) => ensoExecuteStrategy.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3_WRITE,
+    supportedNetworks: [
+      'ethereum',
+      'base',
+      'arbitrum',
+      'polygon',
+      'optimism',
+      'bsc',
+      'demo'
+    ]
   })
 
   return registry
