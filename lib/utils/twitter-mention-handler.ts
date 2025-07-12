@@ -60,10 +60,13 @@ export function setLastProcessedMentionId(id: string): void {
 }
 
 export function hasRepliedToMention(mentionId: string): boolean {
-  return repliedMentions.has(mentionId);
+  const hasReplied = repliedMentions.has(mentionId);
+  console.log(`🔍 Checking if already replied to ${mentionId}: ${hasReplied}`);
+  return hasReplied;
 }
 
 export function markMentionAsReplied(mentionId: string): void {
+  console.log(`🔒 Marking mention ${mentionId} as replied (total tracked: ${repliedMentions.size})`);
   repliedMentions.add(mentionId);
   if (repliedMentions.size > 1000) {
     const mentionsArray = Array.from(repliedMentions);
@@ -284,10 +287,17 @@ export async function processMention(mention: TwitterMention, users: TwitterUser
     const author = users.find(user => user.id === mention.author_id);
     const authorUsername = author?.username || 'unknown';
 
+    console.log(`🔍 Processing mention ${mention.id} from @${authorUsername}`);
+
+    // Filter 1: Already replied check
     if (hasRepliedToMention(mention.id)) {
+      console.log(`🛑 FILTER 1 - Already replied to mention ${mention.id} from @${authorUsername}`);
       return;
     }
+
+    // Filter 2: Bot replying to itself check (username)
     if (authorUsername === 'JarvisCryptoAI') {
+      console.log(`🛑 FILTER 2a - Bot replying to itself (username): ${authorUsername}`);
       return;
     }
 
@@ -321,12 +331,15 @@ export async function processMention(mention: TwitterMention, users: TwitterUser
     let botUserId: string;
     try {
       botUserId = await getJarvisUserId();
+      console.log(`🤖 Bot user ID: ${botUserId}, Mention author ID: ${mention.author_id}`);
     } catch (error) {
       console.warn('Could not verify bot user ID, skipping mention processing to prevent recursive loops');
       return;
     }
 
+    // Filter 2b: Bot replying to itself check (user ID)
     if (mention.author_id === botUserId) {
+      console.log(`🛑 FILTER 2b - Bot replying to itself (user ID): ${mention.author_id}`);
       return;
     }
 
@@ -387,6 +400,7 @@ export async function processMention(mention: TwitterMention, users: TwitterUser
           }
         }
         
+        console.log(`✅ REPORT reply sent, marking mention ${mention.id} as replied`);
         markMentionAsReplied(mention.id);
         
       } catch (error) {
@@ -395,20 +409,24 @@ export async function processMention(mention: TwitterMention, users: TwitterUser
           mention.id,
           `@${authorUsername} Sorry, I encountered an error generating your report. Please try again later. 📊`
         );
+        console.log(`❌ REPORT error reply sent, marking mention ${mention.id} as replied`);
         markMentionAsReplied(mention.id);
       }
     } else {
       // Use existing Twitter bot workflow for regular queries
+      console.log(`📝 Processing regular query for mention ${mention.id}: "${baseQuery}"`);
       const response = await processTwitterQuery(baseQuery, mention.author_id);
       const result = await replyToTweet(mention.id, `@${authorUsername} ${response}`);
       
       if (result && result.data?.id) {
+        console.log(`📤 Regular reply posted with ID: ${result.data.id}`);
         botTweetIds.add(result.data.id);
         if (botTweetIds.size > 1000) {
           const tweetIdsArray = Array.from(botTweetIds);
           botTweetIds = new Set(tweetIdsArray.slice(-500));
         }
       }
+      console.log(`✅ Regular reply sent, marking mention ${mention.id} as replied`);
     }
 
     markMentionAsReplied(mention.id);
@@ -528,6 +546,7 @@ async function postTweetReply(tweetId: string, message: string) {
 }
 
 async function replyToTweet(tweetId: string, message: string) {
+  console.log(`🔄 Attempting to reply to tweet ${tweetId} with message: "${message.substring(0, 50)}..."`);
   try {
     const maxLength = 280;
 
