@@ -12,6 +12,7 @@ interface WalletBalanceToolResult {
   tokens: TokenData[]
   filtered?: boolean
   filter_symbol?: string
+  networkErrors?: { network: string, error: string }[]
 }
 
 interface WalletBalanceSectionProps {
@@ -36,6 +37,7 @@ export function WalletBalanceSection({
     undefined
   )
   const [tokens, setTokens] = useState<TokenData[] | undefined>(undefined)
+  const [networkErrors, setNetworkErrors] = useState<{ network: string, error: string }[] | undefined>(undefined)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isFilteredView, setIsFilteredView] = useState(false)
   const [displaySymbol, setDisplaySymbol] = useState<string | undefined>(
@@ -62,6 +64,7 @@ export function WalletBalanceSection({
 
         if (result.success) {
           setTokens(result.tokens)
+          setNetworkErrors(result.networkErrors)
           setErrorMessage(null)
           setIsFilteredView(result.filtered || false)
           // Use filter_symbol from result if present (tool confirmed specific filter),
@@ -69,6 +72,7 @@ export function WalletBalanceSection({
           setDisplaySymbol(result.filter_symbol || tokenSymbolArg)
         } else {
           setTokens([])
+          setNetworkErrors(undefined)
           setErrorMessage(result.message || 'Failed to fetch wallet balances.')
           setIsFilteredView(false) // Reset filtered view on error
           setDisplaySymbol(tokenSymbolArg) // Still show what was attempted if error
@@ -83,6 +87,7 @@ export function WalletBalanceSection({
     } else if (tool.state === 'call') {
       // Reset previous results when a new call is in progress
       setTokens(undefined)
+      setNetworkErrors(undefined)
       setErrorMessage(null)
     }
   }, [tool, tokenSymbolArg]) // tokenSymbolArg dependency ensures displaySymbol updates if args change
@@ -108,6 +113,7 @@ export function WalletBalanceSection({
           walletAddress={walletAddressArg} // Pass the wallet address from args for display
           solanaWalletAddress={solanaWalletAddressArg}
           tokens={tokens}
+          networkErrors={networkErrors}
           isLoading={isLoading}
           error={errorMessage}
           className="mt-2 w-full shadow-sm"
