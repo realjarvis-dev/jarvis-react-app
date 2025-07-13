@@ -8,6 +8,7 @@ import {
   commonlyUsedTokensArray,
   getDemoTokenData
 } from './utils'
+import { getGoldRushWalletBalances, isGoldRushSupported } from '../goldrush/get-token-balance'
 
 /**
  * Fetches both ERC20 and native token balances for a given wallet address and chain.
@@ -85,15 +86,43 @@ export async function getTokenBalances(
     }
 
     if (!alchemy) {
-      // Fallback to RPC for native balance if Alchemy client is not found but RPC URL exists
+      // For networks like Mantle where Alchemy doesn't support token APIs,
+      // try GoldRush as a fallback for complete token balance support
+      console.warn(
+        `Alchemy client not found for chainId ${chainId}. Attempting GoldRush fallback.`
+      )
+      
+      if (isGoldRushSupported(chainId)) {
+        try {
+          const goldRushBalances = await getGoldRushWalletBalances(
+            walletAddress,
+            chainId,
+            networkConfig.displayName
+          )
+          
+          if (goldRushBalances.length > 0) {
+            console.info(`Successfully fetched ${goldRushBalances.length} token balances via GoldRush for ${networkConfig.displayName}`)
+            return goldRushBalances
+          }
+        } catch (goldRushError) {
+          console.warn(`GoldRush fallback failed for chainId ${chainId}:`, goldRushError)
+        }
+      } else {
+        console.warn(`ChainId ${chainId} not supported by GoldRush API`)
+      }
+      
+      // Final fallback to RPC for native balance only
       if (networkConfig.rpcUrl) {
         console.warn(
-          `Alchemy client not found for chainId ${chainId}. Attempting to fetch native balance via RPC.`
+          `Falling back to RPC for native balance only for chainId ${chainId}.`
         )
         try {
           const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl)
           const nativeBalance = await provider.getBalance(walletAddress)
           const nativeDetails = networkConfig.nativeAsset
+          
+          console.info(`Note: Only native balance available for ${networkConfig.displayName} - ERC-20 tokens not supported`)
+          
           return [
             {
               address: ethers.ZeroAddress,
@@ -109,14 +138,14 @@ export async function getTokenBalances(
           ]
         } catch (rpcError) {
           console.error(
-            `Failed to fetch native balance via RPC for ${chainId} after Alchemy client missing:`,
+            `Failed to fetch native balance via RPC for ${chainId}:`,
             rpcError
           )
-          return [] // Return empty if RPC fallback also fails
+          return [] // Return empty if all fallbacks fail
         }
       }
       console.error(
-        `Alchemy client not available for chainId: ${chainId}, and no RPC fallback possible.`
+        `All token balance methods failed for chainId: ${chainId}.`
       )
       return []
     }
@@ -157,7 +186,32 @@ export async function getTokenBalances(
       // Check if this is a known API configuration issue
       const errorMessage = err instanceof Error ? err.message : String(err)
       if (errorMessage.includes('EAPIs not enabled')) {
-        console.warn(`Enhanced APIs not enabled for chainId ${chainId} on current Alchemy plan - will only fetch native balance`)
+        console.warn(`Enhanced APIs not enabled for chainId ${chainId} on current Alchemy plan - trying GoldRush fallback for ERC-20 tokens`)
+        
+        // Try GoldRush fallback for ERC-20 tokens when Alchemy Enhanced APIs fail
+        if (isGoldRushSupported(chainId)) {
+          try {
+            const goldRushBalances = await getGoldRushWalletBalances(
+              walletAddress,
+              chainId,
+              networkConfig.displayName
+            )
+            
+            // Filter out native token since we'll get it from Alchemy
+            erc20Tokens = goldRushBalances.filter(token => 
+              token.address !== ethers.ZeroAddress && 
+              token.address !== '0x0000000000000000000000000000000000000000'
+            )
+            
+            if (erc20Tokens.length > 0) {
+              console.info(`Successfully fetched ${erc20Tokens.length} ERC-20 tokens via GoldRush fallback`)
+            }
+          } catch (goldRushError) {
+            console.warn(`GoldRush ERC-20 fallback failed for chainId ${chainId}:`, goldRushError)
+          }
+        } else {
+          console.warn(`GoldRush fallback not available for chainId ${chainId}`)
+        }
       }
       // Continue to fetch native balance even if ERC20 fails
     }
