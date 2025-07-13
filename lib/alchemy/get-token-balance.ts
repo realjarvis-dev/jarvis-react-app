@@ -8,7 +8,6 @@ import {
   commonlyUsedTokensArray,
   getDemoTokenData
 } from './utils'
-import { getMoralisWalletBalances } from '../moralis/get-token-balance'
 
 /**
  * Fetches both ERC20 and native token balances for a given wallet address and chain.
@@ -86,40 +85,15 @@ export async function getTokenBalances(
     }
 
     if (!alchemy) {
-      // For networks like Mantle where Alchemy doesn't support token APIs,
-      // try Moralis as a fallback for complete token balance support
-      console.warn(
-        `Alchemy client not found for chainId ${chainId}. Attempting Moralis fallback.`
-      )
-      
-      try {
-        const moralisBalances = await getMoralisWalletBalances(
-          walletAddress,
-          chainId,
-          networkConfig.nativeAsset,
-          networkConfig.displayName
-        )
-        
-        if (moralisBalances.length > 0) {
-          console.info(`Successfully fetched ${moralisBalances.length} token balances via Moralis for ${networkConfig.displayName}`)
-          return moralisBalances
-        }
-      } catch (moralisError) {
-        console.warn(`Moralis fallback failed for chainId ${chainId}:`, moralisError)
-      }
-      
-      // Final fallback to RPC for native balance only
+      // Fallback to RPC for native balance if Alchemy client is not found but RPC URL exists
       if (networkConfig.rpcUrl) {
         console.warn(
-          `Falling back to RPC for native balance only for chainId ${chainId}.`
+          `Alchemy client not found for chainId ${chainId}. Attempting to fetch native balance via RPC.`
         )
         try {
           const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl)
           const nativeBalance = await provider.getBalance(walletAddress)
           const nativeDetails = networkConfig.nativeAsset
-          
-          console.info(`Note: Only native balance available for ${networkConfig.displayName} - ERC-20 tokens not supported`)
-          
           return [
             {
               address: ethers.ZeroAddress,
@@ -135,14 +109,14 @@ export async function getTokenBalances(
           ]
         } catch (rpcError) {
           console.error(
-            `Failed to fetch native balance via RPC for ${chainId}:`,
+            `Failed to fetch native balance via RPC for ${chainId} after Alchemy client missing:`,
             rpcError
           )
-          return [] // Return empty if all fallbacks fail
+          return [] // Return empty if RPC fallback also fails
         }
       }
       console.error(
-        `All token balance methods failed for chainId: ${chainId}.`
+        `Alchemy client not available for chainId: ${chainId}, and no RPC fallback possible.`
       )
       return []
     }
@@ -183,29 +157,7 @@ export async function getTokenBalances(
       // Check if this is a known API configuration issue
       const errorMessage = err instanceof Error ? err.message : String(err)
       if (errorMessage.includes('EAPIs not enabled')) {
-        console.warn(`Enhanced APIs not enabled for chainId ${chainId} on current Alchemy plan - trying Moralis fallback for ERC-20 tokens`)
-        
-        // Try Moralis fallback for ERC-20 tokens when Alchemy Enhanced APIs fail
-        try {
-          const moralisErc20Tokens = await getMoralisWalletBalances(
-            walletAddress,
-            chainId,
-            networkConfig.nativeAsset,
-            networkConfig.displayName
-          )
-          
-          // Filter out native token since we'll get it from Alchemy
-          erc20Tokens = moralisErc20Tokens.filter(token => 
-            token.address !== ethers.ZeroAddress && 
-            token.address !== '0x0000000000000000000000000000000000000000'
-          )
-          
-          if (erc20Tokens.length > 0) {
-            console.info(`Successfully fetched ${erc20Tokens.length} ERC-20 tokens via Moralis fallback`)
-          }
-        } catch (moralisError) {
-          console.warn(`Moralis ERC-20 fallback failed for chainId ${chainId}:`, moralisError)
-        }
+        console.warn(`Enhanced APIs not enabled for chainId ${chainId} on current Alchemy plan - will only fetch native balance`)
       }
       // Continue to fetch native balance even if ERC20 fails
     }
