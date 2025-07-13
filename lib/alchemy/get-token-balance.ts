@@ -10,6 +10,13 @@ import {
 } from './utils'
 import { getGoldRushWalletBalances, isGoldRushSupported } from '../goldrush/get-token-balance'
 
+// Networks where Alchemy doesn't support Enhanced APIs (ERC-20 token balances)
+// Skip Alchemy and go directly to fallback APIs for these networks
+const ALCHEMY_UNSUPPORTED_ENHANCED_APIS = [
+  5000,   // Mantle - EAPIs not enabled
+  // Add other chainIds here as we discover them
+]
+
 /**
  * Fetches both ERC20 and native token balances for a given wallet address and chain.
  * Uses centralized network configuration and handles demo mode for Tenderly.
@@ -29,6 +36,58 @@ export async function getTokenBalances(
       console.error(
         `No network configuration found for chainId: ${chainId}, isDemo: ${isDemo}`
       )
+      return []
+    }
+
+    // Path 0: Skip Alchemy for networks we know don't support Enhanced APIs
+    if (ALCHEMY_UNSUPPORTED_ENHANCED_APIS.includes(chainId)) {
+      console.info(`Skipping Alchemy for chainId ${chainId} (known to not support Enhanced APIs) - using GoldRush directly`)
+      
+      if (isGoldRushSupported(chainId)) {
+        try {
+          const goldRushBalances = await getGoldRushWalletBalances(
+            walletAddress,
+            chainId,
+            networkConfig.displayName
+          )
+          
+          if (goldRushBalances.length > 0) {
+            console.info(`Successfully fetched ${goldRushBalances.length} token balances via GoldRush for ${networkConfig.displayName}`)
+            return goldRushBalances
+          }
+        } catch (goldRushError) {
+          console.warn(`GoldRush failed for chainId ${chainId}:`, goldRushError)
+        }
+      }
+      
+      // Fallback to RPC for native balance only if GoldRush fails
+      if (networkConfig.rpcUrl) {
+        console.warn(`GoldRush failed, falling back to RPC for native balance only for chainId ${chainId}`)
+        try {
+          const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl)
+          const nativeBalance = await provider.getBalance(walletAddress)
+          const nativeDetails = networkConfig.nativeAsset
+          
+          return [
+            {
+              address: ethers.ZeroAddress,
+              name: nativeDetails.name,
+              symbol: nativeDetails.symbol,
+              balance: ethers.formatUnits(
+                nativeBalance,
+                nativeDetails.decimals
+              ),
+              network: networkConfig.displayName,
+              decimals: Number(nativeDetails.decimals)
+            }
+          ]
+        } catch (rpcError) {
+          console.error(`RPC fallback also failed for chainId ${chainId}:`, rpcError)
+          return []
+        }
+      }
+      
+      console.error(`All methods failed for unsupported chainId ${chainId}`)
       return []
     }
 
@@ -187,6 +246,7 @@ export async function getTokenBalances(
       const errorMessage = err instanceof Error ? err.message : String(err)
       if (errorMessage.includes('EAPIs not enabled')) {
         console.warn(`Enhanced APIs not enabled for chainId ${chainId} on current Alchemy plan - trying GoldRush fallback for ERC-20 tokens`)
+        console.info(`Note: Consider adding chainId ${chainId} to ALCHEMY_UNSUPPORTED_ENHANCED_APIS to skip this API call in the future`)
         
         // Try GoldRush fallback for ERC-20 tokens when Alchemy Enhanced APIs fail
         if (isGoldRushSupported(chainId)) {
