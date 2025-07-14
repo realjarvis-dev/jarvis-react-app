@@ -15,7 +15,8 @@ import { getConfigByChainId } from '../network/config'
 
 const bridgeQuoteSolanaTool = tool({
   description:
-    `Get a quote for a cross-chain bridge transfer from user's solana wallet to other evm wallet.
+    `Get a quote for a cross-chain transaction from user's solana wallet to user's evm wallet.
+    User can call it swap or bridge, you should use this tool when detecting cross chain intent
     Only supports bridging from USDC, USDT, or SOL.
     You must ask user whether they prefer fastest or cheapest route. It automatically renders UI on success.`,
   parameters: z.object({

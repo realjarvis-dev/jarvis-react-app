@@ -129,7 +129,6 @@ export const generateLifiBridgeQuote = async (
         slippage,
         preference
       )
-      console.log(quote)
     } catch (error) {
       return {
         instruction: 'notify user',
@@ -209,19 +208,6 @@ export const generateLifiBridgeQuote = async (
     }
   }
 }
-
-console.log(await generateLifiBridgeQuote(
-  "solana",
-  "ethereum",
-  "SOL",
-  "USDC",
-  "7VkW8pL9ok28CZgB5qDKBU2zNtiwxPw3QKLaEBXqWJ2m",
-  "1",
-  "0.005",
-  "0x20dC1B6732E7A20aCba461BD37beead4FF5D93c8",
-  false,
-  "FASTEST"
-))
 
 
 export const executeLifiBridgeTransaction = async (
