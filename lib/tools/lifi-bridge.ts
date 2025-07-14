@@ -67,6 +67,9 @@ const bridgeQuoteTool = tool({
     // enableAutoFuel: z.boolean().describe('Whether to auto fuel the destination chain when the native balance is low, default to true')
   }),
   execute: async (params, context: ToolContext) => {
+    try {
+
+    
     let {fromChain, toChain, fromToken, toToken, amountIn, slippage, recipient, preference } = params
 
     const isDemo = context?.networkContext?.isDemo
@@ -137,6 +140,14 @@ const bridgeQuoteTool = tool({
     }
     
     return result
+    } catch (error) {
+      console.error(error)
+    return {
+      _uiDisplayTool: true,
+      summary: `Error generating quote: ${error instanceof Error ? error.message : "Unknown error"}`,
+      data: { error: error instanceof Error ? error.message : "Unknown error" }
+    }
+  }
   }
 })
 

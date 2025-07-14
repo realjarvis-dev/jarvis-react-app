@@ -20,15 +20,38 @@ export class MissingTokenError extends Error {
 
 // cache token matcher here
 // const tokenMatcherMap = new Map<number, TokenMatcher>() // Will be moved into the class
-
+const solanaCommonTokenList = [
+    {"address": '11111111111111111111111111111111',
+    "decimals": 9,
+    "chainId": LIFI_SOLANA_CHAIN_ID,
+    "symbol": "SOL",
+    "name": "Solana",
+  },
+  {
+    "address": 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+    "decimals": 6,
+    "chainId": LIFI_SOLANA_CHAIN_ID,
+    "symbol": "USDC",
+    "name": "USDC",
+  },
+  {
+    "address": 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB',
+    "decimals": 6,
+    "chainId": LIFI_SOLANA_CHAIN_ID,
+    "symbol": "USDT",
+    "name": "USDT",
+  },
+]
 class CrossChainMatcher {
   private static instance: CrossChainMatcher
   private matcher: ChainMatcher
   private tokenMatcherMap: Map<number, TokenMatcher>
+  private solanaTokenMatcher: TokenMatcher
 
   private constructor() {
     this.matcher = new ChainMatcher()
     this.tokenMatcherMap = new Map<number, TokenMatcher>()
+    this.solanaTokenMatcher = new TokenMatcher(LIFI_SOLANA_CHAIN_ID, 0.3, solanaCommonTokenList)
   }
 
   public static getInstance(): CrossChainMatcher {
@@ -62,8 +85,9 @@ class CrossChainMatcher {
         "name": "USDT",
       },
     }
-    if (token in solanaCommonTokenMap) {
-      return [solanaCommonTokenMap[token as keyof typeof solanaCommonTokenMap]]
+    const solanaTokenMatch = this.solanaTokenMatcher.match(token)
+    if (solanaTokenMatch.length > 0) {
+      return solanaTokenMatch
     }
     throw new MissingTokenError(`Oops, we only support bridging to/from SOL and USDC on Solana.`)
   }
