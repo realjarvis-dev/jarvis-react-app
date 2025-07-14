@@ -223,16 +223,15 @@ const bridgeExecuteTool = tool({
     // }
     let fromUserAddress;
     let toUserAddress = recipient;
-    if (!toUserAddress && toChainId === LIFI_SOLANA_CHAIN_ID) {
-      toUserAddress = await getUserSolWalletAddress()
-    } else {
-      toUserAddress = await getUserEvmWalletAddress()
-    }
-    if (fromChainId === LIFI_SOLANA_CHAIN_ID) {
-      fromUserAddress = await getUserSolWalletAddress()
-    } else {
-      fromUserAddress = await getUserEvmWalletAddress()
-    }
+    if (!toUserAddress) {
+      if (toChainId === LIFI_SOLANA_CHAIN_ID) {
+        toUserAddress = await getUserSolWalletAddress()
+      } else {
+        toUserAddress = await getUserEvmWalletAddress()
+      }
+    } 
+
+    fromUserAddress = await getUserEvmWalletAddress()
     if (!fromUserAddress || !toUserAddress) {
       return {
         instruction: 'notify user',
