@@ -12,6 +12,7 @@ import { getUserId } from '../privy/client'
 import { balanceChangePub } from '../pubsub/balance-change-pub'
 import { ChainType } from '../network/types'
 import { LIFI_SOLANA_CHAIN_ID } from '../token-matcher/token-utils'
+import { getConfigByChainId } from '../network/config'
 
 
 const bridgeQuoteTool = tool({
@@ -249,7 +250,8 @@ const bridgeExecuteTool = tool({
       preference
     )
     const userId = await getUserId()
-    balanceChangePub(userId, [fromChainId.toString() as ChainType, toChainId.toString() as ChainType], isDemo || false)
+    const toChainType = getConfigByChainId(toChainId, false).id
+    balanceChangePub(userId, [context.networkContext?.selectedNetwork as ChainType, toChainType], isDemo || false)
     return result
   }
 })
