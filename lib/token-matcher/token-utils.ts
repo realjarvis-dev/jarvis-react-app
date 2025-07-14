@@ -1,5 +1,6 @@
 import { getTokenBalances } from '../alchemy/get-token-balance'
 import { Token, TokenMatcher, ScoredToken } from './fuzzy-token-matcher'
+export const LIFI_SOLANA_CHAIN_ID = 1151111081099710
 
 export interface TokenMatchResult {
   status: 'success' | 'fail'

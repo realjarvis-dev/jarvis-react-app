@@ -2,7 +2,7 @@ import { Cacheable } from '@type-cacheable/core'
 import { ChainMatcher, type Chain } from './fuzzy-chain-matcher'
 import { TokenMatcher, type Token } from './fuzzy-token-matcher'
 
-export const LIFI_SOLANA_CHAIN_ID = 1151111081099710
+import { LIFI_SOLANA_CHAIN_ID } from './token-utils'
 
 export class MissingChainError extends Error {
   constructor(message: string) {
@@ -53,6 +53,13 @@ class CrossChainMatcher {
         "chainId": LIFI_SOLANA_CHAIN_ID,
         "symbol": "USDC",
         "name": "USDC",
+      },
+      "USDT": {
+        "address": 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB',
+        "decimals": 6,
+        "chainId": LIFI_SOLANA_CHAIN_ID,
+        "symbol": "USDT",
+        "name": "USDT",
       },
     }
     if (token in solanaCommonTokenMap) {
@@ -108,6 +115,8 @@ class CrossChainMatcher {
     // match the chains and tokens
     let toChain: Chain
     let toTokenList: Token[]
+    let fromChain: Chain
+    let fromTokenList: Token[]
     if (toChainString.toLowerCase() === "solana") {
       toChain = {
         "name": "SOL",
@@ -123,13 +132,22 @@ class CrossChainMatcher {
       const toTokenMatches = toTokenMatcher.match(toToken)
       toTokenList = this.validateTokenMatches(toTokenMatches, toToken, toChain.name, 'to')
     }
+    if (fromChainString.toLowerCase() === "solana") {
+      fromChain = {
+        "name": "SOL",
+        "coin": "SOL",
+        "id": LIFI_SOLANA_CHAIN_ID,
+      } as Chain
+      fromTokenList = this.getSolanaToken(fromToken)
+    } else {
+      const fromChainMatches: Chain[] = this.matcher.match(fromChainString)
+      fromChain = this.validateChainMatches(fromChainMatches, fromChainString, 'from')
+      const fromChainId = fromChain.id
+      const fromTokenMatcher = this.getTokenMatcher(fromChainId)
+      const fromTokenMatches = fromTokenMatcher.match(fromToken)
+      fromTokenList = this.validateTokenMatches(fromTokenMatches, fromToken, fromChain.name, 'from')
+    }
 
-    const fromChainMatches: Chain[] = this.matcher.match(fromChainString)
-    const fromChain = this.validateChainMatches(fromChainMatches, fromChainString, 'from')
-    const fromChainId = fromChain.id
-    const fromTokenMatcher = this.getTokenMatcher(fromChainId)
-    const fromTokenMatches = fromTokenMatcher.match(fromToken)
-    const fromTokenList = this.validateTokenMatches(fromTokenMatches, fromToken, fromChain.name, 'from')
     
 
     return {

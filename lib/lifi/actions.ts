@@ -26,16 +26,23 @@ import {
 } from './utils'
 import { getConfigByChainId } from '@/lib/network/config'
 
-const solanaCommonTokenMap = {
-  SOL: '11111111111111111111111111111111',
-  USDC: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
-}
-const solanaCommonTokenDecimals = {
-  SOL: 9,
-  USDC: 6,
-}
 const NATIVE_TOKEN_STRING = '0x0000000000000000000000000000000000000000'
 
+
+/**
+ * 
+ * @param fromChain the chain to bridge from, can be name or symbol or chain id
+ * @param toChain the chain to bridge to, can be name or symbol or chain id
+ * @param fromToken the token to bridge from, can be name or symbol or address
+ * @param toToken the token to bridge to, can be name or symbol or address
+ * @param fromAddress the address to bridge from
+ * @param amountIn the amount of input tokens to bridge, in human readable format
+ * @param slippage the slippage tolerance for the transaction, 0.005 represents 0.5% slippage. Default to 0.005
+ * @param recipient the address to send the bridged tokens to. Default to user's wallet address
+ * @param autoFuelDestChain whether to auto fuel the destination chain when the native balance is low, default to false (obsolete feature)
+ * @param preference the preference for the transaction, FASTEST represents the fastest route, CHEAPEST represents the cheapest route.
+ * @returns a readable quote for the transaction
+ */
 export const generateLifiBridgeQuote = async (
   fromChain: string,
   toChain: string,
@@ -122,6 +129,7 @@ export const generateLifiBridgeQuote = async (
         slippage,
         preference
       )
+      console.log(quote)
     } catch (error) {
       return {
         instruction: 'notify user',
@@ -202,6 +210,18 @@ export const generateLifiBridgeQuote = async (
   }
 }
 
+console.log(await generateLifiBridgeQuote(
+  "solana",
+  "ethereum",
+  "SOL",
+  "USDC",
+  "7VkW8pL9ok28CZgB5qDKBU2zNtiwxPw3QKLaEBXqWJ2m",
+  "1",
+  "0.005",
+  "0x20dC1B6732E7A20aCba461BD37beead4FF5D93c8",
+  false,
+  "FASTEST"
+))
 
 
 export const executeLifiBridgeTransaction = async (
@@ -247,13 +267,15 @@ export const executeLifiBridgeTransaction = async (
     slippage,
     preference
   )
-  if (!quote.transactionRequest.to) {
+  // cast quote.transactionRequest to TransactionRequest
+  const txData = quote.transactionRequest as TransactionRequest
+  if (!txData.to) {
     return {
       instruction: 'notify user',
       details: "Li.fi's protocol address not found."
     }
   }
-  const protocolAddress = quote.transactionRequest.to as string
+  const protocolAddress = txData.to as string
 
   try {
     if (!isFromNativeToken) {
@@ -272,7 +294,7 @@ export const executeLifiBridgeTransaction = async (
         }
       }
     }
-    const txData = quote.transactionRequest as TransactionRequest
+
     const gasLimit = BigInt(
       quote.estimate?.gasCosts?.reduce(
         (acc, curr) => acc + Number(curr.limit),
