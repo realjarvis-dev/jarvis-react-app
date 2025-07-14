@@ -53,7 +53,6 @@ export const executeLifiBridgeTransactionSolana = async (
       const explorerLink = solanaConfig.scanLink
       const explorerLinkWithHash = `https://${explorerLink}/tx/${hash}`
       
-  
       return {
         success: true,
         transaction_hash: hash,

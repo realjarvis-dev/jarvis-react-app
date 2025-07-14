@@ -74,15 +74,33 @@ export async function signSolanaTransaction(transaction: Transaction | Versioned
           });
           return signedTransaction
       } else {
-        console.log("recent block hash", transaction.message.recentBlockhash)
-        console.log("latest block hash", await connection.getLatestBlockhash())
-        console.log("address table lookups", transaction.message.addressTableLookups)
+ 
+        const lookupTables = await Promise.all(transaction.message.addressTableLookups.map(async (lookup) => {
+          const lookupTable = await connection.getAddressLookupTable(lookup.accountKey)
+          return lookupTable
+        }))
+        let ixns = TransactionMessage.decompile(
+          transaction.message,
+          {
+            addressLookupTableAccounts: lookupTables.map(table => table.value).filter(table => table !== null)
+          }
+        ).instructions
 
+        const userWalletPubkey = new PublicKey(wallet.address)
+        const { blockhash } = await connection.getLatestBlockhash()
+        const newMsg = new TransactionMessage({
+            payerKey: userWalletPubkey,
+            recentBlockhash: blockhash,
+            instructions: ixns,
+          }).compileToV0Message();
+
+
+          const newVtx = new VersionedTransaction(newMsg);
 
             // Get the signed transaction object from the response
           const { signedTransaction } = await privy.walletApi.solana.signTransaction({
             walletId: wallet.id!,
-            transaction: transaction
+            transaction: newVtx
           });
 
           
@@ -118,7 +136,7 @@ export async function signSolanaTransactionString(
     const vtx = VersionedTransaction.deserialize(rawTxBytes)
     
     const signedTransaction = await signSolanaTransaction(vtx, connection)
-    console.log("versioned tx", JSON.stringify(vtx, null, 2))
+    // console.log("versioned tx", JSON.stringify(vtx, null, 2))
 
     // const signedBase64 = Buffer.from(signedTransaction.serialize()).toString("base64");
     return signedTransaction
