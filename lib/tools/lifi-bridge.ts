@@ -202,6 +202,7 @@ const bridgeExecuteTool = tool({
     preference,
     // autoFuel
   }, context: ToolContext) => {
+    try {
     const fromChainIdInContext = context?.networkContext?.selectedChainId
     // if (fromChainId.toString() !== fromChainIdInContext?.toString()) {
     //   return {
@@ -253,6 +254,13 @@ const bridgeExecuteTool = tool({
     const toChainType = getConfigByChainId(toChainId, false).id
     balanceChangePub(userId, [context.networkContext?.selectedNetwork as ChainType, toChainType], isDemo || false)
     return result
+    } catch (error) {
+      console.error(error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error"
+      }
+    }
   }
 })
 
