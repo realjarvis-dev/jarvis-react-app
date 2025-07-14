@@ -81,7 +81,12 @@ const get_system_prompt = (
       lifi_bridge_execute: `- lifi_bridge_execute: Use when user wants to swap between two arbitrary tokens to execute the transaction.`,
       kodiak_bault_profitability: `- kodiak_bault_profitability: Use when the user wants to check the profitability of Kodiak Baults for compounding on Berachain. This tool analyzes profitability metrics for specified Baults.`,
       kodiak_compound_bault: `- kodiak_compound_bault: Use when the user wants to compound a profitable Kodiak Bault. This tool executes a transaction to claim BGT rewards using the BountyHelper contract (zero-capital compounding).`,
-      fund_wallet: `- fund_wallet: Use when the user requests their wallet to be funded with ETH in demo mode. Only works in the Demo environment.`
+      fund_wallet: `- fund_wallet: Use when the user requests their wallet to be funded with ETH in demo mode. Only works in the Demo environment.`,
+      lifi_bridge_solana_quote: `- lifi_bridge_solana_quote: Use when the user wants to swap/transfer/bridge SOL, USDC, or USDT from solana to another network. Some common phrase used by user would be "to <token> on <destination network>, then you know that it is a cross chain transfer`,
+      lifi_bridge_solana_execute: `- lifi_bridge_solana_execute: Use after giving a quote and execute the transaction to swap/transfer/bridge SOL, USDC, or USDT from solana to another network. `,
+      jupiter_quote: `- jupiter_quote: Use when the user wants to swap two tokens on solana (non cross chain)`,
+      jupiter_execute: `- jupiter_execute: Use after giving a quote and execute the transaction to swap two tokens on solana.`,
+
     }
 
     // Only include descriptions for supported tools
