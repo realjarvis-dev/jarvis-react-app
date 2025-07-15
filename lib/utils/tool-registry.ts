@@ -42,6 +42,7 @@ import {
 import { NetworkContext, ToolContext } from '../types/context'
 import { xStockList } from '../tools/xstock-search'
 import { jupiterExecute, jupiterQuote } from '../tools/jupiter-trade'
+import { bridgeExecuteSolanaTool, bridgeQuoteSolanaTool } from '../tools/lifi-brdige-solana'
 
 /**
  * Interface for tool definition with schema and execution function
@@ -822,6 +823,34 @@ export function createToolRegistry(model: string): ToolRegistry {
       messages: context?.messages || [],
       networkContext: context?.networkContext!
     } as any),
+    category: ToolCategory.WEB3_WRITE,
+    supportedNetworks: ['solana']
+  })
+
+  registry.registerTool({
+    name: 'lifi_bridge_solana_quote',
+    description: bridgeQuoteSolanaTool.description || '',
+    schema: bridgeQuoteSolanaTool.parameters,
+    execute: async (params, context) =>
+      bridgeQuoteSolanaTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.WEB3_READ,
+    supportedNetworks: ['solana']
+  })
+
+  registry.registerTool({
+    name: 'lifi_bridge_solana_execute',
+    description: bridgeExecuteSolanaTool.description || '',
+    schema: bridgeExecuteSolanaTool.parameters,
+    execute: async (params, context) =>
+      bridgeExecuteSolanaTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
     category: ToolCategory.WEB3_WRITE,
     supportedNetworks: ['solana']
   })

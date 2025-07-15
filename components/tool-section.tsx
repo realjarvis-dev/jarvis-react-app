@@ -317,6 +317,22 @@ export function ToolSection({
           onOpenChange={onOpenChange}
         />
       )
+      case 'lifi_bridge_solana_quote':
+        return (
+          <LifiSwapQuoteSection
+            tool={tool}
+            isOpen={isOpen}
+            onOpenChange={onOpenChange}
+          />
+        )
+      case 'lifi_bridge_solana_execute':
+        return (
+          <LifiSwapExecuteSection
+            tool={tool}
+            isOpen={isOpen}
+            onOpenChange={onOpenChange}
+          />
+        )
     default:
       return null
   }

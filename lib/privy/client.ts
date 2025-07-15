@@ -22,7 +22,7 @@ export async function verifyAccessToken(): Promise<AuthTokenClaims> {
   const cookieStore = await cookies()
   const token = cookieStore.get("privy-token")?.value
   if (!token) {
-    throw new Error("No token found")
+    throw new Error("Oops, you are logged out - please re-login!")
   }
   return privy.verifyAuthToken(token)
 }
@@ -33,11 +33,11 @@ export async function getUser(): Promise<User> {
   const cookieStore = await cookies()
   // const idToken = cookieStore.get("privy-id-token")?.value
   // if (!idToken) {
-  //   // throw new Error("No token found")
+  //   // throw new Error("Oops, you are logged out - please re-login!")
   //   // Fall back to auth token
   //   const token = cookieStore.get("privy-token")?.value
   //   if (!token) {
-  //     throw new Error("No token found")
+  //     throw new Error("Oops, you are logged out - please re-login!")
   //   }
   //   const claims = await privy.verifyAuthToken(token)
   //   const user = await privy.getUserById(claims.userId)
@@ -52,7 +52,7 @@ export async function getUser(): Promise<User> {
   // default to the auth token
   const token = cookieStore.get("privy-token")?.value
   if (!token) {
-    throw new Error("No token found")
+    throw new Error("Oops, you are logged out - please re-login!")
   }
   const claims = await privy.verifyAuthToken(token)
   const user = await privy.getUserById(claims.userId)
@@ -67,7 +67,7 @@ export async function getUserId(): Promise<string> {
     // Fall back to auth token
     const token = cookieStore.get("privy-token")?.value
     if (!token) {
-      throw new Error("No token found")
+      throw new Error("Oops, you are logged out - please re-login!")
     }
     const claims = await privy.verifyAuthToken(token)
     return claims.userId
