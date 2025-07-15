@@ -118,6 +118,9 @@ const bridgeQuoteTool = tool({
       // fromChain = 'Ethereum'
       // toChain = 'Ethereum'
     }
+    if (Number(actualAmountIn) < 0.002) {
+      throw Error("Sorry, the amount is too small to bridge. Can you try again with a larger amount?")
+    }
     const result = await generateLifiBridgeQuote(
       fromChain,
       toChain,
@@ -214,9 +217,6 @@ const bridgeExecuteTool = tool({
     // autoFuel
   }, context: ToolContext) => {
     try {
-    if (Number(amountIn) < 0.002) {
-      throw Error("Sorry, the amount is too small to bridge. Can you try again with a larger amount?")
-    }
     let fromUserAddress;
     let toUserAddress = recipient;
     if (!toUserAddress) {
