@@ -941,6 +941,8 @@ export function createToolRegistry(model: string): ToolRegistry {
     ]
   })
 
+
+
   return registry
 }
 

@@ -42,33 +42,44 @@ export class EnsoSimulationService {
     },
     userAddress: string,
     chainId: number,
-    strategy?: EnsoStrategy
+    strategy?: EnsoStrategy,
+    isDemo: boolean = false
   ): Promise<EnsoSimulationResult> {
     try {
-      // Step 1: Pre-flight validation checks
-      const preflightResult = await this.performPreflightChecks(
-        userAddress,
-        chainId,
-        strategy
-      )
+      // Step 1: Pre-flight validation checks (skip in demo mode)
+      let preflightResult
+      if (isDemo) {
+        // In demo mode, be more permissive
+        preflightResult = {
+          canExecute: true,
+          warnings: ['Demo mode - simulation checks relaxed'],
+          risks: []
+        }
+      } else {
+        preflightResult = await this.performPreflightChecks(
+          userAddress,
+          chainId,
+          strategy
+        )
 
-      if (!preflightResult.canExecute) {
-        return {
-          success: false,
-          canExecute: false,
-          estimatedGas: transaction.gas,
-          expectedOutputs: [],
-          failureReason: preflightResult.failureReason,
-          warnings: preflightResult.warnings,
-          risks: preflightResult.risks,
-          confidence: 0,
-          riskLevel: 'high'
+        if (!preflightResult.canExecute) {
+          return {
+            success: false,
+            canExecute: false,
+            estimatedGas: transaction.gas,
+            expectedOutputs: [],
+            failureReason: preflightResult.failureReason,
+            warnings: preflightResult.warnings,
+            risks: preflightResult.risks,
+            confidence: 0,
+            riskLevel: 'high'
+          }
         }
       }
 
-      // Step 2: Tenderly simulation (if available)
+      // Step 2: Tenderly simulation (skip in demo mode)
       let tenderlyResult = null
-      if (this.tenderly) {
+      if (this.tenderly && !isDemo) {
         tenderlyResult = await this.runTenderlySimulation(
           transaction,
           userAddress,
@@ -95,8 +106,8 @@ export class EnsoSimulationService {
         ],
         risks: riskAssessment.risks,
         stepResults: this.analyzeStepResults(strategy, tenderlyResult),
-        confidence: this.calculateConfidence(strategy, tenderlyResult, preflightResult),
-        riskLevel: riskAssessment.riskLevel
+        confidence: isDemo ? 0.9 : this.calculateConfidence(strategy, tenderlyResult, preflightResult), // High confidence in demo
+        riskLevel: isDemo ? 'low' : riskAssessment.riskLevel // Lower risk assessment in demo
       }
     } catch (error) {
       console.error('Simulation failed:', error)

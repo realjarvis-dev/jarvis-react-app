@@ -28,7 +28,8 @@ const ALCHEMY_UNSUPPORTED_ENHANCED_APIS = [
 export async function getTokenBalances(
   walletAddress: string,
   chainId: number,
-  isDemo: boolean = false
+  isDemo: boolean = false,
+  bypassCache: boolean = false
 ): Promise<TokenData[]> {
   try {
     const networkConfig = getConfigByChainId(chainId, isDemo)
@@ -219,12 +220,12 @@ export async function getTokenBalances(
         (tb: TokenBalance) => BigInt(tb.tokenBalance || '0x0') !== BigInt(0)
       )
 
-      const metadataPromises = nonZeroBalances.map(tb =>
+      const metadataPromises = nonZeroBalances.map((tb: any) =>
         alchemy.core.getTokenMetadata(tb.contractAddress)
       )
       const metadatas = await Promise.all(metadataPromises)
 
-      erc20Tokens = nonZeroBalances.map((tb, i) => {
+      erc20Tokens = nonZeroBalances.map((tb: any, i: number) => {
         const meta = metadatas[i]
         const rawBig = BigInt(tb.tokenBalance || '0x0')
         return {

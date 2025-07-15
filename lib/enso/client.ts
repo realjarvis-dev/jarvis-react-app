@@ -27,6 +27,14 @@ export class JarvisEnsoClient {
    */
   async getRoute(params: EnsoRouteParams): Promise<EnsoRouteResponse> {
     try {
+      console.log('Enso route request:', {
+        fromAddress: params.fromAddress,
+        tokenIn: params.tokenIn,
+        tokenOut: params.tokenOut,
+        amountIn: params.amountIn,
+        chainId: params.chainId
+      })
+
       const routeData = await this.client.getRouteData({
         fromAddress: params.fromAddress as `0x${string}`,
         receiver: params.receiver as `0x${string}`,
@@ -43,6 +51,12 @@ export class JarvisEnsoClient {
         feeReceiver: params.feeReceiver as `0x${string}` | undefined,
         referralCode: params.referralCode
       })
+
+      // Validate route data before returning
+      if (!routeData.tx.data || routeData.tx.data === '0x' || routeData.tx.data === '') {
+        console.error('Enso API returned empty transaction data:', routeData.tx)
+        throw new Error('Enso API returned empty transaction data. The route may not be valid.')
+      }
 
       return {
         tx: {
@@ -265,6 +279,15 @@ export class JarvisEnsoClient {
 
   private handleError(error: any, context: string): EnsoError {
     console.error(`${context}:`, error)
+    
+    // Handle Enso SDK specific errors
+    if (error.statusCode && error.responseData) {
+      return {
+        code: error.statusCode.toString(),
+        message: error.responseData?.error || error.responseData?.message || error.message || context,
+        details: error.responseData
+      }
+    }
     
     if (error.response?.data) {
       return {
