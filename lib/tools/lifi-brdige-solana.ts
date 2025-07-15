@@ -68,7 +68,9 @@ const bridgeQuoteSolanaTool = tool({
   }),
   execute: async (params, context: ToolContext) => {
     let {toChain, fromToken, toToken, amountIn, slippage, recipient, preference } = params
-
+    if (Number(amountIn) < 0.002) {
+      throw Error("Sorry, the amount is too small to bridge. Can you try again with a larger amount?")
+    }
     const fromChain = "solana"
     let fromUserAddress;
     let toUserAddress = recipient;

@@ -214,13 +214,9 @@ const bridgeExecuteTool = tool({
     // autoFuel
   }, context: ToolContext) => {
     try {
-    const fromChainIdInContext = context?.networkContext?.selectedChainId
-    // if (fromChainId.toString() !== fromChainIdInContext?.toString()) {
-    //   return {
-    //     instruction: 'notify user',
-    //     details: "Please use the correct fromChain for the tool, or switch to the correct network"
-    //   }
-    // }
+    if (Number(amountIn) < 0.002) {
+      throw Error("Sorry, the amount is too small to bridge. Can you try again with a larger amount?")
+    }
     let fromUserAddress;
     let toUserAddress = recipient;
     if (!toUserAddress) {
