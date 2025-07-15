@@ -70,17 +70,23 @@ export const walletBalanceTool = tool({
         }
       }
       
-      // Return all tokens
+      // Return all tokens with network error information
       const allTokensData = {
         success: true,
-        message: 'Retrieved all wallet balances',
+        message: 'Retrieved wallet balances',
         tokens: walletBalances.tokens,
-        filtered: false
+        filtered: false,
+        networkErrors: walletBalances.networkErrors
       }
+      
+      const errorCount = walletBalances.networkErrors?.length || 0
+      const summary = errorCount > 0 
+        ? `Found ${walletBalances.tokens.length} tokens (${errorCount} network errors)`
+        : `Found ${walletBalances.tokens.length} tokens in wallet`
       
       return {
         _uiDisplayTool: true,
-        summary: `Found ${walletBalances.tokens.length} tokens in wallet`,
+        summary,
         data: allTokensData
       }
     } catch (error) {

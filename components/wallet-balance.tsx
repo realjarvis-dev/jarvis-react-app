@@ -44,10 +44,12 @@ const TokenRow = ({ token }: { token: TokenData }) => {
 
 const NetworkSection = ({
   network,
-  tokens
+  tokens,
+  error
 }: {
   network: string
   tokens: TokenData[]
+  error?: string
 }) => {
   return (
     <div className="mb-6 last:mb-0">
@@ -55,15 +57,29 @@ const NetworkSection = ({
         <h3 className="text-base font-semibold text-muted-foreground">
           {network}
         </h3>
-        <Badge variant="outline" className="text-xs font-normal">
-          {tokens.length} {tokens.length === 1 ? 'token' : 'tokens'}
-        </Badge>
+        <div className="flex items-center space-x-2">
+          {error ? (
+            <Badge variant="destructive" className="text-xs font-normal">
+              Error
+            </Badge>
+          ) : (
+            <Badge variant="outline" className="text-xs font-normal">
+              {tokens.length} {tokens.length === 1 ? 'token' : 'tokens'}
+            </Badge>
+          )}
+        </div>
       </div>
-      <div className="space-y-1">
-        {tokens.map(token => (
-          <TokenRow key={`${token.address}-${token.network}-${token.name}`} token={token} />
-        ))}
-      </div>
+      {error ? (
+        <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800/50">
+          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+        </div>
+      ) : (
+        <div className="space-y-1">
+          {tokens.map(token => (
+            <TokenRow key={`${token.address}-${token.network}-${token.name}`} token={token} />
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -73,6 +89,7 @@ interface WalletBalanceProps {
   walletAddress?: string
   solanaWalletAddress?: string
   tokens?: TokenData[]
+  networkErrors?: { network: string, error: string }[]
   isLoading: boolean
   error?: string | null
   className?: string
@@ -84,6 +101,7 @@ export function WalletBalance({
   walletAddress,
   solanaWalletAddress,
   tokens,
+  networkErrors,
   isLoading,
   error,
   className = '',
@@ -116,7 +134,7 @@ export function WalletBalance({
     ? tokensList.filter(token => matchesSelectedNetwork(token.network))
     : tokensList
 
-  // Group tokens by network (we'll only have one network after filtering)
+  // Group tokens by network
   const tokensByNetwork = filteredTokens.reduce((acc, token) => {
     if (!acc[token.network]) {
       acc[token.network] = []
@@ -125,8 +143,29 @@ export function WalletBalance({
     return acc
   }, {} as Record<string, TokenData[]>)
 
+  // Create a map of network errors for easy lookup
+  const errorsByNetwork = (networkErrors || []).reduce((acc, error) => {
+    acc[error.network] = error.error
+    return acc
+  }, {} as Record<string, string>)
+
+  // Filter network errors based on the selected network if filtering is enabled
+  const filteredErrorsByNetwork = filterOnNetwork
+    ? Object.fromEntries(
+        Object.entries(errorsByNetwork).filter(([networkName]) => 
+          matchesSelectedNetwork(networkName)
+        )
+      )
+    : errorsByNetwork
+
+  // Get all networks (both successful and failed)
+  const allNetworks = new Set([
+    ...Object.keys(tokensByNetwork),
+    ...Object.keys(filteredErrorsByNetwork)
+  ])
+
   // Sort networks to show mainnet first, then others alphabetically
-  const sortedNetworks = Object.keys(tokensByNetwork).sort((a, b) => {
+  const sortedNetworks = Array.from(allNetworks).sort((a, b) => {
     if (a.toLowerCase().includes('mainnet')) return -1
     return a.localeCompare(b)
   })
@@ -218,11 +257,12 @@ export function WalletBalance({
 
         {!isLoading && !error && sortedNetworks.length > 0 && (
           <div className="pt-2">
-            {sortedNetworks.map(networkAlchemyName => (
+            {sortedNetworks.map(networkName => (
               <NetworkSection
-                key={networkAlchemyName}
-                network={networkAlchemyName}
-                tokens={tokensByNetwork[networkAlchemyName]}
+                key={networkName}
+                network={networkName}
+                tokens={tokensByNetwork[networkName] || []}
+                error={filteredErrorsByNetwork[networkName]}
               />
             ))}
           </div>

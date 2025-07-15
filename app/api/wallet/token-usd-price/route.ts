@@ -21,10 +21,16 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: 'User does not have an Ethereum wallet' }, { status: 400 })
     }
     let usdBalance = 0
-    if (networkConfig.id === 'solana') {
-        usdBalance = await computeUserUsdBalance(solanaWalletAddress, networkConfig.chainId, networkConfig.isDemo)
-    } else {
-        usdBalance = await computeUserUsdBalance(walletAddress, networkConfig.chainId, networkConfig.isDemo)
+    try {
+        if (networkConfig.id === 'solana') {
+            usdBalance = await computeUserUsdBalance(solanaWalletAddress, networkConfig.chainId, networkConfig.isDemo)
+        } else {
+            usdBalance = await computeUserUsdBalance(walletAddress, networkConfig.chainId, networkConfig.isDemo)
+        }
+    } catch (error) {
+        console.error('Error computing USD balance:', error)
+        // Return 0 balance instead of failing completely
+        usdBalance = 0
     }
     return NextResponse.json({ usdBalance })
 }

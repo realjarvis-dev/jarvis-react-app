@@ -7,8 +7,69 @@ import { NetworkConfig } from '../network/types'
 import { getPendleMarkets } from '../pendle/api'
 import { getUserEvmWalletAddress, getUserSolWalletAddress } from '../privy/client'
 
+// Error handling wrapper for EVM token balances
+async function getTokenBalancesWithErrorHandling(
+  walletAddress: string,
+  chainId: number,
+  isDemo: boolean,
+  networkName: string
+): Promise<{ tokens: TokenData[], network: string, error?: string }> {
+  try {
+    const tokens = await getTokenBalances(walletAddress, chainId, isDemo)
+    return { tokens, network: networkName }
+  } catch (error) {
+    console.error(`Error fetching balances for ${networkName}:`, error)
+    
+    // Provide more user-friendly error messages for common issues
+    let userFriendlyError = error instanceof Error ? error.message : String(error)
+    
+    if (userFriendlyError.includes('EAPIs not enabled')) {
+      userFriendlyError = 'Enhanced APIs not enabled for this network on current plan'
+    } else if (userFriendlyError.includes('not enabled for this app')) {
+      userFriendlyError = 'Network not enabled in API configuration'
+    } else if (userFriendlyError.includes('HTTP error! status: 401')) {
+      userFriendlyError = 'API authentication failed'
+    } else if (userFriendlyError.includes('HTTP error! status: 403')) {
+      userFriendlyError = 'API access forbidden - check network permissions'
+    }
+    
+    return {
+      tokens: [],
+      network: networkName,
+      error: userFriendlyError
+    }
+  }
+}
+
+// Error handling wrapper for Solana token balances
+async function getTokenBalancesSolanaWithErrorHandling(
+  walletAddress: string,
+  networkName: string
+): Promise<{ tokens: TokenData[], network: string, error?: string }> {
+  try {
+    // Check if Helius API key is available
+    if (!process.env.HELIUS_API_KEY) {
+      return {
+        tokens: [],
+        network: networkName,
+        error: 'Helius API key not configured'
+      }
+    }
+    const tokens = await getTokenBalancesSolana(walletAddress)
+    return { tokens, network: networkName }
+  } catch (error) {
+    console.error(`Error fetching Solana balances:`, error)
+    return {
+      tokens: [],
+      network: networkName,
+      error: error instanceof Error ? error.message : String(error)
+    }
+  }
+}
+
 export interface WalletBalanceResult {
   tokens: TokenData[]
+  networkErrors?: { network: string, error: string }[]
 }
 
 
@@ -33,17 +94,17 @@ export async function getWalletBalances(
   }
 
   try {
-    const tokenDataPromises: Promise<TokenData[]>[] = []
+    const tokenDataPromises: Promise<{ tokens: TokenData[], network: string, error?: string }>[] = []
 
-    // Add promises for all networks in allNetworkConfigs
+    // Add promises for all networks in allNetworkConfigs with error handling
     Object.values(allNetworkConfigs).forEach((network: NetworkConfig) => {
       if (network.id === "solana") {
         tokenDataPromises.push(
-          getTokenBalancesSolana(solanaWalletAddress)
+          getTokenBalancesSolanaWithErrorHandling(solanaWalletAddress, network.displayName)
         )
       } else {
         tokenDataPromises.push(
-          getTokenBalances(walletAddress, network.chainId, network.isDemo)
+          getTokenBalancesWithErrorHandling(walletAddress, network.chainId, network.isDemo, network.displayName)
         )
       }
     })
@@ -52,13 +113,22 @@ export async function getWalletBalances(
     // This ensures it's included, as it was in the original tokenBalanceFunctions array.
     // The getTokenBalances function handles the isDemo flag correctly.
     tokenDataPromises.push(
-      getTokenBalances(walletAddress, TENDERLY_DEMO_CONFIG.chainId, true)
+      getTokenBalancesWithErrorHandling(walletAddress, TENDERLY_DEMO_CONFIG.chainId, true, TENDERLY_DEMO_CONFIG.displayName)
     )
 
-    const allTokenDataArrays = await Promise.all(tokenDataPromises)
+    const allTokenDataResults = await Promise.all(tokenDataPromises)
 
-    // Flatten the results as each call to getTokenBalances returns TokenData[]
-    let tokenData = allTokenDataArrays.flat()
+    // Flatten the results and track network errors
+    let tokenData: TokenData[] = []
+    const networkErrors: { network: string, error: string }[] = []
+
+    allTokenDataResults.forEach(result => {
+      if (result.error) {
+        networkErrors.push({ network: result.network, error: result.error })
+      } else {
+        tokenData.push(...result.tokens)
+      }
+    })
 
     // Get Pendle markets data
     const pendleMarkets = await getPendleMarkets('all', chainId)
@@ -86,7 +156,8 @@ export async function getWalletBalances(
 
     // Create the final result object
     return {
-      tokens: tokenData
+      tokens: tokenData,
+      networkErrors: networkErrors.length > 0 ? networkErrors : undefined
     }
   } catch (error) {
     console.error('Error fetching wallet balances:', error)
