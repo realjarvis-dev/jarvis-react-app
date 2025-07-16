@@ -13,20 +13,25 @@ export async function computeUserUsdBalance(
   let tokenBalances: TokenData[] = []
   let tokenPrices: TokenPrice[] = []
 
-  if (chainId === SOLANA_CHAIN_ID) {
-    tokenBalances = await getTokenBalancesSolana(walletAddress)
-    if (tokenBalances.length === 0) {
-      return 0
+  try {
+    if (chainId === SOLANA_CHAIN_ID) {
+      tokenBalances = await getTokenBalancesSolana(walletAddress)
+      if (tokenBalances.length === 0) {
+        return 0
+      }
+      const tokenAddresses = tokenBalances.map(token => token.address)
+      tokenPrices = await getJupiterTokenPrices(tokenAddresses)
+    } else {
+      tokenBalances = await getTokenBalances(walletAddress, chainId, isDemo)
+      if (tokenBalances.length === 0) {
+        return 0
+      }
+      const tokenAddresses = tokenBalances.map(token => token.address)
+      tokenPrices = await getTokenUsdPriceBatch(tokenAddresses, chainId)
     }
-    const tokenAddresses = tokenBalances.map(token => token.address)
-    tokenPrices = await getJupiterTokenPrices(tokenAddresses)
-  } else {
-    tokenBalances = await getTokenBalances(walletAddress, chainId, isDemo)
-    if (tokenBalances.length === 0) {
-      return 0
-    }
-    const tokenAddresses = tokenBalances.map(token => token.address)
-    tokenPrices = await getTokenUsdPriceBatch(tokenAddresses, chainId)
+  } catch (error) {
+    console.error(`Error computing USD balance for chainId ${chainId}:`, error)
+    return 0
   }
 
   const tokenUsdPrices = tokenPrices.reduce((acc, singleTokenPrice) => {

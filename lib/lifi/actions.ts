@@ -26,9 +26,23 @@ import {
 } from './utils'
 import { getConfigByChainId } from '@/lib/network/config'
 
-
 const NATIVE_TOKEN_STRING = '0x0000000000000000000000000000000000000000'
 
+
+/**
+ * 
+ * @param fromChain the chain to bridge from, can be name or symbol or chain id
+ * @param toChain the chain to bridge to, can be name or symbol or chain id
+ * @param fromToken the token to bridge from, can be name or symbol or address
+ * @param toToken the token to bridge to, can be name or symbol or address
+ * @param fromAddress the address to bridge from
+ * @param amountIn the amount of input tokens to bridge, in human readable format
+ * @param slippage the slippage tolerance for the transaction, 0.005 represents 0.5% slippage. Default to 0.005
+ * @param recipient the address to send the bridged tokens to. Default to user's wallet address
+ * @param autoFuelDestChain whether to auto fuel the destination chain when the native balance is low, default to false (obsolete feature)
+ * @param preference the preference for the transaction, FASTEST represents the fastest route, CHEAPEST represents the cheapest route.
+ * @returns a readable quote for the transaction
+ */
 export const generateLifiBridgeQuote = async (
   fromChain: string,
   toChain: string,
@@ -41,23 +55,12 @@ export const generateLifiBridgeQuote = async (
   autoFuelDestChain?: boolean,
   preference: "FASTEST" | "CHEAPEST" = "FASTEST"
 ) => {
-  // const fromAddress = await getUserEvmWalletAddress()
-  // if (autoFuelDestChain === undefined) {
-  //   autoFuelDestChain = true
-  // }
   autoFuelDestChain = false
 
   if (!recipient) {
     recipient = fromAddress
   }
   try {
-    console.log('fromChain', fromChain)
-    console.log('toChain', toChain)
-    console.log('fromToken', fromToken)
-    console.log('toToken', toToken)
-    console.log('fromAddress', fromAddress)
-    console.log('amountIn', amountIn)
-    console.log('slippage', slippage)
     const {
       fromChain: fromChainMatch,
       toChain: toChainMatch,
@@ -113,7 +116,6 @@ export const generateLifiBridgeQuote = async (
     const inputDecimals = fromTokenSingle.decimals
     const outputDecimals = toTokenSingle.decimals
     const inputAmount = parseUnits(amountIn, inputDecimals).toString()
-
     let quote: LifiQuoteResponse
     try {
       quote = await getLifiQuote(
@@ -208,7 +210,6 @@ export const generateLifiBridgeQuote = async (
 }
 
 
-
 export const executeLifiBridgeTransaction = async (
   fromAddress: string,
   fromChainId: number,
@@ -252,13 +253,15 @@ export const executeLifiBridgeTransaction = async (
     slippage,
     preference
   )
-  if (!quote.transactionRequest.to) {
+  // cast quote.transactionRequest to TransactionRequest
+  const txData = quote.transactionRequest as TransactionRequest
+  if (!txData.to) {
     return {
       instruction: 'notify user',
       details: "Li.fi's protocol address not found."
     }
   }
-  const protocolAddress = quote.transactionRequest.to as string
+  const protocolAddress = txData.to as string
 
   try {
     if (!isFromNativeToken) {
@@ -277,7 +280,7 @@ export const executeLifiBridgeTransaction = async (
         }
       }
     }
-    const txData = quote.transactionRequest as TransactionRequest
+
     const gasLimit = BigInt(
       quote.estimate?.gasCosts?.reduce(
         (acc, curr) => acc + Number(curr.limit),
