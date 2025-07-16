@@ -29,6 +29,7 @@ import { DeFiLlamaProtocolsSection } from './defillama-protocols-section'
 import { XStockListSection } from './jupiter/xstock-list-section'
 import { JupiterSwapQuoteSection } from './jupiter/swap-quote-section'
 import { JupiterSwapExecuteSection } from './jupiter/swap-execute-section'
+import { EthAlertSubscription } from './eth-alert-subscription'
 
 interface ToolSectionProps {
   tool: ToolInvocation
@@ -70,6 +71,38 @@ export function ToolSection({
     if (tool.state === 'result') {
       return (
         <QuestionConfirmation
+          toolInvocation={tool}
+          isCompleted={true}
+          onConfirm={() => {}} // Not used in result display mode
+        />
+      )
+    }
+  }
+  if (tool.toolName === 'eth_alert') {
+    // When waiting for user input
+    if (tool.state === 'call' && addToolResult) {
+      return (
+        <EthAlertSubscription
+          toolInvocation={tool}
+          onConfirm={(toolCallId, approved, result) => {
+            addToolResult({
+              toolCallId,
+              result: approved
+                ? result
+                : {
+                    declined: true,
+                    message: 'User declined this action.'
+                  }
+            })
+          }}
+        />
+      )
+    }
+
+    // When result is available, display the result
+    if (tool.state === 'result') {
+      return (
+        <EthAlertSubscription
           toolInvocation={tool}
           isCompleted={true}
           onConfirm={() => {}} // Not used in result display mode

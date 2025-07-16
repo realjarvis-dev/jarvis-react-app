@@ -27,7 +27,6 @@ export const Header: React.FC = () => {
   const [showWelcomePopup, setShowWelcomePopup] = useState(false)
   
   const isWalletSummaryPage = pathname === '/wallet/summary'
-  
   const handleCloseWelcomePopup = () => {
     setShowWelcomePopup(false)
     router.push('/')
