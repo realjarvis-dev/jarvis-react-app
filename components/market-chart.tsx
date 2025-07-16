@@ -55,6 +55,29 @@ function formatPrice(price: number): string {
   }
 }
 
+// Format price with subscript notation for meme coins with many zeros
+function formatPriceWithSubscript(price: number): React.ReactNode {
+  if (price >= 0.001) {
+    return formatPrice(price)
+  }
+  
+  const priceStr = price.toFixed(20)
+  const match = priceStr.match(/^0\.(0+)([1-9]\d*)/)
+  
+  if (match && match[1].length >= 4) {
+    const zeroCount = match[1].length
+    const significantDigits = match[2]
+    
+    return (
+      <span className="font-mono">
+        0.0<sub className="text-xs">{zeroCount}</sub>{significantDigits.substring(0, 4)}
+      </span>
+    )
+  }
+  
+  return formatPrice(price)
+}
+
 // Format timestamp to readable date and time
 function formatDateTime(timestamp: number): string {
   const date = new Date(timestamp)
@@ -104,7 +127,9 @@ function MarketStats({ data }: { data: MarketDataPoint[] }) {
         </div>
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
-            <span className="text-base font-bold">${formatPrice(stats.current.price)}</span>
+            <span className="text-sm md:text-base font-bold">
+              ${typeof formatPriceWithSubscript(stats.current.price) === 'string' ? formatPriceWithSubscript(stats.current.price) : <span className="font-mono">{formatPriceWithSubscript(stats.current.price)}</span>}
+            </span>
             <Badge 
               variant="outline" 
               className={cn(
@@ -129,24 +154,44 @@ function MarketStats({ data }: { data: MarketDataPoint[] }) {
         <div className="flex items-center gap-1.5">
           <span className="text-xs font-medium text-muted-foreground">Market Cap</span>
         </div>
-        <div className="text-base font-semibold">{formatLargeNumber(stats.current.marketCap)}</div>
+        <div className="text-sm md:text-base font-semibold">{formatLargeNumber(stats.current.marketCap)}</div>
       </div>
 
       <div className="space-y-1">
         <div className="flex items-center gap-1.5">
           <span className="text-xs font-medium text-muted-foreground">24h Volume</span>
         </div>
-        <div className="text-base font-semibold">{formatLargeNumber(stats.current.volume)}</div>
+        <div className="text-sm md:text-base font-semibold">{formatLargeNumber(stats.current.volume)}</div>
       </div>
 
-      <div className="space-y-1 min-w-0">
-        <div className="flex items-center gap-1.5">
+      <div className="space-y-1 min-w-0 md:justify-self-start">
+        <div className="flex items-center gap-1.5 md:justify-start">
           <span className="text-xs font-medium text-muted-foreground">Price Range</span>
         </div>
-        <div className="text-xs font-semibold flex items-center gap-1 overflow-hidden">
-          <span className="font-mono truncate">${formatPrice(stats.min)}</span>
+        {/* Desktop layout - single line */}
+        <div className="hidden md:flex text-base font-semibold items-center gap-1 overflow-hidden justify-start">
+          <span className="truncate max-w-[8rem]">
+            ${typeof formatPriceWithSubscript(stats.min) === 'string' ? formatPriceWithSubscript(stats.min) : formatPriceWithSubscript(stats.min)}
+          </span>
           <span className="text-muted-foreground flex-shrink-0">-</span>
-          <span className="font-mono truncate">${formatPrice(stats.max)}</span>
+          <span className="truncate max-w-[8rem]">
+            ${typeof formatPriceWithSubscript(stats.max) === 'string' ? formatPriceWithSubscript(stats.max) : formatPriceWithSubscript(stats.max)}
+          </span>
+        </div>
+        {/* Mobile layout - two lines */}
+        <div className="md:hidden text-xs font-semibold space-y-0.5">
+          <div className="flex items-center gap-1">
+            <span className="text-muted-foreground text-[10px]">Min:</span>
+            <span className="truncate">
+              ${typeof formatPriceWithSubscript(stats.min) === 'string' ? formatPriceWithSubscript(stats.min) : formatPriceWithSubscript(stats.min)}
+            </span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-muted-foreground text-[10px]">Max:</span>
+            <span className="truncate">
+              ${typeof formatPriceWithSubscript(stats.max) === 'string' ? formatPriceWithSubscript(stats.max) : formatPriceWithSubscript(stats.max)}
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -158,6 +203,9 @@ function InteractiveChart({ data }: { data: MarketDataPoint[] }) {
   const [hoveredPoint, setHoveredPoint] = useState<MarketDataPoint | null>(null)
   const [mousePosition, setMousePosition] = useState<{ x: number; y: number } | null>(null)
   const svgRef = useRef<SVGSVGElement>(null)
+  
+  // Create deterministic gradient ID based on data
+  const gradientId = `gradient-${data.length > 0 ? data[0].timestamp : 'default'}`
 
   const handleMouseMove = useCallback((event: React.MouseEvent<SVGSVGElement>) => {
     if (!svgRef.current || data.length === 0) return
@@ -251,7 +299,6 @@ function InteractiveChart({ data }: { data: MarketDataPoint[] }) {
   const smoothPath = createSmoothPath(points)
   const priceChange = calculatePriceChange(data)
   const strokeColor = priceChange.isPositive ? '#10b981' : '#ef4444'
-  const gradientId = `gradient-${Math.random().toString(36).substr(2, 9)}`
 
   return (
     <div className="w-full h-72 relative">
