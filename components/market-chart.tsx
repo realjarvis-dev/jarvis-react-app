@@ -126,27 +126,25 @@ function MarketStats({ data }: { data: MarketDataPoint[] }) {
           <span className="text-xs font-medium text-muted-foreground">Current Price</span>
         </div>
         <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2">
-            <span className="text-sm md:text-base font-bold">
-              ${typeof formatPriceWithSubscript(stats.current.price) === 'string' ? formatPriceWithSubscript(stats.current.price) : <span className="font-mono">{formatPriceWithSubscript(stats.current.price)}</span>}
-            </span>
-            <Badge 
-              variant="outline" 
-              className={cn(
-                "flex items-center gap-1 w-fit text-xs py-0.5 px-1.5 border-0",
-                priceChange.isPositive 
-                  ? "bg-green-500/20 text-green-400" 
-                  : "bg-red-500/20 text-red-400"
-              )}
-            >
-              {priceChange.isPositive ? (
-                <TrendingUp className="h-2.5 w-2.5" />
-              ) : (
-                <TrendingDown className="h-2.5 w-2.5" />
-              )}
-              {priceChange.change.toFixed(2)}%
-            </Badge>
+          <div className="text-sm md:text-base font-bold">
+            ${typeof formatPriceWithSubscript(stats.current.price) === 'string' ? formatPriceWithSubscript(stats.current.price) : <span className="font-mono">{formatPriceWithSubscript(stats.current.price)}</span>}
           </div>
+          <Badge 
+            variant="outline" 
+            className={cn(
+              "flex items-center gap-1 w-fit text-xs py-0.5 px-1.5 border-0",
+              priceChange.isPositive 
+                ? "bg-green-500/20 text-green-400" 
+                : "bg-red-500/20 text-red-400"
+            )}
+          >
+            {priceChange.isPositive ? (
+              <TrendingUp className="h-2.5 w-2.5" />
+            ) : (
+              <TrendingDown className="h-2.5 w-2.5" />
+            )}
+            {priceChange.change.toFixed(2)}%
+          </Badge>
         </div>
       </div>
 
@@ -168,26 +166,16 @@ function MarketStats({ data }: { data: MarketDataPoint[] }) {
         <div className="flex items-center gap-1.5 md:justify-start">
           <span className="text-xs font-medium text-muted-foreground">Price Range</span>
         </div>
-        {/* Desktop layout - single line */}
-        <div className="hidden md:flex text-base font-semibold items-center gap-1 overflow-hidden justify-start">
-          <span className="truncate max-w-[8rem]">
-            ${typeof formatPriceWithSubscript(stats.min) === 'string' ? formatPriceWithSubscript(stats.min) : formatPriceWithSubscript(stats.min)}
-          </span>
-          <span className="text-muted-foreground flex-shrink-0">-</span>
-          <span className="truncate max-w-[8rem]">
-            ${typeof formatPriceWithSubscript(stats.max) === 'string' ? formatPriceWithSubscript(stats.max) : formatPriceWithSubscript(stats.max)}
-          </span>
-        </div>
-        {/* Mobile layout - two lines */}
-        <div className="md:hidden text-xs font-semibold space-y-0.5">
+        {/* Both desktop and mobile use two-line layout */}
+        <div className="text-xs md:text-sm font-semibold space-y-0.5">
           <div className="flex items-center gap-1">
-            <span className="text-muted-foreground text-[10px]">Min:</span>
+            <span className="text-muted-foreground text-[10px] md:text-xs">Min:</span>
             <span className="truncate">
               ${typeof formatPriceWithSubscript(stats.min) === 'string' ? formatPriceWithSubscript(stats.min) : formatPriceWithSubscript(stats.min)}
             </span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-muted-foreground text-[10px]">Max:</span>
+            <span className="text-muted-foreground text-[10px] md:text-xs">Max:</span>
             <span className="truncate">
               ${typeof formatPriceWithSubscript(stats.max) === 'string' ? formatPriceWithSubscript(stats.max) : formatPriceWithSubscript(stats.max)}
             </span>
@@ -265,7 +253,7 @@ function InteractiveChart({ data }: { data: MarketDataPoint[] }) {
 
   // Responsive dimensions
   const viewBoxWidth = 300
-  const viewBoxHeight = 120
+  const viewBoxHeight = data.length > 0 ? 150 : 120  // Taller viewBox for mobile
   const padding = 25
 
   // Create smooth curve path
@@ -301,12 +289,12 @@ function InteractiveChart({ data }: { data: MarketDataPoint[] }) {
   const strokeColor = priceChange.isPositive ? '#10b981' : '#ef4444'
 
   return (
-    <div className="w-full h-72 relative">
+    <div className="w-full h-screen md:h-72 max-h-96 relative">
       <svg 
         ref={svgRef}
         viewBox={`0 0 ${viewBoxWidth} ${viewBoxHeight}`} 
         className="w-full h-full cursor-crosshair"
-        preserveAspectRatio="xMidYMid meet"
+        preserveAspectRatio="none"
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
       >
@@ -410,6 +398,31 @@ function InteractiveChart({ data }: { data: MarketDataPoint[] }) {
         {Array.from({ length: 6 }).map((_, i) => {
           const priceStep = minPrice + (priceRange * i) / 5
           const yPos = viewBoxHeight - padding - (i / 5) * (viewBoxHeight - 2 * padding)
+          
+          // Format price with subscript for SVG using tspan
+          const formatPriceForSVG = (price: number) => {
+            if (price >= 0.001) {
+              return <tspan>${formatPrice(price)}</tspan>
+            }
+            
+            const priceStr = price.toFixed(20)
+            const match = priceStr.match(/^0\.(0+)([1-9]\d*)/)
+            
+            if (match && match[1].length >= 4) {
+              const zeroCount = match[1].length
+              const significantDigits = match[2]
+              return (
+                <>
+                  <tspan>$0.0</tspan>
+                  <tspan className="text-[3px]" dy="1">{zeroCount}</tspan>
+                  <tspan dy="-1">{significantDigits.substring(0, 4)}</tspan>
+                </>
+              )
+            }
+            
+            return <tspan>${formatPrice(price)}</tspan>
+          }
+          
           return (
             <text 
               key={i}
@@ -418,7 +431,7 @@ function InteractiveChart({ data }: { data: MarketDataPoint[] }) {
               textAnchor="end" 
               className="text-[4px] fill-muted-foreground font-mono"
             >
-              ${formatPrice(priceStep)}
+              {formatPriceForSVG(priceStep)}
             </text>
           )
         })}
@@ -448,7 +461,7 @@ function InteractiveChart({ data }: { data: MarketDataPoint[] }) {
       {/* Hover tooltip */}
       {hoveredPoint && mousePosition && (
         <div 
-          className="absolute pointer-events-none z-10 bg-background border rounded-lg shadow-lg p-3 text-sm"
+          className="absolute pointer-events-none z-10 bg-background border rounded-lg shadow-lg p-3 text-sm min-w-[180px]"
           style={{
             left: `${(mousePosition.x / viewBoxWidth) * 100}%`,
             top: `${(mousePosition.y / viewBoxHeight) * 100}%`,
@@ -457,19 +470,22 @@ function InteractiveChart({ data }: { data: MarketDataPoint[] }) {
         >
           <div className="space-y-1">
             <div className="font-semibold text-foreground">
-              ${formatPrice(hoveredPoint.price)}
+              ${typeof formatPriceWithSubscript(hoveredPoint.price) === 'string' ? 
+                formatPriceWithSubscript(hoveredPoint.price) : 
+                <span className="font-mono">{formatPriceWithSubscript(hoveredPoint.price)}</span>
+              }
             </div>
             <div className="text-xs text-muted-foreground">
               {formatDateTime(hoveredPoint.timestamp)}
             </div>
             <div className="text-xs space-y-0.5 pt-1 border-t">
               <div className="flex justify-between gap-4">
-                <span className="text-muted-foreground">Market Cap:</span>
-                <span>{formatLargeNumber(hoveredPoint.marketCap)}</span>
+                <span className="text-muted-foreground whitespace-nowrap">Market Cap:</span>
+                <span className="whitespace-nowrap">{formatLargeNumber(hoveredPoint.marketCap)}</span>
               </div>
               <div className="flex justify-between gap-4">
-                <span className="text-muted-foreground">Volume:</span>
-                <span>{formatLargeNumber(hoveredPoint.volume)}</span>
+                <span className="text-muted-foreground whitespace-nowrap">Volume:</span>
+                <span className="whitespace-nowrap">{formatLargeNumber(hoveredPoint.volume)}</span>
               </div>
             </div>
           </div>
@@ -540,23 +556,25 @@ export function MarketChart({
   }
 
   return (
-    <Card className={cn("w-full bg-background/80 backdrop-blur-sm", className)}>
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="capitalize text-lg">
-            {coinId} {coinId.toUpperCase()}
-          </CardTitle>
-          <CardDescription className="text-xs">
-            Last 7 days • {currency}
-          </CardDescription>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-3 pt-0">
-        <MarketStats data={data} />
-        <div className="border rounded-lg p-2 bg-gradient-to-br from-background to-muted/20">
-          <InteractiveChart data={data} />
-        </div>
-      </CardContent>
-    </Card>
+    <div className="w-full md:mx-0 sm:-mx-4 md:mt-0 sm:-mt-4">
+      <Card className={cn("w-full bg-background/80 backdrop-blur-sm", className)}>
+        <CardHeader className="pb-2 md:pb-2 sm:pb-1">
+          <div className="flex items-center justify-between">
+            <CardTitle className="capitalize text-lg md:text-lg sm:text-base">
+              {coinId} {coinId.toUpperCase()}
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Last 7 days • {currency}
+            </CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-2 md:space-y-3 pt-0 md:p-6 sm:p-1">
+          <MarketStats data={data} />
+          <div className="border rounded-lg p-0 md:p-2 bg-gradient-to-br from-background to-muted/20 md:mx-0 sm:-mx-1">
+            <InteractiveChart data={data} />
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   )
 }  
