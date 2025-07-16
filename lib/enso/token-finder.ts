@@ -87,6 +87,3 @@ export class EnsoTokenFinder {
         return ensoProjects
     }
 }
-
-const ensoTokenFinder = new EnsoTokenFinder()
-console.log(await ensoTokenFinder.findToken(1, 2164152, 66.50223, "curve-dex"))
