@@ -43,8 +43,15 @@ function formatPrice(price: number): string {
     return price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   } else if (price >= 1) {
     return price.toFixed(4)
+  } else if (price >= 0.001) {
+    // For values between 0.001 and 1, use 5 decimal places for better readability
+    return price.toFixed(5)
+  } else if (price >= 0.0001) {
+    // For smaller values, use 6 decimal places
+    return price.toFixed(6)
   } else {
-    return price.toPrecision(4)
+    // For very small values, use scientific notation to prevent overflow
+    return price.toExponential(3)
   }
 }
 
@@ -132,14 +139,14 @@ function MarketStats({ data }: { data: MarketDataPoint[] }) {
         <div className="text-base font-semibold">{formatLargeNumber(stats.current.volume)}</div>
       </div>
 
-      <div className="space-y-1">
+      <div className="space-y-1 min-w-0">
         <div className="flex items-center gap-1.5">
           <span className="text-xs font-medium text-muted-foreground">Price Range</span>
         </div>
-        <div className="text-base font-semibold flex items-center gap-2">
-          <span>${formatPrice(stats.min)}</span>
-          <span className="text-muted-foreground">-</span>
-          <span>${formatPrice(stats.max)}</span>
+        <div className="text-xs font-semibold flex items-center gap-1 overflow-hidden">
+          <span className="font-mono truncate">${formatPrice(stats.min)}</span>
+          <span className="text-muted-foreground flex-shrink-0">-</span>
+          <span className="font-mono truncate">${formatPrice(stats.max)}</span>
         </div>
       </div>
     </div>
