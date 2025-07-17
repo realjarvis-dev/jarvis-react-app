@@ -26,7 +26,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
       const room = user?.id.split(':').at(-1)
       const onConnect = () => {
         console.log('socket connected, subscribing to room', room)
-        room && socket.emit('subscribe', room)
+        
       }
       const onPriceAlert = (data: { message: string }) => {
         console.log('receive price alert', data.message)
@@ -34,7 +34,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
       }
       const onDisconnect = () => {
         console.log('socket disconnected')
-        room && socket.emit('unsubscribe', room)
+        
       }
 
   
@@ -48,6 +48,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
       socket.emit('ping', 'hello', (response: any) => {
         console.log('ack response:', response);
       });
+      room && socket.emit('subscribe', room)
 
 
       if (!socket.connected && !socket.io.opts.autoConnect) {
@@ -58,6 +59,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
         socket.off('connect', onConnect)
         socket.off('priceAlert', onPriceAlert)
         socket.off('disconnect', onDisconnect)
+        room && socket.emit('unsubscribe', room)
         socket.disconnect()
       }
     }, [ready, authenticated, user])
