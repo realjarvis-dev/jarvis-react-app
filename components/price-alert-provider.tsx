@@ -5,19 +5,19 @@ import { createContext, ReactNode, useContext, useEffect } from 'react'
 import { toast } from 'sonner'
 import { priceAlertUrl } from '@/lib/pubsub/eth-price-alert'
 
-interface SocketContextType {
+interface PriceAlertContextType {
   eventSource: EventSource | null
 }
 
-const SocketContext = createContext<SocketContextType>({ eventSource: null })
-export const useSocket = () => useContext(SocketContext)
+const PriceAlertContext = createContext<PriceAlertContextType>({ eventSource: null })
+export const usePriceAlert = () => useContext(PriceAlertContext)
 
-export const SocketProvider = ({ children }: { children: ReactNode }) => {
+export const PriceAlertProvider = ({ children }: { children: ReactNode }) => {
   const { ready, authenticated, user } = usePrivy()
 
   useEffect(() => {
     if (!ready || !authenticated) return
-    console.log('Socket provider use effect')
+    console.log('PriceAlert provider use effect')
 
     const room = user?.id.split(':').at(-1)
     if (!room) return
@@ -25,7 +25,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     const eventSource = new EventSource(`${priceAlertUrl}/events/${room}`)
 
     eventSource.onopen = () => {
-      console.log('socket connected, subscribing to room', room)
+      console.log('PriceAlert connected, subscribing to room', room)
     }
 
     eventSource.onmessage = event => {
@@ -50,8 +50,8 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
   }, [ready, authenticated, user])
 
   return (
-    <SocketContext.Provider value={{ eventSource: null }}>
+    <PriceAlertContext.Provider value={{ eventSource: null }}>
       {children}
-    </SocketContext.Provider>
+    </PriceAlertContext.Provider>
   )
 }

@@ -3,7 +3,7 @@ import ArtifactRoot from '@/components/artifact/artifact-root'
 import Header from '@/components/header'
 import WrappedPrivyProvider from '@/components/privy-provider'
 import { QueryProvider } from '@/components/query-provider'
-import { SocketProvider } from '@/components/socket-provider'
+import { PriceAlertProvider } from '@/components/price-alert-provider'
 import { ThemeProvider } from '@/components/theme-provider'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { Toaster } from '@/components/ui/sonner'
@@ -73,7 +73,7 @@ export default async function RootLayout({
             >
               <NetworkProvider>
                 <WrappedPrivyProvider>
-                <SocketProvider>
+                <PriceAlertProvider>
                   <SidebarProvider defaultOpen={false}>
                     <AppSidebar />
                     <div className="flex flex-col flex-1 min-w-0">
@@ -83,7 +83,7 @@ export default async function RootLayout({
                       </main>
                     </div>
                   </SidebarProvider>
-                  </SocketProvider>
+                  </PriceAlertProvider>
                 </WrappedPrivyProvider>
               </NetworkProvider>
               <Toaster />
