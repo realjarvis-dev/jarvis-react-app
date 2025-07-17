@@ -5,9 +5,9 @@ import { ToolInvocation } from 'ai'
 import { Check, X } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { useSocket } from './socket-provider'
 import { Button } from './ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
+import { priceAlertUrl } from '@/lib/pubsub/eth-price-alert'
 
 interface EthAlertSubscriptionProps {
   toolInvocation: ToolInvocation
@@ -27,31 +27,53 @@ export function EthAlertSubscription({
       : null
 
   const { user } = usePrivy()
-  const { socket } = useSocket()
   const [completed, setCompleted] = useState(isCompleted)
 
-  const handleConfirm = () => {
-    if (!user?.id || !socket) {
-      const errorMsg = 'User not authenticated or socket not connected.'
+  const handleConfirm = async () => {
+    if (!user?.id) {
+      const errorMsg = 'User not authenticated.'
       toast.error(errorMsg)
       onConfirm(toolInvocation.toolCallId, false, { error: errorMsg })
       return
     }
 
     const userId = user.id.split(':').at(-1)
-    socket.emit('subscribePriceAlert', {
-      userId,
-      threshold: priceThreshold,
-      direction: priceType
-    })
-
-    const result = {
-      success: true,
-      message: `Subscription set for price ${priceType} $${priceThreshold}`
+    if (!userId) {
+      const errorMsg = 'Invalid user ID.'
+      toast.error(errorMsg)
+      onConfirm(toolInvocation.toolCallId, false, { error: errorMsg })
+      return
     }
-    toast.success(result.message)
-    onConfirm(toolInvocation.toolCallId, true, result)
-    setCompleted(true)
+
+    try {
+      const response = await fetch(priceAlertUrl + '/price-alert', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userId,
+          threshold: priceThreshold,
+          direction: priceType
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to set price alert')
+      }
+
+      const result = {
+        success: true,
+        message: `Subscription set for price ${priceType} $${priceThreshold}`
+      }
+      toast.success(result.message)
+      onConfirm(toolInvocation.toolCallId, true, result)
+      setCompleted(true)
+    } catch (error) {
+      const errorMsg = 'Failed to set price alert.'
+      toast.error(errorMsg)
+      onConfirm(toolInvocation.toolCallId, false, { error: errorMsg })
+    }
   }
 
   const handleDecline = () => {

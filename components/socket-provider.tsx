@@ -1,72 +1,57 @@
 'use client'
 
 import { usePrivy } from '@privy-io/react-auth'
-import { createContext, ReactNode, useContext, useEffect, useRef } from 'react'
+import { createContext, ReactNode, useContext, useEffect } from 'react'
 import { toast } from 'sonner'
-import socket from '@/lib/pubsub/socket'
+import { priceAlertUrl } from '@/lib/pubsub/eth-price-alert'
 
 interface SocketContextType {
-    socket: typeof socket
-  }
-  
-const SocketContext = createContext<SocketContextType>({ socket })
+  eventSource: EventSource | null
+}
+
+const SocketContext = createContext<SocketContextType>({ eventSource: null })
 export const useSocket = () => useContext(SocketContext)
 
 export const SocketProvider = ({ children }: { children: ReactNode }) => {
-    const { ready, authenticated, user } = usePrivy()
-  
-    useEffect(() => {
-        console.log("Socket provider use effect")
-        console.log(typeof window === "undefined")
-        console.log(!ready)
-        console.log(!authenticated)
-      if (!ready || !authenticated) return
-        console.log("Socket provider use effect 2")
+  const { ready, authenticated, user } = usePrivy()
 
-      const room = user?.id.split(':').at(-1)
-      const onConnect = () => {
-        console.log('socket connected, subscribing to room', room)
-        
-      }
-      const onPriceAlert = (data: { message: string }) => {
+  useEffect(() => {
+    if (!ready || !authenticated) return
+    console.log('Socket provider use effect')
+
+    const room = user?.id.split(':').at(-1)
+    if (!room) return
+
+    const eventSource = new EventSource(`${priceAlertUrl}/events/${room}`)
+
+    eventSource.onopen = () => {
+      console.log('socket connected, subscribing to room', room)
+    }
+
+    eventSource.onmessage = event => {
+      try {
+        const data = JSON.parse(event.data)
         console.log('receive price alert', data.message)
-        if (!data.message.includes("TEST")) {
+        if (!data.message.includes('TEST')) {
           toast.info(data.message)
         }
+      } catch (error) {
+        console.error('Failed to parse SSE message:', error)
       }
+    }
 
-      const onDisconnect = (reason: any) => {
-            console.log(`client ${socket.id} disconnected:`, reason);
-      }
-      socket.on('connect', onConnect)
-      socket.on('priceAlert', onPriceAlert)
-      socket.on('disconnect', onDisconnect);
-      socket.onAny((event, ...args) => {
-        console.log('[onAny] got event', event, args)
-      })
-      
-      socket.emit('ping', 'hello', (response: any) => {
-        console.log('ack response:', response);
-      });
-      room && socket.emit('subscribe', room)
+    eventSource.onerror = error => {
+      console.error('EventSource failed:', error)
+    }
 
+    return () => {
+      eventSource.close()
+    }
+  }, [ready, authenticated, user])
 
-      if (!socket.connected && !socket.io.opts.autoConnect) {
-        console.log("Socket. connect")
-        socket.connect()
-      }
-      return () => {
-        socket.off('connect', onConnect)
-        socket.off('priceAlert', onPriceAlert)
-        socket.off('disconnect', onDisconnect)
-        room && socket.emit('unsubscribe', room)
-        socket.disconnect()
-      }
-    }, [ready, authenticated, user])
-  
-    return (
-      <SocketContext.Provider value={{ socket }}>
-        {children}
-      </SocketContext.Provider>
-    )
-  }
+  return (
+    <SocketContext.Provider value={{ eventSource: null }}>
+      {children}
+    </SocketContext.Provider>
+  )
+}
