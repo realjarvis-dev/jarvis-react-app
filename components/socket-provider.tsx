@@ -34,15 +34,13 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
           toast.info(data.message)
         }
       }
-      const onDisconnect = () => {
-        console.log('socket disconnected')
-        
-      }
 
-  
+      const onDisconnect = (reason: any) => {
+            console.log(`client ${socket.id} disconnected:`, reason);
+      }
       socket.on('connect', onConnect)
       socket.on('priceAlert', onPriceAlert)
-      socket.on('disconnect', onDisconnect)
+      socket.on('disconnect', onDisconnect);
       socket.onAny((event, ...args) => {
         console.log('[onAny] got event', event, args)
       })
