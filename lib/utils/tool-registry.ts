@@ -682,7 +682,7 @@ export function createToolRegistry(model: string): ToolRegistry {
     category: ToolCategory.UTILITY,
     supportedNetworks: [
       'ethereum',
-      'demo',
+      'demo'
     ]
   })
 
@@ -699,7 +699,7 @@ export function createToolRegistry(model: string): ToolRegistry {
     category: ToolCategory.UTILITY,
     supportedNetworks: [
       'ethereum',
-      'demo',
+      'demo'
     ]
   })
 
