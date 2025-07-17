@@ -1,8 +1,13 @@
 'use client'
 
 import { ToolInvocation } from 'ai'
+import { DeFiLlamaProtocolsSection } from './defillama-protocols-section'
+import { DeFiLlamaYieldsSection } from './defillama-yields-section'
 import { GenericSwapCard } from './generic-swap-card'
 import { GetGasPriceSection } from './get-gas-price-section'
+import { JupiterSwapExecuteSection } from './jupiter/swap-execute-section'
+import { JupiterSwapQuoteSection } from './jupiter/swap-quote-section'
+import { XStockListSection } from './jupiter/xstock-list-section'
 import { KodiakBaultProfitability } from './kodiak-bault-profitability'
 import { KodiakDepositCard } from './kodiak-deposit-card'
 import { KodiakOpportunitiesSection } from './kodiak-opportunities-section'
@@ -20,15 +25,11 @@ import RetrieveSection from './retrieve-section'
 import { SearchSection } from './search-section'
 import { SimpleQuoteDisplay } from './simple-quote-display'
 import { SwapTransactionCard } from './swap-transaction-card'
+import { TargetAllocationSection } from './target-allocation-section'
 import { TransferSection } from './transfer-section'
 import { VideoSearchSection } from './video-search-section'
 import { WalletBalanceSection } from './wallet-balance-section'
 import { WalletFundingSection } from './wallet-funding-section'
-import { DeFiLlamaYieldsSection } from './defillama-yields-section'
-import { DeFiLlamaProtocolsSection } from './defillama-protocols-section'
-import { XStockListSection } from './jupiter/xstock-list-section'
-import { JupiterSwapQuoteSection } from './jupiter/swap-quote-section'
-import { JupiterSwapExecuteSection } from './jupiter/swap-execute-section'
 
 interface ToolSectionProps {
   tool: ToolInvocation
@@ -333,6 +334,22 @@ export function ToolSection({
             onOpenChange={onOpenChange}
           />
         )
+    case 'create_target_allocation':
+      return (
+        <TargetAllocationSection
+          tool={tool}
+          isOpen={isOpen}
+          onOpenChange={onOpenChange}
+        />
+      )
+    case 'get_target_allocation':
+      return (
+        <TargetAllocationSection
+          tool={tool}
+          isOpen={isOpen}
+          onOpenChange={onOpenChange}
+        />
+      )
     default:
       return null
   }

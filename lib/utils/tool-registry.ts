@@ -1,15 +1,19 @@
 import { ChainType } from '@/lib/network/types'
 import { z } from 'zod'
 import { searchSchema } from '../schema/search'
+import { createTargetAllocationTool } from '../tools/create-target-allocation'
 import { defiProtocolsTool } from '../tools/defillama-protocols'
 import { defiYieldsTool } from '../tools/defillama-yields'
 import { getGasPriceTool } from '../tools/gas-price'
+import { getTargetAllocationTool } from '../tools/get-target-allocation'
+import { jupiterExecute, jupiterQuote } from '../tools/jupiter-trade'
 import {
   kodiakBaultProfitabilityTool,
   kodiakCompoundBaultTool,
   kodiakDepositTool,
   kodiakOpportunitiesTool
 } from '../tools/kodiak'
+import { bridgeExecuteSolanaTool, bridgeQuoteSolanaTool } from '../tools/lifi-brdige-solana'
 import { bridgeExecuteTool, bridgeQuoteTool } from '../tools/lifi-bridge'
 import { marketChartTool } from '../tools/market-chart'
 import {
@@ -39,10 +43,8 @@ import {
   initialWalletRewardTool,
   walletBalanceTool
 } from '../tools/wallet'
-import { NetworkContext, ToolContext } from '../types/context'
 import { xStockList } from '../tools/xstock-search'
-import { jupiterExecute, jupiterQuote } from '../tools/jupiter-trade'
-import { bridgeExecuteSolanaTool, bridgeQuoteSolanaTool } from '../tools/lifi-brdige-solana'
+import { NetworkContext, ToolContext } from '../types/context'
 
 /**
  * Interface for tool definition with schema and execution function
@@ -665,6 +667,40 @@ export function createToolRegistry(model: string): ToolRegistry {
       } as any),
     category: ToolCategory.WEB3_WRITE,
     supportedNetworks: ['demo']
+  })
+
+  registry.registerTool({
+    name: 'create_target_allocation',
+    description: 'Create or update a target portfolio allocation strategy',
+    schema: createTargetAllocationTool.parameters,
+    execute: async (params, context) =>
+      createTargetAllocationTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.UTILITY,
+    supportedNetworks: [
+      'ethereum',
+      'demo',
+    ]
+  })
+
+  registry.registerTool({
+    name: 'get_target_allocation',
+    description: 'Get the user\'s saved target portfolio allocation strategy',
+    schema: getTargetAllocationTool.parameters,
+    execute: async (params, context) =>
+      getTargetAllocationTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.UTILITY,
+    supportedNetworks: [
+      'ethereum',
+      'demo',
+    ]
   })
 
   registry.registerTool({
