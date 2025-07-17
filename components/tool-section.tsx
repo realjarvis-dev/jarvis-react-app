@@ -20,6 +20,7 @@ import { PendleZapInQuoteDisplay } from './pendle/pendle-zap-in-quote-display'
 import { PendleZapOutExecutionCard } from './pendle/pendle-zap-out-execution-card'
 import { PendleZapOutQuoteDisplay } from './pendle/pendle-zap-out-quote-display'
 import { QuestionConfirmation } from './question-confirmation'
+import { RebalancingExecutionSection } from './rebalancing-execution-section'
 import { RedeemTransactionCard } from './redeem-transaction-card'
 import RetrieveSection from './retrieve-section'
 import { SearchSection } from './search-section'
@@ -345,6 +346,14 @@ export function ToolSection({
     case 'get_target_allocation':
       return (
         <TargetAllocationSection
+          tool={tool}
+          isOpen={isOpen}
+          onOpenChange={onOpenChange}
+        />
+      )
+    case 'execute_rebalancing':
+      return (
+        <RebalancingExecutionSection
           tool={tool}
           isOpen={isOpen}
           onOpenChange={onOpenChange}

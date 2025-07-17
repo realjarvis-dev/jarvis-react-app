@@ -4,6 +4,7 @@ import { searchSchema } from '../schema/search'
 import { createTargetAllocationTool } from '../tools/create-target-allocation'
 import { defiProtocolsTool } from '../tools/defillama-protocols'
 import { defiYieldsTool } from '../tools/defillama-yields'
+import { executeRebalancingTool } from '../tools/execute-rebalancing'
 import { getGasPriceTool } from '../tools/gas-price'
 import { getTargetAllocationTool } from '../tools/get-target-allocation'
 import { jupiterExecute, jupiterQuote } from '../tools/jupiter-trade'
@@ -697,6 +698,23 @@ export function createToolRegistry(model: string): ToolRegistry {
         networkContext: context?.networkContext!
       } as any),
     category: ToolCategory.UTILITY,
+    supportedNetworks: [
+      'ethereum',
+      'demo'
+    ]
+  })
+
+  registry.registerTool({
+    name: 'execute_rebalancing',
+    description: 'Execute portfolio rebalancing to match target allocation',
+    schema: executeRebalancingTool.parameters,
+    execute: async (params, context) =>
+      executeRebalancingTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.WEB3_WRITE,
     supportedNetworks: [
       'ethereum',
       'demo'
