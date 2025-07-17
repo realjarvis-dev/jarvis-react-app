@@ -87,3 +87,9 @@ export class EnsoTokenFinder {
         return ensoProjects
     }
 }
+
+const ensoTokenFinder = new EnsoTokenFinder()
+
+export function getEnsoTokenFinder() {
+    return ensoTokenFinder
+}

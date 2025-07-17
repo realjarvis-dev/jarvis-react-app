@@ -19,4 +19,4 @@ export async function lookupPoolLatestData(poolAddress: string) {
     return poolChart.data[poolChart.data.length - 1]
 }
 
-console.log(await lookupPoolLatestData("789970a7-7ddd-4580-b86b-fe0c3844881e"))
+// console.log(await lookupPoolLatestData("789970a7-7ddd-4580-b86b-fe0c3844881e"))

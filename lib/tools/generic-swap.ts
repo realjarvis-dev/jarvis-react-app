@@ -169,7 +169,7 @@ export const genericSwapTool = tool({
       }
 
       if (erc20Input) {
-        const approvalResult = await erc20Approval(tokenInAddress, txData.to,
+        const approvalResult = await erc20Approval(tokenInAddress, txData.tx.to,
             amountInBaseUnits, evmWalletAddress, effectiveChainId, isDemo)
         if (approvalResult.status === 'fail') {
           throw new Error(approvalResult.message)
@@ -180,7 +180,7 @@ export const genericSwapTool = tool({
       await logToFile(logFilePath, logContent)
 
       // TODO: uncomment this when ready
-      const result = await executeTransaction(txData, effectiveChainId)
+      const result = await executeTransaction(txData.tx, effectiveChainId)
 
       const completeTime = new Date().toISOString()
 
