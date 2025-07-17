@@ -6516,6 +6516,39 @@ export const pendleInactiveTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0x4e82347bc41cfd5d62cef483c7f0a739a8158963",
       "expiry": "2025-05-29T00:00:00.000Z",
       "underlyingAsset": "0x9f0df7799f6fdad409300080cff680f5a23df4b1"
+    },
+    {
+      "chainId": 146,
+      "address": "0x77d8f09053c28faf1e00df6511b23125d438616f",
+      "symbol": "PT-USDC-Silo20-17JUL2025",
+      "name": "PT USDC-Silo20 17JUL2025",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0xacfad541698437f6ef0e728c56a50ce35c73cc3e",
+      "expiry": "2025-07-17T00:00:00.000Z",
+      "underlyingAsset": "0x322e1d5384aa4ed66aeca770b95686271de61dc3"
+    },
+    {
+      "chainId": 146,
+      "address": "0x64547ba3f2d032c2d9f43e6ca1a98516a43dad3f",
+      "symbol": "YT-USDC-Silo20-17JUL2025",
+      "name": "YT USDC-Silo20 17JUL2025",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0xacfad541698437f6ef0e728c56a50ce35c73cc3e",
+      "expiry": "2025-07-17T00:00:00.000Z",
+      "underlyingAsset": "0x322e1d5384aa4ed66aeca770b95686271de61dc3"
+    },
+    {
+      "chainId": 146,
+      "address": "0xa9da5457ffc301d7c98fb38105f551a665511af3",
+      "symbol": "SY-USDC-Silo20",
+      "name": "SY USDC-Silo20",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0xacfad541698437f6ef0e728c56a50ce35c73cc3e",
+      "expiry": "2025-07-17T00:00:00.000Z",
+      "underlyingAsset": "0x322e1d5384aa4ed66aeca770b95686271de61dc3"
     }
   ],
   "5000": [
