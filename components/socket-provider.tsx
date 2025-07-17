@@ -30,7 +30,9 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
       }
       const onPriceAlert = (data: { message: string }) => {
         console.log('receive price alert', data.message)
-        toast.info(data.message)
+        if (!data.message.includes("TEST")) {
+          toast.info(data.message)
+        }
       }
       const onDisconnect = () => {
         console.log('socket disconnected')
