@@ -221,8 +221,8 @@ export function RebalancingExecutionSection({
                     Ready to Execute
                   </div>
                   <p className="text-blue-600 dark:text-blue-400 text-sm">
-                    Review the planned actions above. If you're satisfied with the rebalancing plan, 
-                    ask me to "Execute the rebalancing" to perform the actual swaps.
+                    Review the planned actions above. If you&apos;re satisfied with the rebalancing plan, 
+                    ask me to &quot;Execute the rebalancing&quot; to perform the actual swaps.
                   </p>
                 </div>
               )}
