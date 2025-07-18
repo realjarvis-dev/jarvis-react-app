@@ -15,7 +15,6 @@ export const getNotification = async (userId: string) => {
     pipe.hgetall(hashKey)
   })
   const rawResults = await pipe.exec()
-  redis.close()
   return ids.map((id, idx) => {
     const data = Array.isArray(rawResults[idx])
       ? rawResults[idx][1]

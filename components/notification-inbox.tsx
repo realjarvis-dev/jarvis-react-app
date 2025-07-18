@@ -67,16 +67,17 @@ const NotificationInbox = () => {
     }
   }
 
-  if (isLoading) {
-    return <DefaultSkeleton />
-  }
-
-  if (isError || !notifications) {
+  if (isError) {
     return null
   }
 
-  const unreadNotifications =
-    notifications.filter(n => parseInt(n.createdAt, 10) > lastSeenAt) || []
+  let unreadNotifications: Notification[] = []
+  if (!isLoading && notifications) {
+    unreadNotifications = notifications.filter(n => parseInt(n.createdAt, 10) > lastSeenAt) || []
+  } else {
+    unreadNotifications = []
+  }
+
 
   return (
     <Popover onOpenChange={handlePopoverChange}>
@@ -96,36 +97,42 @@ const NotificationInbox = () => {
         <div className="grid gap-4">
           <div className="space-y-2">
             <h4 className="font-medium leading-none">Notifications</h4>
-            <p className="text-sm text-muted-foreground">
-              You have {unreadNotifications.length} unread messages.
-            </p>
+            {!isLoading && (
+              <p className="text-sm text-muted-foreground">
+                You have {unreadNotifications.length} unread messages.
+              </p>
+            )}
           </div>
           <div className="grid gap-2">
-            {notifications.map(notification => (
-              <div
-                key={notification.id}
-                className="mb-2 grid grid-cols-[25px_1fr] items-start pb-4 last:mb-0 last:pb-0"
-              >
-                <span
-                  className={cn(
-                    'flex h-2 w-2 translate-y-1 rounded-full',
-                    parseInt(notification.createdAt, 10) > lastSeenAt &&
-                      'bg-sky-500'
-                  )}
-                />
-                <div className="grid gap-1">
-                  <p className="text-sm font-medium leading-none">
-                    {notification.title}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {notification.msg}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {formatTimestamp(notification.createdAt)}
-                  </p>
+            {isLoading ? (
+              <DefaultSkeleton />
+            ) : (
+              notifications.map(notification => (
+                <div
+                  key={notification.id}
+                  className="mb-2 grid grid-cols-[25px_1fr] items-start pb-4 last:mb-0 last:pb-0"
+                >
+                  <span
+                    className={cn(
+                      'flex h-2 w-2 translate-y-1 rounded-full',
+                      parseInt(notification.createdAt, 10) > lastSeenAt &&
+                        'bg-sky-500'
+                    )}
+                  />
+                  <div className="grid gap-1">
+                    <p className="text-sm font-medium leading-none">
+                      {notification.title}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {notification.msg}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatTimestamp(notification.createdAt)}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </PopoverContent>
