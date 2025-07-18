@@ -54,7 +54,8 @@ const NotificationInbox = () => {
   } = useQuery<Notification[]>({
     queryKey: ['notifications'],
     queryFn: fetchNotifications,
-    enabled: ready && authenticated
+    enabled: ready && authenticated,
+    initialData: []
   })
 
   const [lastSeenAt, setLastSeenAt] = useLocalStorage('lastSeenAt', {
@@ -71,13 +72,8 @@ const NotificationInbox = () => {
     return null
   }
 
-  let unreadNotifications: Notification[] = []
-  if (!isLoading && notifications) {
-    unreadNotifications = notifications.filter(n => parseInt(n.createdAt, 10) > lastSeenAt) || []
-  } else {
-    unreadNotifications = []
-  }
-
+  const unreadNotifications =
+    notifications.filter(n => parseInt(n.createdAt, 10) > lastSeenAt) || []
 
   return (
     <Popover onOpenChange={handlePopoverChange}>
