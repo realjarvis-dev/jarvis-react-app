@@ -3,13 +3,13 @@
 import { usePrivy } from '@privy-io/react-auth'
 import { createContext, ReactNode, useContext, useEffect } from 'react'
 import { toast } from 'sonner'
-import { priceAlertUrl } from '@/lib/pubsub/eth-price-alert'
+import { pusher, Pusher } from '@/lib/pusher/pusher'
 
 interface PriceAlertContextType {
-  eventSource: EventSource | null
+  pusher: Pusher | null
 }
 
-const PriceAlertContext = createContext<PriceAlertContextType>({ eventSource: null })
+const PriceAlertContext = createContext<PriceAlertContextType>({ pusher: null })
 export const usePriceAlert = () => useContext(PriceAlertContext)
 
 export const PriceAlertProvider = ({ children }: { children: ReactNode }) => {
@@ -22,35 +22,25 @@ export const PriceAlertProvider = ({ children }: { children: ReactNode }) => {
     const room = user?.id.split(':').at(-1)
     if (!room) return
 
-    const eventSource = new EventSource(`${priceAlertUrl}/events/${room}`)
-
-    eventSource.onopen = () => {
-      console.log('PriceAlert connected, subscribing to room', room)
-    }
-
-    eventSource.onmessage = event => {
+    const userChannel = pusher.subscribe(room)
+    userChannel.bind('priceAlert', (data: any) => {
       try {
-        const data = JSON.parse(event.data)
-        console.log('receive price alert', data.message)
+        console.log('receive price alert', data)
         if (!data.message.includes('TEST')) {
           toast.info(data.message)
         }
       } catch (error) {
-        console.error('Failed to parse SSE message:', error)
+        console.error('Failed to parse price alert:', error)
       }
-    }
-
-    eventSource.onerror = error => {
-      console.error('EventSource failed:', error)
-    }
+    })
 
     return () => {
-      eventSource.close()
+      pusher.disconnect()
     }
   }, [ready, authenticated, user])
 
   return (
-    <PriceAlertContext.Provider value={{ eventSource: null }}>
+    <PriceAlertContext.Provider value={{ pusher: null }}>
       {children}
     </PriceAlertContext.Provider>
   )

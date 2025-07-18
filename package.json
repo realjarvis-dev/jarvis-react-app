@@ -74,6 +74,7 @@
     "next-themes": "^0.3.0",
     "node-html-parser": "^6.1.13",
     "ollama-ai-provider": "^1.2.0",
+    "pusher-js": "pusher/pusher-js",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-icons": "^5.0.1",
