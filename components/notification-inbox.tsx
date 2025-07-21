@@ -55,7 +55,7 @@ const NotificationInbox = () => {
     queryKey: ['notifications'],
     queryFn: fetchNotifications,
     enabled: ready && authenticated,
-    initialData: []
+    refetchInterval: 1000 * 60 * 10, // 10 minutes
   })
 
   const [lastSeenAt, setLastSeenAt] = useLocalStorage('lastSeenAt', {
@@ -73,12 +73,11 @@ const NotificationInbox = () => {
   }
 
   const unreadNotifications =
-    notifications.filter(n => parseInt(n.createdAt, 10) > lastSeenAt) || []
+    notifications?.filter(n => parseInt(n.createdAt, 10) > lastSeenAt) ?? []
   if (isLoading) {
-    console.log("is loading")
+    console.log('is loading')
     console.log(notifications)
   }
-
 
   return (
     <Popover onOpenChange={handlePopoverChange}>
@@ -94,47 +93,45 @@ const NotificationInbox = () => {
           <span className="sr-only">Toggle notifications</span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 max-h-[66vh]">
-        <div className="grid gap-4 h-full">
-          <div className="space-y-2 flex-shrink-0">
-            <h4 className="font-medium leading-none">Notifications</h4>
-            {!isLoading && (
-              <p className="text-sm text-muted-foreground">
-                You have {unreadNotifications.length} unread messages.
-              </p>
-            )}
-          </div>
-          <div className="grid gap-2 overflow-y-auto flex-1">
-            {isLoading ? (
-              <DefaultSkeleton />
-            ) : (
-              notifications.map(notification => (
-                <div
-                  key={notification.id}
-                  className="mb-2 grid grid-cols-[25px_1fr] items-start pb-4 last:mb-0 last:pb-0"
-                >
-                  <span
-                    className={cn(
-                      'flex h-2 w-2 translate-y-1 rounded-full',
-                      parseInt(notification.createdAt, 10) > lastSeenAt &&
-                        'bg-sky-500'
-                    )}
-                  />
-                  <div className="grid gap-1">
-                    <p className="text-sm font-medium leading-none">
-                      {notification.title}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {notification.msg}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatTimestamp(notification.createdAt)}
-                    </p>
-                  </div>
+      <PopoverContent className="w-80 max-h-[66vh] p-0 flex flex-col">
+        <div className="p-4 pb-2">
+          <h4 className="font-medium leading-none">Notifications</h4>
+          {!isLoading && (
+            <p className="text-sm text-muted-foreground">
+              You have {unreadNotifications.length} unread messages.
+            </p>
+          )}
+        </div>
+        <div className="grid gap-2 p-4 pt-2 overflow-y-auto">
+          {isLoading ? (
+            <DefaultSkeleton />
+          ) : (
+            notifications?.map(notification => (
+              <div
+                key={notification.id}
+                className="mb-2 grid grid-cols-[25px_1fr] items-start pb-4 last:mb-0 last:pb-0"
+              >
+                <span
+                  className={cn(
+                    'flex h-2 w-2 translate-y-1 rounded-full',
+                    parseInt(notification.createdAt, 10) > lastSeenAt &&
+                      'bg-sky-500'
+                  )}
+                />
+                <div className="grid gap-1">
+                  <p className="text-sm font-medium leading-none">
+                    {notification.title}
+                  </p>
+                  <p className="text-sm text-muted-foreground break-words">
+                    {notification.msg}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {formatTimestamp(notification.createdAt)}
+                  </p>
                 </div>
-              ))
-            )}
-          </div>
+              </div>
+            ))
+          )}
         </div>
       </PopoverContent>
     </Popover>
