@@ -74,6 +74,11 @@ const NotificationInbox = () => {
 
   const unreadNotifications =
     notifications.filter(n => parseInt(n.createdAt, 10) > lastSeenAt) || []
+  if (isLoading) {
+    console.log("is loading")
+    console.log(notifications)
+  }
+
 
   return (
     <Popover onOpenChange={handlePopoverChange}>
@@ -89,9 +94,9 @@ const NotificationInbox = () => {
           <span className="sr-only">Toggle notifications</span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80">
-        <div className="grid gap-4">
-          <div className="space-y-2">
+      <PopoverContent className="w-80 max-h-[66vh]">
+        <div className="grid gap-4 h-full">
+          <div className="space-y-2 flex-shrink-0">
             <h4 className="font-medium leading-none">Notifications</h4>
             {!isLoading && (
               <p className="text-sm text-muted-foreground">
@@ -99,7 +104,7 @@ const NotificationInbox = () => {
               </p>
             )}
           </div>
-          <div className="grid gap-2">
+          <div className="grid gap-2 overflow-y-auto flex-1">
             {isLoading ? (
               <DefaultSkeleton />
             ) : (
