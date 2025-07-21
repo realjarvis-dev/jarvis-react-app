@@ -63,7 +63,7 @@ const NotificationInbox = () => {
   })
 
   const handlePopoverChange = (open: boolean) => {
-    if (!open) {
+    if (!open && notifications) {
       setLastSeenAt(Date.now())
     }
   }
