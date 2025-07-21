@@ -18,8 +18,8 @@ const TOKEN_ADDRESSES: Record<string, string> = {
   'stETH': '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84' // stETH
 }
 
-// Minimum drift threshold to trigger rebalancing (5%)
-const REBALANCE_THRESHOLD = 5
+// Minimum drift threshold to trigger rebalancing (3%)
+const REBALANCE_THRESHOLD = 3
 
 interface RebalanceAction {
   fromToken: string
