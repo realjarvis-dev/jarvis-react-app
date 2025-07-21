@@ -41,7 +41,13 @@ export const executeRebalancingTool = tool({
     try {
       console.log('⚖️ execute_rebalancing: Starting portfolio rebalancing...')
       
-      const { dry_run, slippage } = params
+      let { dry_run, slippage } = params
+      
+      // Increase slippage for demo networks due to limited liquidity
+      if (context?.networkContext?.isDemo) {
+        slippage = Math.max(slippage, 0.03) // Minimum 3% slippage for demo
+        console.log(`🎯 Demo mode: Using increased slippage of ${(slippage * 100).toFixed(1)}%`)
+      }
       
       // Get user ID and wallet address
       const userId = await getUserId()
