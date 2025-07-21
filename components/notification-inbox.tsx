@@ -69,7 +69,25 @@ const NotificationInbox = () => {
   }
 
   if (isError) {
-    return null
+    return (
+        <Popover onOpenChange={handlePopoverChange}>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="icon" className="relative">
+              <BellIcon className="h-5 w-5" />
+              <span className="sr-only">Toggle notifications</span>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 max-h-[66vh] p-0 flex flex-col">
+            <div className="p-4 pb-2">
+              <h4 className="font-medium leading-none">Notifications</h4>
+
+              <p className="text-sm text-muted-foreground break-words">
+                Sorry, something went wrong. Please come back later and we will get your notifications.
+              </p>
+            </div>
+          </PopoverContent>
+        </Popover>
+      )
   }
 
   const unreadNotifications =

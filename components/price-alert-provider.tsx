@@ -4,6 +4,7 @@ import { usePrivy } from '@privy-io/react-auth'
 import { createContext, ReactNode, useContext, useEffect } from 'react'
 import { toast } from 'sonner'
 import { pusher, Pusher } from '@/lib/pusher/pusher'
+import { useQueryClient } from '@tanstack/react-query'
 
 interface PriceAlertContextType {
   pusher: Pusher | null
@@ -14,6 +15,7 @@ export const usePriceAlert = () => useContext(PriceAlertContext)
 
 export const PriceAlertProvider = ({ children }: { children: ReactNode }) => {
   const { ready, authenticated, user } = usePrivy()
+  const queryClient = useQueryClient()
 
   useEffect(() => {
     if (!ready || !authenticated) return
@@ -29,6 +31,7 @@ export const PriceAlertProvider = ({ children }: { children: ReactNode }) => {
         if (!data.message.includes('TEST')) {
           toast.info(data.message)
         }
+        queryClient.invalidateQueries({ queryKey: ['notifications'] })
       } catch (error) {
         console.error('Failed to parse price alert:', error)
       }
