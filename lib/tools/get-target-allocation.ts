@@ -53,11 +53,32 @@ export const getTargetAllocationTool = tool({
         }
       }
 
-      // Parse the target allocation
-      const targetAllocation = JSON.parse(allocationData.allocation as string)
+      // Helper function to safely parse JSON fields with type validation
+      const safeParseJSON = <T>(field: any, fallback: T): T => {
+        if (typeof field === 'string') {
+          try {
+            return JSON.parse(field);
+          } catch {
+            return fallback;
+          }
+        }
+        return field || fallback;
+      };
+
+      // Parse the target allocation safely (handles both string and object formats)
+      const targetAllocation = safeParseJSON(allocationData.allocation, {} as Record<string, number>)
       const updatedAt = allocationData.updatedAt
 
       console.log('📊 Target allocation:', targetAllocation)
+
+      // Validate that we have a valid allocation object
+      if (!targetAllocation || Object.keys(targetAllocation).length === 0) {
+        return {
+          _uiDisplayTool: true,
+          success: false,
+          error: 'Target allocation data is corrupted. Please create a new target allocation.'
+        }
+      }
 
       // Get current wallet balances
       console.log('💰 Fetching wallet balances...')

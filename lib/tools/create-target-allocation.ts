@@ -55,7 +55,7 @@ export const createTargetAllocationTool = tool({
       
       await redis.hmset(allocationKey, {
         userId,
-        allocation: JSON.stringify(definedAllocations),
+        allocation: definedAllocations, // Store object directly, Redis wrapper will handle conversion
         updatedAt: allocationData.updatedAt
       })
 
