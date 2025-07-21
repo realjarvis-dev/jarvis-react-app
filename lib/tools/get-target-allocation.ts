@@ -1,19 +1,19 @@
 import { tool } from 'ai'
 import { z } from 'zod'
 import { getTokenBalances } from '../alchemy/get-token-balance'
+import { REBALANCE_THRESHOLD } from '../constants'
 import { getTokenUsdPriceBatch } from '../enso/get-token-usd-price'
 import { getUserEvmWalletAddress, getUserId } from '../privy/client'
 import { getRedisClient } from '../redis/config'
 import { ToolContext } from '../types/context'
 
 // Supported tokens for allocation analysis
-const SUPPORTED_TOKENS = ['ETH', 'USDC', 'stETH'] as const
+const SUPPORTED_TOKENS = ['ETH', 'USDC'] as const
 
-// Token address mapping for price fetching
+// Token addresses for supported tokens
 const TOKEN_ADDRESSES: Record<string, string> = {
   'ETH': '0x0000000000000000000000000000000000000000', // Native ETH
   'USDC': '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', // USDC on demo/mainnet
-  'stETH': '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84' // stETH
 }
 
 export const getTargetAllocationTool = tool({
@@ -174,9 +174,9 @@ export const getTargetAllocationTool = tool({
           tokenPrices,
           updatedAt,
           analysis: {
-            hasSignificantDrift: Object.values(drift).some(d => Math.abs(d) > 5),
+            hasSignificantDrift: Object.values(drift).some(d => Math.abs(d) > REBALANCE_THRESHOLD),
             maxDrift: Math.max(...Object.values(drift).map(Math.abs)),
-            needsRebalancing: Object.values(drift).some(d => Math.abs(d) > 5)
+            needsRebalancing: Object.values(drift).some(d => Math.abs(d) > REBALANCE_THRESHOLD)
           }
         },
         summary: `Target vs Actual allocation analysis complete. Total portfolio value: $${totalUsdValue.toFixed(2)}`

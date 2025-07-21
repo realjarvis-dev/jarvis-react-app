@@ -1,6 +1,7 @@
 import { tool } from 'ai'
 import { z } from 'zod'
 import { getTokenBalances } from '../alchemy/get-token-balance'
+import { REBALANCE_THRESHOLD } from '../constants'
 import { getTokenUsdPriceBatch } from '../enso/get-token-usd-price'
 import { executeLifiBridgeTransaction, generateLifiBridgeQuote } from '../lifi/actions'
 import { getUserEvmWalletAddress, getUserId } from '../privy/client'
@@ -9,17 +10,13 @@ import { getRedisClient } from '../redis/config'
 import { ToolContext } from '../types/context'
 
 // Supported tokens for rebalancing
-const SUPPORTED_TOKENS = ['ETH', 'USDC', 'stETH'] as const
+const SUPPORTED_TOKENS = ['ETH', 'USDC'] as const
 
-// Token address mapping
+// Token addresses for supported tokens
 const TOKEN_ADDRESSES: Record<string, string> = {
   'ETH': '0x0000000000000000000000000000000000000000', // Native ETH
   'USDC': '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', // USDC on mainnet
-  'stETH': '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84' // stETH
 }
-
-// Minimum drift threshold to trigger rebalancing (3%)
-const REBALANCE_THRESHOLD = 3
 
 interface RebalanceAction {
   fromToken: string
@@ -127,7 +124,7 @@ export const executeRebalancingTool = tool({
         return {
           _uiDisplayTool: true,
           success: false,
-          error: 'No supported tokens found in wallet. Supported tokens: ETH, USDC, stETH'
+          error: 'No supported tokens found in wallet. Supported tokens: ETH, USDC'
         }
       }
 
@@ -461,4 +458,4 @@ export const executeRebalancingTool = tool({
       }
     }
   }
-}) 
+})

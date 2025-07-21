@@ -5,19 +5,18 @@ import { getRedisClient } from '../redis/config'
 import { ToolContext } from '../types/context'
 
 // Supported tokens for Phase 1
-const SUPPORTED_TOKENS = ['ETH', 'USDC', 'stETH'] as const
+const SUPPORTED_TOKENS = ['ETH', 'USDC'] as const
 
 export const createTargetAllocationTool = tool({
-  description: 'Create or update a target portfolio allocation strategy. Supports ETH, USDC, and stETH with percentages that must total 100%. Parse user input like "60% ETH, 30% USDC, 10% stETH" into allocation object.',
+  description: 'Create or update a target portfolio allocation strategy. Supports ETH and USDC with percentages that must total 100%. Parse user input like "70% ETH, 30% USDC" into allocation object.',
   parameters: z.object({
     allocation: z.object({
       ETH: z.number().min(0).max(100).optional().describe('Percentage allocation for ETH (0-100)'),
-      USDC: z.number().min(0).max(100).optional().describe('Percentage allocation for USDC (0-100)'),
-      stETH: z.number().min(0).max(100).optional().describe('Percentage allocation for stETH (0-100)')
+      USDC: z.number().min(0).max(100).optional().describe('Percentage allocation for USDC (0-100)')
     }).refine(
       (data) => Object.keys(data).length > 0,
       { message: "At least one token allocation must be specified" }
-    ).describe('Target allocation percentages for supported tokens. Example: {"ETH": 60, "USDC": 30, "stETH": 10}')
+    ).describe('Target allocation percentages for supported tokens. Example: {"ETH": 70, "USDC": 30}')
   }),
   execute: async (params, context: ToolContext) => {
     try {

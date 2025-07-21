@@ -1,5 +1,5 @@
-import { ToolDefinition, ToolCategory, ToolRegistry, getToolRegistry } from './tool-registry'
 import { NetworkContext } from '../types/context'
+import { ToolCategory, ToolDefinition, ToolRegistry, getToolRegistry } from './tool-registry'
 
 export interface Suggestion {
   id: string

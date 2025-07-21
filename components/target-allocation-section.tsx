@@ -1,5 +1,6 @@
 'use client'
 
+import { REBALANCE_THRESHOLD } from '@/lib/constants'
 import { ToolInvocation } from 'ai'
 import { AlertTriangle, CheckCircle, TrendingDown, TrendingUp, XCircle } from 'lucide-react'
 import { CollapsibleMessage } from './collapsible-message'
@@ -120,9 +121,9 @@ export function TargetAllocationSection({
                       {Object.entries(actualAllocation).map(([token, percentage]) => {
                         const targetPercentage = allocation[token] || 0
                         const driftValue = drift[token] || 0
-                        const isOverweight = driftValue > 5
-                        const isUnderweight = driftValue < -5
-                        const isOnTarget = Math.abs(driftValue) <= 5
+                        const isOverweight = driftValue > REBALANCE_THRESHOLD
+                        const isUnderweight = driftValue < -REBALANCE_THRESHOLD
+                        const isOnTarget = Math.abs(driftValue) <= REBALANCE_THRESHOLD
                         
                         return (
                           <div key={token} className="flex flex-col items-center p-3 bg-muted/50 rounded-lg relative">
@@ -171,7 +172,7 @@ export function TargetAllocationSection({
                         Rebalancing Recommended
                       </div>
                       <p className="text-amber-600 dark:text-amber-400 text-sm">
-                        Your portfolio has drifted more than 5% from your target allocation. 
+                        Your portfolio has drifted more than {REBALANCE_THRESHOLD}% from your target allocation. 
                         Consider rebalancing to get back on track.
                       </p>
                       <div className="mt-2 text-xs text-amber-600 dark:text-amber-400">
