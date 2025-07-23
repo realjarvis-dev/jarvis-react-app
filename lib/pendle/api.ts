@@ -103,7 +103,9 @@ export function processPendleMarkets(
       underlyingAsset: underlyingAssetAddress,
       liquidity: market.details.liquidity,
       impliedApy: market.details.impliedApy,
-      active: active
+      active: active,
+      isNew: market.isNew,
+      timestamp: market.timestamp
     }
   })
 }
