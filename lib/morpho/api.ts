@@ -45,7 +45,7 @@ export class MorphoAPI {
     const query = `
       query GetMarkets($chainIds: [Int!]!) {
         markets(
-          first: 100
+          first: 1000
           orderBy: SupplyAssetsUsd
           orderDirection: Desc
           where: { chainId_in: $chainIds }
@@ -92,26 +92,43 @@ export class MorphoAPI {
   /**
    * Get borrowing rates for PT token markets
    */
-  async getPTTokenBorrowingRates(ptTokenAddresses: string[]): Promise<BorrowingRateData[]> {
-    const markets = await this.getMarkets()
+  async getPTTokenBorrowingRates(ptTokenAddresses: string[], chainIds?: number[]): Promise<BorrowingRateData[]> {
+    const markets = await this.getMarkets(chainIds)
     
     return markets
-      .filter(market => 
-        ptTokenAddresses.some(ptAddress => 
+      .filter(market => {
+        // Add null safety checks
+        if (!market || !market.collateralAsset || !market.collateralAsset.address) {
+          return false
+        }
+        // Filter out markets with zero liquidity
+        const totalSupply = parseFloat(market.state.supplyAssets || '0')
+        const totalBorrow = parseFloat(market.state.borrowAssets || '0')
+        if (totalSupply === 0 && totalBorrow === 0) {
+          return false
+        }
+        return ptTokenAddresses.some(ptAddress => 
           market.collateralAsset.address.toLowerCase() === ptAddress.toLowerCase()
         )
-      )
-      .map(market => ({
-        marketKey: market.uniqueKey,
-        borrowApy: market.state.borrowApy,
-        supplyApy: market.state.supplyApy,
-        utilization: parseFloat(market.state.utilization),
-        totalBorrowAssets: parseFloat(market.state.borrowAssets),
-        totalSupplyAssets: parseFloat(market.state.supplyAssets),
-        collateralAsset: market.collateralAsset.address,
-        loanAsset: market.loanAsset.address,
-        maxLtv: parseFloat(market.lltv)
-      }))
+      })
+      .map(market => {
+        const totalSupply = parseFloat(market.state.supplyAssets)
+        const totalBorrow = parseFloat(market.state.borrowAssets)
+        const availableLiquidity = totalSupply - totalBorrow
+        
+        return {
+          marketKey: market.uniqueKey,
+          borrowApy: market.state.borrowApy,
+          supplyApy: market.state.supplyApy,
+          utilization: parseFloat(market.state.utilization),
+          totalBorrowAssets: totalBorrow,
+          totalSupplyAssets: totalSupply,
+          availableLiquidity: Math.max(0, availableLiquidity),
+          collateralAsset: market.collateralAsset.address,
+          loanAsset: market.loanAsset.address,
+          maxLtv: parseFloat(market.lltv) / 1e18
+        }
+      })
   }
 
   /**
@@ -198,10 +215,16 @@ export class MorphoAPI {
     }
     
     const targetHealthFactor = targetHealthFactors[riskTolerance]
-    const maxSafeLeverage = maxLtv / targetHealthFactor
+    
+    // Correct leverage calculation:
+    // Health Factor = (Collateral Value * LTV) / Debt
+    // With leverage L: Collateral = Initial * L, Debt = Initial * (L - 1)
+    // HF = (Initial * L * LTV) / (Initial * (L - 1)) = (L * LTV) / (L - 1)
+    // Solving for L: L = targetHF / (targetHF - LTV)
+    const maxSafeLeverage = targetHealthFactor / (targetHealthFactor - maxLtv)
     
     // Also consider yield efficiency - diminishing returns at high leverage
-    const optimalYieldLeverage = 1 + (yieldSpread * 0.5) // Rough heuristic
+    const optimalYieldLeverage = 1 + (yieldSpread * 2) // More aggressive scaling
     
     return Math.min(maxSafeLeverage, optimalYieldLeverage, 5) // Cap at 5x max
   }
