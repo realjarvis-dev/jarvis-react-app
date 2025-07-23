@@ -19,6 +19,8 @@ import { PendleZapInExecutionCard } from './pendle/pendle-zap-in-execution-card'
 import { PendleZapInQuoteDisplay } from './pendle/pendle-zap-in-quote-display'
 import { PendleZapOutExecutionCard } from './pendle/pendle-zap-out-execution-card'
 import { PendleZapOutQuoteDisplay } from './pendle/pendle-zap-out-quote-display'
+import { PendlePtLoopingQuoteDisplay } from './pendle-pt-looping-quote-display'
+import { PendlePtLoopingExecutionCard } from './pendle-pt-looping-execution-card'
 import { QuestionConfirmation } from './question-confirmation'
 import { RebalancingExecutionSection } from './rebalancing-execution-section'
 import { RedeemTransactionCard } from './redeem-transaction-card'
@@ -202,6 +204,25 @@ export function ToolSection({
     case 'pendle_swap':
       return (
         <SwapTransactionCard tool={tool} isOpen={isOpen} onOpenChange={onOpenChange} />
+      )
+
+    case 'pendle_pt_looping_quote':
+      return (
+        <PendlePtLoopingQuoteDisplay
+          tool={tool}
+          isOpen={isOpen}
+          onOpenChange={onOpenChange}
+        />
+      )
+
+    case 'pendle_pt_looping_execute':
+    case 'pendle_pt_looping_monitor':
+      return (
+        <PendlePtLoopingExecutionCard
+          tool={tool}
+          isOpen={isOpen}
+          onOpenChange={onOpenChange}
+        />
       )
 
     case 'generic_swap':

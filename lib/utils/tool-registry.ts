@@ -34,6 +34,11 @@ import {
   pendleZapOutExecuteTool,
   pendleZapOutQuoteTool
 } from '../tools/pendle-remove-liquidity'
+import {
+  pendlePtLoopingQuoteTool,
+  pendlePtLoopingExecuteTool,
+  pendlePtLoopingMonitorTool
+} from '../tools/pendle-pt-looping'
 import { privyTransferTool } from '../tools/privy-transfer'
 import { createQuestionTool } from '../tools/question'
 import { retrieveTool } from '../tools/retrieve'
@@ -816,6 +821,60 @@ export function createToolRegistry(model: string): ToolRegistry {
     ]
   })
 
+  // PT Looping Tools
+  registry.registerTool({
+    name: 'pendle_pt_looping_quote',
+    description: 'Find and analyze PT token looping opportunities on Morpho',
+    schema: pendlePtLoopingQuoteTool.parameters,
+    execute: async (params, context) =>
+      pendlePtLoopingQuoteTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.WEB3_READ,
+    supportedNetworks: [
+      'ethereum',
+      'base',
+      'demo'
+    ]
+  })
+
+  registry.registerTool({
+    name: 'pendle_pt_looping_execute',
+    description: 'Execute a PT token looping strategy on Morpho',
+    schema: pendlePtLoopingExecuteTool.parameters,
+    execute: async (params, context) =>
+      pendlePtLoopingExecuteTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.WEB3_WRITE,
+    supportedNetworks: [
+      'ethereum',
+      'base',
+      'demo'
+    ]
+  })
+
+  registry.registerTool({
+    name: 'pendle_pt_looping_monitor',
+    description: 'Monitor existing PT looping positions',
+    schema: pendlePtLoopingMonitorTool.parameters,
+    execute: async (params, context) =>
+      pendlePtLoopingMonitorTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.WEB3_READ,
+    supportedNetworks: [
+      'ethereum',
+      'base',
+      'demo'
+    ]
+  })
 
   // DeFiLlama Tools
   registry.registerTool({

@@ -7,7 +7,10 @@ import {
   RefreshCw,
   Search,
   Target,
-  TrendingUp
+  TrendingUp,
+  Repeat,
+  Play,
+  Eye
 } from 'lucide-react'
 import React from 'react'
 import { Badge } from './ui/badge'
@@ -35,7 +38,10 @@ export const ToolBadge: React.FC<ToolBadgeProps> = ({
     defillama_protocols: <BarChart size={14} />,
     create_target_allocation: <Target size={14} />,
     get_target_allocation: <Target size={14} />,
-    execute_rebalancing: <RefreshCw size={14} />
+    execute_rebalancing: <RefreshCw size={14} />,
+    pendle_pt_looping_quote: <Repeat size={14} />,
+    pendle_pt_looping_execute: <Play size={14} />,
+    pendle_pt_looping_monitor: <Eye size={14} />
   }
 
   return (
