@@ -43,4 +43,6 @@ export interface SimplifiedPendleMarket {
   liquidity: number
   impliedApy: number
   active: boolean
+  isNew: boolean
+  timestamp: string
 } 
