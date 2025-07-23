@@ -31,7 +31,7 @@ export interface ClientSuggestionContext {
 export class ClientSuggestionEngine {
   private similarityEngine = createSimilarityEngine()
   
-  // Common DeFi tokens
+  // Common DeFi tokens and protocols
   private commonTokens = [
     'ETH', 'WETH', 'USDC', 'USDT', 'DAI', 'BTC', 'WBTC',
     'AAVE', 'UNI', 'COMP', 'MKR', 'LINK', 'SNX', 'CRV',

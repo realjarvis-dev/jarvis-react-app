@@ -1,7 +1,7 @@
 import { TENDERLY_DEMO_CONFIG } from "@/lib/network/config";
+import { TokenData } from "@/lib/types/wallet-token";
 import { Alchemy } from "alchemy-sdk";
 import { ethers } from "ethers";
-import { TokenData } from "@/lib/types/wallet-token";
 import { SimpleRedisCache } from "./cache/simple-redis-cache";
 
 const commonlyUsedTokens = {
@@ -14,7 +14,8 @@ const commonlyUsedTokens = {
     UNI: '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984',
     AAVE: '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9',
     MKR: '0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2',
-    COMP: '0xc00e94cb662c3520282e6f5717214004a7f26888'
+    COMP: '0xc00e94cb662c3520282e6f5717214004a7f26888',
+    stETH: '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84'
 }
 
 export const commonlyUsedTokensArray = Object.values(commonlyUsedTokens)
