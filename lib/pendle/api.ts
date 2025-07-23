@@ -82,12 +82,14 @@ export function processPendleMarkets(
   active: boolean = true
 ): SimplifiedPendleMarket[] {
   return markets.map(market => {
-    // Helper function to remove "1-" prefix from addresses if present
+    // Helper function to remove chainId prefix from addresses if present
     const cleanAddress = (address: string): string => {
-      return address.startsWith('1-') ? address.substring(2) : address
+      // Remove common chainId prefixes: "1-" (Ethereum), "8453-" (Base), etc.
+      const prefixMatch = address.match(/^(\d+)-(.+)$/)
+      return prefixMatch ? prefixMatch[2] : address
     }
 
-    // Clean all addresses that might have the "1-" prefix
+    // Clean all addresses that might have chainId prefixes
     const ptAddress = cleanAddress(market.pt)
     const ytAddress = cleanAddress(market.yt)
     const syAddress = cleanAddress(market.sy)

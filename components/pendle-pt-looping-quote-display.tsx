@@ -163,6 +163,16 @@ export function PendlePtLoopingQuoteDisplay({
     }
   }
 
+  const formatLiquidity = (liquidity: number) => {
+    if (liquidity >= 1000000) {
+      return `$${(liquidity / 1000000).toFixed(1)}M`
+    } else if (liquidity >= 1000) {
+      return `$${(liquidity / 1000).toFixed(1)}K`
+    } else {
+      return `$${liquidity.toFixed(0)}`
+    }
+  }
+
   const getRiskIcon = (riskLevel: string) => {
     switch (riskLevel) {
       case 'LOW': return <Shield size={14} />
@@ -215,9 +225,14 @@ export function PendlePtLoopingQuoteDisplay({
             <Card key={index} className="border border-gray-200 dark:border-gray-700">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg font-semibold">
-                    {opportunity.ptToken}
-                  </CardTitle>
+                  <div className="space-y-1">
+                    <CardTitle className="text-lg font-semibold">
+                      {opportunity.ptToken}
+                    </CardTitle>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Expires: {new Date(opportunity.ptExpiry).toLocaleDateString()} ({opportunity.daysToExpiry} days)
+                    </div>
+                  </div>
                   <Badge className={getRiskColor(opportunity.riskLevel)}>
                     <div className="flex items-center gap-1">
                       {getRiskIcon(opportunity.riskLevel)}
@@ -264,28 +279,31 @@ export function PendlePtLoopingQuoteDisplay({
                     <div className="text-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
                       <div className="font-medium">2x</div>
                       <div className="text-green-600 dark:text-green-400">
-                        {opportunity.estimatedApyAt2x.toFixed(1)}%
+                        {Math.min(opportunity.estimatedApyAt2x, 999).toFixed(1)}%{opportunity.estimatedApyAt2x > 999 ? '+' : ''}
                       </div>
                     </div>
                     <div className="text-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
                       <div className="font-medium">3x</div>
                       <div className="text-green-600 dark:text-green-400">
-                        {opportunity.estimatedApyAt3x.toFixed(1)}%
+                        {Math.min(opportunity.estimatedApyAt3x, 999).toFixed(1)}%{opportunity.estimatedApyAt3x > 999 ? '+' : ''}
                       </div>
                     </div>
                     {opportunity.estimatedApyAt4x > 0 && (
                       <div className="text-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
                         <div className="font-medium">4x</div>
                         <div className="text-green-600 dark:text-green-400">
-                          {opportunity.estimatedApyAt4x.toFixed(1)}%
+                          {Math.min(opportunity.estimatedApyAt4x, 999).toFixed(1)}%{opportunity.estimatedApyAt4x > 999 ? '+' : ''}
                         </div>
                       </div>
                     )}
                   </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                    APY = PT Yield × Leverage - Borrow Rate × (Leverage - 1) • Gas costs not included
+                  </div>
                 </div>
 
                 {/* Risk Information */}
-                <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                <div className="pt-2 border-t border-gray-200 dark:border-gray-700 space-y-1">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-600 dark:text-gray-400">Max Safe Leverage</span>
                     <span className="font-medium">{opportunity.maxLeverage.toFixed(1)}x</span>
@@ -293,6 +311,10 @@ export function PendlePtLoopingQuoteDisplay({
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-600 dark:text-gray-400">Liquidation Threshold</span>
                     <span className="font-medium">{opportunity.liquidationThreshold.toFixed(1)}%</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600 dark:text-gray-400">Available Liquidity</span>
+                    <span className="font-medium">{formatLiquidity(opportunity.availableLiquidity)}</span>
                   </div>
                 </div>
               </CardContent>
@@ -305,12 +327,15 @@ export function PendlePtLoopingQuoteDisplay({
           <div className="flex items-start gap-2">
             <AlertTriangle className="text-yellow-600 dark:text-yellow-400 mt-0.5" size={16} />
             <div className="text-sm text-yellow-800 dark:text-yellow-200">
-              <div className="font-medium mb-1">Looping Strategy Risks</div>
+              <div className="font-medium mb-2">Important Considerations</div>
               <div className="space-y-1 text-xs">
-                <div>• Leveraged positions amplify both gains and losses</div>
-                <div>• Interest rate changes can affect profitability</div>
-                <div>• Liquidation risk if health factor drops below 1.0</div>
-                <div>• Smart contract and protocol risks apply</div>
+                <div>• <strong>APY estimates exclude gas costs</strong> - Multiple transactions required for looping</div>
+                <div>• <strong>PT token expiry risk</strong> - Positions must be closed before token expiration</div>
+                <div>• <strong>Leverage amplifies risks</strong> - Both gains and losses are magnified</div>
+                <div>• <strong>Interest rate volatility</strong> - Borrow rates and PT yields can change rapidly</div>
+                <div>• <strong>Liquidation threshold</strong> - Position liquidated if collateral value drops below threshold</div>
+                <div>• <strong>Available liquidity limits</strong> - Large positions may face execution constraints</div>
+                <div>• <strong>Smart contract risks</strong> - Pendle and Morpho protocol risks apply</div>
               </div>
             </div>
           </div>

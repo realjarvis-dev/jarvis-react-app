@@ -57,6 +57,7 @@ export interface BorrowingRateData {
   utilization: number
   totalBorrowAssets: number
   totalSupplyAssets: number
+  availableLiquidity: number
   collateralAsset: string
   loanAsset: string
   maxLtv: number
@@ -64,6 +65,9 @@ export interface BorrowingRateData {
 
 export interface LoopingOpportunity {
   ptToken: string
+  ptAddress: string
+  ptExpiry: string
+  daysToExpiry: number
   ptYield: number
   morphoMarketKey: string
   borrowRate: number
@@ -73,6 +77,7 @@ export interface LoopingOpportunity {
   estimatedApyAt3x: number
   estimatedApyAt4x: number
   liquidationThreshold: number
+  availableLiquidity: number
   riskLevel: 'LOW' | 'MEDIUM' | 'HIGH'
 }
 

@@ -46,13 +46,20 @@ export const pendlePtLoopingQuoteTool = tool({
           market.impliedApy > 0 &&
           new Date(market.expiry) > new Date() // Not expired
         )
-        .map(market => ({
-          ptAddress: market.pt,
-          impliedApy: market.impliedApy * 100, // Convert decimal to percentage
-          name: market.name,
-          expiry: market.expiry,
-          liquidity: market.liquidity
-        }))
+        .map(market => {
+          const expiryDate = new Date(market.expiry)
+          const now = new Date()
+          const daysToExpiry = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+          
+          return {
+            ptAddress: market.pt,
+            impliedApy: market.impliedApy * 100, // Convert decimal to percentage
+            name: market.name,
+            expiry: market.expiry,
+            daysToExpiry,
+            liquidity: market.liquidity
+          }
+        })
 
       scanningProgress.eligiblePTTokens = eligiblePTTokens.length
       scanningProgress.step = 3
@@ -79,9 +86,9 @@ export const pendlePtLoopingQuoteTool = tool({
         }
       }
 
-      // Fetch Morpho borrowing rates for these PT tokens
+      // Fetch Morpho borrowing rates for these PT tokens (filtered by chainId)
       const ptAddresses = eligiblePTTokens.map(pt => pt.ptAddress)
-      const borrowingRates = await morphoAPI.getPTTokenBorrowingRates(ptAddresses)
+      const borrowingRates = await morphoAPI.getPTTokenBorrowingRates(ptAddresses, [chainId])
       scanningProgress.morphoMarketsFound = borrowingRates.length
       scanningProgress.step = 4
       scanningProgress.currentAction = 'Calculating yield opportunities and optimal leverage...'
@@ -136,6 +143,9 @@ export const pendlePtLoopingQuoteTool = tool({
 
         opportunities.push({
           ptToken: ptToken.name,
+          ptAddress: ptToken.ptAddress,
+          ptExpiry: ptToken.expiry,
+          daysToExpiry: ptToken.daysToExpiry,
           ptYield: ptToken.impliedApy,
           morphoMarketKey: morphoMarket.marketKey,
           borrowRate: morphoBorrowApy,
@@ -144,7 +154,8 @@ export const pendlePtLoopingQuoteTool = tool({
           estimatedApyAt2x,
           estimatedApyAt3x,
           estimatedApyAt4x,
-          liquidationThreshold: morphoMarket.maxLtv * 100,
+          liquidationThreshold: morphoMarket.maxLtv,
+          availableLiquidity: morphoMarket.availableLiquidity,
           riskLevel
         })
       }
@@ -269,7 +280,7 @@ export const pendlePtLoopingExecuteTool = tool({
       }
 
       // Calculate health factor and safety checks
-      const maxLtv = parseFloat(morphoMarket.lltv)
+      const maxLtv = parseFloat(morphoMarket.lltv) / 1e18
       const expectedHealthFactor = morphoAPI.calculateHealthFactor(
         usdResult.usdAmount * targetLeverage,
         usdResult.usdAmount * (targetLeverage - 1),

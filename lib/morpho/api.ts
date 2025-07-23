@@ -112,18 +112,19 @@ export class MorphoAPI {
         )
       })
       .map(market => {
-        const totalSupply = parseFloat(market.state.supplyAssets)
-        const totalBorrow = parseFloat(market.state.borrowAssets)
-        const availableLiquidity = totalSupply - totalBorrow
+        // Convert from token amounts to USD amounts using the USD values from state
+        const totalSupplyUsd = market.state.supplyAssetsUsd || 0
+        const totalBorrowUsd = market.state.borrowAssetsUsd || 0
+        const availableLiquidityUsd = Math.max(0, totalSupplyUsd - totalBorrowUsd)
         
         return {
           marketKey: market.uniqueKey,
           borrowApy: market.state.borrowApy,
           supplyApy: market.state.supplyApy,
           utilization: parseFloat(market.state.utilization),
-          totalBorrowAssets: totalBorrow,
-          totalSupplyAssets: totalSupply,
-          availableLiquidity: Math.max(0, availableLiquidity),
+          totalBorrowAssets: totalBorrowUsd,
+          totalSupplyAssets: totalSupplyUsd,
+          availableLiquidity: availableLiquidityUsd,
           collateralAsset: market.collateralAsset.address,
           loanAsset: market.loanAsset.address,
           maxLtv: parseFloat(market.lltv) / 1e18
