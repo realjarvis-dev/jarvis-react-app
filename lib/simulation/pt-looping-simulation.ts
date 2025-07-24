@@ -20,12 +20,14 @@ export type SimulationParams = {
 
 export type LoopRow = {
   loop: number
+  usdc: number
   collateralValue: number
   debt: number
   borrowedThisLoop: number
   ptValue: number
   gasSpentUsd: number
   ltv: number
+  buySlippage: number
 }
 
 export type SimulationSummary = {
@@ -39,6 +41,8 @@ export type SimulationSummary = {
   loops: number
   targetLtv: number
   leverage: number
+  buySlippage: number
+  sellSlippage: number
 }
 
 const SECONDS_PER_YEAR = 365 * 24 * 60 * 60
@@ -58,9 +62,15 @@ export function runPtLoopingSimulation(p: SimulationParams): {
   const rows: LoopRow[] = []
   let loopGasSpent = 0
   let unwindGasUnit = 0
+  let totalBuySlippage = 0
+  let totalUsdc = 0
   
   for (let i = 1; i <= p.loops; i++) {
+    totalUsdc += usdc
     const ptBought = usdc * (1 - p.slippageBuy)
+    const buySlippage = usdc * p.slippageBuy
+    totalBuySlippage += buySlippage
+
     let loopGas = 0
     ptValue += ptBought
     usdc = 0
@@ -78,23 +88,27 @@ export function runPtLoopingSimulation(p: SimulationParams): {
       usdc += borrowAmt
 
       rows.push({
+        usdc: totalUsdc,
         loop: i,
         collateralValue,
         debt,
         borrowedThisLoop: borrowAmt,
         ptValue,
         gasSpentUsd: loopGas,
-        ltv: collateralValue > 0 ? debt / collateralValue : 0
+        ltv: collateralValue > 0 ? debt / collateralValue : 0,
+        buySlippage: totalBuySlippage
       })
     } else {
       rows.push({
+        usdc: totalUsdc,
         loop: i,
         collateralValue: 0,
         debt,
         borrowedThisLoop: 0,
         ptValue,
         gasSpentUsd: loopGas,
-        ltv: ptValue > 0 ? debt / ptValue : 0
+        ltv: ptValue > 0 ? debt / ptValue : 0,
+        buySlippage: totalBuySlippage
       })
     }
 
@@ -109,22 +123,27 @@ export function runPtLoopingSimulation(p: SimulationParams): {
 
   const repayNeeded = debt + debtGrowth
   const ptRedeemValue = (ptValue + ptGrowth) * (1 - p.slippageSell)
+  const sellSlippage = ptRedeemValue * p.slippageSell
 
-  let usdcAfterUnwind = usdc + ptRedeemValue - repayNeeded
+//   let usdcAfterUnwind = p.initialUsdc + ptGrowth - debtGrowth
+  let usdcAfterUnwind = ptRedeemValue - repayNeeded
 
   const unwindGasSpent = gasCostUsd(
     unwindGasUnit,
     p.gasPriceGwei,
     p.ethPriceUsd
   );
-  usdcAfterUnwind -= unwindGasSpent;
 
   const totalGasSpent = loopGasSpent + unwindGasSpent;
+  usdcAfterUnwind -= totalGasSpent
+
   const pnl = usdcAfterUnwind - p.initialUsdc
   const apr = t > 0 ? pnl / p.initialUsdc / t : 0
   const leverage = ptValue / p.initialUsdc
 
   const summary: SimulationSummary = {
+    buySlippage: totalBuySlippage,
+    sellSlippage: sellSlippage,
     initialUsdc: p.initialUsdc,
     finalUsdcAfterCosts: usdcAfterUnwind,
     totalGasSpent,
