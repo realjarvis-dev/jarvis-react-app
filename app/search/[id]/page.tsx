@@ -61,11 +61,7 @@ export default async function SearchPage(props: {
     console.log('No chat found')
     redirect('/')
   }
-  console.log(
-    'UserId difference in <search />[id]/page.tsx',
-    chat?.userId,
-    userId
-  )
+
   // privy's start with did:
   if (chat?.userId !== userId && isPrivyUserId(chat?.userId)) {
     console.log('Chat user ID does not match user ID')

@@ -45,6 +45,7 @@ import {
   walletBalanceTool
 } from '../tools/wallet'
 import { xStockList } from '../tools/xstock-search'
+import { ethAlert } from '../tools/eth-alert'
 import { NetworkContext, ToolContext } from '../types/context'
 
 /**
@@ -210,6 +211,14 @@ export function createToolRegistry(model: string): ToolRegistry {
   const searchTool = createSearchTool(model)
   const videoSearchTool = createVideoSearchTool(model)
   const askQuestionTool = createQuestionTool(model)
+
+  registry.registerTool({
+    name: "eth_alert",
+    description: "Set up a price alert for ethereum",
+    schema: ethAlert.parameters,
+    category: ToolCategory.WEB3_WRITE,
+    supportedNetworks: ['ethereum', 'demo']
+  })
 
   registry.registerTool({
     name: 'get_gas_price',
