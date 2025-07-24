@@ -10,12 +10,13 @@ import { NetworkProvider } from '@/lib/network/context'
 import { cn } from '@/lib/utils'
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
-import { Inter as FontSans } from 'next/font/google'
 import './globals.css'
-const fontSans = FontSans({
-  subsets: ['latin'],
-  variable: '--font-sans'
-})
+
+// Use system fonts instead of Google Fonts to avoid network issues
+const fontSans = {
+  variable: '--font-sans',
+  className: 'font-sans'
+}
 
 const title = 'Jarvis'
 const description = 'Unifying Web3 with autonomous agent.'
@@ -60,8 +61,7 @@ export default async function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body
         className={cn(
-          'min-h-screen flex flex-col font-sans antialiased',
-          fontSans.variable
+          'min-h-screen flex flex-col font-sans antialiased'
         )}
         suppressHydrationWarning
       >
