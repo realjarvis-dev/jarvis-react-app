@@ -7,7 +7,12 @@ export type SimulationParams = {
   borrowApy: number
   slippageBuy: number
   slippageSell: number
-  gasUnitsPerLoop: number
+  gasUnitsBuyPT: number
+  gasUnitsSellPT: number
+  gasUnitsDeposit: number
+  gasUnitsBorrow: number
+  gasUnitsRepay: number
+  gasUnitsWithdraw: number
   gasPriceGwei: number
   ethPriceUsd: number
   horizonDays: number
@@ -27,6 +32,8 @@ export type SimulationSummary = {
   initialUsdc: number
   finalUsdcAfterCosts: number
   totalGasSpent: number
+  loopGasSpent: number;
+  unwindGasSpent: number;
   pnlUsd: number
   apr: number
   loops: number
@@ -49,19 +56,23 @@ export function runPtLoopingSimulation(p: SimulationParams): {
   let debt = 0
   let ptValue = 0
   const rows: LoopRow[] = []
-  let totalGas = 0
-
+  let loopGasSpent = 0
+  let unwindGasUnit = 0
+  
   for (let i = 1; i <= p.loops; i++) {
     const ptBought = usdc * (1 - p.slippageBuy)
+    let loopGas = 0
     ptValue += ptBought
     usdc = 0
-    const loopGas = gasCostUsd(p.gasUnitsPerLoop, p.gasPriceGwei, p.ethPriceUsd)
-    totalGas += loopGas
+    loopGas += gasCostUsd(p.gasUnitsBuyPT, p.gasPriceGwei, p.ethPriceUsd)
+    unwindGasUnit += p.gasUnitsSellPT
 
     if (i !== p.loops) {
       const collateralValue = ptValue
       const maxDebtAllowed = collateralValue * targetLtv
       const borrowAmt = Math.max(0, maxDebtAllowed - debt)
+      loopGas += gasCostUsd(p.gasUnitsBorrow + p.gasUnitsDeposit, p.gasPriceGwei, p.ethPriceUsd)
+      unwindGasUnit += p.gasUnitsRepay + p.gasUnitsWithdraw
 
       debt += borrowAmt
       usdc += borrowAmt
@@ -82,10 +93,14 @@ export function runPtLoopingSimulation(p: SimulationParams): {
         debt,
         borrowedThisLoop: 0,
         ptValue,
-        gasSpentUsd: loopGas / 2,
+        gasSpentUsd: loopGas,
         ltv: ptValue > 0 ? debt / ptValue : 0
       })
     }
+
+    loopGasSpent += loopGas
+
+
   }
 
   const t = p.horizonDays / 365
@@ -97,10 +112,14 @@ export function runPtLoopingSimulation(p: SimulationParams): {
 
   let usdcAfterUnwind = usdc + ptRedeemValue - repayNeeded
 
-  const unwindGas = gasCostUsd(p.gasUnitsPerLoop, p.gasPriceGwei, p.ethPriceUsd)
-  totalGas += unwindGas
-  usdcAfterUnwind -= unwindGas // Subtract unwind gas from final amount, not totalGas.
+  const unwindGasSpent = gasCostUsd(
+    unwindGasUnit,
+    p.gasPriceGwei,
+    p.ethPriceUsd
+  );
+  usdcAfterUnwind -= unwindGasSpent;
 
+  const totalGasSpent = loopGasSpent + unwindGasSpent;
   const pnl = usdcAfterUnwind - p.initialUsdc
   const apr = t > 0 ? pnl / p.initialUsdc / t : 0
   const leverage = ptValue / p.initialUsdc
@@ -108,7 +127,9 @@ export function runPtLoopingSimulation(p: SimulationParams): {
   const summary: SimulationSummary = {
     initialUsdc: p.initialUsdc,
     finalUsdcAfterCosts: usdcAfterUnwind,
-    totalGasSpent: totalGas,
+    totalGasSpent,
+    loopGasSpent,
+    unwindGasSpent,
     pnlUsd: pnl,
     apr,
     loops: p.loops,

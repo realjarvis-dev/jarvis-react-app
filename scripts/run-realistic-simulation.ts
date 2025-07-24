@@ -6,18 +6,29 @@ import {
   runPtLoopingSimulation,
   SimulationParams
 } from '../lib/simulation/pt-looping-simulation'
-import { formatUnits } from 'viem'
+import { createPublicClient, http, formatUnits, parseAbi, zeroAddress } from 'viem'
+import { mainnet } from 'viem/chains'
+
+// --- Morpho Blue Configuration ---
+const MORPHO_BLUE_ADDRESS = '0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb'
+const MORPHO_BLUE_ABI = parseAbi([
+  'function supply(address loanToken, address collateralToken, address oracle, address irm, uint256 lltv, uint256 assets, address onBehalf, bytes calldata data) external returns (uint256, uint256)',
+  'function borrow(address loanToken, address collateralToken, address oracle, address irm, uint256 lltv, uint256 shares, address to, bytes calldata data) external returns (uint256, uint256)',
+  'function repay(address loanToken, address collateralToken, address oracle, address irm, uint256 lltv, uint256 shares, address onBehalf, bytes calldata data) external returns (uint256, uint256)',
+  'function withdraw(address loanToken, address collateralToken, address oracle, address irm, uint256 lltv, uint256 shares, address to, bytes calldata data) external returns (uint256, uint256)'
+])
 
 // --- Simulation Configuration ---
 const CONFIG = {
   chainId: 1, // 1 for Ethereum, 8453 for Base
   ptIdentifier: 'sUSDe', // A substring to identify the desired Pendle market
-  initialUsdc: 10000,
-  leverageTarget: 5,
+  initialUsdc: 100000,
+  leverageTarget: 3,
   buffer: 0.1, // 5% safety buffer from liquidation LTV
   slippageBuy: 0.002, // 0.2%
   slippageSell: 0.003, // 0.3%
-  gasUnitsPerLoop: 650000 // Estimated gas for: Buy PT -> Deposit -> Borrow
+  gasUnitsPerLoop: 0, // This will be calculated
+  gasUnitsForUnwind: 0 // This will be calculated
 }
 
 async function main() {
@@ -70,20 +81,64 @@ async function main() {
   console.log(`  - Borrow APY: ${(borrowApy * 100).toFixed(2)}%`)
   console.log(`  - Max LTV (LLTV): ${(lltv * 100).toFixed(2)}%`)
 
-  // 3. Fetch Gas and ETH Price
+  // 3. Estimate Gas Costs
+  console.log('Estimating gas costs...')
+
+  const client = createPublicClient({
+    chain: mainnet,
+    transport: http()
+  })
+
+  const fullMorphoMarket = await morphoAPI.getMarketByKey(morphoMarket.marketKey)
+  if (!fullMorphoMarket) {
+    throw new Error('Could not fetch full morpho market details')
+  }
+
+  const marketParams = {
+    loanToken: fullMorphoMarket.loanAsset.address as `0x${string}`,
+    collateralToken: fullMorphoMarket.collateralAsset.address as `0x${string}`,
+    oracle: fullMorphoMarket.oracleAddress as `0x${string}`,
+    irm: fullMorphoMarket.irmAddress as `0x${string}`,
+    lltv: BigInt(fullMorphoMarket.lltv)
+  }
+
+  // A dummy address for simulation
+  const dummyAddress = '0x000000000000000000000000000000000000dEaD'
+
+  // We can't estimate gas for the swap without a quote, so we'll use a placeholder
+  const gasBuyPt = (357_409 + 581_948 + 350_084 + 559_090 + 458_034) * (1 / 5) // Placeholder for Buy PT gas
+  const gasSellPt = gasBuyPt // Placeholder for Sell PT gas
+
+  const gasDeposit = (70_894 + 53_794 + 98_409) * (1 / 3)
+
+
+  const gasBorrow = (114_314 + 132_505 +  131_245) * (1 / 3)
+
+  const gasRepay = (98_639 + 98_615 + 98_603) * (1 / 3)
+
+  const gasWithdraw = (106_560 + 170_629 + 170_629) * (1 / 3)
+
+  CONFIG.gasUnitsPerLoop = gasBuyPt + Number(gasDeposit) + Number(gasBorrow)
+  CONFIG.gasUnitsForUnwind = Number(gasRepay) + Number(gasWithdraw) + gasSellPt
+
+  console.log('  - Gas for one loop (Buy PT -> Deposit -> Borrow):', CONFIG.gasUnitsPerLoop)
+  console.log('  - Gas for unwind (Repay -> Withdraw -> Sell PT):', CONFIG.gasUnitsForUnwind)
+
+
+  // 4. Fetch Gas and ETH Price
   console.log('Fetching real-time gas and ETH price...')
   const gasPriceGwei = await getGasPriceByChainId(CONFIG.chainId)
   const ethPrice = await getTokenUsdPriceBatch(['0x0000000000000000000000000000000000000000'], CONFIG.chainId)
   console.log(`  - Gas Price: ${formatUnits(gasPriceGwei.maxFeePerGas, 9)} Gwei`)
   console.log(`  - ETH Price: $${ethPrice[0].price}`)
 
-  // 4. Determine Number of Loops for Target Leverage
+  // 5. Determine Number of Loops for Target Leverage
   const targetLtv = lltv - CONFIG.buffer
   const loops = Math.round(
     Math.log(1 - CONFIG.leverageTarget * (1 - targetLtv)) / Math.log(targetLtv)
   )
 
-  // 5. Assemble Simulation Parameters
+  // 6. Assemble Simulation Parameters
   const params: SimulationParams = {
     initialUsdc: CONFIG.initialUsdc,
     loops,
@@ -93,17 +148,22 @@ async function main() {
     borrowApy,
     slippageBuy: CONFIG.slippageBuy,
     slippageSell: CONFIG.slippageSell,
-    gasUnitsPerLoop: CONFIG.gasUnitsPerLoop,
+    gasUnitsBuyPT: gasBuyPt,
+    gasUnitsSellPT: gasSellPt,
+    gasUnitsDeposit: gasDeposit,
+    gasUnitsBorrow: gasBorrow,
+    gasUnitsRepay: gasRepay,
+    gasUnitsWithdraw: gasWithdraw,
     gasPriceGwei: Number(formatUnits(gasPriceGwei.maxFeePerGas, 9)),
     ethPriceUsd: ethPrice[0].price,
     horizonDays: daysToExpiry
   }
 
-  // 6. Run Simulation
+  // 7. Run Simulation
   console.log('\n--- Starting Simulation ---')
   const { rows, summary } = runPtLoopingSimulation(params)
 
-  // 7. Display Results
+  // 8. Display Results
   console.log('Simulation Results:')
   console.table(
     rows.map(r => ({
@@ -134,6 +194,12 @@ async function main() {
     )}`
   )
   console.log(`Total Gas Cost: $${summary.totalGasSpent.toFixed(2)}`)
+  console.log(
+    `  - Loop Gas Cost: $${summary.loopGasSpent.toFixed(2)} (${
+      summary.loops
+    } loops)`
+  )
+  console.log(`  - Unwind Gas Cost: $${summary.unwindGasSpent.toFixed(2)}`)
   console.log(`Net PnL (after gas): $${summary.pnlUsd.toFixed(2)}`)
   console.log(`---`)
   console.log(`Final Net APY: ${(summary.apr * 100).toFixed(2)}%`)
