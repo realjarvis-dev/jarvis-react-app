@@ -337,10 +337,98 @@ async function formatSwapOutput(
 // ------------------------------------------------------------------------------------------------------------ //
 // ------------------------------------------------------------------------------------------------------------ //
 
+/**
+ * Classify assets based on their risk profile and type
+ * @param name Asset name (e.g., "sUSDe", "sENA", "rswETH")
+ * @returns Asset classification with type and risk score
+ */
+function classifyAsset(name: string): {
+  type: 'stablecoin' | 'stablecoin-synthetic' | 'yield-bearing' | 'volatile';
+  isStablecoin: boolean;
+  riskScore: number; // 1-10, lower = safer
+  category: string;
+} {
+  const nameLower = name.toLowerCase();
+  
+  // True stablecoins (lowest risk)
+  if (nameLower.includes('usde') || nameLower.includes('susde') || 
+      nameLower.includes('usdc') || nameLower.includes('usdt') || 
+      nameLower.includes('dai') || nameLower.includes('xusd') || 
+      nameLower.includes('yusd') || nameLower.includes('usn') ||
+      nameLower.includes('aidausdc') || nameLower.includes('midas') && nameLower.includes('usd')) {
+    return {
+      type: 'stablecoin',
+      isStablecoin: true,
+      riskScore: 1,
+      category: 'Stablecoin'
+    };
+  }
+  
+  // Synthetic dollar assets (slightly higher risk)
+  if (nameLower.includes('sena') || nameLower.includes('ena')) {
+    return {
+      type: 'stablecoin-synthetic',
+      isStablecoin: false, // sENA is not a true stablecoin
+      riskScore: 4,
+      category: 'Synthetic Dollar'
+    };
+  }
+  
+  // Liquid staking tokens and yield-bearing assets
+  if (nameLower.includes('steth') || nameLower.includes('wsteth') || 
+      nameLower.includes('reth') || nameLower.includes('sweth') ||
+      nameLower.includes('rseth') || nameLower.includes('rsweth') ||
+      nameLower.includes('ezeth') || nameLower.includes('weeth') ||
+      nameLower.includes('rlp')) {
+    return {
+      type: 'yield-bearing',
+      isStablecoin: false,
+      riskScore: 6,
+      category: 'Yield-bearing ETH'
+    };
+  }
+  
+  // Default to volatile assets
+  return {
+    type: 'volatile',
+    isStablecoin: false,
+    riskScore: 8,
+    category: 'Volatile Asset'
+  };
+}
+
+/**
+ * Enhanced sorting function that considers both yield and risk
+ * Prioritizes: 1) Stablecoins, 2) High liquidity, 3) High APY, 4) Lower risk
+ */
+function createRecommendationScore(
+  market: any,
+  classification: ReturnType<typeof classifyAsset>
+): number {
+  let score = 0;
+  
+  // Base APY score (0-100)
+  score += market.impliedApy * 100;
+  
+  // Stablecoin bonus (prioritize true stablecoins)
+  if (classification.isStablecoin) {
+    score += 50; // Big bonus for true stablecoins
+  }
+  
+  // Liquidity bonus (logarithmic scale)
+  const liquidityBonus = Math.log10(Math.max(market.liquidity, 1)) * 5;
+  score += liquidityBonus;
+  
+  // Risk penalty (lower risk = higher score)
+  const riskPenalty = (classification.riskScore - 1) * 2;
+  score -= riskPenalty;
+  
+  return score;
+}
 
 export const pendleOpportunitiesTool = tool({
   description:
-    'Get Pendle yield opportunities. This tool automatically renders UI.',
+    'Get Pendle yield opportunities with intelligent stablecoin prioritization. This tool automatically renders UI.',
   parameters: z.object({
     max_results: z
       .number()
@@ -359,10 +447,18 @@ export const pendleOpportunitiesTool = tool({
       .optional()
       .describe(
         'Maximum APY in percentage (e.g., 10 for 10%). Filters for APY <= value/100. Optional.'
-      )
+      ),
+    stablecoins_only: z
+      .boolean()
+      .optional()
+      .describe('If true, only return true stablecoins (USDC, USDT, DAI, sUSDe, etc.). Default false.'),
+    sort_by: z
+      .enum(['recommended', 'apy', 'liquidity', 'newest'])
+      .default('recommended')
+      .describe('Sort results by: "recommended" (smart scoring), "apy" (highest APY first), "liquidity" (highest liquidity first), or "newest" (latest pools first).')
   }),
   execute: async (params, context: ToolContext) => {
-    const { max_results, apy_gte, apy_lte } = params;
+    const { max_results, apy_gte, apy_lte, stablecoins_only, sort_by } = params;
     const networkContext = context?.networkContext;
     
     if (!networkContext?.selectedChainId) {
@@ -385,19 +481,87 @@ export const pendleOpportunitiesTool = tool({
         decimal_apy_lte = apy_lte / 100
       }
 
-      let filtered = markets
+      // Enhanced filtering with asset classification
+      let filtered = markets.map(market => {
+        const classification = classifyAsset(market.name);
+        const recommendationScore = createRecommendationScore(market, classification);
+        
+        return {
+          ...market,
+          classification,
+          recommendationScore
+        };
+      });
+
+      // Apply APY filters
       if (decimal_apy_gte !== undefined)
         filtered = filtered.filter(o => o.impliedApy >= decimal_apy_gte!)
       if (decimal_apy_lte !== undefined)
         filtered = filtered.filter(o => o.impliedApy <= decimal_apy_lte!)
-      filtered.sort((a, b) => b.impliedApy - a.impliedApy)
-      const results = filtered.slice(0, max_results)
+      
+      // Apply stablecoin filter if requested
+      if (stablecoins_only) {
+        filtered = filtered.filter(o => o.classification.isStablecoin);
+      }
+
+      // Sort based on user preference
+      switch (sort_by) {
+        case 'apy':
+          filtered.sort((a, b) => b.impliedApy - a.impliedApy);
+          break;
+        case 'liquidity':
+          filtered.sort((a, b) => b.liquidity - a.liquidity);
+          break;
+        case 'newest':
+          // Sort by timestamp descending (newest first), fallback to APY if timestamps are equal
+          filtered.sort((a, b) => {
+            const timestampComparison = new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+            return timestampComparison !== 0 ? timestampComparison : b.impliedApy - a.impliedApy;
+          });
+          break;
+        case 'recommended':
+        default:
+          // Sort by recommendation score (considers APY, liquidity, risk, and stablecoin status)
+          filtered.sort((a, b) => b.recommendationScore - a.recommendationScore);
+          break;
+      }
+      
+      const results = filtered.slice(0, max_results);
+      
+      // Create summary with context about filtering and sorting
+      let summary = `Found ${results.length} Pendle yield opportunities`;
+      
+      // Add sort context
+      switch (sort_by) {
+        case 'apy':
+          summary += ' (sorted by APY)';
+          break;
+        case 'liquidity':
+          summary += ' (sorted by liquidity)';
+          break;
+        case 'newest':
+          summary += ' (sorted by newest pools first)';
+          break;
+        case 'recommended':
+          summary += ' (smart recommendations)';
+          break;
+      }
+      
+      if (stablecoins_only) {
+        summary += ', stablecoins only';
+      }
+      
+      const stablecoinCount = results.filter(r => r.classification.isStablecoin).length;
+      if (stablecoinCount > 0 && !stablecoins_only && sort_by === 'recommended') {
+        summary += ` - ${stablecoinCount} stablecoins prioritized`;
+      }
       
       // Return minimal data for streaming, but include full data for UI
       return {
         _uiDisplayTool: true,
-        summary: `Found ${results.length} Pendle yield opportunities`,
+        summary,
         count: results.length,
+        stablecoin_count: stablecoinCount,
         data: results
       }
     } catch (error: any) {
@@ -406,7 +570,9 @@ export const pendleOpportunitiesTool = tool({
         error: error.message || 'Failed to get opportunities',
         max_results,
         apy_gte,
-        apy_lte
+        apy_lte,
+        stablecoins_only,
+        sort_by
       }
       
       return {
