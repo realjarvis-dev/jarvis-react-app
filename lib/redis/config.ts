@@ -57,6 +57,22 @@ export class RedisWrapper {
     }
   }
 
+  async sadd(key: string, member: string): Promise<number> {
+    if (this.client instanceof Redis) {
+      return this.client.sadd(key, member);
+    } else {
+      return (this.client as RedisClientType).sAdd(key, member);
+    }
+  }
+
+  async smembers(key: string): Promise<string[]> {
+    if (this.client instanceof Redis) {
+      return this.client.smembers(key);
+    } else {
+      return (this.client as RedisClientType).sMembers(key);
+    }
+  }
+
   pipeline() {
     return this.client instanceof Redis
       ? new UpstashPipelineWrapper(this.client.pipeline())
@@ -159,6 +175,11 @@ class UpstashPipelineWrapper {
     return this
   }
 
+  sadd(key: string, member: string) {
+    this.pipeline.sadd(key, member)
+    return this
+  }
+
   hmset(key: string, value: Record<string, any>) {
     this.pipeline.hmset(key, value)
     return this
@@ -198,6 +219,11 @@ class LocalPipelineWrapper {
 
   zrem(key: string, member: string) {
     this.pipeline.zRem(key, member)
+    return this
+  }
+
+  sadd(key: string, member: string) {
+    this.pipeline.sAdd(key, member)
     return this
   }
 
