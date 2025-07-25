@@ -3,7 +3,6 @@ import { type Workflow } from '@/lib/inngest/types'
 import { getRedisClient } from '@/lib/redis/config'
 import { notFound } from 'next/navigation'
 
-export const runtime = 'edge'
 
 export default async function Automation({
   params
@@ -13,7 +12,7 @@ export default async function Automation({
   const redis = await getRedisClient()
   const workflowData = await redis.hgetall(`workflow:${params.id!}`)
 
-  if (workflowData) {
+  if (workflowData && Object.keys(workflowData).length > 0) {
     const workflow: Workflow = {
       id: workflowData.id as string,
       createdAt: workflowData.createdAt as string,

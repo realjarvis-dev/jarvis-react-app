@@ -14,5 +14,5 @@ export interface Workflow {
   /** ISO timestamp when created */
   createdAt: string;
   /** the JSON blob describing the user’s action graph */
-  workflow: InngestWorkflow;
+  workflow: InngestWorkflow | null;
 }

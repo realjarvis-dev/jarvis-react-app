@@ -53,7 +53,11 @@ export const AutomationEditor = ({ workflow }: { workflow: Workflow }) => {
           <div className="h-svh max-h-[500px]">
             <Provider
               key={workflowDraft?.id}
-              workflow={workflowDraft?.workflow}
+              workflow={workflowDraft?.workflow ?? {
+                name: 'New Workflow',
+                actions: [],
+                edges: []
+              }}
               trigger={{
                 event: {
                   name: workflowDraft.trigger,
