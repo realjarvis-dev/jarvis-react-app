@@ -7,10 +7,11 @@ import { notFound } from 'next/navigation'
 export default async function Automation({
   params
 }: {
-  params: { id: string }
+  params: { id: Promise<string> }
 }) {
   const redis = await getRedisClient()
-  const workflowData = await redis.hgetall(`workflow:${params.id!}`)
+  const { id } = await params
+  const workflowData = await redis.hgetall(`workflow:${id!}`)
 
   if (workflowData && Object.keys(workflowData).length > 0) {
     const workflow: Workflow = {
