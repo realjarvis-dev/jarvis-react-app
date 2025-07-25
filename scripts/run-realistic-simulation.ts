@@ -20,8 +20,8 @@ const MORPHO_BLUE_ABI = parseAbi([
 
 // --- Simulation Configuration ---
 const CONFIG = {
-  chainId: 1, // 1 for Ethereum, 8453 for Base
-  ptIdentifier: 'sUSDe', // A substring to identify the desired Pendle market
+  chainId: 8453, // 1 for Ethereum, 8453 for Base
+  ptIdentifier: 'USR', // A substring to identify the desired Pendle market
   initialUsdc: 100000,
   buffer: 0.1, // 10% safety buffer from liquidation LTV
   slippageBuy: 0.0004, // 0.04%
@@ -41,7 +41,7 @@ async function main() {
 //   const targetMarket = allMarkets.find(m =>
 //     m.name.includes(CONFIG.ptIdentifier)
 //   )
-  const targetMarket = allTargetMarket[allTargetMarket.length - 1] // need to change it to the last item when you are looking for the furthers market
+  const targetMarket = allTargetMarket[0] // need to change it to the last item when you are looking for the furthers market
 
   if (!targetMarket) {
     console.error(
@@ -81,7 +81,7 @@ async function main() {
   console.log(`  - Max LTV (LLTV): ${(lltv * 100).toFixed(2)}%`)
 
 
-  const fullMorphoMarket = await morphoAPI.getMarketByKey(morphoMarket.marketKey)
+  const fullMorphoMarket = await morphoAPI.getMarketByKey(morphoMarket.marketKey, CONFIG.chainId)
   if (!fullMorphoMarket) {
     throw new Error('Could not fetch full morpho market details')
   }

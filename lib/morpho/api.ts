@@ -135,10 +135,10 @@ export class MorphoAPI {
   /**
    * Get specific market by unique key
    */
-  async getMarketByKey(uniqueKey: string): Promise<MorphoMarket | null> {
+  async getMarketByKey(uniqueKey: string, chainId: number): Promise<MorphoMarket | null> {
     const query = `
-      query GetMarket($uniqueKey: String!) {
-        marketByUniqueKey(uniqueKey: $uniqueKey) {
+      query GetMarket($uniqueKey: String!, $chainId: Int!) {
+        marketByUniqueKey(uniqueKey: $uniqueKey, chainId: $chainId) {
           uniqueKey
           lltv
           oracleAddress
@@ -173,7 +173,7 @@ export class MorphoAPI {
     `
 
     try {
-      const response = await this.query<{ marketByUniqueKey: MorphoMarket }>(query, { uniqueKey })
+      const response = await this.query<{ marketByUniqueKey: MorphoMarket }>(query, { uniqueKey, chainId })
       return response.marketByUniqueKey
     } catch (error) {
       console.error(`Failed to fetch market ${uniqueKey}:`, error)
