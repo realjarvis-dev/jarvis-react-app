@@ -125,6 +125,15 @@ export function runPtLoopingSimulation(p: SimulationParams): {
   const ptRedeemValue = (ptValue + ptGrowth) * (1 - p.slippageSell)
   const sellSlippage = ptRedeemValue * p.slippageSell
 
+  console.log("pt growth", ptGrowth)
+  console.log("pt value", ptValue)
+  console.log("pt growth with slippage", ptGrowth * (1 - p.slippageSell))
+  console.log("debt", debt)
+  console.log("debt growth", debt * p.borrowApy * t)
+  console.log("borrow apy", p.borrowApy)
+  console.log("Repay needed", repayNeeded)
+  console.log("PT redeem value", ptRedeemValue)
+
 //   let usdcAfterUnwind = p.initialUsdc + ptGrowth - debtGrowth
   let usdcAfterUnwind = ptRedeemValue - repayNeeded
 
