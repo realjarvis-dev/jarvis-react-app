@@ -1717,6 +1717,13 @@ export const tokensByChain = {
     },
     {
       "chainId": 1,
+      "address": "0x4b13006980aCB09645131b91D259eaA111eaF5Ba",
+      "symbol": "MYC",
+      "name": "Mycelium",
+      "decimals": 18
+    },
+    {
+      "chainId": 1,
       "address": "0x4a527d8fc13C5203AB24BA0944F4Cb14658D1Db6",
       "symbol": "MITx",
       "name": "Morpheus Labs",
@@ -2413,13 +2420,6 @@ export const tokensByChain = {
       "address": "0x86772b1409b61c639EaAc9Ba0AcfBb6E238e5F83",
       "symbol": "NDX",
       "name": "Indexed Finance",
-      "decimals": 18
-    },
-    {
-      "chainId": 1,
-      "address": "0xB1f66997A5760428D3a87D68b90BfE0aE64121cC",
-      "symbol": "LUA",
-      "name": "LuaSwap",
       "decimals": 18
     },
     {
@@ -6277,6 +6277,13 @@ export const tokensByChain = {
       "address": "0x91dFbEE3965baAEE32784c2d546B7a0C62F268c9",
       "symbol": "BONDLY",
       "name": "Forj",
+      "decimals": 18
+    },
+    {
+      "chainId": 1,
+      "address": "0x94804dc4948184fFd7355f62Ccbb221c9765886F",
+      "symbol": "RAGE",
+      "name": "Rage.Fan",
       "decimals": 18
     },
     {
@@ -11545,13 +11552,6 @@ export const tokensByChain = {
     },
     {
       "chainId": 1,
-      "address": "0x519C1001D550C0a1DaE7d1fC220f7d14c2A521BB",
-      "symbol": "PSWAP",
-      "name": "Polkaswap",
-      "decimals": 18
-    },
-    {
-      "chainId": 1,
       "address": "0x41A3Dba3D677E573636BA691a70ff2D606c29666",
       "symbol": "BLANK",
       "name": "BlockWallet",
@@ -14065,6 +14065,13 @@ export const tokensByChain = {
     },
     {
       "chainId": 1,
+      "address": "0x6731827Cb6879a2091ce3ab3423f7bf20539b579",
+      "symbol": "MPWR",
+      "name": "Empower",
+      "decimals": 18
+    },
+    {
+      "chainId": 1,
       "address": "0x2565ae0385659badCada1031DB704442E1b69982",
       "symbol": "ASM",
       "name": "Assemble AI",
@@ -14306,13 +14313,6 @@ export const tokensByChain = {
       "address": "0x6b96c78D4472031F1fBed2d1C4Bd3895e9212344",
       "symbol": "TAOx",
       "name": "TAOx",
-      "decimals": 18
-    },
-    {
-      "chainId": 1,
-      "address": "0x56A86d648c435DC707c8405B78e2Ae8eB4E60Ba4",
-      "symbol": "STACK",
-      "name": "StackOS",
       "decimals": 18
     },
     {
@@ -28002,6 +28002,13 @@ export const tokensByChain = {
       "symbol": "COA",
       "name": "Alliance Games",
       "decimals": 18
+    },
+    {
+      "chainId": 56,
+      "address": "0xad8c787992428cD158E451aAb109f724B6bc36de",
+      "symbol": "ASP",
+      "name": "Aspecta",
+      "decimals": 18
     }
   ],
   "100": [
@@ -29508,6 +29515,13 @@ export const tokensByChain = {
       "address": "0xaf204776c7245bF4147c2612BF6e5972Ee483701",
       "symbol": "sDAI",
       "name": "Savings xDAI",
+      "decimals": 18
+    },
+    {
+      "chainId": 100,
+      "address": "0x216a7d520992eD198593A16e0b17c784c9cdc660",
+      "symbol": "POOL(Bridged)",
+      "name": "PoolTogether from Mainnet",
       "decimals": 18
     },
     {
@@ -32472,13 +32486,6 @@ export const tokensByChain = {
     },
     {
       "chainId": 137,
-      "address": "0x52aF6aA779F36a53De44ae1969756a506b2577b5",
-      "symbol": "mERNE",
-      "name": "ERNE-Matic",
-      "decimals": 18
-    },
-    {
-      "chainId": 137,
       "address": "0x4CEBdBCB286101A17D3eA1f7fe7bbDeD2B2053dd",
       "symbol": "YLD",
       "name": "Yield (PoS)",
@@ -34656,13 +34663,6 @@ export const tokensByChain = {
     },
     {
       "chainId": 137,
-      "address": "0x3A29CAb2E124919d14a6F735b6033a3AaD2B260F",
-      "symbol": "oRETRO",
-      "name": "Option to buy RETRO",
-      "decimals": 18
-    },
-    {
-      "chainId": 137,
       "address": "0x57999936fC9A9EC0751a8D146CcE11901Be8beD0",
       "symbol": "fxVRSW",
       "name": "Virtuswap Token (FXERC20)",
@@ -34904,6 +34904,13 @@ export const tokensByChain = {
       "address": "0xf329e36C7bF6E5E86ce2150875a84Ce77f477375",
       "symbol": "aPolAAVE",
       "name": "Aave Polygon AAVE",
+      "decimals": 18
+    },
+    {
+      "chainId": 137,
+      "address": "0x47C52F93A359dB9F4509005CF982DFc440790561",
+      "symbol": "OBT",
+      "name": "Orbit Bridge Matic Token",
       "decimals": 18
     },
     {
@@ -39318,6 +39325,13 @@ export const tokensByChain = {
     },
     {
       "chainId": 137,
+      "address": "0x0f92D459B20D21F6bf9E02056EA9165d3f78bA62",
+      "symbol": "CUM",
+      "name": "CumCoin (PoS)",
+      "decimals": 18
+    },
+    {
+      "chainId": 137,
       "address": "0x1FcbE5937B0cc2adf69772D228fA4205aCF4D9b2",
       "symbol": "BADGER",
       "name": "Badger (PoS)",
@@ -42869,6 +42883,13 @@ export const tokensByChain = {
     },
     {
       "chainId": 146,
+      "address": "0x4D85bA8c3918359c78Ed09581E5bc7578ba932ba",
+      "symbol": "stkscUSD",
+      "name": "Staked Sonic USD",
+      "decimals": 6
+    },
+    {
+      "chainId": 146,
       "address": "0x6881B80ea7C858E4aEEf63893e18a8A36f3682f3",
       "symbol": "NAVI",
       "name": "NAVI",
@@ -42956,6 +42977,13 @@ export const tokensByChain = {
       "address": "0x3333111A391cC08fa51353E9195526A70b333333",
       "symbol": "x33",
       "name": "Shadow Liquid Staking Token",
+      "decimals": 18
+    },
+    {
+      "chainId": 146,
+      "address": "0x455d5f11Fea33A8fa9D3e285930b478B6bF85265",
+      "symbol": "stkscETH",
+      "name": "Staked Sonic ETH",
       "decimals": 18
     },
     {
@@ -43209,6 +43237,13 @@ export const tokensByChain = {
       "symbol": "crvUSD",
       "name": "Curve.Fi USD Stablecoin",
       "decimals": 18
+    },
+    {
+      "chainId": 146,
+      "address": "0xD0851030C94433C261B405fEcbf1DEC5E15948d0",
+      "symbol": "stkscBTC",
+      "name": "Staked Sonic BTC",
+      "decimals": 8
     }
   ],
   "204": [
@@ -43914,13 +43949,6 @@ export const tokensByChain = {
       "address": "0x85dec8c4B2680793661bCA91a8F129607571863d",
       "symbol": "BRUSH",
       "name": "PaintSwap Token",
-      "decimals": 18
-    },
-    {
-      "chainId": 250,
-      "address": "0x33333ee26a7d02e41c33828B42Fb1E0889143477",
-      "symbol": "LIQR",
-      "name": "LIQR",
       "decimals": 18
     },
     {
@@ -45914,13 +45942,6 @@ export const tokensByChain = {
     },
     {
       "chainId": 999,
-      "address": "0x74a40455Ff49ECE02009BEe405154ac9Ac3FA340",
-      "symbol": "STONKS",
-      "name": "Stonks",
-      "decimals": 6
-    },
-    {
-      "chainId": 999,
       "address": "0xB5fE77d323d69eB352A02006eA8ecC38D882620C",
       "symbol": "KEI",
       "name": "KEI Stablecoin",
@@ -47125,6 +47146,13 @@ export const tokensByChain = {
     },
     {
       "chainId": 999,
+      "address": "0xB5EE887259F792E613edBD20dDE8970C10fefda1",
+      "symbol": "VDO",
+      "name": "ValiDAO",
+      "decimals": 18
+    },
+    {
+      "chainId": 999,
       "address": "0xE8336a19A4Fe2582073d8A89054673e44FeD6eF9",
       "symbol": "conhHYPEUSDT",
       "name": "Concentrated Hyperbloom Hyperswap HYPE-USDT",
@@ -47226,6 +47254,146 @@ export const tokensByChain = {
       "address": "0x064Fe2BB8e5FcdB1B3213489a3972A21393000FC",
       "symbol": "UETH-undefined-LBP",
       "name": "test small & big toggle Liquidity Bootstrapping Pool",
+      "decimals": 18
+    },
+    {
+      "chainId": 999,
+      "address": "0xb54802A68bde17c44EcFf88AE2B26dD0f5559c43",
+      "symbol": "Volatile - RLP/HLP0",
+      "name": "Ramses Volatile - RLP/HLP0",
+      "decimals": 18
+    },
+    {
+      "chainId": 999,
+      "address": "0x2084839396c56BEf5A25360B0000aB40103C9Db9",
+      "symbol": "cowHybraHyperevmLHYPE-WHYPE",
+      "name": "Cow Hybra Hyperevm LHYPE-WHYPE",
+      "decimals": 18
+    },
+    {
+      "chainId": 999,
+      "address": "0xA036417eEcEaDca725d8106400560961d0C216D5",
+      "symbol": "conhHYPEPURR",
+      "name": "Concentrated Hyperbloom HYPE-PURR",
+      "decimals": 18
+    },
+    {
+      "chainId": 999,
+      "address": "0x513Fd781e908540030FbFfB88BeBf0f21FFfd4E0",
+      "symbol": "JEFFHYPE",
+      "name": "JEFF.HL",
+      "decimals": 18
+    },
+    {
+      "chainId": 999,
+      "address": "0x3bfD9b2bC7F536CDC1179371AF9d46Abd1A457be",
+      "symbol": "PURRHYPE",
+      "name": "HYPURR",
+      "decimals": 18
+    },
+    {
+      "chainId": 999,
+      "address": "0xa64a727D215F265F2B44eF018faE926Ddc6b5bA0",
+      "symbol": "conhHYPELHYPE",
+      "name": "Concentrated Hyperbloom Prjx HYPE-LHYPE",
+      "decimals": 18
+    },
+    {
+      "chainId": 999,
+      "address": "0x8eF30C5cE9a460bFae82F1F039F7C5E5427d7018",
+      "symbol": "hSOL",
+      "name": "Hyperliquid Solana",
+      "decimals": 9
+    },
+    {
+      "chainId": 999,
+      "address": "0x35d5854E6697396129395Ba0a41149d4057174C2",
+      "symbol": "sUSDe-USDe",
+      "name": "sUSDe/USDe",
+      "decimals": 18
+    },
+    {
+      "chainId": 999,
+      "address": "0xD60BD6a2771fb1201edADb5B0a5C5b1134C44120",
+      "symbol": "USR-USDT0",
+      "name": "USR/USDT0",
+      "decimals": 18
+    },
+    {
+      "chainId": 999,
+      "address": "0x76C8DaE55CD103B9865c6f056C8da915C8a98c4C",
+      "symbol": "cowHybraHyperevmfeUSD-WHYPE",
+      "name": "Cow Hybra Hyperevm feUSD-WHYPE",
+      "decimals": 18
+    },
+    {
+      "chainId": 999,
+      "address": "0x34c7C50E44eD7Ab6360c2fe18F15E66083e5EC29",
+      "symbol": "conhUSDHLHYPE",
+      "name": "Concentrated Hyperbloom USDHL-HYPE",
+      "decimals": 18
+    },
+    {
+      "chainId": 999,
+      "address": "0xb80bC5B1547f2F5e33eC292536EcE03521a424eA",
+      "symbol": "IV-HYPE-WHYPE-mHYPE-100",
+      "name": "ICHI Vault Liquidity",
+      "decimals": 18
+    },
+    {
+      "chainId": 999,
+      "address": "0xb385afdF3A033ebD06dC182D83CAf794bDEa2Ce1",
+      "symbol": "sw-liquidHYPE",
+      "name": "Spectra ERC4626 Wrapper: Liquid HYPE Yield",
+      "decimals": 18
+    },
+    {
+      "chainId": 999,
+      "address": "0xc67C09d162bFc6b768250B1913BC2E70730b148D",
+      "symbol": "IV-HYPE-mHYPE-WHYPE-100",
+      "name": "ICHI Vault Liquidity",
+      "decimals": 18
+    },
+    {
+      "chainId": 999,
+      "address": "0x56ADAF90C4d932A53259E7b7C819D55c7B0a71a4",
+      "symbol": "hbUSDT-gtUSDT0-gtUSDe",
+      "name": "Boosted hbUSDT-gtUSDT0-gtUSDe",
+      "decimals": 18
+    },
+    {
+      "chainId": 999,
+      "address": "0x5A6AB9a47115Bb4e3492b20A4d9eeD3397D88ADe",
+      "symbol": "conhUBTCUETH",
+      "name": "Concentrated Hyperbloom UBTC-UETH",
+      "decimals": 18
+    },
+    {
+      "chainId": 999,
+      "address": "0xE42163B71B69Aa4509aa15b06722B1F0484332E3",
+      "symbol": "conhLHYPEUSDXL",
+      "name": "Concentrated Hyperbloom LHYPE-USDXL",
+      "decimals": 18
+    },
+    {
+      "chainId": 999,
+      "address": "0x6BD8De0fEd17DC0C0A82b9Fe5522B129ecAEBDbD",
+      "symbol": "50mcHYPE-50gtuETH",
+      "name": "Balancer Weighted mcHYPE-gtuETH",
+      "decimals": 18
+    },
+    {
+      "chainId": 999,
+      "address": "0x63a642dcd91ab4D579Ec45181945DF1e1e95d6b4",
+      "symbol": "sw-hbUSDT",
+      "name": "Spectra ERC4626 Wrapper: Hyperbeat USDT",
+      "decimals": 18
+    },
+    {
+      "chainId": 999,
+      "address": "0xA5b39551f301343B5f6dD1047D4c55082A60f14F",
+      "symbol": "50gtUSDT0-50mcHYPE",
+      "name": "Balancer Weighted gtUSDT0-mcHYPE",
       "decimals": 18
     }
   ],
@@ -51241,6 +51409,13 @@ export const tokensByChain = {
     },
     {
       "chainId": 8453,
+      "address": "0x37d3D61a304695619433bc05EF841E889F69Debf",
+      "symbol": "DONNIE",
+      "name": "DONNIE",
+      "decimals": 18
+    },
+    {
+      "chainId": 8453,
       "address": "0x000000000D564D5be76f7f0d28fE52605afC7Cf8",
       "symbol": "flETH",
       "name": "flETH",
@@ -53114,6 +53289,13 @@ export const tokensByChain = {
       "address": "0xAD435674417520aeeED6b504bBe654d4f556182F",
       "symbol": "jEUR",
       "name": "Jarvis Synthetic Euro",
+      "decimals": 18
+    },
+    {
+      "chainId": 42161,
+      "address": "0xC74fE4c715510Ec2F8C61d70D397B32043F55Abe",
+      "symbol": "MYC",
+      "name": "Mycelium",
       "decimals": 18
     },
     {
@@ -55764,13 +55946,6 @@ export const tokensByChain = {
     },
     {
       "chainId": 42161,
-      "address": "0x0C4681e6C0235179ec3D4F4fc4DF3d14FDD96017",
-      "symbol": "RDNT(old)",
-      "name": "Radiant",
-      "decimals": 18
-    },
-    {
-      "chainId": 42161,
       "address": "0x0000206329b97DB379d5E1Bf586BbDB969C63274",
       "symbol": "USDA",
       "name": "USDA",
@@ -56509,6 +56684,13 @@ export const tokensByChain = {
       "address": "0x6D7187220f769bdE541FF51Dd37ee07416F861d2",
       "symbol": "NSTR",
       "name": "Nostra",
+      "decimals": 18
+    },
+    {
+      "chainId": 42161,
+      "address": "0x1Ad1dB091c14c4F5A988b58ac8A34fb01f672A8a",
+      "symbol": "CPI",
+      "name": "Consumer Price Index",
       "decimals": 18
     },
     {
@@ -60848,13 +61030,6 @@ export const tokensByChain = {
       "address": "0x320aDa89DbFA3A154613D2731c9BC3a4030DbA19",
       "symbol": "FROST",
       "name": "FROST",
-      "decimals": 18
-    },
-    {
-      "chainId": 43114,
-      "address": "0x346A59146b9b4a77100D369a3d18E8007A9F46a6",
-      "symbol": "AVAI",
-      "name": "AVAI",
       "decimals": 18
     },
     {
