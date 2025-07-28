@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  serverExternalPackages: [
+    "@inngest/workflow-kit",
+    "jsonpath"
+  ],
   images: {
     remotePatterns: [
       {
