@@ -2753,6 +2753,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
+      "address": "0x4a6228dcc3e7f6973b8cfd55adcd7537fd803758",
+      "symbol": "PT-GHOUSR-gauge-25SEP2025",
+      "name": "PT GHOUSR-gauge 25SEP2025",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x1a249b03362c1bfffea062f3bd7096c58ca07279",
+      "expiry": "2025-09-25T00:00:00.000Z",
+      "underlyingAsset": "0xc372ccdd24bb0753ceb78bbac4d24eb7de4abe4e"
+    },
+    {
+      "chainId": 1,
+      "address": "0xfbc0d6439b9dc7b8ff6c581f25724adbd8375a4e",
+      "symbol": "YT-GHOUSR-gauge-25SEP2025",
+      "name": "YT GHOUSR-gauge 25SEP2025",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x1a249b03362c1bfffea062f3bd7096c58ca07279",
+      "expiry": "2025-09-25T00:00:00.000Z",
+      "underlyingAsset": "0xc372ccdd24bb0753ceb78bbac4d24eb7de4abe4e"
+    },
+    {
+      "chainId": 1,
+      "address": "0xba04c9a4297484aa671fd3425364994cf2ac8037",
+      "symbol": "SY-GHOUSR-gauge",
+      "name": "SY GHOUSR-gauge",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x1a249b03362c1bfffea062f3bd7096c58ca07279",
+      "expiry": "2025-09-25T00:00:00.000Z",
+      "underlyingAsset": "0xc372ccdd24bb0753ceb78bbac4d24eb7de4abe4e"
+    },
+    {
+      "chainId": 1,
       "address": "0x1a4485101815e5afeb4d83e7a4febb822e683d99",
       "symbol": "PT-SuperETH-30OCT2025",
       "name": "PT SuperETH 30OCT2025",
@@ -3080,6 +3113,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0x71d4a6bac0fe7210309b6a3807cf2bad13d7c1e1",
       "expiry": "2025-09-25T00:00:00.000Z",
       "underlyingAsset": "0x9fd7466f987fd4c45a5bbde22ed8aba5bc8d72d1"
+    },
+    {
+      "chainId": 1,
+      "address": "0xf3f491e5608f8b8a6fd9e9d66a4a4036d7fd282c",
+      "symbol": "PT-pUSDe-16OCT2025",
+      "name": "PT pUSDe 16OCT2025",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0xf4c449d6a2d1840625211769779ada42857d04dd",
+      "expiry": "2025-10-16T00:00:00.000Z",
+      "underlyingAsset": "0xa62b204099277762d1669d283732dcc1b3aa96ce"
+    },
+    {
+      "chainId": 1,
+      "address": "0xe49462ffd604d35061fb6937626f675873314c93",
+      "symbol": "YT-pUSDe-16OCT2025",
+      "name": "YT pUSDe 16OCT2025",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0xf4c449d6a2d1840625211769779ada42857d04dd",
+      "expiry": "2025-10-16T00:00:00.000Z",
+      "underlyingAsset": "0xa62b204099277762d1669d283732dcc1b3aa96ce"
+    },
+    {
+      "chainId": 1,
+      "address": "0x33e88943b00e699fc5b6597c5f8bcb0872af8bee",
+      "symbol": "SY-pUSDe",
+      "name": "SY pUSDe",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0xf4c449d6a2d1840625211769779ada42857d04dd",
+      "expiry": "2025-10-16T00:00:00.000Z",
+      "underlyingAsset": "0xa62b204099277762d1669d283732dcc1b3aa96ce"
     }
   ],
   "56": [
