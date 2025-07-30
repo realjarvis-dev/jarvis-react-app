@@ -18,7 +18,7 @@ export const PriceAlertProvider = ({ children }: { children: ReactNode }) => {
   const queryClient = useQueryClient()
 
   useEffect(() => {
-    if (!ready || !authenticated) return
+    if (!ready || !authenticated || !pusher) return
     console.log('PriceAlert provider use effect')
 
     const room = user?.id.split(':').at(-1)
@@ -40,10 +40,10 @@ export const PriceAlertProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       pusher.disconnect()
     }
-  }, [ready, authenticated, user])
+  }, [ready, authenticated, user, queryClient])
 
   return (
-    <PriceAlertContext.Provider value={{ pusher: null }}>
+    <PriceAlertContext.Provider value={{ pusher }}>
       {children}
     </PriceAlertContext.Provider>
   )
