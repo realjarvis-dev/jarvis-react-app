@@ -15,6 +15,7 @@ import { ArrowLeft } from 'lucide-react'
 import { usePathname, useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 import GuestMenu from './guest-menu'
+import NotificationInbox from './notification-inbox'
 import UserMenu from './user-menu'
 import WalletMenu from './wallet-menu'
 import WelcomePopup from './welcome-popup'
@@ -27,7 +28,6 @@ export const Header: React.FC = () => {
   const [showWelcomePopup, setShowWelcomePopup] = useState(false)
   
   const isWalletSummaryPage = pathname === '/wallet/summary'
-  
   const handleCloseWelcomePopup = () => {
     setShowWelcomePopup(false)
     router.push('/')
@@ -101,6 +101,7 @@ export const Header: React.FC = () => {
           </Button>
         )}
         {ready && authenticated && <WalletMenu />}
+        {ready && authenticated && <NotificationInbox />}
         {ready && authenticated ? <UserMenu /> : <GuestMenu login={login} />}
       </div>
     </header>
