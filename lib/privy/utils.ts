@@ -127,7 +127,10 @@ export async function erc20Approval(
   amount: string,
   userAddress: string,
   chainId: number,
-  isDemo: boolean
+  isDemo: boolean,
+  timeoutMs: number = 60000,
+  evmWalletId?: string,
+  evmWalletAddress?: string
 ): Promise<{ status: string; hash?: string; message?: string }> {
   // default to use the TEST_RPC_URL in env
   // on localhost can put 127.0.0.1:8545 for local testing
@@ -163,7 +166,10 @@ export async function erc20Approval(
       {
         estimateGas: true,
       },
-      isDemo
+      isDemo,
+      timeoutMs,
+      evmWalletId,
+      evmWalletAddress
     )
     return { status: 'success', hash: txData.hash }
   } catch (error: any) {
@@ -210,17 +216,20 @@ export async function signTransaction(
     }>
     legacyGasPriceFunction?: (chainId: number) => Promise<number>
   },
-  isDemo: boolean = false
+  isDemo: boolean = false,
+  evmWalletId?: string,
+  evmWalletAddress?: string
 ) {
-  // Get EVM wallet and user address
-  const evmWallet = await getUserWallet('ethereum')
-  if (!evmWallet || !evmWallet.id) {
-    throw new Error('EVM wallet not found')
-  }
-
-  const userAddress = await getUserEvmWalletAddress()
-  if (!userAddress) {
-    throw new Error('User address not found')
+  if (!evmWalletId) {
+    const evmWallet = await getUserWallet('ethereum')
+    if (!evmWallet || !evmWallet.id) {
+      throw new Error('EVM wallet not found')
+    }
+    evmWalletId = evmWallet.id
+    evmWalletAddress = await getUserEvmWalletAddress()
+    if (!evmWalletAddress) {
+      throw new Error('EVM wallet address not found')
+    }
   }
 
   // Set default gas options if not provided
@@ -268,7 +277,7 @@ export async function signTransaction(
 
   // Get current nonce
   const nonce = await provider.getTransactionCount(
-    userAddress as `0x${string}`,
+    evmWalletAddress as `0x${string}`,
     'pending'
   )
 
@@ -328,7 +337,7 @@ export async function signTransaction(
   if (isLegacyGasModeChain) {
 
     const res = await privy.walletApi.ethereum.signTransaction({
-      walletId: evmWallet.id,
+      walletId: evmWalletId,
       transaction: {
         to: `0x${toAddress}` as `0x${string}`,
         from: `0x${fromAddress}` as `0x${string}`,
@@ -347,7 +356,7 @@ export async function signTransaction(
     encoding = res.encoding
   } else {
     const res = await privy.walletApi.ethereum.signTransaction({
-      walletId: evmWallet.id,
+      walletId: evmWalletId,
       transaction: {
         to: `0x${toAddress}` as `0x${string}`,
         from: `0x${fromAddress}` as `0x${string}`,
@@ -485,11 +494,13 @@ export async function executeTransaction(
       legacyGasPriceFunction?: (chainId: number) => Promise<number>;
     },
     isDemo: boolean = false,
-    timeoutMs: number = 60000
+    timeoutMs: number = 60000,
+    evmWalletId?: string,
+    evmWalletAddress?: string
   ) {
     
     // Sign the transaction
-    const { signedTransaction, provider } = await signTransaction(txData, chainId, gasOptions, isDemo);
+    const { signedTransaction, provider } = await signTransaction(txData, chainId, gasOptions, isDemo, evmWalletId, evmWalletAddress);
     
     // Broadcast the transaction
     return await broadcastTransaction(signedTransaction, provider, timeoutMs);

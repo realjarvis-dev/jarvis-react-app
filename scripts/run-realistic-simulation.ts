@@ -20,8 +20,8 @@ const MORPHO_BLUE_ABI = parseAbi([
 
 // --- Simulation Configuration ---
 const CONFIG = {
-  chainId: 8453, // 1 for Ethereum, 8453 for Base
-  ptIdentifier: 'USR', // A substring to identify the desired Pendle market
+  chainId: 1, // 1 for Ethereum, 8453 for Base
+  ptIdentifier: 'USDS', // A substring to identify the desired Pendle market
   initialUsdc: 100000,
   buffer: 0.1, // 10% safety buffer from liquidation LTV
   slippageBuy: 0.0004, // 0.04%
@@ -41,7 +41,7 @@ async function main() {
 //   const targetMarket = allMarkets.find(m =>
 //     m.name.includes(CONFIG.ptIdentifier)
 //   )
-  const targetMarket = allTargetMarket[0] // need to change it to the last item when you are looking for the furthers market
+  const targetMarket = allTargetMarket[allTargetMarket.length - 1] // need to change it to the last item when you are looking for the furthers market
 
   if (!targetMarket) {
     console.error(
@@ -56,6 +56,8 @@ async function main() {
       (1000 * 60 * 60 * 24)
   )
   console.log(`Found PT Market: ${targetMarket.name}`)
+  console.log(`  - PT Address: ${targetMarket.pt}`)
+  console.log(`  - Market Address: ${targetMarket.address}`)
   console.log(`  - PT APY: ${(ptApy * 100).toFixed(2)}%`)
   console.log(`  - Days to Expiry: ${daysToExpiry}`)
 
