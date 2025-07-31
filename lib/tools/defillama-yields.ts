@@ -108,6 +108,7 @@ export const defiYieldsTool = tool({
       return {
         _uiDisplayTool: true,
         summary,
+        instruction: 'If user later interested in any opportunities returned, you should use defillama_yield_quote tool to get a quote for user. Usually when user shows interest they would say they want to swap to <pool_name>, zap into <pool_name>, invest into <pool_name>, or deposit into <pool_name>. anything similar, as long as after this tool, has a high probability of asking defi llama yield quote.',
         data: { 
           yields: filteredYields,
           protocolAnalysis: protocolAnalysis || [],

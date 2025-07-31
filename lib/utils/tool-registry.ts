@@ -851,7 +851,7 @@ export function createToolRegistry(model: string): ToolRegistry {
 
   registry.registerTool({
     name: 'defillama_yields',
-    description: 'Discover high-yield DeFi opportunities across different protocols and chains',
+    description: 'Discover high-yield DeFi opportunities across different protocols and chains. If user later interested in any opportunities returned, you should use defillama_yield_quote tool to get a quote for user.',
     schema: defiYieldsTool.parameters,
     execute: async (params, context) => defiYieldsTool.execute(params, {
       toolCallId: context?.toolCallId || 'unknown',
