@@ -301,7 +301,7 @@ export const pendleZapOutExecuteTool = tool({
     const userAddress = await getUserEvmWalletAddress()
     const amountLpInWei = parseUnits(amountLpIn, 18)
     if (isDemo) {
-      slippage = 0.3
+      slippage = 0.1
     }
     
     // Validate user has sufficient LP token balance before execution

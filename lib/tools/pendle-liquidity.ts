@@ -79,7 +79,7 @@ export const pendleZapInQuoteTool = tool({
       const isDemo = networkContext!.isDemo
       const userAddress = await getUserEvmWalletAddress()
       if (isDemo) {
-        slippage = 0.3
+        slippage = 0.1
       }
       if (!userAddress) {
         return {
@@ -458,7 +458,7 @@ export const pendleZapInExecuteTool = tool({
       }
     }
     if (isDemo) {
-      slippage = 0.3
+      slippage = 0.1
     }
     
     // Check if PT token is expired (market inactive) before execution
