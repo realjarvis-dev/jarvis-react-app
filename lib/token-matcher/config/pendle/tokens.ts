@@ -113,72 +113,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
-      "address": "0x27eb97233f6228704ea64bb272fc8eece68fd9f4",
-      "symbol": "PT-GHOUSR-gauge-31JUL2025",
-      "name": "PT GHOUSR-gauge 31JUL2025",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0x82d810ededb09614144900f914e75dd76700f19d",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0xc372ccdd24bb0753ceb78bbac4d24eb7de4abe4e"
-    },
-    {
-      "chainId": 1,
-      "address": "0x4263edde8814056f8672acc3a8d6a57160003245",
-      "symbol": "YT-GHOUSR-gauge-31JUL2025",
-      "name": "YT GHOUSR-gauge 31JUL2025",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0x82d810ededb09614144900f914e75dd76700f19d",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0xc372ccdd24bb0753ceb78bbac4d24eb7de4abe4e"
-    },
-    {
-      "chainId": 1,
-      "address": "0xba04c9a4297484aa671fd3425364994cf2ac8037",
-      "symbol": "SY-GHOUSR-gauge",
-      "name": "SY GHOUSR-gauge",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0x82d810ededb09614144900f914e75dd76700f19d",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0xc372ccdd24bb0753ceb78bbac4d24eb7de4abe4e"
-    },
-    {
-      "chainId": 1,
-      "address": "0x917459337caac939d41d7493b3999f571d20d667",
-      "symbol": "PT-USDe-31JUL2025",
-      "name": "PT USDe 31JUL2025",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0x9df192d13d61609d1852461c4850595e1f56e714",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0x4c9edd5852cd905f086c759e8383e09bff1e68b3"
-    },
-    {
-      "chainId": 1,
-      "address": "0x733ee9ba88f16023146ebc965b7a1da18a322464",
-      "symbol": "YT-USDe-31JUL2025",
-      "name": "YT USDe 31JUL2025",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0x9df192d13d61609d1852461c4850595e1f56e714",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0x4c9edd5852cd905f086c759e8383e09bff1e68b3"
-    },
-    {
-      "chainId": 1,
-      "address": "0xb47cbf6697a6518222c7af4098a43aefe2739c8c",
-      "symbol": "SY-USDe",
-      "name": "SY USDe",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0x9df192d13d61609d1852461c4850595e1f56e714",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0x4c9edd5852cd905f086c759e8383e09bff1e68b3"
-    },
-    {
-      "chainId": 1,
       "address": "0x23e60d1488525bf4685f53b3aa8e676c30321066",
       "symbol": "PT-wstUSR-25SEP2025",
       "name": "PT wstUSR 25SEP2025",
@@ -212,39 +146,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
-      "address": "0x3b3fb9c57858ef816833dc91565efcd85d96f634",
-      "symbol": "PT-sUSDe-31JUL2025",
-      "name": "PT sUSDe 31JUL2025",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0x4339ffe2b7592dc783ed13cce310531ab366deac",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0x9d39a5de30e57443bff2a8307a4256c8797a3497"
-    },
-    {
-      "chainId": 1,
-      "address": "0xb7e51d15161c49c823f3951d579ded61cd27272b",
-      "symbol": "YT-sUSDe-31JUL2025",
-      "name": "YT sUSDe 31JUL2025",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0x4339ffe2b7592dc783ed13cce310531ab366deac",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0x9d39a5de30e57443bff2a8307a4256c8797a3497"
-    },
-    {
-      "chainId": 1,
-      "address": "0xf541aa4d6f29ec2423a0d306dbc677021a02dbc0",
-      "symbol": "SY-sUSDe",
-      "name": "SY sUSDe",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0x4339ffe2b7592dc783ed13cce310531ab366deac",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0x9d39a5de30e57443bff2a8307a4256c8797a3497"
-    },
-    {
-      "chainId": 1,
       "address": "0xfc66d247f577bfc87df8a5267c43676c4a088b8b",
       "symbol": "PT-sENA-25SEP2025",
       "name": "PT sENA 25SEP2025",
@@ -275,39 +176,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0xda57abf95a7c21eb9df08fbaada182f749f6c62f",
       "expiry": "2025-09-25T00:00:00.000Z",
       "underlyingAsset": "0x8be3460a480c80728a8c4d7a5d5303c85ba7b3b9"
-    },
-    {
-      "chainId": 1,
-      "address": "0x11105208abb3ce206922bf4cd6b2d5f98cac2f0d",
-      "symbol": "PT-SuperUSDC-31JUL2025",
-      "name": "PT SuperUSDC 31JUL2025",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0x9b5418ef165e86490edbfbae865e0791b225f037",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0xf7de3c70f2db39a188a81052d2f3c8e3e217822a"
-    },
-    {
-      "chainId": 1,
-      "address": "0x8c7352907f0a0c61771ad7f3ac2f631294182f4b",
-      "symbol": "YT-SuperUSDC-31JUL2025",
-      "name": "YT SuperUSDC 31JUL2025",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0x9b5418ef165e86490edbfbae865e0791b225f037",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0xf7de3c70f2db39a188a81052d2f3c8e3e217822a"
-    },
-    {
-      "chainId": 1,
-      "address": "0x0a91166428d71777e1a9b338b84eb9452e520b78",
-      "symbol": "SY-SuperUSDC",
-      "name": "SY SuperUSDC",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0x9b5418ef165e86490edbfbae865e0791b225f037",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0xf7de3c70f2db39a188a81052d2f3c8e3e217822a"
     },
     {
       "chainId": 1,
@@ -476,39 +344,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
-      "address": "0xf736acf34ff7cd9b3565b73a1f15e652859bf322",
-      "symbol": "PT-rUSD-31JUL2025",
-      "name": "PT rUSD 31JUL2025",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0x88c4f34b86907b7221c0061f7a0bbec9391ea727",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0x09d4214c03d01f49544c0448dbe3a27f768f2b34"
-    },
-    {
-      "chainId": 1,
-      "address": "0x050960d2438d151a246625916b64626f49a1bc0a",
-      "symbol": "YT-rUSD-31JUL2025",
-      "name": "YT rUSD 31JUL2025",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0x88c4f34b86907b7221c0061f7a0bbec9391ea727",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0x09d4214c03d01f49544c0448dbe3a27f768f2b34"
-    },
-    {
-      "chainId": 1,
-      "address": "0x43d6651ff941776976ae8e5b11ef513e054a7931",
-      "symbol": "SY-rUSD",
-      "name": "SY rUSD",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0x88c4f34b86907b7221c0061f7a0bbec9391ea727",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0x09d4214c03d01f49544c0448dbe3a27f768f2b34"
-    },
-    {
-      "chainId": 1,
       "address": "0xab365c0879024481e4ad3b47bd6fea9c10014fbc",
       "symbol": "PT-sUSDf-25SEP2025",
       "name": "PT sUSDf 25SEP2025",
@@ -539,105 +374,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0x45f163e583d34b8e276445dd3da9ae077d137d72",
       "expiry": "2025-09-25T00:00:00.000Z",
       "underlyingAsset": "0xc8cf6d7991f15525488b2a83df53468d682ba4b0"
-    },
-    {
-      "chainId": 1,
-      "address": "0xf10a134a987e22ffa9463570a6d1eb92a63fc178",
-      "symbol": "PT-csUSDL-31JUL2025",
-      "name": "PT csUSDL 31JUL2025",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0x08bf93c8f85977c64069dd34c5da7b1c636e104f",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0xbeefc011e94f43b8b7b455ebab290c7ab4e216f1"
-    },
-    {
-      "chainId": 1,
-      "address": "0x1b85471da5bd63cbe80bdfea1e45b6a0215e2a54",
-      "symbol": "YT-csUSDL-31JUL2025",
-      "name": "YT csUSDL 31JUL2025",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0x08bf93c8f85977c64069dd34c5da7b1c636e104f",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0xbeefc011e94f43b8b7b455ebab290c7ab4e216f1"
-    },
-    {
-      "chainId": 1,
-      "address": "0x8077b6f34e9193d5bbb0ef06a73119060534d130",
-      "symbol": "SY-csUSDL",
-      "name": "SY csUSDL",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0x08bf93c8f85977c64069dd34c5da7b1c636e104f",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0xbeefc011e94f43b8b7b455ebab290c7ab4e216f1"
-    },
-    {
-      "chainId": 1,
-      "address": "0x7c5aa3e49d46e582f50287f70695278d962392df",
-      "symbol": "PT-sUSN-31JUL2025",
-      "name": "PT sUSN 31JUL2025",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0xdcbc2e70ab9bfdd873a3f92f264d9fcd730680c7",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0xe24a3dc889621612422a64e6388927901608b91d"
-    },
-    {
-      "chainId": 1,
-      "address": "0x8b6da6f27279a6513184899d85e39e2ca724842a",
-      "symbol": "YT-sUSN-31JUL2025",
-      "name": "YT sUSN 31JUL2025",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0xdcbc2e70ab9bfdd873a3f92f264d9fcd730680c7",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0xe24a3dc889621612422a64e6388927901608b91d"
-    },
-    {
-      "chainId": 1,
-      "address": "0xa0a2c8c94bf30227f84af6e054025945a51d0eff",
-      "symbol": "SY-sUSN",
-      "name": "SY sUSN",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0xdcbc2e70ab9bfdd873a3f92f264d9fcd730680c7",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0xe24a3dc889621612422a64e6388927901608b91d"
-    },
-    {
-      "chainId": 1,
-      "address": "0xedce58c0d14a9beaa4f053ebdbdb2df83f211118",
-      "symbol": "PT-USN-31JUL2025",
-      "name": "PT USN 31JUL2025",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0x11f7f8aa7bb5abf819544d502d0f365c4cb0dfeb",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0xda67b4284609d2d48e5d10cfac411572727dc1ed"
-    },
-    {
-      "chainId": 1,
-      "address": "0x267f578f866617628386211da738347e063eccb7",
-      "symbol": "YT-USN-31JUL2025",
-      "name": "YT USN 31JUL2025",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0x11f7f8aa7bb5abf819544d502d0f365c4cb0dfeb",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0xda67b4284609d2d48e5d10cfac411572727dc1ed"
-    },
-    {
-      "chainId": 1,
-      "address": "0x2c452bdd2192a197fb085a7c73fe6c82782401dc",
-      "symbol": "SY-USN",
-      "name": "SY USN",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0x11f7f8aa7bb5abf819544d502d0f365c4cb0dfeb",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0xda67b4284609d2d48e5d10cfac411572727dc1ed"
     },
     {
       "chainId": 1,
@@ -674,72 +410,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
-      "address": "0x7f01d0fce9bc646389483384c41b4d71c7139f11",
-      "symbol": "PT-USD (Midas mEDGE)-31JUL2025",
-      "name": "PT USD (Midas mEDGE) 31JUL2025",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0xcbeed3364912bcee868cfa9cff6fe865c85ea094",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0xbb51e2a15a9158ebe2b0ceb8678511e063ab7a55"
-    },
-    {
-      "chainId": 1,
-      "address": "0x365466ede498d32cf65d22405420a777c021180c",
-      "symbol": "YT-USD (Midas mEDGE)-31JUL2025",
-      "name": "YT USD (Midas mEDGE) 31JUL2025",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0xcbeed3364912bcee868cfa9cff6fe865c85ea094",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0xbb51e2a15a9158ebe2b0ceb8678511e063ab7a55"
-    },
-    {
-      "chainId": 1,
-      "address": "0xb5130e951e5d8d77ac2fd1ca40982d03b2483782",
-      "symbol": "SY-USD (Midas mEDGE)",
-      "name": "SY USD (Midas mEDGE)",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0xcbeed3364912bcee868cfa9cff6fe865c85ea094",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0xbb51e2a15a9158ebe2b0ceb8678511e063ab7a55"
-    },
-    {
-      "chainId": 1,
-      "address": "0x1132065009850c72e27b7950c0f9285d1d103589",
-      "symbol": "PT-USD (Midas mMEV)-31JUL2025",
-      "name": "PT USD (Midas mMEV) 31JUL2025",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0x266728b30c98b24de810e3325adc615486988cb2",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0x030b69280892c888670edcdcd8b69fd8026a0bf3"
-    },
-    {
-      "chainId": 1,
-      "address": "0xe67377eb4ffc6cdb85f421697a01ec98c0d6d5cd",
-      "symbol": "YT-USD (Midas mMEV)-31JUL2025",
-      "name": "YT USD (Midas mMEV) 31JUL2025",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0x266728b30c98b24de810e3325adc615486988cb2",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0x030b69280892c888670edcdcd8b69fd8026a0bf3"
-    },
-    {
-      "chainId": 1,
-      "address": "0x77891c7f756d4f49d91e6aabae7df5c1169f2aaa",
-      "symbol": "SY-USD (Midas mMEV)",
-      "name": "SY USD (Midas mMEV)",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0x266728b30c98b24de810e3325adc615486988cb2",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0x030b69280892c888670edcdcd8b69fd8026a0bf3"
-    },
-    {
-      "chainId": 1,
       "address": "0xa42c63686f45c124f2034152b4bb0cc63ce3ff52",
       "symbol": "PT-uniBTC-18DEC2025",
       "name": "PT uniBTC 18DEC2025",
@@ -773,39 +443,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
-      "address": "0x3bd0c522ea444ea2b3f28777e8c20248b6e33252",
-      "symbol": "PT-wsrUSD-31JUL2025",
-      "name": "PT wsrUSD 31JUL2025",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0xd7a432f7962123561a63e60e7396b6ba622651b1",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0xd3fd63209fa2d55b07a0f6db36c2f43900be3094"
-    },
-    {
-      "chainId": 1,
-      "address": "0x9b7568e6f1703744705f673b6389ba49cfe3fb59",
-      "symbol": "YT-wsrUSD-31JUL2025",
-      "name": "YT wsrUSD 31JUL2025",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0xd7a432f7962123561a63e60e7396b6ba622651b1",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0xd3fd63209fa2d55b07a0f6db36c2f43900be3094"
-    },
-    {
-      "chainId": 1,
-      "address": "0x212670e78cbec6f219204c52889763628bedd15e",
-      "symbol": "SY-wsrUSD",
-      "name": "SY wsrUSD",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0xd7a432f7962123561a63e60e7396b6ba622651b1",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0xd3fd63209fa2d55b07a0f6db36c2f43900be3094"
-    },
-    {
-      "chainId": 1,
       "address": "0xd1d0ff7bb555f57a9604ce06bca704ab97a0049a",
       "symbol": "PT-yUSD-07AUG2025",
       "name": "PT yUSD 07AUG2025",
@@ -836,39 +473,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0x1047a4d2dc60e6652b51e7c63ba276b501ad6bc8",
       "expiry": "2025-08-07T00:00:00.000Z",
       "underlyingAsset": "0x19ebd191f7a24ece672ba13a302212b5ef7f35cb"
-    },
-    {
-      "chainId": 1,
-      "address": "0xaacae34960cac6f32826f81e15f855f8e8c7f39e",
-      "symbol": "PT-fGHO-31JUL2025",
-      "name": "PT fGHO 31JUL2025",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0xc64d59eb11c869012c686349d24e1d7c91c86ee2",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0x6a29a46e21c730dca1d8b23d637c101cec605c5b"
-    },
-    {
-      "chainId": 1,
-      "address": "0x3992e4c12e22d7535d6144f3af66e712963e9345",
-      "symbol": "YT-fGHO-31JUL2025",
-      "name": "YT fGHO 31JUL2025",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0xc64d59eb11c869012c686349d24e1d7c91c86ee2",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0x6a29a46e21c730dca1d8b23d637c101cec605c5b"
-    },
-    {
-      "chainId": 1,
-      "address": "0x4726fcb2fbe4398449bb7ce44eb458dbd7141191",
-      "symbol": "SY-fGHO",
-      "name": "SY fGHO",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0xc64d59eb11c869012c686349d24e1d7c91c86ee2",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0x6a29a46e21c730dca1d8b23d637c101cec605c5b"
     },
     {
       "chainId": 1,
@@ -1133,39 +737,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0xa36b60a14a1a5247912584768c6e53e1a269a9f7",
       "expiry": "2025-09-25T00:00:00.000Z",
       "underlyingAsset": "0x9d39a5de30e57443bff2a8307a4256c8797a3497"
-    },
-    {
-      "chainId": 1,
-      "address": "0x860ae8aaa07bd743ee7dd0eff93e4bb8bd953497",
-      "symbol": "PT-SuperETH-31JUL2025",
-      "name": "PT SuperETH 31JUL2025",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0x49afd881cd581cc0258ce6db95e3fe167113c65b",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0xef101508bf4dc6cf0f0a0c135f39a41fab4e4389"
-    },
-    {
-      "chainId": 1,
-      "address": "0x220c37ee56f260111a1c3d5ef778a3556de84b1c",
-      "symbol": "YT-SuperETH-31JUL2025",
-      "name": "YT SuperETH 31JUL2025",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0x49afd881cd581cc0258ce6db95e3fe167113c65b",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0xef101508bf4dc6cf0f0a0c135f39a41fab4e4389"
-    },
-    {
-      "chainId": 1,
-      "address": "0xed5cc19927e3a4ac20e4a9e9e433ddd99138504e",
-      "symbol": "SY-SuperETH",
-      "name": "SY SuperETH",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0x49afd881cd581cc0258ce6db95e3fe167113c65b",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0xef101508bf4dc6cf0f0a0c135f39a41fab4e4389"
     },
     {
       "chainId": 1,
@@ -3083,6 +2654,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
+      "address": "0xe6a934089bbee34f832060ce98848359883749b3",
+      "symbol": "PT-sUSDe-27NOV2025",
+      "name": "PT sUSDe 27NOV2025",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0xb6ac3d5da138918ac4e84441e924a20daa60dbdd",
+      "expiry": "2025-11-27T00:00:00.000Z",
+      "underlyingAsset": "0x9d39a5de30e57443bff2a8307a4256c8797a3497"
+    },
+    {
+      "chainId": 1,
+      "address": "0x28e626b560f1faac01544770425e2de8fd179c79",
+      "symbol": "YT-sUSDe-27NOV2025",
+      "name": "YT sUSDe 27NOV2025",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0xb6ac3d5da138918ac4e84441e924a20daa60dbdd",
+      "expiry": "2025-11-27T00:00:00.000Z",
+      "underlyingAsset": "0x9d39a5de30e57443bff2a8307a4256c8797a3497"
+    },
+    {
+      "chainId": 1,
+      "address": "0xabf8165dd7a90ab75878161db15bf85f6f781d9b",
+      "symbol": "SY-sUSDe",
+      "name": "SY sUSDe",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0xb6ac3d5da138918ac4e84441e924a20daa60dbdd",
+      "expiry": "2025-11-27T00:00:00.000Z",
+      "underlyingAsset": "0x9d39a5de30e57443bff2a8307a4256c8797a3497"
+    },
+    {
+      "chainId": 1,
       "address": "0x904673592a3febb74a30a73161e8c05a200c8961",
       "symbol": "PT-hwHLP-25SEP2025",
       "name": "PT hwHLP 25SEP2025",
@@ -3146,6 +2750,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0xf4c449d6a2d1840625211769779ada42857d04dd",
       "expiry": "2025-10-16T00:00:00.000Z",
       "underlyingAsset": "0xa62b204099277762d1669d283732dcc1b3aa96ce"
+    },
+    {
+      "chainId": 1,
+      "address": "0xd2cd73fa955aba07f5c3f53a1e01744a2b857daf",
+      "symbol": "PT-fGHO-18DEC2025",
+      "name": "PT fGHO 18DEC2025",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x1821ec9c2d2c13f6b89d21301b93bd8d6667712b",
+      "expiry": "2025-12-18T00:00:00.000Z",
+      "underlyingAsset": "0x6a29a46e21c730dca1d8b23d637c101cec605c5b"
+    },
+    {
+      "chainId": 1,
+      "address": "0x2e32d34db610cb304c8c7d5a8044489d453aa935",
+      "symbol": "YT-fGHO-18DEC2025",
+      "name": "YT fGHO 18DEC2025",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x1821ec9c2d2c13f6b89d21301b93bd8d6667712b",
+      "expiry": "2025-12-18T00:00:00.000Z",
+      "underlyingAsset": "0x6a29a46e21c730dca1d8b23d637c101cec605c5b"
+    },
+    {
+      "chainId": 1,
+      "address": "0x4726fcb2fbe4398449bb7ce44eb458dbd7141191",
+      "symbol": "SY-fGHO",
+      "name": "SY fGHO",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x1821ec9c2d2c13f6b89d21301b93bd8d6667712b",
+      "expiry": "2025-12-18T00:00:00.000Z",
+      "underlyingAsset": "0x6a29a46e21c730dca1d8b23d637c101cec605c5b"
     }
   ],
   "56": [
@@ -4114,39 +3751,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 8453,
-      "address": "0xa28a34f1e16d845a0a709bafaac3831ca7a417a7",
-      "symbol": "PT-sKAITO-31JUL2025",
-      "name": "PT sKAITO 31JUL2025",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0xa46cac2243ecd83a6a9ad58232c1967ebd14d41b",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0x548d3b444da39686d1a6f1544781d154e7cd1ef7"
-    },
-    {
-      "chainId": 8453,
-      "address": "0x5f42d7365ed7b51a77c275e9f36a8d8f9cc56750",
-      "symbol": "YT-sKAITO-31JUL2025",
-      "name": "YT sKAITO 31JUL2025",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0xa46cac2243ecd83a6a9ad58232c1967ebd14d41b",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0x548d3b444da39686d1a6f1544781d154e7cd1ef7"
-    },
-    {
-      "chainId": 8453,
-      "address": "0x4b272672a58da22b213e733f5aba48cfec534d30",
-      "symbol": "SY-sKAITO",
-      "name": "SY sKAITO",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0xa46cac2243ecd83a6a9ad58232c1967ebd14d41b",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0x548d3b444da39686d1a6f1544781d154e7cd1ef7"
-    },
-    {
-      "chainId": 8453,
       "address": "0xe4862da6e20c3a2a4e437a0ecdb823a2aebbf140",
       "symbol": "PT-yvBal-GHO-USR-25SEP2025",
       "name": "PT yvBal-GHO-USR 25SEP2025",
@@ -4177,39 +3781,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0xa6b8cfe75ca5e1b2a527aa255d10521faaf24b61",
       "expiry": "2025-09-25T00:00:00.000Z",
       "underlyingAsset": "0x69efa3cd7fc773fe227b9cc4f41132dcde020a29"
-    },
-    {
-      "chainId": 8453,
-      "address": "0xb1847b85da0595c6f72b0757ee292bd472dca45e",
-      "symbol": "PT-aGHO-31JUL2025",
-      "name": "PT aGHO 31JUL2025",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0x6144511e1bd935c258b7b9075f120474df1b1e5f",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0x067ae75628177fd257c2b1e500993e1a0babcbd1"
-    },
-    {
-      "chainId": 8453,
-      "address": "0x5cd855d8dbe1e94065622d83d2e112a3a168d1cf",
-      "symbol": "YT-aGHO-31JUL2025",
-      "name": "YT aGHO 31JUL2025",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0x6144511e1bd935c258b7b9075f120474df1b1e5f",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0x067ae75628177fd257c2b1e500993e1a0babcbd1"
-    },
-    {
-      "chainId": 8453,
-      "address": "0x540e181d4e3c70632e6bb153282bead2886d0768",
-      "symbol": "SY-aGHO",
-      "name": "SY aGHO",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0x6144511e1bd935c258b7b9075f120474df1b1e5f",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0x067ae75628177fd257c2b1e500993e1a0babcbd1"
     },
     {
       "chainId": 8453,
@@ -4375,6 +3946,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0xd5dd84c7b8919dceb09536a0fef6db9046805127",
       "expiry": "2025-12-18T00:00:00.000Z",
       "underlyingAsset": "0xb6fe221fe9eef5aba221c348ba20a1bf5e73624c"
+    },
+    {
+      "chainId": 8453,
+      "address": "0xc7eb21815b9698d627410f7b1dffd9e65c980ebd",
+      "symbol": "PT-sKAITO-29JAN2026",
+      "name": "PT sKAITO 29JAN2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x53fb20ff03ef94ef224557cc6262e0f11c20f718",
+      "expiry": "2026-01-29T00:00:00.000Z",
+      "underlyingAsset": "0x548d3b444da39686d1a6f1544781d154e7cd1ef7"
+    },
+    {
+      "chainId": 8453,
+      "address": "0xbf0741d9ec96d2e94b6982247c1cd6c23d5ead08",
+      "symbol": "YT-sKAITO-29JAN2026",
+      "name": "YT sKAITO 29JAN2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x53fb20ff03ef94ef224557cc6262e0f11c20f718",
+      "expiry": "2026-01-29T00:00:00.000Z",
+      "underlyingAsset": "0x548d3b444da39686d1a6f1544781d154e7cd1ef7"
+    },
+    {
+      "chainId": 8453,
+      "address": "0x4b272672a58da22b213e733f5aba48cfec534d30",
+      "symbol": "SY-sKAITO",
+      "name": "SY sKAITO",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x53fb20ff03ef94ef224557cc6262e0f11c20f718",
+      "expiry": "2026-01-29T00:00:00.000Z",
+      "underlyingAsset": "0x548d3b444da39686d1a6f1544781d154e7cd1ef7"
     }
   ],
   "42161": [
@@ -4976,39 +4580,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 80094,
-      "address": "0xf503927e23417de3e5ff35c6200b45edd60a5ef7",
-      "symbol": "PT-uniBTC-31JUL2025",
-      "name": "PT uniBTC 31JUL2025",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0x541f098898390bbcdd11f00da30d5ad17ca74647",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0xc3827a4bc8224ee2d116637023b124ced6db6e90"
-    },
-    {
-      "chainId": 80094,
-      "address": "0x44cf35e27743057cf7d5325c78205cfbdfd2949b",
-      "symbol": "YT-uniBTC-31JUL2025",
-      "name": "YT uniBTC 31JUL2025",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0x541f098898390bbcdd11f00da30d5ad17ca74647",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0xc3827a4bc8224ee2d116637023b124ced6db6e90"
-    },
-    {
-      "chainId": 80094,
-      "address": "0x2284e9a9a45829431317dcab3aa3a24878046068",
-      "symbol": "SY-uniBTC",
-      "name": "SY uniBTC",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0x541f098898390bbcdd11f00da30d5ad17ca74647",
-      "expiry": "2025-07-31T00:00:00.000Z",
-      "underlyingAsset": "0xc3827a4bc8224ee2d116637023b124ced6db6e90"
-    },
-    {
-      "chainId": 80094,
       "address": "0x3510d362ae03477918b4ecb9b51808afd23308e6",
       "symbol": "PT-iBGT-25SEP2025",
       "name": "PT iBGT 25SEP2025",
@@ -5039,6 +4610,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0x02293d88656860a840ed457d38f51e3e6bee8461",
       "expiry": "2025-09-25T00:00:00.000Z",
       "underlyingAsset": "0xac03caba51e17c86c921e1f6cbfbdc91f8bb2e6b"
+    },
+    {
+      "chainId": 80094,
+      "address": "0x6fa48156a2e843e0a90b70a1defc8ef868815270",
+      "symbol": "PT-uniBTC-18DEC2025",
+      "name": "PT uniBTC 18DEC2025",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x158c7d15f5ebc0f9412ed5a2997dfaaa06ea349d",
+      "expiry": "2025-12-18T00:00:00.000Z",
+      "underlyingAsset": "0xc3827a4bc8224ee2d116637023b124ced6db6e90"
+    },
+    {
+      "chainId": 80094,
+      "address": "0xcea976df7803e7a32513ffdbe692ae01353657be",
+      "symbol": "YT-uniBTC-18DEC2025",
+      "name": "YT uniBTC 18DEC2025",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x158c7d15f5ebc0f9412ed5a2997dfaaa06ea349d",
+      "expiry": "2025-12-18T00:00:00.000Z",
+      "underlyingAsset": "0xc3827a4bc8224ee2d116637023b124ced6db6e90"
+    },
+    {
+      "chainId": 80094,
+      "address": "0x6e7f7a2c3ab10ce93e49aa889e4e09ff7703b218",
+      "symbol": "SY-uniBTC",
+      "name": "SY uniBTC",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x158c7d15f5ebc0f9412ed5a2997dfaaa06ea349d",
+      "expiry": "2025-12-18T00:00:00.000Z",
+      "underlyingAsset": "0xc3827a4bc8224ee2d116637023b124ced6db6e90"
     }
   ]
 };
