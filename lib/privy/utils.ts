@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { getGasPriceByChainId } from '../blocknative/get-gas-price'
 import { getProposedGasPrice } from '../etherscan/gas-price'
 import { getConfigByChainId } from '../network/config'
+import { extractReceivedTokens } from '../utils/transaction-parser'
 
 
 const ERC20_ABI = [
@@ -239,12 +240,57 @@ export async function signTransaction(
   }
 
   // Get provider for gas estimation
-  const provider = new ethers.JsonRpcProvider(
-    process.env.TEST_RPC_URL || getConfigByChainId(chainId, isDemo).rpcUrl
-  )
+  const rpcUrl = process.env.TEST_RPC_URL || getConfigByChainId(chainId, isDemo).rpcUrl
+  console.log('Using RPC URL:', rpcUrl)
+  
+  // Check if this is a Tenderly RPC URL and add appropriate configuration
+  const isTenderly = rpcUrl.includes('tenderly.co')
+  const providerOptions: any = {
+    name: 'custom',
+    chainId: chainId,
+    // Add polling configuration for better stability
+    pollingInterval: 4000
+  }
+  
+  // Add Tenderly-specific headers if needed
+  if (isTenderly && process.env.TENDERLY_ACCESS_TOKEN) {
+    providerOptions.headers = {
+      'X-Access-Key': process.env.TENDERLY_ACCESS_TOKEN
+    }
+  }
+  
+  // For Tenderly virtual networks, disable automatic network detection
+  if (isTenderly) {
+    providerOptions.staticNetwork = ethers.Network.from({
+      name: 'tenderly',
+      chainId: chainId
+    })
+  }
+  
+  const provider = new ethers.JsonRpcProvider(rpcUrl, providerOptions)
 
-  // Get latest block for base fee calculation
-  const block = await provider.getBlock('latest')
+  // Test the provider connection with retry logic
+  let block = null
+  let attempts = 0
+  const maxAttempts = 3
+  
+  while (attempts < maxAttempts && !block) {
+    try {
+      console.log(`Attempting to connect to RPC (attempt ${attempts + 1}/${maxAttempts})`)
+      block = await provider.getBlock('latest')
+      console.log('Successfully connected to RPC, got block:', block?.number)
+    } catch (error) {
+      attempts++
+      console.error(`RPC connection attempt ${attempts} failed:`, error instanceof Error ? error.message : error)
+      
+      if (attempts < maxAttempts) {
+        console.log('Retrying in 2 seconds...')
+        await new Promise(resolve => setTimeout(resolve, 2000))
+      } else {
+        throw new Error(`Failed to connect to RPC after ${maxAttempts} attempts. Please check your TEST_RPC_URL: ${rpcUrl}`)
+      }
+    }
+  }
   const baseFee = block?.baseFeePerGas
   const maxFee = baseFee ? BigInt(baseFee) * BigInt(2) : BigInt(1010690044) // ~2× base fee
   const priority = ethers.parseUnits('1', 'gwei') // 1 gwei tip
@@ -278,8 +324,7 @@ export async function signTransaction(
 
   // Check if we're using Anvil fork (which has reliable gas estimation)
   // vs Tenderly (which had issues with gas estimation)
-  const rpcUrl = process.env.TEST_RPC_URL || getConfigByChainId(chainId, isDemo).rpcUrl
-  const isAnvilFork = rpcUrl.includes('127.0.0.1') || rpcUrl.includes('anvil-fork')
+  const isAnvilFork = rpcUrl.includes('127.0.0.1') || rpcUrl.includes('anvil-fork') // Fixed duplicate rpcUrl declaration
   
   if (isDemo && !isAnvilFork) {
     // Only disable gas estimation for non-Anvil demo environments (e.g., Tenderly)
@@ -315,11 +360,28 @@ export async function signTransaction(
   const from = txData.from
   const data = txData.data
 
+  // Debug transaction data before signing
+  console.log('Transaction data before signing:', {
+    to,
+    from,
+    data,
+    dataLength: data?.length,
+    value: quantity
+  })
+
   // strip the 0x prefix for to, quantity, and data
   const toAddress = (to as string).replace(/^0x/, '')
   const valueHex = quantity.replace(/^0x/, '')
   const dataHex = (data as string).replace(/^0x/, '')
   const fromAddress = (from as string).replace(/^0x/, '')
+
+  console.log('Transaction data after hex processing:', {
+    toAddress,
+    fromAddress,
+    dataHex: dataHex.substring(0, 100) + '...',
+    dataHexLength: dataHex.length,
+    valueHex
+  })
 
   // Sign transaction with Privy based on chain type
   let signedTransaction: string
@@ -380,7 +442,7 @@ export async function signTransaction(
  * @param signedTransaction Signed transaction from signTransaction
  * @param provider Ethereum provider
  * @param timeoutMs Timeout in milliseconds (default: 60000ms = 1 minute)
- * @returns Transaction response with hash
+ * @returns Transaction response with hash and receipt
  */
 export async function broadcastTransaction(
   signedTransaction: string,
@@ -389,9 +451,24 @@ export async function broadcastTransaction(
 ) {
   let hash: string | null = null
   try {
+    // Debug signed transaction
+    console.log('Broadcasting signed transaction:', {
+      signedTransactionLength: signedTransaction.length,
+      signedTransactionPreview: signedTransaction.substring(0, 100) + '...'
+    })
+
     // Broadcast the transaction
     const txResponse = await provider.broadcastTransaction(signedTransaction)
     hash = txResponse.hash
+    
+    console.log('Transaction broadcast response:', {
+      hash: txResponse.hash,
+      to: txResponse.to,
+      from: txResponse.from,
+      data: txResponse.data?.substring(0, 100) + '...' || 'undefined',
+      dataLength: txResponse.data?.length || 0,
+      value: txResponse.value?.toString()
+    })
 
     // Wait for confirmation with timeout
     const receipt = await Promise.race([
@@ -402,10 +479,22 @@ export async function broadcastTransaction(
     ])
 
     return {
-      hash: txResponse.hash
+      hash: txResponse.hash,
+      receipt
     }
   } catch (error: any) {
     console.error('Error executing transaction:', error.message)
+    console.error('Full error object:', {
+      code: error.code,
+      message: error.message,
+      transaction: error.transaction,
+      receipt: error.receipt,
+      action: error.action,
+      invocation: error.invocation,
+      data: error.data,
+      reason: error.reason,
+      revert: error.revert
+    })
     if (hash) {
       // If we have a hash but confirmation failed/timed out, still return the hash
       if (error.message.includes('Transaction confirmation timeout')) {
@@ -492,7 +581,27 @@ export async function executeTransaction(
     const { signedTransaction, provider } = await signTransaction(txData, chainId, gasOptions, isDemo);
     
     // Broadcast the transaction
-    return await broadcastTransaction(signedTransaction, provider, timeoutMs);
+    const result = await broadcastTransaction(signedTransaction, provider, timeoutMs);
+    
+    // Parse transaction logs to discover new tokens (only if we have a receipt)
+    if (result.receipt && txData.from) {
+      try {
+        const newTokens = extractReceivedTokens([...result.receipt.logs], txData.from as string);
+        
+        if (newTokens.length > 0) {
+          console.log(`New tokens received in transaction ${result.hash}:`, newTokens);
+          
+          // Import and trigger immediate balance refresh for new tokens
+          const { refreshSpecificTokens } = await import('../utils/wallet');
+          await refreshSpecificTokens(newTokens, txData.from as string, chainId, isDemo);
+        }
+      } catch (error) {
+        console.warn('Failed to parse transaction logs for new tokens:', error);
+        // Don't fail the transaction if token discovery fails
+      }
+    }
+    
+    return result;
   }
 
 /**

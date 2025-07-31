@@ -108,3 +108,19 @@ export interface DeFiOpportunity {
     momentum: 'strong' | 'moderate' | 'weak'
   }
 }
+
+export interface DeFiLlamaPoolChartDataPoint {
+  timestamp: string
+  tvlUsd: number
+  apy: number
+  apyBase: number
+  apyReward: number | null
+  il7d: number | null
+  apyBase7d: number | null
+}
+
+export interface DeFiLlamaPoolChartResponse {
+  status: string
+  data: DeFiLlamaPoolChartDataPoint[]
+}
+

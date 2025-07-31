@@ -182,6 +182,11 @@ class CrossChainMatcher {
     }
   }
 
+  public async matchToken(chainId: number, token: string, limit = 5) {
+    const tokenMatcher = this.getTokenMatcher(chainId)
+    return tokenMatcher.match(token, limit)
+  }
+
   private getTokenMatcher(chainId: number) {
     let tokenMatcher = this.tokenMatcherMap.get(chainId)
     if (!tokenMatcher) {

@@ -188,9 +188,10 @@ export const TENDERLY_DEMO_CONFIG: NetworkConfig = {
   displayName: 'Ethereum (Demo)',
   chainId: 1, // Match Ethereum Mainnet for consistency in demo, was TenderlyDemoConfig.chainId
   rpcUrl:
-    process.env.NEXT_PUBLIC_TEST_NET_ENV === 'development'
+    process.env.TEST_RPC_URL || // Respect TEST_RPC_URL override first
+    (process.env.NEXT_PUBLIC_TEST_NET_ENV === 'development'
       ? (process.env.NEXT_PUBLIC_DEMO_RPC_URL || "http://127.0.0.1:8545")
-      : 'http://anvil-fork:8545',
+      : 'http://anvil-fork:8545'),
   scanLink: process.env.NEXT_PUBLIC_TEST_NET_ENV === 'development' ? 
   (process.env.NEXT_PUBLIC_EXPLORER_URL || undefined)
   : undefined, // Tenderly vnet explorer might not have a simple base URL like etherscan

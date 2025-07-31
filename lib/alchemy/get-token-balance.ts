@@ -28,7 +28,8 @@ const ALCHEMY_UNSUPPORTED_ENHANCED_APIS = [
 export async function getTokenBalances(
   walletAddress: string,
   chainId: number,
-  isDemo: boolean = false
+  isDemo: boolean = false,
+  bypassCache: boolean = false
 ): Promise<TokenData[]> {
   try {
     const networkConfig = getConfigByChainId(chainId, isDemo)

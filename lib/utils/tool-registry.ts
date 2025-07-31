@@ -45,6 +45,16 @@ import {
   walletBalanceTool
 } from '../tools/wallet'
 import { xStockList } from '../tools/xstock-search'
+import { 
+  ensoYieldMaximizer, 
+  ensoExecuteStrategy 
+} from '../tools/enso-yield-maximizer'
+import { 
+  ensoCrossChainOptimizer, 
+  ensoLPOptimizer, 
+  ensoStablecoinOptimizer 
+} from '../tools/enso-cross-chain-optimizer'
+import { defillamaYieldExecute, defillamaYieldQuote } from '../tools/defillama-yield-execute'
 import { ethAlert } from '../tools/eth-alert'
 import { NetworkContext, ToolContext } from '../types/context'
 
@@ -841,7 +851,7 @@ export function createToolRegistry(model: string): ToolRegistry {
 
   registry.registerTool({
     name: 'defillama_yields',
-    description: 'Discover high-yield DeFi opportunities across different protocols and chains',
+    description: 'Discover high-yield DeFi opportunities across different protocols and chains. If user later interested in any opportunities returned, you should use defillama_yield_quote tool to get a quote for user.',
     schema: defiYieldsTool.parameters,
     execute: async (params, context) => defiYieldsTool.execute(params, {
       toolCallId: context?.toolCallId || 'unknown',
@@ -889,6 +899,33 @@ export function createToolRegistry(model: string): ToolRegistry {
     category: ToolCategory.WEB3_WRITE,
     supportedNetworks: ['solana']
   })
+
+
+  registry.registerTool({
+    name: 'defillama_yield_quote',
+    description: 'Find and get a quote the user selected defi llama opportunity.',
+    schema: defillamaYieldQuote.parameters,
+    execute: async (params, context) => defillamaYieldQuote.execute(params, {
+      toolCallId: context?.toolCallId || 'unknown',
+      messages: context?.messages || [],
+      networkContext: context?.networkContext!
+    } as any),
+    category: ToolCategory.WEB3_READ,
+    supportedNetworks: [
+      'ethereum', 'demo']})
+
+  registry.registerTool({
+      name: 'defillama_yield_execute',
+      description: 'Execute defi llama opportunity, use after user confirm the defi llama quote',
+      schema: defillamaYieldExecute.parameters,
+      execute: async (params, context) => defillamaYieldExecute.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.WEB3_WRITE,
+    supportedNetworks: [
+      'ethereum', 'demo']})
 
   registry.registerTool({
     name: 'lifi_bridge_solana_quote',
