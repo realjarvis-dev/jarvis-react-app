@@ -38,9 +38,9 @@ export const PriceAlertProvider = ({ children }: { children: ReactNode }) => {
     })
 
     return () => {
-      pusher.disconnect()
+      pusher?.disconnect()
     }
-  }, [ready, authenticated, user, queryClient])
+  }, [ready, authenticated, user, queryClient, pusher])
 
   return (
     <PriceAlertContext.Provider value={{ pusher }}>
