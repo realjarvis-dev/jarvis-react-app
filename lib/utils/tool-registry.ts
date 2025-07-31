@@ -1,15 +1,20 @@
 import { ChainType } from '@/lib/network/types'
 import { z } from 'zod'
 import { searchSchema } from '../schema/search'
+import { createTargetAllocationTool } from '../tools/create-target-allocation'
 import { defiProtocolsTool } from '../tools/defillama-protocols'
 import { defiYieldsTool } from '../tools/defillama-yields'
+import { executeRebalancingTool } from '../tools/execute-rebalancing'
 import { getGasPriceTool } from '../tools/gas-price'
+import { getTargetAllocationTool } from '../tools/get-target-allocation'
+import { jupiterExecute, jupiterQuote } from '../tools/jupiter-trade'
 import {
   kodiakBaultProfitabilityTool,
   kodiakCompoundBaultTool,
   kodiakDepositTool,
   kodiakOpportunitiesTool
 } from '../tools/kodiak'
+import { bridgeExecuteSolanaTool, bridgeQuoteSolanaTool } from '../tools/lifi-brdige-solana'
 import { bridgeExecuteTool, bridgeQuoteTool } from '../tools/lifi-bridge'
 import { marketChartTool } from '../tools/market-chart'
 import {
@@ -39,9 +44,7 @@ import {
   initialWalletRewardTool,
   walletBalanceTool
 } from '../tools/wallet'
-import { NetworkContext, ToolContext } from '../types/context'
 import { xStockList } from '../tools/xstock-search'
-import { jupiterExecute, jupiterQuote } from '../tools/jupiter-trade'
 import { 
   ensoYieldMaximizer, 
   ensoExecuteStrategy 
@@ -52,6 +55,8 @@ import {
   ensoStablecoinOptimizer 
 } from '../tools/enso-cross-chain-optimizer'
 import { defillamaYieldExecute, defillamaYieldQuote } from '../tools/defillama-yield-execute'
+import { ethAlert } from '../tools/eth-alert'
+import { NetworkContext, ToolContext } from '../types/context'
 
 /**
  * Interface for tool definition with schema and execution function
@@ -216,6 +221,14 @@ export function createToolRegistry(model: string): ToolRegistry {
   const searchTool = createSearchTool(model)
   const videoSearchTool = createVideoSearchTool(model)
   const askQuestionTool = createQuestionTool(model)
+
+  registry.registerTool({
+    name: "eth_alert",
+    description: "Set up a price alert for ethereum",
+    schema: ethAlert.parameters,
+    category: ToolCategory.WEB3_WRITE,
+    supportedNetworks: ['ethereum', 'demo']
+  })
 
   registry.registerTool({
     name: 'get_gas_price',
@@ -677,6 +690,57 @@ export function createToolRegistry(model: string): ToolRegistry {
   })
 
   registry.registerTool({
+    name: 'create_target_allocation',
+    description: 'Create or update a target portfolio allocation strategy',
+    schema: createTargetAllocationTool.parameters,
+    execute: async (params, context) =>
+      createTargetAllocationTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.UTILITY,
+    supportedNetworks: [
+      'ethereum',
+      'demo'
+    ]
+  })
+
+  registry.registerTool({
+    name: 'get_target_allocation',
+    description: 'Get the user\'s saved target portfolio allocation strategy',
+    schema: getTargetAllocationTool.parameters,
+    execute: async (params, context) =>
+      getTargetAllocationTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.UTILITY,
+    supportedNetworks: [
+      'ethereum',
+      'demo'
+    ]
+  })
+
+  registry.registerTool({
+    name: 'execute_rebalancing',
+    description: 'Execute portfolio rebalancing to match target allocation',
+    schema: executeRebalancingTool.parameters,
+    execute: async (params, context) =>
+      executeRebalancingTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.WEB3_WRITE,
+    supportedNetworks: [
+      'ethereum',
+      'demo'
+    ]
+  })
+
+  registry.registerTool({
     name: 'pendle_zap_in_quote',
     description: pendleZapInQuoteTool.description || '',
     schema: pendleZapInQuoteTool.parameters,
@@ -836,111 +900,6 @@ export function createToolRegistry(model: string): ToolRegistry {
     supportedNetworks: ['solana']
   })
 
-  // Enso Alpha Strategy Tools
-  registry.registerTool({
-    name: 'enso_yield_maximizer',
-    description: 'Find and execute the highest yielding DeFi opportunities across 140+ protocols using Enso',
-    schema: ensoYieldMaximizer.parameters,
-    execute: async (params, context) => ensoYieldMaximizer.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!
-    } as any),
-    category: ToolCategory.WEB3_READ,
-    supportedNetworks: [
-      'ethereum',
-      'base', 
-      'arbitrum',
-      'polygon',
-      'optimism',
-      'bsc',
-      'demo'
-    ]
-  })
-
-  registry.registerTool({
-    name: 'enso_cross_chain_optimizer',
-    description: 'Find and execute the best yield opportunities across multiple blockchain networks',
-    schema: ensoCrossChainOptimizer.parameters,
-    execute: async (params, context) => ensoCrossChainOptimizer.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!
-    } as any),
-    category: ToolCategory.WEB3_READ,
-    supportedNetworks: [
-      'ethereum',
-      'base',
-      'arbitrum', 
-      'polygon',
-      'optimism',
-      'bsc',
-      'demo'
-    ]
-  })
-
-  registry.registerTool({
-    name: 'enso_lp_optimizer',
-    description: 'Find and enter the best liquidity provider positions for maximum yield',
-    schema: ensoLPOptimizer.parameters,
-    execute: async (params, context) => ensoLPOptimizer.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!
-    } as any),
-    category: ToolCategory.WEB3_READ,
-    supportedNetworks: [
-      'ethereum',
-      'base',
-      'arbitrum',
-      'polygon', 
-      'optimism',
-      'bsc',
-      'demo'
-    ]
-  })
-
-  registry.registerTool({
-    name: 'enso_stablecoin_optimizer',
-    description: 'Optimize stablecoin yields by finding the highest APY opportunities across lending protocols',
-    schema: ensoStablecoinOptimizer.parameters,
-    execute: async (params, context) => ensoStablecoinOptimizer.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!
-    } as any),
-    category: ToolCategory.WEB3_READ,
-    supportedNetworks: [
-      'ethereum',
-      'base',
-      'arbitrum',
-      'polygon',
-      'optimism', 
-      'bsc',
-      'demo'
-    ]
-  })
-
-  registry.registerTool({
-    name: 'enso_execute_strategy',
-    description: 'Execute a previously simulated Enso strategy after user confirmation',
-    schema: ensoExecuteStrategy.parameters,
-    execute: async (params, context) => ensoExecuteStrategy.execute(params, {
-      toolCallId: context?.toolCallId || 'unknown',
-      messages: context?.messages || [],
-      networkContext: context?.networkContext!
-    } as any),
-    category: ToolCategory.WEB3_WRITE,
-    supportedNetworks: [
-      'ethereum',
-      'base',
-      'arbitrum',
-      'polygon',
-      'optimism',
-      'bsc',
-      'demo'
-    ]
-  })
 
   registry.registerTool({
     name: 'defillama_yield_quote',
@@ -955,7 +914,7 @@ export function createToolRegistry(model: string): ToolRegistry {
     supportedNetworks: [
       'ethereum', 'demo']})
 
-    registry.registerTool({
+  registry.registerTool({
       name: 'defillama_yield_execute',
       description: 'Execute defi llama opportunity, use after user confirm the defi llama quote',
       schema: defillamaYieldExecute.parameters,
@@ -964,11 +923,37 @@ export function createToolRegistry(model: string): ToolRegistry {
         messages: context?.messages || [],
         networkContext: context?.networkContext!
       } as any),
-      category: ToolCategory.WEB3_WRITE,
-      supportedNetworks: [
-        'ethereum', 'demo']})
+    category: ToolCategory.WEB3_WRITE,
+    supportedNetworks: [
+      'ethereum', 'demo']})
 
+  registry.registerTool({
+    name: 'lifi_bridge_solana_quote',
+    description: bridgeQuoteSolanaTool.description || '',
+    schema: bridgeQuoteSolanaTool.parameters,
+    execute: async (params, context) =>
+      bridgeQuoteSolanaTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.WEB3_READ,
+    supportedNetworks: ['solana']
+  })
 
+  registry.registerTool({
+    name: 'lifi_bridge_solana_execute',
+    description: bridgeExecuteSolanaTool.description || '',
+    schema: bridgeExecuteSolanaTool.parameters,
+    execute: async (params, context) =>
+      bridgeExecuteSolanaTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.WEB3_WRITE,
+    supportedNetworks: ['solana']
+  })
 
   return registry
 }

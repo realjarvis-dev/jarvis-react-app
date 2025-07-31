@@ -1,8 +1,13 @@
 'use client'
 
 import { ToolInvocation } from 'ai'
+import { DeFiLlamaProtocolsSection } from './defillama-protocols-section'
+import { DeFiLlamaYieldsSection } from './defillama-yields-section'
 import { GenericSwapCard } from './generic-swap-card'
 import { GetGasPriceSection } from './get-gas-price-section'
+import { JupiterSwapExecuteSection } from './jupiter/swap-execute-section'
+import { JupiterSwapQuoteSection } from './jupiter/swap-quote-section'
+import { XStockListSection } from './jupiter/xstock-list-section'
 import { KodiakBaultProfitability } from './kodiak-bault-profitability'
 import { KodiakDepositCard } from './kodiak-deposit-card'
 import { KodiakOpportunitiesSection } from './kodiak-opportunities-section'
@@ -15,20 +20,19 @@ import { PendleZapInQuoteDisplay } from './pendle/pendle-zap-in-quote-display'
 import { PendleZapOutExecutionCard } from './pendle/pendle-zap-out-execution-card'
 import { PendleZapOutQuoteDisplay } from './pendle/pendle-zap-out-quote-display'
 import { QuestionConfirmation } from './question-confirmation'
+import { RebalancingExecutionSection } from './rebalancing-execution-section'
 import { RedeemTransactionCard } from './redeem-transaction-card'
 import RetrieveSection from './retrieve-section'
 import { SearchSection } from './search-section'
 import { SimpleQuoteDisplay } from './simple-quote-display'
 import { SwapTransactionCard } from './swap-transaction-card'
+import { TargetAllocationSection } from './target-allocation-section'
 import { TransferSection } from './transfer-section'
 import { VideoSearchSection } from './video-search-section'
 import { WalletBalanceSection } from './wallet-balance-section'
 import { WalletFundingSection } from './wallet-funding-section'
-import { DeFiLlamaYieldsSection } from './defillama-yields-section'
-import { DeFiLlamaProtocolsSection } from './defillama-protocols-section'
-import { XStockListSection } from './jupiter/xstock-list-section'
-import { JupiterSwapQuoteSection } from './jupiter/swap-quote-section'
-import { JupiterSwapExecuteSection } from './jupiter/swap-execute-section'
+import { EthAlertSubscription } from './eth-alert-subscription'
+
 
 interface ToolSectionProps {
   tool: ToolInvocation
@@ -70,6 +74,38 @@ export function ToolSection({
     if (tool.state === 'result') {
       return (
         <QuestionConfirmation
+          toolInvocation={tool}
+          isCompleted={true}
+          onConfirm={() => {}} // Not used in result display mode
+        />
+      )
+    }
+  }
+  if (tool.toolName === 'eth_alert') {
+    // When waiting for user input
+    if (tool.state === 'call' && addToolResult) {
+      return (
+        <EthAlertSubscription
+          toolInvocation={tool}
+          onConfirm={(toolCallId, approved, result) => {
+            addToolResult({
+              toolCallId,
+              result: approved
+                ? result
+                : {
+                    declined: true,
+                    message: 'User declined this action.'
+                  }
+            })
+          }}
+        />
+      )
+    }
+
+    // When result is available, display the result
+    if (tool.state === 'result') {
+      return (
+        <EthAlertSubscription
           toolInvocation={tool}
           isCompleted={true}
           onConfirm={() => {}} // Not used in result display mode
@@ -312,6 +348,46 @@ export function ToolSection({
     case 'jupiter_execute':
       return (
         <JupiterSwapExecuteSection
+          tool={tool}
+          isOpen={isOpen}
+          onOpenChange={onOpenChange}
+        />
+      )
+      case 'lifi_bridge_solana_quote':
+        return (
+          <LifiSwapQuoteSection
+            tool={tool}
+            isOpen={isOpen}
+            onOpenChange={onOpenChange}
+          />
+        )
+      case 'lifi_bridge_solana_execute':
+        return (
+          <LifiSwapExecuteSection
+            tool={tool}
+            isOpen={isOpen}
+            onOpenChange={onOpenChange}
+          />
+        )
+    case 'create_target_allocation':
+      return (
+        <TargetAllocationSection
+          tool={tool}
+          isOpen={isOpen}
+          onOpenChange={onOpenChange}
+        />
+      )
+    case 'get_target_allocation':
+      return (
+        <TargetAllocationSection
+          tool={tool}
+          isOpen={isOpen}
+          onOpenChange={onOpenChange}
+        />
+      )
+    case 'execute_rebalancing':
+      return (
+        <RebalancingExecutionSection
           tool={tool}
           isOpen={isOpen}
           onOpenChange={onOpenChange}

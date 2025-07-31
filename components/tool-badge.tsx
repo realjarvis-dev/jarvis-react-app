@@ -23,6 +23,9 @@ export const ToolBadge: React.FC<ToolBadgeProps> = ({
     get_gas_price: <Lightbulb size={14} />,
     defillama_yields: <DollarSign size={14} />,
     defillama_protocols: <BarChart size={14} />,
+    create_target_allocation: <Target size={14} />,
+    get_target_allocation: <Target size={14} />,
+    execute_rebalancing: <RefreshCw size={14} />
   }
 
   return (

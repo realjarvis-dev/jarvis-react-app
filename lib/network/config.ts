@@ -7,6 +7,7 @@ import { solana } from '@metalayer/viem-chains'
 // These objects must match the NetworkConfig interface from types.ts
 // The `id` field is crucial as it forms the basis for ChainType
 export const SOLANA_CHAIN_ID = 501494
+export const LIFI_SOLANA_CHAIN_ID = 1151111081099710
 
 export const ethereumConfig: NetworkConfig = {
   id: 'ethereum' as const,
@@ -250,6 +251,9 @@ export function getConfigByChainId(
 ): NetworkConfig {
   if (isDemo) {
     return TENDERLY_DEMO_CONFIG
+  }
+  if (chainId === LIFI_SOLANA_CHAIN_ID) {
+    return solanaConfig
   }
   for (const key in allNetworkConfigs) {
     const network = allNetworkConfigs[key as ChainType]

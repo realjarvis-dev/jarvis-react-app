@@ -3,6 +3,7 @@ import ArtifactRoot from '@/components/artifact/artifact-root'
 import Header from '@/components/header'
 import WrappedPrivyProvider from '@/components/privy-provider'
 import { QueryProvider } from '@/components/query-provider'
+import { PriceAlertProvider } from '@/components/price-alert-provider'
 import { ThemeProvider } from '@/components/theme-provider'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { Toaster } from '@/components/ui/sonner'
@@ -12,6 +13,7 @@ import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Inter as FontSans } from 'next/font/google'
 import './globals.css'
+
 const fontSans = FontSans({
   subsets: ['latin'],
   variable: '--font-sans'
@@ -27,18 +29,14 @@ export const metadata: Metadata = {
   openGraph: {
     title,
     description,
-    images: [
-      '/opengraph-image.png?v=20250627-1'
-    ]
+    images: ['/opengraph-image.png?v=20250627-1']
   },
   twitter: {
     title,
     description,
     card: 'summary_large_image',
     creator: '@JarvisCryptoAI',
-    images: [
-      '/opengraph-image.png?v=20250627-1'
-    ]
+    images: ['/opengraph-image.png?v=20250627-1']
   }
 }
 
@@ -65,30 +63,34 @@ export default async function RootLayout({
         )}
         suppressHydrationWarning
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem={false}
-          disableTransitionOnChange
-        >
-          <NetworkProvider>
-            <WrappedPrivyProvider>
-              <QueryProvider>
-                <SidebarProvider defaultOpen={false}>
-                  <AppSidebar />
-                  <div className="flex flex-col flex-1 min-w-0">
-                    <Header />
-                    <main className="flex-1 w-full">
-                      <ArtifactRoot>{children}</ArtifactRoot>
-                    </main>
-                  </div>
-                </SidebarProvider>
-              </QueryProvider>
-            </WrappedPrivyProvider>
-          </NetworkProvider>
-          <Toaster />
-          <Analytics />
-        </ThemeProvider>
+        
+          <QueryProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="dark"
+              enableSystem={false}
+              disableTransitionOnChange
+            >
+              <NetworkProvider>
+                <WrappedPrivyProvider>
+                <PriceAlertProvider>
+                  <SidebarProvider defaultOpen={false}>
+                    <AppSidebar />
+                    <div className="flex flex-col flex-1 min-w-0">
+                      <Header />
+                      <main className="flex-1 w-full">
+                        <ArtifactRoot>{children}</ArtifactRoot>
+                      </main>
+                    </div>
+                  </SidebarProvider>
+                  </PriceAlertProvider>
+                </WrappedPrivyProvider>
+              </NetworkProvider>
+              <Toaster />
+              <Analytics />
+            </ThemeProvider>
+          </QueryProvider>
+        
       </body>
     </html>
   )

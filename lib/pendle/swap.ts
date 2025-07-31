@@ -41,6 +41,21 @@ export async function getPendleSwapTokensData(
   console.log('Amount Out:', res.data.amountOut);
   console.log('Price Impact:', res.data.priceImpact);
 
+  // Validate transaction data
+  if (!res.tx.data || res.tx.data === '0x' || res.tx.data === '') {
+    throw new Error('Invalid transaction data returned from Pendle API. This may indicate insufficient liquidity or an unsupported swap pair.');
+  }
+
+  // Check for extreme price impact (>100%)
+  if (res.data.priceImpact > 100) {
+    throw new Error(`Extremely high price impact (${res.data.priceImpact.toFixed(2)}%). This swap is not economically viable. Try a smaller amount or different token pair.`);
+  }
+
+  // Warn about high price impact (>5%)
+  if (res.data.priceImpact > 5) {
+    console.warn(`High price impact detected: ${res.data.priceImpact.toFixed(2)}%`);
+  }
+
   return res;
 }
 
@@ -116,18 +131,32 @@ export async function executePendleSwap(
   };
 
   // Execute transaction using the utility function
-  const txResponse = await executeTransaction(
-    txData,
-    chainId,
-    {
-      estimateGas: true
-    },
-    isDemo
-  );
+  try {
+    const txResponse = await executeTransaction(
+      txData,
+      chainId,
+      {
+        estimateGas: true
+      },
+      isDemo
+    );
 
-  console.log('Transaction hash:', txResponse.hash);
-  
-  return txResponse;
+    console.log('Transaction hash:', txResponse.hash);
+    
+    return txResponse;
+  } catch (error: any) {
+    // Handle specific transaction execution errors
+    if (error.message?.includes('feed is unhealthy') || error.message?.includes('DF: feed is unhealthy')) {
+      throw new Error('Price oracle feed is currently unhealthy. This is a safety mechanism to prevent trades during unreliable market conditions. Please try again later or use an alternative DEX.');
+    }
+    
+    if (error.message?.includes('execution reverted')) {
+      throw new Error(`Transaction failed: ${error.message}. This may be due to market conditions, insufficient balance, or slippage tolerance.`);
+    }
+    
+    // Re-throw with original error message
+    throw error;
+  }
 }
 
 /**

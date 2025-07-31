@@ -1,0 +1,1 @@
+export const priceAlertUrl = process.env.NEXT_PUBLIC_TEST_NET_ENV === 'development' ? "http://localhost:3002" : "https://jarvis-alert.onrender.com"

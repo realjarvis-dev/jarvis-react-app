@@ -1,14 +1,14 @@
 import { tool } from 'ai'
 import { z } from 'zod'
-import { NetworkContext } from '../types/context'
 import { TENDERLY_DEMO_CONFIG } from '../network/config'
+import { NetworkContext } from '../types/context'
 import { getWalletBalances } from '../utils/wallet'
 
-import { addBalanceVnet, ethToWei, REQUESTED_FUNDING_AMOUNT, INITIAL_REWARD_AMOUNT, TenderlyRpcResponse } from '../tenderly/fund'
-import { addBalanceAnvilFork } from '../anvil-fork/fund'
 import { TransactionResponse } from 'ethers'
-import { balanceChangePub } from '../pubsub/balance-change-pub'
+import { addBalanceAnvilFork } from '../anvil-fork/fund'
 import { getUserId } from '../privy/client'
+import { balanceChangePub } from '../pubsub/balance-change-pub'
+import { addBalanceVnet, ethToWei, INITIAL_REWARD_AMOUNT, REQUESTED_FUNDING_AMOUNT, TenderlyRpcResponse } from '../tenderly/fund'
 
 interface ToolContext {
   toolCallId?: string
@@ -20,9 +20,9 @@ interface ToolContext {
 export const walletBalanceTool = tool({
   description: 'Get wallet balance information for all tokens or a specific token.',
   parameters: z.object({
-    wallet_address: z.string()
+    wallet_address: z.string().optional()
       .describe('Specific EVM wallet address to check, default to user\'s EVM wallet'),
-    solana_wallet_address: z.string()
+    solana_wallet_address: z.string().optional()
       .describe('Specific Solana wallet address to check, default to user\'s Solana wallet'),
     token_symbol: z.string().optional()
       .describe('Specific token symbol to filter by (e.g., "ETH", "DAI", etc.)')

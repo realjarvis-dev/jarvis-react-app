@@ -220,12 +220,12 @@ export async function getTokenBalances(
         (tb: TokenBalance) => BigInt(tb.tokenBalance || '0x0') !== BigInt(0)
       )
 
-      const metadataPromises = nonZeroBalances.map((tb: any) =>
+      const metadataPromises = nonZeroBalances.map((tb: TokenBalance) =>
         alchemy.core.getTokenMetadata(tb.contractAddress)
       )
       const metadatas = await Promise.all(metadataPromises)
 
-      erc20Tokens = nonZeroBalances.map((tb: any, i: number) => {
+      erc20Tokens = nonZeroBalances.map((tb: TokenBalance, i: number) => {
         const meta = metadatas[i]
         const rawBig = BigInt(tb.tokenBalance || '0x0')
         return {

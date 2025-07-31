@@ -14,6 +14,8 @@ import {
   VersionedTransaction
 } from '@solana/web3.js'
 import { getUserWallet, privy } from './client'
+import { excelonMainnet } from 'viem/chains'
+
 
 
 export async function signSolanaTransaction(transaction: Transaction | VersionedTransaction,
@@ -73,15 +75,52 @@ export async function signSolanaTransaction(transaction: Transaction | Versioned
           });
           return signedTransaction
       } else {
-            // Get the signed transaction object from the response
-          const { signedTransaction } = await privy.walletApi.solana.signTransaction({
-            walletId: wallet.id!,
-            transaction: transaction
-          });
+ 
+        const lookupTables = await Promise.all(transaction.message.addressTableLookups.map(async (lookup) => {
+          const lookupTable = await connection.getAddressLookupTable(lookup.accountKey)
+          return lookupTable
+        }))
 
-          
+        try {
+          let ixns = TransactionMessage.decompile(
+            transaction.message,
+            {
+              addressLookupTableAccounts: lookupTables.map(table => table.value).filter(table => table !== null)
+            }
+          ).instructions
+  
+          const userWalletPubkey = new PublicKey(wallet.address)
+          const { blockhash } = await connection.getLatestBlockhash()
+          const newMsg = new TransactionMessage({
+              payerKey: userWalletPubkey,
+              recentBlockhash: blockhash,
+              instructions: ixns,
+            }).compileToV0Message();
+  
+  
+            const newVtx = new VersionedTransaction(newMsg);
+  
+              // Get the signed transaction object from the response
+            const { signedTransaction } = await privy.walletApi.solana.signTransaction({
+              walletId: wallet.id!,
+              transaction: newVtx
+            });
+  
+            
+  
+            return signedTransaction 
+        } catch (err) {
+              // Get the signed transaction object from the response
+              const { signedTransaction } = await privy.walletApi.solana.signTransaction({
+                walletId: wallet.id!,
+                transaction: transaction
+              });
+    
+              
+    
+              return signedTransaction 
+        }
 
-          return signedTransaction 
       }
 
 
@@ -95,7 +134,7 @@ export async function signSolanaTransaction(transaction: Transaction | Versioned
  * Sign a base64 encoded Solana transaction string
  * @param transaction - The transaction string to sign
  * @param connection - The Solana connection
- * @returns The signed transaction string in base64 format
+ * @returns The signed transaction with type Transaction or VersionedTransaction
  */
 
 export async function signSolanaTransactionString(
@@ -112,6 +151,7 @@ export async function signSolanaTransactionString(
     const vtx = VersionedTransaction.deserialize(rawTxBytes)
     
     const signedTransaction = await signSolanaTransaction(vtx, connection)
+    // console.log("versioned tx", JSON.stringify(vtx, null, 2))
 
     // const signedBase64 = Buffer.from(signedTransaction.serialize()).toString("base64");
     return signedTransaction
@@ -119,7 +159,7 @@ export async function signSolanaTransactionString(
     console.log("error:", err)
     // Fall back to legacy transaction
     const tx = Transaction.from(rawTxBytes)
-
+    console.log("legacy tx", tx)
     const signedTransaction = await signSolanaTransaction(tx, connection)
 
     // const signedBase64 = Buffer.from(signedTransaction.serialize()).toString("base64");
