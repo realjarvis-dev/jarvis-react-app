@@ -114,7 +114,7 @@ const bridgeQuoteTool = tool({
       }
     }
     if (isDemo) {
-      slippage = '0.3'
+      slippage = '0.1'
       // fromChain = 'Ethereum'
       // toChain = 'Ethereum'
     }
@@ -236,7 +236,7 @@ const bridgeExecuteTool = tool({
     }
     const isDemo = context?.networkContext?.isDemo
     if (isDemo) {
-      slippage = '0.3'
+      slippage = '0.1'
     }
     
     const result =  await executeLifiBridgeTransaction(

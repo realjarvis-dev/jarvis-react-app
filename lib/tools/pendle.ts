@@ -106,7 +106,7 @@ const PENDLE_CONFIG = {
   
   // Slippage Configuration
   DEFAULT_SLIPPAGE: 0.01,        // 1% default slippage
-  DEMO_SLIPPAGE: 0.3,            // 30% slippage for demo mode
+  DEMO_SLIPPAGE: 0.1,            // 10% slippage for demo mode
   MAX_SLIPPAGE: 0.1,             // 10% maximum allowed slippage
   MIN_SLIPPAGE: 0.001,           // 0.1% minimum slippage
   
