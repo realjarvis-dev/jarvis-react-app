@@ -192,6 +192,14 @@ export const chains = [
     "mainnet": true
   },
   {
+    "key": "hpl",
+    "chainType": "EVM",
+    "name": "Hyperliquid",
+    "coin": "USDC",
+    "id": 1337,
+    "mainnet": true
+  },
+  {
     "key": "imx",
     "chainType": "EVM",
     "name": "Immutable zkEVM",
@@ -389,6 +397,14 @@ export const chains = [
     "name": "Kaia",
     "coin": "KLAY",
     "id": 8217,
+    "mainnet": true
+  },
+  {
+    "key": "plu",
+    "chainType": "EVM",
+    "name": "Plume",
+    "coin": "PLU",
+    "id": 98866,
     "mainnet": true
   },
   {
