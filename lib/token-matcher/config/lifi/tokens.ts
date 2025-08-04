@@ -28058,6 +28058,20 @@ export const tokensByChain = {
       "symbol": "MIA",
       "name": "MIA",
       "decimals": 18
+    },
+    {
+      "chainId": 56,
+      "address": "0xa5346F91A767b89a0363A4309C8E6c5ADc0C4A59",
+      "symbol": "MM",
+      "name": "Momofun",
+      "decimals": 18
+    },
+    {
+      "chainId": 56,
+      "address": "0xA22159fACA8BF5c57A48888a2D4Ddafc88e4DDEB",
+      "symbol": "AIO",
+      "name": "AIO",
+      "decimals": 18
     }
   ],
   "100": [
@@ -42667,6 +42681,13 @@ export const tokensByChain = {
       "address": "0x8689AeDf32d35aa9A90849f59bA6841c389e6CF9",
       "symbol": "XPED",
       "name": "Xpedition",
+      "decimals": 18
+    },
+    {
+      "chainId": 137,
+      "address": "0xAC1Cd197931810b6f115D690c72a3438990D3Ba3",
+      "symbol": "ORIO",
+      "name": "ORIO",
       "decimals": 18
     },
     {
