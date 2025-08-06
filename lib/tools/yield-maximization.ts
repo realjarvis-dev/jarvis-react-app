@@ -5,6 +5,99 @@ import { ToolContext } from '../types/context'
 import { getYieldAggregator, UnifiedYieldOpportunity } from '../utils/yield-aggregator'
 
 /**
+ * Parse ETH amount string to standardized format
+ */
+function parseEthAmount(amount: string): { amountEth: string; isValid: boolean } {
+  // Remove "ETH" suffix if present and clean up
+  const cleanAmount = amount.replace(/eth/i, '').trim()
+  
+  // Parse as decimal number
+  const ethAmount = parseFloat(cleanAmount)
+  if (isNaN(ethAmount) || ethAmount <= 0) {
+    return { amountEth: '0', isValid: false }
+  }
+  
+  return {
+    amountEth: ethAmount.toString(),
+    isValid: true
+  }
+}
+
+/**
+ * Validate execution safety
+ */
+function validateExecution(opportunity: UnifiedYieldOpportunity, amountEth: string): { 
+  canExecute: boolean; 
+  warnings: string[]; 
+  requiresConfirmation: boolean 
+} {
+  const warnings: string[] = []
+  let requiresConfirmation = false
+  
+  // Risk level validation
+  if (opportunity.riskLevel === 'high') {
+    warnings.push(`⚠️ High risk opportunity (${opportunity.apy.toFixed(2)}% APY)`)
+    requiresConfirmation = true
+  }
+  
+  // Amount validation
+  const amount = parseFloat(amountEth)
+  if (amount > 10) {
+    warnings.push(`⚠️ Large investment amount: ${amount} ETH`)
+    requiresConfirmation = true
+  }
+  
+  // Expiry validation
+  if (opportunity.metadata.maturityDate) {
+    const expiry = new Date(opportunity.metadata.maturityDate)
+    const daysToExpiry = (expiry.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+    if (daysToExpiry < 30) {
+      warnings.push(`⚠️ Position expires in ${Math.ceil(daysToExpiry)} days`)
+      requiresConfirmation = true
+    }
+  }
+  
+  return {
+    canExecute: true,
+    warnings,
+    requiresConfirmation
+  }
+}
+
+/**
+ * Generate execution command for the opportunity
+ */
+function generateExecutionCommand(opportunity: UnifiedYieldOpportunity, amountEth: string): string {
+  const market = opportunity.metadata.pendleData
+  
+  // Generate the command that users can copy/paste or the system can suggest
+  return `Zap ${amountEth} ETH into ${market.name}`
+}
+
+/**
+ * Generate detailed execution guidance
+ */
+function generateExecutionGuidance(
+  opportunity: UnifiedYieldOpportunity, 
+  amountEth: string,
+  warnings: string[]
+): {
+  command: string
+  explanation: string
+  riskSummary: string
+  expectedOutcome: string
+} {
+  const market = opportunity.metadata.pendleData
+  
+  return {
+    command: generateExecutionCommand(opportunity, amountEth),
+    explanation: `This will use ${amountEth} ETH to enter the ${opportunity.name} position via Pendle's zap-in functionality. The system will automatically handle the ETH → token conversion if needed.`,
+    riskSummary: warnings.length > 0 ? warnings.join(' ') : '✅ No major risks detected',
+    expectedOutcome: `You'll receive ${opportunity.name} tokens yielding ${opportunity.apy.toFixed(2)}% APY until ${new Date(opportunity.metadata.maturityDate).toLocaleDateString()}`
+  }
+}
+
+/**
  * Calculate summary statistics for opportunities
  */
 function calculateOpportunityStats(opportunities: UnifiedYieldOpportunity[]) {
@@ -46,7 +139,7 @@ function calculateOpportunityStats(opportunities: UnifiedYieldOpportunity[]) {
 function getExecutionHint(opportunity: UnifiedYieldOpportunity): string {
   switch (opportunity.protocol) {
     case 'pendle':
-      return `Use "pendle_zap_in" tool to enter this ${opportunity.category} position. Exit via ${opportunity.exitMethod}.`
+      return `Use "Zap X ETH into ${opportunity.name}" to enter this position.`
     default:
       return 'Execution method to be determined.'
   }
@@ -55,19 +148,21 @@ function getExecutionHint(opportunity: UnifiedYieldOpportunity): string {
 /**
  * Get next steps recommendations
  */
-function getNextSteps(opportunities: UnifiedYieldOpportunity[]): string[] {
+function getNextSteps(opportunities: UnifiedYieldOpportunity[], hasExecution: boolean = false): string[] {
   const steps: string[] = []
   
   if (opportunities.length > 0) {
     const topOpp = opportunities[0]
     steps.push(`💡 Best opportunity: ${topOpp.name} at ${topOpp.apy.toFixed(2)}% APY`)
     
-    if (topOpp.protocol === 'pendle') {
-      steps.push(`📝 To enter: Say "zap into ${topOpp.symbol}" or "invest in ${topOpp.name}"`)
-    }
-    
-    if (opportunities.length > 1) {
-      steps.push(`🔄 Compare: Review other opportunities and their risk levels before deciding`)
+    if (!hasExecution) {
+      if (topOpp.protocol === 'pendle') {
+        steps.push(`📝 To invest: Say "Invest 1 ETH in the best opportunity" or "Zap 0.5 ETH into ${topOpp.symbol}"`)
+      }
+      
+      if (opportunities.length > 1) {
+        steps.push(`🔄 Compare: Review other opportunities and their risk levels before deciding`)
+      }
     }
     
     if (topOpp.metadata.maturityDate) {
@@ -102,10 +197,10 @@ function getPortfolioRecommendation(opportunities: UnifiedYieldOpportunity[]): s
 }
 
 export const yieldMaximizationTool = tool({
-  description: 'Find and analyze the highest yielding Pendle opportunities. This tool scans Pendle markets for yield tokenization opportunities and ranks them by risk-adjusted returns.',
+  description: 'Find and analyze the highest yielding Pendle opportunities, with smart execution guidance for ETH investments. Can discover opportunities or provide detailed execution plans.',
   parameters: z.object({
-    action: z.enum(['discover', 'analyze']).default('discover')
-      .describe('Action to perform: "discover" to find opportunities, "analyze" to analyze current portfolio vs opportunities'),
+    action: z.enum(['discover', 'analyze', 'execute']).default('discover')
+      .describe('Action: "discover" to find opportunities, "analyze" for portfolio analysis, "execute" to get execution guidance'),
     riskLevel: z.enum(['conservative', 'moderate', 'aggressive']).default('moderate')
       .describe('Risk tolerance: conservative (low risk only), moderate (low-medium risk), aggressive (all risk levels)'),
     minApy: z.number().optional()
@@ -119,7 +214,14 @@ export const yieldMaximizationTool = tool({
     minTvl: z.number().optional()
       .describe('Minimum Total Value Locked in USD (default: 100,000)'),
     maxResults: z.number().min(1).max(20).default(10)
-      .describe('Maximum number of opportunities to return (default: 10)')
+      .describe('Maximum number of opportunities to return (default: 10)'),
+    // Execution guidance parameters
+    executeAmount: z.string().optional()
+      .describe('Amount of ETH to invest (e.g., "1", "0.5", "2"). Required for execute action.'),
+    targetOpportunity: z.string().optional()
+      .describe('Specific opportunity to target (e.g., "best", "highest", "PT rswETH"). Defaults to "best".'),
+    skipConfirmation: z.boolean().default(false)
+      .describe('Skip safety confirmations for risky investments. Use with caution.')
   }),
   execute: async (params, context: ToolContext) => {
     try {
@@ -131,10 +233,13 @@ export const yieldMaximizationTool = tool({
         includeStablecoins,
         excludeStablecoins,
         minTvl,
-        maxResults
+        maxResults,
+        executeAmount,
+        targetOpportunity = 'best',
+        skipConfirmation
       } = params
 
-      console.log('🎯 yield_maximization: Starting Pendle yield discovery...')
+      console.log(`🎯 yield_maximization: Starting Pendle ${action}...`)
 
       // Get user wallet address
       const walletAddress = await getUserEvmWalletAddress()
@@ -157,6 +262,17 @@ export const yieldMaximizationTool = tool({
           _uiDisplayTool: true,
           success: false,
           error: 'Yield maximization is only available on Ethereum and Demo networks.'
+        }
+      }
+
+      // Validate execution parameters
+      if (action === 'execute') {
+        if (!executeAmount) {
+          return {
+            _uiDisplayTool: true,
+            success: false,
+            error: 'executeAmount is required for execute action. Specify ETH amount like "1" or "0.5".'
+          }
         }
       }
 
@@ -199,6 +315,112 @@ export const yieldMaximizationTool = tool({
       // Calculate summary statistics
       const stats = calculateOpportunityStats(limitedOpportunities)
 
+      // Handle execution action (generate guidance)
+      if (action === 'execute') {
+        try {
+          // Parse ETH amount
+          const { amountEth, isValid } = parseEthAmount(executeAmount!)
+          
+          if (!isValid) {
+            return {
+              _uiDisplayTool: true,
+              success: false,
+              error: `Invalid ETH amount: ${executeAmount}. Please specify a valid number like "1" or "0.5".`
+            }
+          }
+          
+          // Select target opportunity
+          let selectedOpportunity: UnifiedYieldOpportunity
+          if (targetOpportunity === 'best' || targetOpportunity === 'highest') {
+            selectedOpportunity = limitedOpportunities[0] // Best opportunity (already sorted)
+          } else {
+            // Find by name/symbol
+            const found = limitedOpportunities.find(opp => 
+              opp.name.toLowerCase().includes(targetOpportunity.toLowerCase()) ||
+              opp.symbol.toLowerCase().includes(targetOpportunity.toLowerCase())
+            )
+            if (!found) {
+              return {
+                _uiDisplayTool: true,
+                success: false,
+                error: `Opportunity "${targetOpportunity}" not found in current results. Available: ${limitedOpportunities.map(o => o.symbol).join(', ')}`
+              }
+            }
+            selectedOpportunity = found
+          }
+          
+          // Validate execution safety
+          const validation = validateExecution(selectedOpportunity, amountEth)
+          
+          if (validation.requiresConfirmation && !skipConfirmation) {
+            return {
+              _uiDisplayTool: true,
+              success: false,
+              requiresConfirmation: true,
+              data: {
+                selectedOpportunity: {
+                  id: selectedOpportunity.id,
+                  name: selectedOpportunity.name,
+                  apy: selectedOpportunity.apy,
+                  riskLevel: selectedOpportunity.riskLevel,
+                  tvl: selectedOpportunity.tvl,
+                  maturityDate: selectedOpportunity.metadata.maturityDate
+                },
+                investmentAmount: amountEth,
+                warnings: validation.warnings,
+                confirmationMessage: `Please confirm: Invest ${amountEth} ETH in ${selectedOpportunity.name} (${selectedOpportunity.apy.toFixed(2)}% APY, ${selectedOpportunity.riskLevel} risk)`
+              },
+              message: `Investment requires confirmation due to ${validation.warnings.length} warning(s). Add "skipConfirmation: true" to proceed or say the exact command below.`
+            }
+          }
+          
+          // Generate execution guidance
+          const guidance = generateExecutionGuidance(selectedOpportunity, amountEth, validation.warnings)
+          
+          return {
+            _uiDisplayTool: true,
+            success: true,
+            summary: `📋 Ready to invest ${amountEth} ETH in ${selectedOpportunity.name} (${selectedOpportunity.apy.toFixed(2)}% APY)`,
+            data: {
+              action: 'execute',
+              selectedOpportunity: {
+                id: selectedOpportunity.id,
+                name: selectedOpportunity.name,
+                symbol: selectedOpportunity.symbol,
+                apy: selectedOpportunity.apy,
+                riskLevel: selectedOpportunity.riskLevel,
+                tvl: selectedOpportunity.tvl,
+                category: selectedOpportunity.category,
+                maturityDate: selectedOpportunity.metadata.maturityDate
+              },
+              investmentAmount: amountEth,
+              executionGuidance: guidance,
+              nextCommand: guidance.command,
+              alternativeCommands: [
+                `Zap ${amountEth} ETH into ${selectedOpportunity.symbol}`,
+                `Invest ${amountEth} ETH in ${selectedOpportunity.name}`
+              ],
+              warnings: validation.warnings,
+              // Show context opportunities
+              topOpportunities: limitedOpportunities.slice(0, 3).map(opp => ({
+                name: opp.name,
+                apy: opp.apy,
+                riskLevel: opp.riskLevel
+              })),
+              statistics: stats
+            }
+          }
+          
+        } catch (error) {
+          return {
+            _uiDisplayTool: true,
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to generate execution guidance'
+          }
+        }
+      }
+
+      // Handle discovery/analyze actions (existing logic)
       if (action === 'discover') {
         return {
           _uiDisplayTool: true,
@@ -239,8 +461,6 @@ export const yieldMaximizationTool = tool({
         }
       } else {
         // action === 'analyze'
-        // TODO: Implement portfolio analysis vs opportunities
-        // This would compare current holdings with best opportunities
         return {
           _uiDisplayTool: true,
           success: true,
@@ -267,8 +487,11 @@ export const yieldMaximizationTool = tool({
 
 // Export individual functions for testing
 export {
-    calculateOpportunityStats,
-    getExecutionHint,
+    calculateOpportunityStats, generateExecutionCommand,
+    generateExecutionGuidance, getExecutionHint,
     getNextSteps,
-    getPortfolioRecommendation
+    getPortfolioRecommendation,
+    parseEthAmount,
+    validateExecution
 }
+
