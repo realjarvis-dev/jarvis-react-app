@@ -1,11 +1,12 @@
 'use client'
 
 import { ToolInvocation } from 'ai'
-import { Clock, DollarSign, Shield, Target, TrendingUp } from 'lucide-react'
+import { AlertTriangle, Clock, DollarSign, Shield, Target, TrendingUp } from 'lucide-react'
 import { CollapsibleMessage } from './collapsible-message'
 import { DefaultSkeleton } from './default-skeleton'
 import { ToolArgsSection } from './section'
 import { Badge } from './ui/badge'
+import { Button } from './ui/button'
 import { Card } from './ui/card'
 
 interface YieldMaximizationSectionProps {
@@ -101,6 +102,11 @@ export function YieldMaximizationSection({
     return '🔗'  // Always Pendle now
   }
 
+  // Check if this is an execution result
+  const isExecutionResult = result.action === 'execute'
+  const executionGuidance = result.executionGuidance
+  const selectedOpportunity = result.selectedOpportunity
+
   return (
     <CollapsibleMessage
       role="assistant"
@@ -111,6 +117,99 @@ export function YieldMaximizationSection({
       showIcon={false}
     >
       <div className="space-y-6">
+        {/* Execution Guidance Section */}
+        {isExecutionResult && executionGuidance && (
+          <div className="border border-blue-200 rounded-lg p-6 bg-blue-50">
+            <div className="flex items-center space-x-2 mb-4">
+              <Target className="h-5 w-5 text-blue-600" />
+              <h3 className="text-lg font-semibold text-blue-900">📋 Execution Plan</h3>
+            </div>
+            
+            {/* Selected Opportunity Summary */}
+            <div className="bg-white rounded-lg p-4 mb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium text-gray-900">{selectedOpportunity.name}</h4>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <Badge variant="outline" className={getRiskColor(selectedOpportunity.riskLevel)}>
+                      {selectedOpportunity.riskLevel} risk
+                    </Badge>
+                    <span className="text-sm text-gray-600">{selectedOpportunity.category}</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-green-600">
+                    {selectedOpportunity.apy.toFixed(2)}%
+                  </div>
+                  <div className="text-sm text-gray-600">APY</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Main Command */}
+            <div className="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm mb-4">
+              <div className="flex items-center justify-between">
+                <span>{result.nextCommand}</span>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="text-xs"
+                  onClick={() => navigator.clipboard.writeText(result.nextCommand)}
+                >
+                  Copy
+                </Button>
+              </div>
+            </div>
+
+            {/* Alternative Commands */}
+            {result.alternativeCommands && result.alternativeCommands.length > 0 && (
+              <div className="mb-4">
+                <p className="text-sm font-medium text-gray-700 mb-2">Alternative commands:</p>
+                <div className="space-y-2">
+                  {result.alternativeCommands.map((cmd: string, index: number) => (
+                    <div key={index} className="bg-gray-100 text-gray-800 p-2 rounded text-sm font-mono">
+                      {cmd}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Guidance Details */}
+            <div className="space-y-3">
+              <div>
+                <p className="text-sm font-medium text-gray-700">💡 What will happen:</p>
+                <p className="text-sm text-gray-600">{executionGuidance.explanation}</p>
+              </div>
+              
+              <div>
+                <p className="text-sm font-medium text-gray-700">🎯 Expected outcome:</p>
+                <p className="text-sm text-gray-600">{executionGuidance.expectedOutcome}</p>
+              </div>
+              
+              <div>
+                <p className="text-sm font-medium text-gray-700">⚠️ Risk assessment:</p>
+                <p className="text-sm text-gray-600">{executionGuidance.riskSummary}</p>
+              </div>
+            </div>
+
+            {/* Warnings */}
+            {result.warnings && result.warnings.length > 0 && (
+              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                <div className="flex items-center space-x-2 mb-2">
+                  <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                  <span className="text-sm font-medium text-yellow-800">Warnings</span>
+                </div>
+                <ul className="text-sm text-yellow-700 space-y-1">
+                  {result.warnings.map((warning: string, index: number) => (
+                    <li key={index}>{warning}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Summary Statistics */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card className="p-4">
@@ -155,7 +254,7 @@ export function YieldMaximizationSection({
               <div>
                 <p className="text-sm text-muted-foreground">Opportunities</p>
                 <p className="text-lg font-bold">
-                  {opportunities.length}
+                  {isExecutionResult ? result.topOpportunities?.length || 0 : opportunities.length}
                 </p>
               </div>
             </div>
@@ -166,11 +265,12 @@ export function YieldMaximizationSection({
         <div>
           <h3 className="text-lg font-semibold mb-4">🏆 Top Opportunities</h3>
           <div className="space-y-3">
-            {opportunities.slice(0, 5).map((opp: any, index: number) => (
-              <Card key={opp.id} className="p-4 hover:shadow-md transition-shadow">
+            {/* Show execution context opportunities if available, otherwise show discovery results */}
+            {(isExecutionResult && result.topOpportunities ? result.topOpportunities : opportunities.slice(0, 5)).map((opp: any, index: number) => (
+              <Card key={opp.id || index} className="p-4 hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4 flex-1">
-                    <div className="text-2xl">{getProtocolIcon(opp.protocol)}</div>
+                    <div className="text-2xl">{getProtocolIcon(opp.protocol || 'pendle')}</div>
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-1">
                         <h4 className="font-medium">{opp.name}</h4>
@@ -184,7 +284,7 @@ export function YieldMaximizationSection({
                         )}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        {opp.category} • {opp.protocol.charAt(0).toUpperCase() + opp.protocol.slice(1)}
+                        {opp.category || 'Yield Tokenization'} • Pendle
                         {opp.tvl > 0 && ` • TVL: ${formatNumber(opp.tvl)}`}
                         {opp.maturityDate && (
                           <span className="flex items-center gap-1 mt-1">
@@ -193,9 +293,11 @@ export function YieldMaximizationSection({
                           </span>
                         )}
                       </div>
-                      <div className="text-xs text-muted-foreground mt-2">
-                        💡 {opp.executionHint}
-                      </div>
+                      {opp.executionHint && (
+                        <div className="text-xs text-muted-foreground mt-2">
+                          💡 {opp.executionHint}
+                        </div>
+                      )}
                     </div>
                   </div>
                   
@@ -212,7 +314,7 @@ export function YieldMaximizationSection({
         </div>
 
         {/* Next Steps */}
-        {nextSteps.length > 0 && (
+        {nextSteps.length > 0 && !isExecutionResult && (
           <div>
             <h3 className="text-lg font-semibold mb-4">📋 Next Steps</h3>
             <Card className="p-4">
