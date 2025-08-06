@@ -2,16 +2,22 @@ import { actions } from "./workflow-actions";
 import { EngineAction } from "@inngest/workflow-kit";
 import { getRedisClient, RedisWrapper } from "../redis/config";
 import { executePendleSwap, getPendleSwapTokensData } from "../pendle/swap";
-import { parseUnits } from "viem";
+import { parseUnits, formatUnits } from "viem";
 import { erc20Approval, executeTransaction } from "../privy/utils";
+import { ethers } from "ethers";
 const PT_ADDRESS = "0xc347584b415715b1b66774b2899fef2fd3b56d6e"
 const MARKET_ADDRESS = "0xff43e751f2f07bbf84da1fc1fa12ce116bf447e5"
+
+// const MARKET_ADDRESS = "0xda57abf95a7c21eb9df08fbaada182f749f6c62f"
+// const PT_ADDRESS = "0xfc66d247f577bfc87df8a5267c43676c4a088b8b"
+
 const PT_DECIMALS = 18
 const MARKET_DECIMALS = 18
 const USDC_DECIMALS = 6
 const DAI_DECIMALS = 18
 const USDC_ADDRESS = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
 const DAI_ADDRESS = "0x6b175474e89094c44da98b954eedeac495271d0f"
+const walletId = "u6g0wul9ios8ga92x4qqojqg"
 
 
 export const actionsWithHandlers: EngineAction[] = [
@@ -28,21 +34,21 @@ export const actionsWithHandlers: EngineAction[] = [
         }
         const amountInWei = parseUnits(String(amount), USDC_DECIMALS)
 
-        const quote = await step.run("get-pt-quote", async () => {
-          const quote = getPendleSwapTokensData(
+        const amountOut = await step.run("buy-pt", async () => {
+          console.log("input amount: ", amount)
+          const quote = await getPendleSwapTokensData(
             MARKET_ADDRESS,
             USDC_ADDRESS,
             PT_ADDRESS,
             amountInWei.toString(),
-            0.01,
+            0.1, // 10% slippage for demo mode
             true,
             1,
             event.data.userWalletAddress
           )
-          return quote
-        })
-
-        await step.run("approve-usdc", async () => {
+          console.log(
+            "got quote data"
+          )
           const tx = await erc20Approval(
             USDC_ADDRESS,
             quote.tx.to,
@@ -54,19 +60,18 @@ export const actionsWithHandlers: EngineAction[] = [
             event.data.evmWalletId,
             event.data.userWalletAddress
           )
-        })
-
-        await step.run("buy-pt", async () => {
+          console.log("Approve erc 20")
           const txData = {
             to: quote.tx.to,
             from: event.data.userWalletAddress,
             data: quote.tx.data,
             value: quote.tx.value || '0'
           }
+          
           const txResponse = await executeTransaction(
             txData,
             1,
-            { estimateGas: true },
+            { estimateGas: false, gasLimit: ethers.toQuantity(1000000) as `0x${string}` },
             true,
             60000,
             event.data.evmWalletId,
@@ -78,10 +83,10 @@ export const actionsWithHandlers: EngineAction[] = [
             [`txHash-${currState}`]: txResponse.hash
           });
           
-          return quote.data.amountOut;
+          return formatUnits(BigInt(quote.data.amountOut), PT_DECIMALS);
         });
 
-        return { amount: quote.data.amountOut };
+        return { amount: amountOut };
       },
     },
     {

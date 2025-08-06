@@ -12,7 +12,7 @@
 const TENDERLY_ADMIN_RPC_URL = process.env.TENDERLY_ADMIN_RPC_URL;
 
 // Configuration constants
-export const REQUESTED_FUNDING_AMOUNT = 0.1; // ETH - amount to fund wallet with (incremental)
+export const REQUESTED_FUNDING_AMOUNT = 1; // ETH - amount to fund wallet with (incremental)
 export const INITIAL_REWARD_AMOUNT = 1.0; // ETH - initial reward for new users
 
 export interface TenderlyRpcResponse {
