@@ -3,7 +3,9 @@ import { z } from 'zod'
 import { searchSchema } from '../schema/search'
 import { createTargetAllocationTool } from '../tools/create-target-allocation'
 import { defiProtocolsTool } from '../tools/defillama-protocols'
+import { defillamaYieldExecute, defillamaYieldQuote } from '../tools/defillama-yield-execute'
 import { defiYieldsTool } from '../tools/defillama-yields'
+import { ethAlert } from '../tools/eth-alert'
 import { executeRebalancingTool } from '../tools/execute-rebalancing'
 import { getGasPriceTool } from '../tools/gas-price'
 import { getTargetAllocationTool } from '../tools/get-target-allocation'
@@ -45,17 +47,7 @@ import {
   walletBalanceTool
 } from '../tools/wallet'
 import { xStockList } from '../tools/xstock-search'
-import { 
-  ensoYieldMaximizer, 
-  ensoExecuteStrategy 
-} from '../tools/enso-yield-maximizer'
-import { 
-  ensoCrossChainOptimizer, 
-  ensoLPOptimizer, 
-  ensoStablecoinOptimizer 
-} from '../tools/enso-cross-chain-optimizer'
-import { defillamaYieldExecute, defillamaYieldQuote } from '../tools/defillama-yield-execute'
-import { ethAlert } from '../tools/eth-alert'
+import { yieldMaximizationTool } from '../tools/yield-maximization'
 import { NetworkContext, ToolContext } from '../types/context'
 
 /**
@@ -734,6 +726,23 @@ export function createToolRegistry(model: string): ToolRegistry {
         networkContext: context?.networkContext!
       } as any),
     category: ToolCategory.WEB3_WRITE,
+    supportedNetworks: [
+      'ethereum',
+      'demo'
+    ]
+  })
+
+  registry.registerTool({
+    name: 'yield_maximization',
+    description: 'Find and analyze the highest yielding Pendle opportunities for yield tokenization',
+    schema: yieldMaximizationTool.parameters,
+    execute: async (params, context) =>
+      yieldMaximizationTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.WEB3_READ,
     supportedNetworks: [
       'ethereum',
       'demo'
