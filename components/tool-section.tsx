@@ -3,6 +3,7 @@
 import { ToolInvocation } from 'ai'
 import { DeFiLlamaProtocolsSection } from './defillama-protocols-section'
 import { DeFiLlamaYieldsSection } from './defillama-yields-section'
+import { EthAlertSubscription } from './eth-alert-subscription'
 import { GenericSwapCard } from './generic-swap-card'
 import { GetGasPriceSection } from './get-gas-price-section'
 import { JupiterSwapExecuteSection } from './jupiter/swap-execute-section'
@@ -31,7 +32,7 @@ import { TransferSection } from './transfer-section'
 import { VideoSearchSection } from './video-search-section'
 import { WalletBalanceSection } from './wallet-balance-section'
 import { WalletFundingSection } from './wallet-funding-section'
-import { EthAlertSubscription } from './eth-alert-subscription'
+import { YieldMaximizationSection } from './yield-maximization-section'
 
 
 interface ToolSectionProps {
@@ -380,6 +381,14 @@ export function ToolSection({
     case 'get_target_allocation':
       return (
         <TargetAllocationSection
+          tool={tool}
+          isOpen={isOpen}
+          onOpenChange={onOpenChange}
+        />
+      )
+    case 'yield_maximization':
+      return (
+        <YieldMaximizationSection
           tool={tool}
           isOpen={isOpen}
           onOpenChange={onOpenChange}
