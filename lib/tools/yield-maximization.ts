@@ -2,6 +2,7 @@ import { tool } from 'ai'
 import { z } from 'zod'
 import { getUserEvmWalletAddress } from '../privy/client'
 import { ToolContext } from '../types/context'
+import { getPortfolioAnalyzer } from '../utils/portfolio-analyzer'
 import { getYieldAggregator, UnifiedYieldOpportunity } from '../utils/yield-aggregator'
 
 /**
@@ -197,10 +198,10 @@ function getPortfolioRecommendation(opportunities: UnifiedYieldOpportunity[]): s
 }
 
 export const yieldMaximizationTool = tool({
-  description: 'Find and analyze the highest yielding Pendle opportunities, with smart execution guidance for ETH investments. Can discover opportunities or provide detailed execution plans.',
+  description: 'Comprehensive yield maximization tool for Pendle opportunities with portfolio analysis, execution guidance, and smart rebalancing strategies. Can discover opportunities, analyze current portfolio, or provide detailed execution plans.',
   parameters: z.object({
     action: z.enum(['discover', 'analyze', 'execute']).default('discover')
-      .describe('Action: "discover" to find opportunities, "analyze" for portfolio analysis, "execute" to get execution guidance'),
+      .describe('Action: "discover" to find opportunities, "analyze" for comprehensive portfolio analysis, "execute" to get execution guidance'),
     riskLevel: z.enum(['conservative', 'moderate', 'aggressive']).default('moderate')
       .describe('Risk tolerance: conservative (low risk only), moderate (low-medium risk), aggressive (all risk levels)'),
     minApy: z.number().optional()
@@ -276,7 +277,104 @@ export const yieldMaximizationTool = tool({
         }
       }
 
+      // Handle portfolio analysis action
+      if (action === 'analyze') {
+        console.log('🔍 Performing comprehensive portfolio analysis...')
+        
+        try {
+          const portfolioAnalyzer = getPortfolioAnalyzer()
+          const analysis = await portfolioAnalyzer.analyzePortfolio(
+            walletAddress,
+            chainId,
+            isDemo,
+            riskLevel
+          )
+          
+          return {
+            _uiDisplayTool: true,
+            success: true,
+            summary: `📊 Portfolio Analysis Complete: ${analysis.healthScore.overallScore}/100 health score, ${analysis.summary.improvementPotential.toFixed(1)}% yield improvement potential`,
+            data: {
+              action: 'analyze',
+              portfolioAnalysis: {
+                totalValue: analysis.totalPortfolioValueUsd,
+                healthScore: analysis.healthScore,
+                summary: analysis.summary,
+                positions: analysis.positions.map(pos => ({
+                  tokenSymbol: pos.tokenSymbol,
+                  tokenName: pos.tokenName,
+                  balance: pos.balance,
+                  balanceUsd: pos.balanceUsd,
+                  currentYield: pos.currentYield,
+                  isYieldPosition: pos.isYieldPosition
+                })),
+                yieldGaps: analysis.yieldGaps.map(gap => ({
+                  tokenSymbol: gap.position.tokenSymbol,
+                  currentYield: gap.position.currentYield,
+                  bestOpportunityName: gap.bestOpportunity?.name || 'None found',
+                  bestOpportunityApy: gap.bestOpportunity?.apy || 0,
+                  yieldGap: gap.yieldGap,
+                  potentialAnnualGain: gap.potentialAnnualGain,
+                  recommendation: gap.recommendation,
+                  reason: gap.reason
+                })),
+                strategies: analysis.recommendedStrategies.map(strategy => ({
+                  name: strategy.name,
+                  description: strategy.description,
+                  riskLevel: strategy.riskLevel,
+                  expectedYieldImprovement: strategy.expectedYieldImprovement,
+                  estimatedAnnualGain: strategy.estimatedAnnualGain,
+                  executionSteps: strategy.executionSteps.map(step => ({
+                    stepNumber: step.stepNumber,
+                    action: step.action,
+                    description: step.description
+                  }))
+                }))
+              },
+              // Include top 5 opportunities as requested
+              opportunities: analysis.topOpportunities.map(opp => ({
+                id: opp.id,
+                protocol: opp.protocol,
+                name: opp.name,
+                symbol: opp.symbol,
+                apy: opp.apy,
+                tvl: opp.tvl,
+                riskLevel: opp.riskLevel,
+                category: opp.category,
+                chain: opp.chain,
+                entryMethod: opp.entryMethod,
+                exitMethod: opp.exitMethod,
+                isStablecoin: opp.metadata.isStablecoin,
+                hasImpermanentLoss: opp.metadata.hasImpermanentLoss,
+                maturityDate: opp.metadata.maturityDate,
+                executionHint: getExecutionHint(opp)
+              })),
+              statistics: calculateOpportunityStats(analysis.topOpportunities),
+              searchCriteria: {
+                riskLevel,
+                chainId,
+                networkId,
+                note: isDemo ? 'Demo network - opportunities from Ethereum mainnet' : 'Ethereum mainnet opportunities'
+              }
+            }
+          }
+          
+        } catch (error) {
+          console.error('Portfolio analysis failed:', error)
+          return {
+            _uiDisplayTool: true,
+            success: false,
+            error: `Portfolio analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+          }
+        }
+      }
+
+      // For discover and execute actions, proceed with opportunity discovery
       console.log(`🔍 Scanning Pendle opportunities on ${networkId} (chainId: ${chainId})...`)
+
+      // For yield opportunities, always use Ethereum mainnet chainId (1) unless explicitly demo
+      const yieldChainId = isDemo ? chainId : 1
+      console.log(`🎯 Using chainId ${yieldChainId} for yield opportunities (isDemo: ${isDemo})`)
 
       // Get yield aggregator and fetch opportunities
       const aggregator = getYieldAggregator()
@@ -287,7 +385,7 @@ export const yieldMaximizationTool = tool({
         includeStablecoins,
         excludeStablecoins,
         minTvl,
-        chainId,
+        chainId: yieldChainId,
         isDemo
       })
 
@@ -420,7 +518,7 @@ export const yieldMaximizationTool = tool({
         }
       }
 
-      // Handle discovery/analyze actions (existing logic)
+      // Handle discovery action (existing logic)
       if (action === 'discover') {
         return {
           _uiDisplayTool: true,
@@ -451,25 +549,13 @@ export const yieldMaximizationTool = tool({
               riskLevel,
               minApy,
               maxApy,
-              chainId,
+              chainId: yieldChainId,
               networkId,
               totalFound: opportunities.length,
-              totalShown: limitedOpportunities.length
+              totalShown: limitedOpportunities.length,
+              note: isDemo ? 'Demo network - opportunities from Ethereum mainnet' : 'Ethereum mainnet opportunities'
             },
             nextSteps: getNextSteps(limitedOpportunities)
-          }
-        }
-      } else {
-        // action === 'analyze'
-        return {
-          _uiDisplayTool: true,
-          success: true,
-          summary: 'Portfolio analysis feature coming soon. For now, showing best Pendle opportunities.',
-          data: {
-            action: 'analyze',
-            opportunities: limitedOpportunities.slice(0, 5), // Show top 5 for analysis
-            statistics: stats,
-            recommendation: getPortfolioRecommendation(limitedOpportunities)
           }
         }
       }
