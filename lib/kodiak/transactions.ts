@@ -198,6 +198,23 @@ export async function executeDeposit(
     }
     const correctNonce = await provider.getTransactionCount(userAddress as `0x${string}`, "pending");
 
+    // Dynamic gas estimation for deposit transaction
+    let gasLimit: bigint;
+    try {
+      const gasEstimate = await provider.estimateGas({
+        to: KODIAK_ROUTER_ADDRESS as `0x${string}`,
+        from: userAddress as `0x${string}`,
+        data: depositData as `0x${string}`,
+        value: BigInt(0)
+      });
+      // Add a 30% buffer for complex swaps (more than approval's 20%)
+      gasLimit = gasEstimate + (gasEstimate * BigInt(3)) / BigInt(10);
+      console.log(`[Kodiak Deposit] Estimated gas: ${gasEstimate}, with buffer: ${gasLimit}`);
+    } catch (gasError) {
+      console.warn(`[Kodiak Deposit] Gas estimation failed, using fallback: ${gasError}`);
+      // Use a higher fallback for complex deposit operations
+      gasLimit = BigInt(1000000); // 1M gas fallback for complex operations
+    }
     
     try {
       // Send deposit transaction using Privy
@@ -208,7 +225,7 @@ export async function executeDeposit(
           data: depositData as `0x${string}`,
           chainId: berachainConfig.chainId,
           from: userAddress as `0x${string}`,
-          gasLimit: 650000,
+          gasLimit: ethers.toQuantity(gasLimit) as `0x${string}`,
           maxFeePerGas: ethers.toQuantity(maxFee + priority) as `0x${string}`,
           maxPriorityFeePerGas: ethers.toQuantity(priority) as `0x${string}`,
           nonce: correctNonce,
@@ -226,6 +243,48 @@ export async function executeDeposit(
       return { status: 'success', hash: txResponse.hash };
     } catch (txError) {
       console.error("[Kodiak Deposit] Transaction failed:", txError);
+      
+      // Check if it's a gas-related error and provide more specific error message
+      const errorMessage = txError instanceof Error ? txError.message : String(txError);
+      if (errorMessage.includes('gas') || errorMessage.includes('insufficient') || errorMessage.includes('cumulative')) {
+        console.error("[Kodiak Deposit] Gas-related error detected. Consider retrying with higher gas limit.");
+        
+        // If gas estimation failed initially and we used fallback, try with even higher gas
+        if (gasLimit === BigInt(1000000)) {
+          console.log("[Kodiak Deposit] Attempting retry with increased gas limit...");
+          try {
+            const retryGasLimit = BigInt(1500000); // 1.5M gas for retry
+            
+            const { encoding: retryEncoding, signedTransaction: retrySignedTx } = await privy.walletApi.ethereum.signTransaction({
+              walletId: wallet.id,
+              transaction: {
+                to: KODIAK_ROUTER_ADDRESS as `0x${string}`,
+                data: depositData as `0x${string}`,
+                chainId: berachainConfig.chainId,
+                from: userAddress as `0x${string}`,
+                gasLimit: ethers.toQuantity(retryGasLimit) as `0x${string}`,
+                maxFeePerGas: ethers.toQuantity(maxFee + priority) as `0x${string}`,
+                maxPriorityFeePerGas: ethers.toQuantity(priority) as `0x${string}`,
+                nonce: correctNonce,
+              },
+              idempotencyKey: uuidv4() // New idempotency key for retry
+            });
+            
+            const retryTxResponse = await provider.broadcastTransaction(retrySignedTx);
+            const retryReceipt = await retryTxResponse.wait();
+            
+            if (retryReceipt) {
+              console.log('[Kodiak Deposit] Retry successful, mined in block', retryReceipt.blockNumber);
+            }
+            console.log("[Kodiak Deposit] Retry transaction successful with hash:", retryTxResponse.hash);
+            return { status: 'success', hash: retryTxResponse.hash };
+          } catch (retryError) {
+            console.error("[Kodiak Deposit] Retry also failed:", retryError);
+            throw retryError;
+          }
+        }
+      }
+      
       throw txError;
     }
   } catch (error) {
