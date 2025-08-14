@@ -152,6 +152,18 @@ export async function executeDeposit(
       routeData: quoteResult.methodParameters!.calldata
     };
     
+    // Debug logging for swap parameters
+    console.log("[Kodiak Deposit] Swap parameters:", {
+      amountIn: swapParams.amountIn,
+      minAmountOut: swapParams.minAmountOut,
+      zeroForOne: swapParams.zeroForOne,
+      totalAmount: totalAmount.toString(),
+      minShares: minSharesReceived.toString(),
+      slippageBPS: params.slippageBPS,
+      quoteAmount: quoteResult.quote,
+      routeDataLength: swapParams.routeData?.length || 0
+    });
+    
     // Create contract instance
     const kodiakRouter = new ethers.Contract(
       KODIAK_ROUTER_ADDRESS,
@@ -198,6 +210,35 @@ export async function executeDeposit(
     }
     const correctNonce = await provider.getTransactionCount(userAddress as `0x${string}`, "pending");
 
+    // Validate transaction by simulating it first
+    console.log(`[Kodiak Deposit] Simulating transaction before execution...`);
+    try {
+      // Try to simulate the transaction using staticCall to catch revert reasons
+      const result = await provider.call({
+        to: KODIAK_ROUTER_ADDRESS as `0x${string}`,
+        from: userAddress as `0x${string}`,
+        data: depositData as `0x${string}`,
+        value: BigInt(0)
+      });
+      console.log(`[Kodiak Deposit] Transaction simulation successful`);
+    } catch (simulationError) {
+      console.error(`[Kodiak Deposit] Transaction simulation failed:`, simulationError);
+      
+      // Extract revert reason if available
+      const simErrorMessage = simulationError instanceof Error ? simulationError.message : String(simulationError);
+      
+      // Common revert reasons and fixes
+      if (simErrorMessage.includes('insufficient') || simErrorMessage.includes('allowance')) {
+        throw new Error('Insufficient token allowance. Please ensure token approval completed successfully.');
+      } else if (simErrorMessage.includes('slippage') || simErrorMessage.includes('amount')) {
+        throw new Error('Slippage tolerance too low or invalid swap amounts. Try increasing slippage or adjusting amounts.');
+      } else if (simErrorMessage.includes('deadline')) {
+        throw new Error('Transaction deadline exceeded. Please retry with a longer deadline.');
+      } else {
+        throw new Error(`Transaction would revert: ${simErrorMessage}`);
+      }
+    }
+
     // Dynamic gas estimation for deposit transaction
     let gasLimit: bigint;
     try {
@@ -236,6 +277,29 @@ export async function executeDeposit(
       
       const txResponse = await provider.broadcastTransaction(signedTransaction)
       const receipt = await txResponse.wait()
+      
+      // Check if transaction was successful
+      if (receipt && receipt.status === 0) {
+        console.error('[Kodiak Deposit] Transaction mined but reverted in block', receipt.blockNumber);
+        console.error('[Kodiak Deposit] Gas used:', receipt.gasUsed.toString());
+        
+        // Try to get revert reason by replaying the transaction
+        try {
+          await provider.call({
+            to: txResponse.to,
+            from: txResponse.from,
+            data: txResponse.data,
+            blockTag: receipt.blockNumber - 1 // Use block before transaction
+          });
+        } catch (revertError) {
+          const revertReason = revertError instanceof Error ? revertError.message : 'Unknown revert reason';
+          console.error('[Kodiak Deposit] Revert reason:', revertReason);
+          throw new Error(`Transaction reverted: ${revertReason}`);
+        }
+        
+        throw new Error('Transaction was mined but reverted with no clear reason');
+      }
+      
       if (receipt) {
         console.log('[Kodiak Deposit] Mined in block', receipt.blockNumber)
       }
