@@ -165,6 +165,25 @@ async function calculateOptimalSwapForIsland(
 }
 
 /**
+ * Determine appropriate slippage for Kodiak Quote API based on swap amount
+ * @param amountToSwap The amount being swapped
+ * @returns Slippage percentage as string (e.g., "2" for 2%)
+ */
+function getApiSlippageForAmount(amountToSwap: bigint): string {
+  // For very small amounts, use higher slippage in the API call
+  if (amountToSwap < BigInt('1000000000000000')) { // < 0.001 tokens
+    return "3"; // 3%
+  }
+  if (amountToSwap < BigInt('10000000000000000')) { // < 0.01 tokens
+    return "2.5"; // 2.5%
+  }
+  if (amountToSwap < BigInt('100000000000000000')) { // < 0.1 tokens
+    return "2"; // 2%
+  }
+  return "1"; // Default 1% for larger amounts
+}
+
+/**
  * Get the swap calldata from Kodiak Quote API based on the output from calculateOptimalSwapForIsland
  * @param swapResult The result from calculateOptimalSwapForIsland
  * @returns Raw API response 
@@ -178,7 +197,9 @@ async function getKodiakSwapCalldata(
   const PROTOCOLS = "v2,v3,mixed";
   const TYPE = "exactIn";
   const DEADLINE = "60";
-  const SLIPPAGE_TOLERANCE = "1";
+  
+  // Dynamic slippage based on swap amount
+  const SLIPPAGE_TOLERANCE = getApiSlippageForAmount(swapResult.amountToSwap);
   
   // Get the user's wallet address for the recipient
   const userAddress = await getUserEvmWalletAddress();
@@ -205,6 +226,12 @@ async function getKodiakSwapCalldata(
   };
 
   console.log("Swap Calldata Params", params)
+  console.log(`[Kodiak Quote] Using ${SLIPPAGE_TOLERANCE}% slippage for swap amount: ${swapResult.amountToSwap.toString()}`)
+  
+  // Validate minimum swap amount (avoid dust transactions)
+  if (swapResult.amountToSwap < BigInt('100000000000000')) { // < 0.0001 tokens
+    console.warn(`[Kodiak Quote] Swap amount ${swapResult.amountToSwap.toString()} may be too small for DEX`);
+  }
   
   try {
     // Make the API call
@@ -219,6 +246,11 @@ async function getKodiakSwapCalldata(
     // Return the validated response data
     return data;
   } catch (error) {
+    console.error(`[Kodiak Quote] API call failed for swap amount ${swapResult.amountToSwap.toString()}:`, error);
+    if (axios.isAxiosError(error)) {
+      const errorMsg = error.response?.data?.message || error.message;
+      throw new Error(`Kodiak Quote API failed: ${errorMsg}. Amount: ${swapResult.amountToSwap.toString()}, Slippage: ${SLIPPAGE_TOLERANCE}%`);
+    }
     throw error;
   }
 }
@@ -311,6 +343,21 @@ async function depositToKodiakIsland(params: IslandSingleDepositParams): Promise
     
     // Parse total amount
     const totalAmount = ethers.parseUnits(params.totalAmount, decimals);
+    
+    // Validate minimum deposit amount to avoid DEX/swap issues  
+    const minDepositThreshold = BigInt('10000000000000'); // 0.00001 tokens (very conservative)
+    if (totalAmount < minDepositThreshold) {
+      console.log(`[Kodiak Deposit] Total amount ${totalAmount.toString()} below minimum threshold ${minDepositThreshold.toString()}`);
+      return {
+        status: 'fail',
+        error_message: `Deposit amount too small. Minimum: 0.00001 ${tokenContract.symbol || 'tokens'}. Current: ${params.totalAmount}. Extremely small deposits fail due to DEX minimums and gas costs.`
+      };
+    }
+    
+    // Log if deposit is very small but still allowed
+    if (totalAmount < BigInt('100000000000000')) { // < 0.0001 tokens
+      console.log(`[Kodiak Deposit] Processing small deposit: ${params.totalAmount} ${tokenContract.symbol}. Using enhanced slippage tolerance.`);
+    }
     
     // Step 1: Calculate optimal swap
     const swapResult = await calculateOptimalSwapForIsland(
