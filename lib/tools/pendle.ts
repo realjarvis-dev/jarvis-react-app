@@ -7,10 +7,35 @@ import { executePendleMintPy, getMintPyQuote } from '../pendle/mint-py'
 import { executePendleMintSy, getMintSyQuote } from '../pendle/mint-sy'
 import { executePendleRedeemPy, getRedeemPyQuote } from '../pendle/redeem-py'
 import { executePendleRedeemSy, getRedeemSyQuote } from '../pendle/redeem-sy'
-import { executePendleSwap, getSwapQuote } from '../pendle/swap'
+import { executePendleSwap, getPendleSwapTransactionData, getSwapQuote } from '../pendle/swap'
 import { getERC20Details } from '../privy/utils'
 import { NetworkContext } from '../types/context'
-import { parseUsdAmount, getUsdSupportDescription, getEffectiveAmount } from '../utils/usd-parser'
+import { createTransactionPreview } from '../utils/gas-estimation'
+import { getEffectiveAmount, getUsdSupportDescription, parseUsdAmount } from '../utils/usd-parser'
+
+/**
+ * Categorize price impact level for user warnings
+ * @param priceImpact Price impact percentage (e.g., 5.5 for 5.5%)
+ * @returns Price impact level category
+ */
+function getPriceImpactLevel(priceImpact: number): 'low' | 'medium' | 'high' | 'extreme' {
+  if (priceImpact <= 1) return 'low';
+  if (priceImpact <= 5) return 'medium';
+  if (priceImpact <= 15) return 'high';
+  return 'extreme';
+}
+
+/**
+ * Get token decimals for formatting
+ */
+async function getTokenDecimals(tokenAddress: string, chainId: number): Promise<number> {
+  try {
+    const tokenDetails = await getERC20Details(tokenAddress, chainId);
+    return tokenDetails.decimals;
+  } catch (error) {
+    return 18; // Default decimals
+  }
+}
 
 async function resolveTokenAddress(
   tokenAddressOrName: string, 
@@ -279,6 +304,82 @@ async function prepareSwapConfiguration(
     ...swapTokens,
     amountInWei
   };
+}
+
+/**
+ * Helper function to get real-time gas estimation data
+ * @param userWalletAddress User's wallet address
+ * @param direction Swap direction
+ * @param amountInHuman Human-readable amount
+ * @param chainId Chain ID
+ * @param isDemo Whether this is demo mode
+ * @returns Real-time gas estimation data
+ */
+async function getRealTimeGasEstimation(
+  userWalletAddress: string,
+  direction: 'ethToToken' | 'tokenToEth',
+  amountInHuman: string,
+  chainId: number,
+  isDemo: boolean
+) {
+  try {
+    const { getGasPriceByChainId } = await import('../blocknative/get-gas-price');
+    const provider = new ethers.JsonRpcProvider(
+      getConfigByChainId(chainId, isDemo).rpcUrl
+    );
+    
+    // Get current gas prices and user balance
+    const [gasPrice, userBalance] = await Promise.all([
+      getGasPriceByChainId(chainId),
+      provider.getBalance(userWalletAddress)
+    ]);
+    
+    // Estimate gas limit for Pendle swaps (typically 300k-500k)
+    const estimatedGasLimit = BigInt(400000);
+    const totalGasCost = estimatedGasLimit * gasPrice.maxFeePerGas;
+    const transactionValue = direction === 'ethToToken' ? ethers.parseEther(amountInHuman) : BigInt(0);
+    const totalRequired = totalGasCost + transactionValue;
+    
+    // Calculate values in ETH and USD (using approximate ETH price)
+    const ethPrice = 3000;
+    const totalGasCostEth = ethers.formatEther(totalGasCost);
+    const totalGasCostUsd = (parseFloat(totalGasCostEth) * ethPrice).toFixed(2);
+    const userBalanceEth = ethers.formatEther(userBalance);
+    const userBalanceUsd = (parseFloat(userBalanceEth) * ethPrice).toFixed(2);
+    const totalRequiredEth = ethers.formatEther(totalRequired);
+    const totalRequiredUsd = (parseFloat(totalRequiredEth) * ethPrice).toFixed(2);
+    
+    const canProceed = userBalance >= totalRequired;
+    const shortfall = canProceed ? BigInt(0) : totalRequired - userBalance;
+    const shortfallEth = ethers.formatEther(shortfall);
+    const shortfallUsd = (parseFloat(shortfallEth) * ethPrice).toFixed(2);
+    
+    return {
+      networkFee: `${totalGasCostEth} ETH ($${totalGasCostUsd})`,
+      userBalance: `${userBalanceEth} ETH ($${userBalanceUsd})`,
+      required: `${totalRequiredEth} ETH ($${totalRequiredUsd})`,
+      shortfall: `${shortfallEth} ETH ($${shortfallUsd})`,
+      gasLimit: estimatedGasLimit.toString(),
+      gasPrice: `${ethers.formatUnits(gasPrice.maxFeePerGas, 'gwei')} gwei`,
+      maxFeePerGas: `${ethers.formatUnits(gasPrice.maxFeePerGas, 'gwei')} gwei`,
+      estimationMethod: 'real-time',
+      canProceed: canProceed
+    };
+  } catch (error) {
+    console.error('Failed to get real-time gas estimation:', error);
+    // Return error state instead of hardcoded values
+    return {
+      networkFee: 'Unable to estimate - network error',
+      userBalance: 'Unable to fetch - network error',
+      required: 'Unable to calculate - network error',
+      shortfall: 'Unable to calculate - network error',
+      gasLimit: '400000',
+      gasPrice: 'Unable to fetch - network error',
+      maxFeePerGas: 'Unable to fetch - network error',
+      estimationMethod: 'error',
+      canProceed: false
+    };
+  }
 }
 
 /**
@@ -716,6 +817,7 @@ export const pendleQuoteTool = tool({
         chainId
       );
       
+      const priceImpactLevel = getPriceImpactLevel(swapData.priceImpact);
       const quoteData = {
         market: swapConfig.fullTokenName,
         inputAmount: actualAmountInHuman,
@@ -725,6 +827,13 @@ export const pendleQuoteTool = tool({
         inverse: outputData.inverse,
         outputAmount: outputData.outputAmountFormatted,
         priceImpact: swapData.priceImpact,
+        priceImpactLevel: priceImpactLevel,
+        priceImpactFormatted: `${swapData.priceImpact.toFixed(2)}%`,
+        priceImpactWarning: priceImpactLevel === 'extreme' ? 
+          `⚠️ EXTREME price impact (${swapData.priceImpact.toFixed(2)}%)! You may receive much less than expected.` :
+          priceImpactLevel === 'high' ?
+          `⚠️ High price impact (${swapData.priceImpact.toFixed(2)}%). Consider using a larger amount.` :
+          null,
         complete_time: new Date().toISOString(),
         foundMarketAddress: swapConfig.marketAddress,
         foundTokenAddress: resolvedTokenAddress,
@@ -735,9 +844,15 @@ export const pendleQuoteTool = tool({
         } : null
       }
       
+      const quoteSummary = priceImpactLevel === 'extreme' 
+        ? `⚠️ Quote with EXTREME price impact (${swapData.priceImpact.toFixed(2)}%): ${outputData.rate}`
+        : priceImpactLevel === 'high'
+        ? `⚠️ Quote with high price impact (${swapData.priceImpact.toFixed(2)}%): ${outputData.rate}`
+        : `Quote for ${outputData.rate}`;
+
       return {
         _uiDisplayTool: true,
-        summary: `Quote for ${outputData.rate}`,
+        summary: quoteSummary,
         data: quoteData
       }
     } catch (error: any) {
@@ -795,7 +910,15 @@ export const pendleSwapTool = tool({
     market_name: z
       .string()
       .optional()
-      .describe('The name of the market (e.g. "rswETH"). Used for display purposes.')
+      .describe('The name of the market (e.g. "rswETH"). Used for display purposes.'),
+    confirmed_high_price_impact: z
+      .boolean()
+      .optional()
+      .describe('Set to true if user has confirmed they want to proceed despite high price impact warning.'),
+    confirmed_economic_warning: z
+      .boolean()
+      .optional()
+      .describe('Set to true if user has confirmed they want to proceed despite the economic warning (gas costs > trade value).')
   }),
   execute: async (params, context: ToolContext) => {
     let {
@@ -805,23 +928,26 @@ export const pendleSwapTool = tool({
       token_type,
       amount_in_human,
       slippage = PENDLE_CONFIG.DEFAULT_SLIPPAGE,
-      market_name
+      market_name,
+      confirmed_high_price_impact = false,
+      confirmed_economic_warning = false
     } = params;
     const networkContext = context?.networkContext;
-    const isDemo = networkContext?.isDemo
+    
+    if (!networkContext?.selectedChainId) {
+      throw new Error('Network context with selectedChainId is required');
+    }
+    
+    const chainId = networkContext.selectedChainId;
+    const isDemo = networkContext.isDemo || false;
+    
     if (isDemo) {
       slippage = PENDLE_CONFIG.DEMO_SLIPPAGE
     }
 
     let displayTokenIn, displayTokenOut;
+    
     try {
-
-      if (!networkContext?.selectedChainId) {
-        throw new Error('Network context with selectedChainId is required');
-      }
-      
-      const chainId = networkContext.selectedChainId;
-      const isDemo = networkContext.isDemo;
 
       console.log('===== PENDLE SWAP TOOL DEBUG =====');
       console.log('Input parameters:', {
@@ -856,7 +982,315 @@ export const pendleSwapTool = tool({
       displayTokenIn = swapConfig.inputToken;
       displayTokenOut = swapConfig.outputToken;
 
-      // Execute the swap using executePendleSwap
+      // First get a quote to check price impact
+      const quoteData = await getSwapQuote(
+        swapConfig.marketAddress,
+        swapConfig.tokenIn,
+        swapConfig.tokenOut,
+        swapConfig.amountInWei,
+        slippage,
+        PENDLE_CONFIG.ENABLE_AGGREGATOR,
+        chainId,
+        user_wallet_address
+      );
+
+      // Check if price impact requires confirmation (unless already confirmed)
+      const priceImpact = quoteData.priceImpact;
+      const priceImpactLevel = getPriceImpactLevel(priceImpact);
+      
+      if (priceImpactLevel === 'extreme' && priceImpact > 15 && !confirmed_high_price_impact) {
+        // Return confirmation request instead of executing immediately
+        return {
+          _uiDisplayTool: true,
+          summary: `⚠️ High Price Impact Warning: ${priceImpact.toFixed(2)}%`,
+          data: {
+            requiresConfirmation: true,
+            priceImpact: priceImpact,
+            priceImpactFormatted: `${priceImpact.toFixed(2)}%`,
+            warningLevel: 'extreme',
+            warningMessage: `This swap has an extremely high price impact of ${priceImpact.toFixed(2)}%. You may receive significantly less tokens than expected.`,
+            recommendations: [
+              'Consider using a larger trade amount for better rates',
+              'Try a different token pair with more liquidity',
+              'Wait for better market conditions',
+              'Only proceed if you understand the risks'
+            ],
+            swapDetails: {
+              from: displayTokenIn,
+              to: displayTokenOut,
+              amountIn: `${amount_in_human} ${displayTokenIn}`,
+              estimatedAmountOut: ethers.formatUnits(quoteData.amountOut, await getTokenDecimals(resolvedTokenAddress, chainId)),
+              priceImpact: `${priceImpact.toFixed(2)}%`,
+              slippage: `${(slippage * 100).toFixed(1)}%`
+            },
+            confirmationPrompt: `Do you want to proceed with this swap despite the ${priceImpact.toFixed(2)}% price impact?`,
+            // Include all parameters needed to execute if user confirms
+            executionParams: {
+              token_address: resolvedTokenAddress,
+              user_wallet_address,
+              direction,
+              token_type,
+              input_token_name_display: displayTokenIn,
+              output_token_name_display: displayTokenOut,
+              amount_in_human,
+              slippage,
+              market_name: resolvedMarketName || market_name,
+              confirmed_high_price_impact: true
+            }
+          }
+        };
+      }
+
+      // If user confirmed high price impact, log it
+      if (confirmed_high_price_impact && priceImpact > 15) {
+        console.log(`User confirmed high price impact swap: ${priceImpact.toFixed(2)}%`);
+      }
+
+      // Get transaction data for gas estimation (like MetaMask does)
+      console.log('Getting transaction data for gas estimation...');
+      let txData;
+      let transactionPreview;
+      
+      try {
+        txData = await getPendleSwapTransactionData(
+          swapConfig.marketAddress,
+          swapConfig.tokenIn,
+          swapConfig.tokenOut,
+          swapConfig.amountInWei,
+          slippage,
+          PENDLE_CONFIG.ENABLE_AGGREGATOR,
+          chainId,
+          user_wallet_address
+        );
+
+        // Create transaction preview with gas estimation
+        transactionPreview = await createTransactionPreview(
+          {
+            to: txData.to,
+            from: txData.from,
+            data: txData.data,
+            value: txData.value
+          },
+          chainId,
+          isDemo
+        );
+
+        // If insufficient balance, return detailed error like MetaMask would show
+        if (!transactionPreview.canProceed) {
+          return {
+          _uiDisplayTool: true,
+          summary: `❌ Insufficient funds for swap`,
+          data: {
+            success: false,
+            error: 'Insufficient ETH balance to cover gas fees',
+            error_category: 'Insufficient Balance (Gas Fees)',
+            gasEstimation: {
+              networkFee: `${transactionPreview.gasEstimate.totalGasCostEth} ETH ($${transactionPreview.gasEstimate.totalGasCostUsd})`,
+              userBalance: `${transactionPreview.gasEstimate.userBalanceEth} ETH ($${transactionPreview.gasEstimate.userBalanceUsd})`,
+              required: `${transactionPreview.totalRequiredEth} ETH ($${transactionPreview.totalRequiredUsd})`,
+              shortfall: `${transactionPreview.gasEstimate.shortfallEth} ETH ($${transactionPreview.gasEstimate.shortfallUsd})`,
+              gasLimit: transactionPreview.gasEstimate.gasLimit.toString(),
+              gasPrice: transactionPreview.gasEstimate.gasPrice > 0 ? 
+                `${ethers.formatUnits(transactionPreview.gasEstimate.gasPrice, 'gwei')} gwei` : 
+                `${ethers.formatUnits(transactionPreview.gasEstimate.maxFeePerGas || BigInt(0), 'gwei')} gwei`,
+              estimationMethod: transactionPreview.gasEstimate.estimationMethod
+            },
+            detailedMessage: `Network fee: ${transactionPreview.gasEstimate.totalGasCostEth} ETH ($${transactionPreview.gasEstimate.totalGasCostUsd})\nYour balance: ${transactionPreview.gasEstimate.userBalanceEth} ETH ($${transactionPreview.gasEstimate.userBalanceUsd})\nYou need ${transactionPreview.gasEstimate.shortfallEth} ETH ($${transactionPreview.gasEstimate.shortfallUsd}) more`,
+            suggested_action: `Add at least ${transactionPreview.gasEstimate.shortfallEth} ETH ($${transactionPreview.gasEstimate.shortfallUsd}) to your wallet, or wait for lower gas prices.`,
+            swap_parameters: {
+              from: displayTokenIn,
+              to: displayTokenOut,
+              amount_in: `${amount_in_human} ${displayTokenIn}`,
+              token_address: resolvedTokenAddress,
+              direction,
+              amount_in_human,
+              slippage
+            }
+          }
+        };
+      }
+
+      // Show gas preview if it's high (like MetaMask warning)  
+      if (transactionPreview && transactionPreview.warningMessage) {
+        console.warn('Gas cost warning:', transactionPreview.warningMessage);
+      }
+
+      } catch (gasEstimationError: any) {
+        console.warn('Failed to get transaction data for gas estimation:', gasEstimationError);
+        
+        // In demo mode, check if we should offer educational failure explanation
+        if (isDemo) {
+          const { shouldOfferDemoSimulation, createDemoFailureResponse } = await import('../utils/demo-transaction-handler');
+          
+          // Try to extract revert reason from the error
+          let revertReason = null;
+          if (gasEstimationError.message?.includes('custom error 0x72294811')) {
+            revertReason = 'Market conditions changed - insufficient liquidity or price impact too high';
+          } else if (gasEstimationError.message?.includes('execution reverted')) {
+            revertReason = gasEstimationError.message;
+          }
+          
+          if (revertReason && shouldOfferDemoSimulation(revertReason, isDemo)) {
+            console.log('🎭 Demo mode: Offering educational failure explanation with optional simulation');
+            
+            // Get basic gas estimation for educational purposes
+            const { robustGasEstimation } = await import('../utils/robust-gas-estimation');
+            const basicTxData = {
+              to: '0x888888888889758F76e7103c6CbF23ABbF58F946',
+              from: user_wallet_address,
+              data: '0x',
+              value: direction === 'ethToToken' ? ethers.parseEther(amount_in_human).toString() : '0'
+            };
+            
+            const gasEstimate = await robustGasEstimation(basicTxData, chainId, isDemo);
+            
+            const demoResponse = createDemoFailureResponse(revertReason, basicTxData, {
+              gasLimit: gasEstimate.gasLimit,
+              totalGasCostEth: gasEstimate.totalGasCostEth,
+              totalGasCostUsd: gasEstimate.totalGasCostUsd,
+              maxFeePerGas: gasEstimate.maxFeePerGas,
+              gasPrice: gasEstimate.gasPrice
+            });
+            
+            return {
+              _uiDisplayTool: true,
+              summary: `🎓 Demo: Transaction would fail - ${demoResponse.explanation.title}`,
+              data: {
+                isDemoEducational: true,
+                ...demoResponse,
+                swap_parameters: {
+                  from: displayTokenIn,
+                  to: displayTokenOut,
+                  amount_in: `${amount_in_human} ${displayTokenIn}`,
+                  token_address,
+                  direction,
+                  amount_in_human,
+                  slippage
+                }
+              }
+            };
+          }
+        }
+        
+        // METAMASK-STYLE APPROACH: Show gas estimation even if transaction might fail
+        // Don't block users - give them transparency to make their own decision
+        
+        // Always try to provide gas cost information like MetaMask does
+        let gasEstimationData = null;
+        try {
+          const fallbackTxData = {
+            to: '0x888888888889758F76e7103c6CbF23ABbF58F946', // Pendle RouterV4
+            from: user_wallet_address,
+            data: '0x',
+            value: direction === 'ethToToken' ? ethers.parseEther(amount_in_human).toString() : '0'
+          };
+          
+          const fallbackPreview = await createTransactionPreview(fallbackTxData, chainId, isDemo);
+          gasEstimationData = {
+            networkFee: `${fallbackPreview.gasEstimate.totalGasCostEth} ETH ($${fallbackPreview.gasEstimate.totalGasCostUsd})`,
+            userBalance: `${fallbackPreview.gasEstimate.userBalanceEth} ETH ($${fallbackPreview.gasEstimate.userBalanceUsd})`,
+            required: `${fallbackPreview.totalRequiredEth} ETH ($${fallbackPreview.totalRequiredUsd})`,
+            shortfall: fallbackPreview.canProceed ? '0 ETH ($0)' : `${fallbackPreview.gasEstimate.shortfallEth} ETH ($${fallbackPreview.gasEstimate.shortfallUsd})`,
+            gasLimit: fallbackPreview.gasEstimate.gasLimit.toString(),
+            gasPrice: fallbackPreview.gasEstimate.gasPrice > 0 ? 
+              `${ethers.formatUnits(fallbackPreview.gasEstimate.gasPrice, 'gwei')} gwei` : 
+              `${ethers.formatUnits(fallbackPreview.gasEstimate.maxFeePerGas || BigInt(0), 'gwei')} gwei`,
+            estimationMethod: 'fallback',
+            canProceed: fallbackPreview.canProceed,
+            maxFeePerGas: fallbackPreview.gasEstimate.maxFeePerGas ? 
+              ethers.formatUnits(fallbackPreview.gasEstimate.maxFeePerGas, 'gwei') : null
+          };
+        } catch (fallbackError) {
+          console.warn('Could not get gas estimation:', fallbackError);
+          gasEstimationData = await getRealTimeGasEstimation(
+            user_wallet_address,
+            direction,
+            amount_in_human,
+            chainId,
+            isDemo
+          );
+        }
+        
+        // Check if this is an economically unviable trade (like MetaMask would show)
+        const tradeValueUsd = parseFloat(amount_in_human) * 3000; // Approximate ETH price
+        const gasCostUsd = parseFloat(gasEstimationData.networkFee.match(/\$(\d+\.\d+)/)?.[1] || '10');
+        const isEconomicallyUnviable = tradeValueUsd < gasCostUsd * 0.1; // Gas cost > 10x trade value
+        
+        // Show MetaMask-style transparency with economic warning (unless already confirmed)
+        if (isEconomicallyUnviable && !confirmed_economic_warning) {
+          return {
+            _uiDisplayTool: true,
+            summary: `⚠️ High gas cost warning for small trade`,
+            data: {
+              requiresConfirmation: true,
+              warningType: 'economical',
+              tradeDetails: {
+                amount: `${amount_in_human} ETH`,
+                tradeValue: `$${tradeValueUsd.toFixed(2)}`,
+                gasEstimation: gasEstimationData,
+                gasCostVsTradeValue: `${(gasCostUsd / tradeValueUsd).toFixed(1)}x`,
+                economicallyViable: false
+              },
+              warningMessage: `This trade will cost approximately ${gasEstimationData.networkFee} in gas fees for a $${tradeValueUsd.toFixed(2)} transaction. You will lose money on this trade.`,
+              recommendations: [
+                'Consider increasing your trade amount to at least 0.01 ETH ($30)',
+                'Wait for lower gas prices during off-peak hours',
+                'Use a Layer 2 solution if available',
+                'Only proceed if you understand you will lose money'
+              ],
+              detailedMessage: `Trade amount: ${amount_in_human} ETH ($${tradeValueUsd.toFixed(2)})\nNetwork fee: ${gasEstimationData.networkFee}\nYour balance: ${gasEstimationData.userBalance}\nNet result: You will lose ~$${(gasCostUsd - tradeValueUsd).toFixed(2)}`,
+              confirmationPrompt: 'Do you want to proceed with this uneconomical trade anyway?',
+              executionParams: {
+                token_address,
+                user_wallet_address,
+                direction,
+                token_type,
+                input_token_name_display: displayTokenIn,
+                output_token_name_display: displayTokenOut,
+                amount_in_human,
+                slippage,
+                market_name,
+                confirmed_economic_warning: true
+              }
+            }
+          };
+        }
+        
+        // If still insufficient balance after gas estimation, show that error
+        if (gasEstimationData && gasEstimationData.canProceed === false) {
+          // Extract shortfall amount more carefully
+          const shortfallMatch = gasEstimationData.shortfall?.match(/(\d+\.?\d*)\s*ETH/);
+          const shortfallAmount = shortfallMatch ? shortfallMatch[1] : 'some';
+          
+          return {
+            _uiDisplayTool: true,
+            summary: `❌ Insufficient funds for swap`,
+            data: {
+              success: false,
+              error: 'Insufficient ETH balance to cover gas fees',
+              error_category: 'Insufficient Balance (Gas Fees)',
+              gasEstimation: gasEstimationData,
+              detailedMessage: `Network fee: ${gasEstimationData.networkFee}\nYour balance: ${gasEstimationData.userBalance}\nShortfall: ${gasEstimationData.shortfall}`,
+              suggested_action: `Add at least ${shortfallAmount} ETH to your wallet or wait for lower gas prices.`,
+              swap_parameters: {
+                from: displayTokenIn,
+                to: displayTokenOut,
+                amount_in: `${amount_in_human} ${displayTokenIn}`,
+                token_address,
+                direction,
+                amount_in_human,
+                slippage
+              }
+            }
+          };
+        }
+        
+        // MetaMask-style: Continue to execution even if gas estimation failed
+        // User has been informed about potential costs and can proceed
+        console.log('⚠️ Gas estimation failed but continuing to execution (MetaMask-style transparency)');
+      }
+
+      // Price impact is acceptable or confirmed, and balance is sufficient - proceed with execution
       const result = await executePendleSwap(
         swapConfig.marketAddress,
         swapConfig.tokenIn,
@@ -890,16 +1324,119 @@ export const pendleSwapTool = tool({
         }
       }
 
+      const summaryMessage = confirmed_high_price_impact && priceImpact > 15
+        ? `⚠️ High impact swap executed: ${amount_in_human} ${displayTokenIn} → ${displayTokenOut} (${priceImpact.toFixed(2)}% impact)`
+        : `Swap executed: ${amount_in_human} ${displayTokenIn} → ${displayTokenOut}`;
+
       return {
         _uiDisplayTool: true,
-        summary: `Swap executed: ${amount_in_human} ${displayTokenIn} → ${displayTokenOut}`,
-        data: swapData
+        summary: summaryMessage,
+        data: {
+          ...swapData,
+          priceImpact: priceImpact,
+          priceImpactLevel: priceImpactLevel,
+          confirmedHighImpact: confirmed_high_price_impact,
+          gasEstimation: transactionPreview ? {
+            networkFee: `${transactionPreview.gasEstimate.totalGasCostEth} ETH ($${transactionPreview.gasEstimate.totalGasCostUsd})`,
+            gasLimit: transactionPreview.gasEstimate.gasLimit.toString(),
+            estimationMethod: transactionPreview.gasEstimate.estimationMethod
+          } : null
+        }
       }
     } catch (error: any) {
       console.log(error)
+      
+      // ALWAYS provide gas estimation in error cases (MetaMask-style transparency)
+      let gasEstimationData = null;
+      try {
+        const fallbackTxData = {
+          to: '0x888888888889758F76e7103c6CbF23ABbF58F946', // Pendle RouterV4
+          from: user_wallet_address,
+          data: '0x', // Empty data for basic estimation
+          value: direction === 'ethToToken' ? ethers.parseEther(amount_in_human).toString() : '0'
+        };
+
+        const fallbackPreview = await createTransactionPreview(fallbackTxData, chainId, isDemo);
+        
+        // Always provide gas estimation, regardless of balance sufficiency
+        gasEstimationData = {
+          networkFee: `${fallbackPreview.gasEstimate.totalGasCostEth} ETH ($${fallbackPreview.gasEstimate.totalGasCostUsd})`,
+          userBalance: `${fallbackPreview.gasEstimate.userBalanceEth} ETH ($${fallbackPreview.gasEstimate.userBalanceUsd})`,
+          required: `${fallbackPreview.totalRequiredEth} ETH ($${fallbackPreview.totalRequiredUsd})`,
+          shortfall: fallbackPreview.canProceed ? '0 ETH ($0)' : `${fallbackPreview.gasEstimate.shortfallEth} ETH ($${fallbackPreview.gasEstimate.shortfallUsd})`,
+          gasLimit: fallbackPreview.gasEstimate.gasLimit.toString(),
+          gasPrice: fallbackPreview.gasEstimate.gasPrice > 0 ? 
+            `${ethers.formatUnits(fallbackPreview.gasEstimate.gasPrice, 'gwei')} gwei` : 
+            `${ethers.formatUnits(fallbackPreview.gasEstimate.maxFeePerGas || BigInt(0), 'gwei')} gwei`,
+          maxFeePerGas: fallbackPreview.gasEstimate.maxFeePerGas ? 
+            `${ethers.formatUnits(fallbackPreview.gasEstimate.maxFeePerGas, 'gwei')} gwei` : null,
+          estimationMethod: 'fallback',
+          canProceed: fallbackPreview.canProceed
+        };
+      } catch (gasError) {
+        console.warn('Could not get gas estimation, using real-time fallback:', gasError);
+        gasEstimationData = await getRealTimeGasEstimation(
+          user_wallet_address,
+          direction,
+          amount_in_human,
+          chainId,
+          isDemo
+        );
+      }
+      
+      // Extract more detailed error information
+      let errorReason = error.message || 'Failed to execute Pendle swap.';
+      let errorCategory = 'Unknown';
+      let suggestedAction = '';
+      
+      // If we have gas estimation showing insufficient balance, override the error
+      if (gasEstimationData) {
+        errorReason = 'Insufficient ETH balance to cover gas fees';
+        errorCategory = 'Insufficient Balance (Gas Fees)';
+        suggestedAction = `Add at least ${gasEstimationData.shortfall} to your wallet, or wait for lower gas prices.`;
+      } else {
+      
+      if (errorReason.includes('Gas fees') && errorReason.includes('exceed your balance')) {
+        errorCategory = 'Insufficient Balance (Gas Fees)';
+        suggestedAction = 'Gas prices are very high right now. Wait for lower gas prices or add more ETH to your wallet.';
+      } else if (errorReason.includes('insufficient balance')) {
+        errorCategory = 'Insufficient Balance';
+        suggestedAction = 'Please ensure you have enough ETH in your wallet.';
+      } else if (errorReason.includes('slippage') || errorReason.includes('SLIPPAGE_EXCEEDED')) {
+        errorCategory = 'Slippage Too Low';
+        suggestedAction = 'Try increasing slippage tolerance to 2-5%.';
+      } else if (errorReason.includes('Extremely high price impact') || errorReason.includes('price impact')) {
+        errorCategory = 'High Price Impact';
+        suggestedAction = 'Try using a larger trade amount for better rates, or choose a different token pair with more liquidity.';
+      } else if (errorReason.includes('Transaction was mined but reverted') || errorReason.includes('Transaction reverted')) {
+        errorCategory = 'Transaction Reverted';
+        if (errorReason.includes('slippage')) {
+          suggestedAction = 'Increase slippage tolerance to 2-5% or wait for more stable market conditions.';
+        } else if (errorReason.includes('deadline') || errorReason.includes('EXPIRED')) {
+          suggestedAction = 'Try the transaction again - market conditions changed during execution.';
+        } else if (errorReason.includes('output amount')) {
+          suggestedAction = 'Price moved against you during execution. Try again with higher slippage tolerance.';
+        } else {
+          suggestedAction = 'Transaction failed during execution. Check token balances and try again with different parameters.';
+        }
+      } else if (errorReason.includes('gas')) {
+        errorCategory = 'Gas Issue';
+        suggestedAction = 'Network congestion detected. Try again when gas prices are lower.';
+      } else if (errorReason.includes('Transaction validation failed')) {
+        errorCategory = 'Transaction Validation';
+        suggestedAction = 'Check if the token pair is available for trading with the requested amount.';
+      } else if (errorReason.includes('network') || errorReason.includes('connection')) {
+        errorCategory = 'Network Error';
+        suggestedAction = 'Please check your internet connection and try again.';
+      }
+      } // Close the else block from gas estimation check
+      
       const errorData = {
         success: false,
-        error: error.message || 'Failed to execute Pendle swap.',
+        error: errorReason,
+        error_category: errorCategory,
+        suggested_action: suggestedAction,
+        gasEstimation: gasEstimationData,
         swap_parameters: {
           from: displayTokenIn,
           to: displayTokenOut,
@@ -913,7 +1450,7 @@ export const pendleSwapTool = tool({
       
       return {
         _uiDisplayTool: true,
-        summary: `Swap failed: ${error.message || 'Failed to execute Pendle swap'}`,
+        summary: `Swap failed (${errorCategory}): ${errorReason}`,
         data: errorData
       }
     }
