@@ -142,7 +142,17 @@ export async function executeDeposit(
     // Create RouterSwapParams object
     console.log("quoteResult", quoteResult)
 
-    const minAmountOut = calculateMinAmountOut(quoteResult.quote, params.slippageBPS);
+    // Adjust slippage for small amounts to prevent failures
+    const adjustedSlippageBPS = adjustSlippageForSmallAmounts(
+      swapResult.amountToSwap.toString(), 
+      params.slippageBPS
+    );
+    
+    if (adjustedSlippageBPS > params.slippageBPS) {
+      console.log(`[Kodiak Deposit] Adjusted slippage from ${params.slippageBPS} to ${adjustedSlippageBPS} BPS for small amount`);
+    }
+    
+    const minAmountOut = calculateMinAmountOut(quoteResult.quote, adjustedSlippageBPS);
     const swapParams = {
       // zeroForOne should be true if we're swapping token0 for token1
       // This matches the isToken0 flag which indicates if the input token is token0
@@ -162,7 +172,8 @@ export async function executeDeposit(
       zeroForOne: swapParams.zeroForOne,
       totalAmount: totalAmount.toString(),
       minShares: minSharesReceived.toString(),
-      slippageBPS: params.slippageBPS,
+      originalSlippageBPS: params.slippageBPS,
+      adjustedSlippageBPS: adjustedSlippageBPS,
       quoteAmount: quoteResult.quote,
       routeDataLength: swapParams.routeData?.length || 0
     });
@@ -369,6 +380,39 @@ export async function executeDeposit(
       status: 'fail',
       error_message: error instanceof Error ? error.message : String(error)
     };
+  }
+}
+
+/**
+ * Adjust slippage tolerance for small amounts to prevent transaction failures
+ * @param amountToSwap The amount being swapped (as string)
+ * @param originalSlippageBPS Original slippage in basis points
+ * @returns Adjusted slippage in basis points
+ */
+function adjustSlippageForSmallAmounts(amountToSwap: string, originalSlippageBPS: number): number {
+  try {
+    const swapAmount = BigInt(amountToSwap);
+    
+    // For very small amounts (< 1e15 wei, roughly 0.001 tokens with 18 decimals)
+    // increase slippage to account for rounding errors and price impact
+    if (swapAmount < BigInt('1000000000000000')) { // < 0.001 tokens
+      return Math.max(originalSlippageBPS, 200); // At least 2%
+    }
+    
+    // For small amounts (< 1e16 wei, roughly 0.01 tokens)
+    if (swapAmount < BigInt('10000000000000000')) { // < 0.01 tokens  
+      return Math.max(originalSlippageBPS, 150); // At least 1.5%
+    }
+    
+    // For micro amounts (< 1e17 wei, roughly 0.1 tokens)
+    if (swapAmount < BigInt('100000000000000000')) { // < 0.1 tokens
+      return Math.max(originalSlippageBPS, 100); // At least 1%
+    }
+    
+    return originalSlippageBPS; // Use original slippage for larger amounts
+  } catch (error) {
+    console.warn(`[Kodiak Deposit] Error adjusting slippage, using original: ${error}`);
+    return originalSlippageBPS;
   }
 }
 
