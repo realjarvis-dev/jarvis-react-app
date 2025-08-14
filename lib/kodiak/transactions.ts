@@ -152,6 +152,9 @@ export async function executeDeposit(
       routeData: quoteResult.methodParameters!.calldata
     };
     
+    // For minSharesReceived, we should parse it with 18 decimals as LP tokens typically use 18 decimals
+    const minSharesReceived = ethers.parseUnits(params.minSharesReceived, 18);
+    
     // Debug logging for swap parameters
     console.log("[Kodiak Deposit] Swap parameters:", {
       amountIn: swapParams.amountIn,
@@ -170,9 +173,6 @@ export async function executeDeposit(
       KODIAK_ROUTER_FULL_ABI,
       provider
     );
-    
-    // For minSharesReceived, we should still parse it with 18 decimals as LP tokens typically use 18 decimals
-    const minSharesReceived = ethers.parseUnits(params.minSharesReceived, 18);
 
     console.log("sending txRequest")
     console.log("params.islandAddress", params.islandAddress)
