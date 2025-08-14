@@ -6,16 +6,18 @@ import { allNetworkConfigs, TENDERLY_DEMO_CONFIG } from '../network/config'
 import { NetworkConfig } from '../network/types'
 import { getPendleMarkets } from '../pendle/api'
 import { getUserEvmWalletAddress, getUserSolWalletAddress } from '../privy/client'
+import { getLocalForkTokenBalances, isLocalForkEnvironment } from '../local-fork/token-balance'
 
 // Error handling wrapper for EVM token balances
 async function getTokenBalancesWithErrorHandling(
   walletAddress: string,
   chainId: number,
   isDemo: boolean,
-  networkName: string
+  networkName: string,
+  bypassCache: boolean = false
 ): Promise<{ tokens: TokenData[], network: string, error?: string }> {
   try {
-    const tokens = await getTokenBalances(walletAddress, chainId, isDemo)
+    const tokens = await getTokenBalances(walletAddress, chainId, isDemo, bypassCache)
     return { tokens, network: networkName }
   } catch (error) {
     console.error(`Error fetching balances for ${networkName}:`, error)
@@ -77,7 +79,8 @@ export interface WalletBalanceResult {
 export async function getWalletBalances(
   walletAddressParam?: string,
   solanaWalletAddressParam?: string,
-  chainId: number = 1 // used for pendle markets
+  chainId: number = 1, // used for pendle markets
+  bypassCache: boolean = false // bypass cache for immediate refresh
 ): Promise<WalletBalanceResult> {
   // Use provided wallet address or environment variable
   const walletAddress = walletAddressParam || (await getUserEvmWalletAddress())
@@ -104,7 +107,7 @@ export async function getWalletBalances(
         )
       } else {
         tokenDataPromises.push(
-          getTokenBalancesWithErrorHandling(walletAddress, network.chainId, network.isDemo, network.displayName)
+          getTokenBalancesWithErrorHandling(walletAddress, network.chainId, network.isDemo, network.displayName, bypassCache)
         )
       }
     })
@@ -113,8 +116,27 @@ export async function getWalletBalances(
     // This ensures it's included, as it was in the original tokenBalanceFunctions array.
     // The getTokenBalances function handles the isDemo flag correctly.
     tokenDataPromises.push(
-      getTokenBalancesWithErrorHandling(walletAddress, TENDERLY_DEMO_CONFIG.chainId, true, TENDERLY_DEMO_CONFIG.displayName)
+      getTokenBalancesWithErrorHandling(walletAddress, TENDERLY_DEMO_CONFIG.chainId, true, TENDERLY_DEMO_CONFIG.displayName, bypassCache)
     )
+
+    // Add local fork token balances if in local fork environment
+    if (isLocalForkEnvironment()) {
+      tokenDataPromises.push(
+        (async () => {
+          try {
+            const localForkTokens = await getLocalForkTokenBalances(walletAddress, chainId)
+            return { tokens: localForkTokens, network: 'Local Fork' }
+          } catch (error) {
+            console.warn('Failed to fetch local fork tokens:', error)
+            return {
+              tokens: [],
+              network: 'Local Fork',
+              error: error instanceof Error ? error.message : 'Unknown error'
+            }
+          }
+        })()
+      )
+    }
 
     const allTokenDataResults = await Promise.all(tokenDataPromises)
 
@@ -162,5 +184,31 @@ export async function getWalletBalances(
   } catch (error) {
     console.error('Error fetching wallet balances:', error)
     throw error
+  }
+}
+
+/**
+ * Refresh balances for specific tokens immediately (bypass cache)
+ * @param tokenAddresses Array of token addresses to refresh
+ * @param userAddress User's wallet address
+ * @param chainId Chain ID where the tokens are located
+ * @param isDemo Whether this is a demo environment
+ */
+export async function refreshSpecificTokens(
+  tokenAddresses: string[],
+  userAddress: string,
+  chainId: number,
+  isDemo: boolean = false
+): Promise<void> {
+  try {
+    console.log(`Refreshing balances for ${tokenAddresses.length} tokens on chain ${chainId}`)
+    
+    // Force a fresh balance fetch with cache bypass
+    await getWalletBalances(userAddress, undefined, chainId, true)
+    
+    console.log('Token balances refreshed successfully')
+  } catch (error) {
+    console.error('Failed to refresh specific token balances:', error)
+    // Don't throw - this is a best-effort enhancement
   }
 }

@@ -106,7 +106,7 @@ const PENDLE_CONFIG = {
   
   // Slippage Configuration
   DEFAULT_SLIPPAGE: 0.01,        // 1% default slippage
-  DEMO_SLIPPAGE: 0.3,            // 30% slippage for demo mode
+  DEMO_SLIPPAGE: 0.1,            // 10% slippage for demo mode
   MAX_SLIPPAGE: 0.1,             // 10% maximum allowed slippage
   MIN_SLIPPAGE: 0.001,           // 0.1% minimum slippage
   
@@ -351,7 +351,7 @@ function classifyAsset(name: string): {
   const nameLower = name.toLowerCase();
   
   // True stablecoins (lowest risk)
-  if (nameLower.includes('usde') || nameLower.includes('susde') || 
+  if ((nameLower.includes('usde') && !nameLower.includes('tusde')) || nameLower.includes('susde') || 
       nameLower.includes('usdc') || nameLower.includes('usdt') || 
       nameLower.includes('dai') || nameLower.includes('xusd') || 
       nameLower.includes('yusd') || nameLower.includes('usn') ||
@@ -452,13 +452,17 @@ export const pendleOpportunitiesTool = tool({
       .boolean()
       .optional()
       .describe('If true, only return true stablecoins (USDC, USDT, DAI, sUSDe, etc.). Default false.'),
+    exclude_stablecoins: z
+      .boolean()
+      .optional()
+      .describe('If true, exclude all stablecoin pools and only show volatile/yield-bearing assets. Default false.'),
     sort_by: z
       .enum(['recommended', 'apy', 'liquidity', 'newest'])
       .default('recommended')
       .describe('Sort results by: "recommended" (smart scoring), "apy" (highest APY first), "liquidity" (highest liquidity first), or "newest" (latest pools first).')
   }),
   execute: async (params, context: ToolContext) => {
-    const { max_results, apy_gte, apy_lte, stablecoins_only, sort_by } = params;
+    const { max_results, apy_gte, apy_lte, stablecoins_only, exclude_stablecoins, sort_by } = params;
     const networkContext = context?.networkContext;
     
     if (!networkContext?.selectedChainId) {
@@ -499,9 +503,11 @@ export const pendleOpportunitiesTool = tool({
       if (decimal_apy_lte !== undefined)
         filtered = filtered.filter(o => o.impliedApy <= decimal_apy_lte!)
       
-      // Apply stablecoin filter if requested
+      // Apply stablecoin filters if requested
       if (stablecoins_only) {
         filtered = filtered.filter(o => o.classification.isStablecoin);
+      } else if (exclude_stablecoins) {
+        filtered = filtered.filter(o => !o.classification.isStablecoin);
       }
 
       // Sort based on user preference
@@ -549,6 +555,8 @@ export const pendleOpportunitiesTool = tool({
       
       if (stablecoins_only) {
         summary += ', stablecoins only';
+      } else if (exclude_stablecoins) {
+        summary += ', excluding stablecoins';
       }
       
       const stablecoinCount = results.filter(r => r.classification.isStablecoin).length;
@@ -572,6 +580,7 @@ export const pendleOpportunitiesTool = tool({
         apy_gte,
         apy_lte,
         stablecoins_only,
+        exclude_stablecoins,
         sort_by
       }
       

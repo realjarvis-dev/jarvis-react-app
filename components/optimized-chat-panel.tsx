@@ -434,7 +434,7 @@ export function ChatPanel({
               >
                 <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto hide-scrollbar">
                   <SearchModeToggle />
-                  <WithTooltip tooltipText="Enter Demo Mode: no gas, no losses, just learning. Demo network is refreshed every 7 days.">
+                  <WithTooltip tooltipText="Enter Demo Mode: no gas, no losses, just learning. Demo network is refreshed every day.">
                     <DemoToggle />
                   </WithTooltip>
                   <ChainSelector />

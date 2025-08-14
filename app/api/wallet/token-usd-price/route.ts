@@ -17,15 +17,20 @@ export async function GET(request: Request) {
     }
     const walletAddress = await getUserEvmWalletAddress()
     const solanaWalletAddress = await getUserSolWalletAddress()
-    if (!walletAddress || !solanaWalletAddress) {
-        return NextResponse.json({ error: 'User does not have an Ethereum wallet' }, { status: 400 })
+    
+    // Check if user has at least one wallet
+    if (!walletAddress && !solanaWalletAddress) {
+        return NextResponse.json({ error: 'User does not have any wallet connected' }, { status: 400 })
     }
     let usdBalance = 0
     try {
-        if (networkConfig.id === 'solana') {
+        if (networkConfig.id === 'solana' && solanaWalletAddress) {
             usdBalance = await computeUserUsdBalance(solanaWalletAddress, networkConfig.chainId, networkConfig.isDemo)
-        } else {
+        } else if (walletAddress) {
             usdBalance = await computeUserUsdBalance(walletAddress, networkConfig.chainId, networkConfig.isDemo)
+        } else {
+            console.log('No appropriate wallet for current network configuration')
+            usdBalance = 0
         }
     } catch (error) {
         console.error('Error computing USD balance:', error)

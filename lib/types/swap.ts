@@ -12,7 +12,8 @@ export type EnsoSwapInput = {
     tokenOut: string,
     fromAddress: string,
     amountIn: string,
-    slippage: number
+    slippage: number,
+    destinationChainId?: number
 }
 
 /** 
@@ -26,6 +27,28 @@ export type EnsoSwapETHToPTInput = {
     fromAddress: string,
     amountIn: string,
     slippage: number
+}
+
+export type EnsoSwapOutput = {
+    amountOut: string[]
+    gas: string
+    tx: {
+        to: string
+        data: string
+        value: string
+        gas: string
+    }
+    route: {
+        protocol: string
+        action: string
+        tokenIn: string
+        tokenOut: string
+        amountIn: string
+        amountOut: string
+        gas: string
+    }[]
+    priceImpact?: string
+    feeAmount?: string
 }
 
 /**

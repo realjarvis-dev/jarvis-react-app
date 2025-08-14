@@ -1,14 +1,4 @@
-import {
-  BarChart,
-  DollarSign,
-  Film,
-  Lightbulb,
-  Link,
-  RefreshCw,
-  Search,
-  Target,
-  TrendingUp
-} from 'lucide-react'
+import { DollarSign, Link, Search, Film, Lightbulb, TrendingUp, BarChart, Target, RefreshCw } from 'lucide-react'
 import React from 'react'
 import { Badge } from './ui/badge'
 

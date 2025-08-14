@@ -1,36 +1,32 @@
 import axios from 'axios'
-import { EnsoSwapInput, EnsoTxInput, EnsoSwapETHToPTInput } from '../types/swap'
+import { EnsoSwapInput, EnsoTxInput, EnsoSwapETHToPTInput, EnsoSwapOutput } from '../types/swap'
 import { parseUnits } from 'viem'
 
 export async function ensoSwap(input: EnsoSwapInput) {
-  const { chainId, tokenIn, tokenOut, fromAddress, amountIn, slippage } = input
+  const { chainId, tokenIn, tokenOut, fromAddress, amountIn, slippage, destinationChainId } = input
 
   // enso use 100 for 1%, original slippage was 0.01 for 1%
   const convertedSlippage = slippage * 10000
 
-  const txData = await axios.post(
+  const txData = await axios.get(
     'https://api.enso.finance/api/v1/shortcuts/route',
     {
-      chainId: chainId,
-      fromAddress,
-      routingStrategy: 'router',
-      receiver: fromAddress,
-      spender: fromAddress,
-      tokenIn: [tokenIn],
-      amountIn: [amountIn],
-      tokenOut: [tokenOut],
-      slippage: convertedSlippage.toString()
-    },
-    {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${process.env.ENSO_API_KEY}`
+      params: {
+        chainId: chainId,
+        fromAddress,
+        routingStrategy: 'router',
+        receiver: fromAddress,
+        spender: fromAddress,
+        tokenIn: [tokenIn],
+        amountIn: [amountIn],
+        tokenOut: [tokenOut],
+        slippage: convertedSlippage.toString(),
+        destinationChainId: destinationChainId || undefined
       }
     }
   )
-  console.log(JSON.stringify(txData.data, null, 2))
 
-  return txData.data.tx as EnsoTxInput
+  return txData.data as EnsoSwapOutput
 }
 
 export async function ensoSwapEthToToken(input: EnsoSwapETHToPTInput) {
