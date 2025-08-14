@@ -246,6 +246,15 @@ export async function executeDeposit(
       
       // Check if it's a gas-related error and provide more specific error message
       const errorMessage = txError instanceof Error ? txError.message : String(txError);
+      
+      // Handle nonce-related errors specifically
+      if (errorMessage.includes('nonce') || errorMessage.includes('NONCE_EXPIRED') || errorMessage.includes('nonce too low')) {
+        console.error("[Kodiak Deposit] Nonce-related error detected:", errorMessage);
+        // For nonce errors, we should not retry as the transaction may have actually succeeded
+        // Let the error propagate to inform user to check transaction status
+        throw txError;
+      }
+      
       if (errorMessage.includes('gas') || errorMessage.includes('insufficient') || errorMessage.includes('cumulative')) {
         console.error("[Kodiak Deposit] Gas-related error detected. Consider retrying with higher gas limit.");
         
@@ -254,6 +263,10 @@ export async function executeDeposit(
           console.log("[Kodiak Deposit] Attempting retry with increased gas limit...");
           try {
             const retryGasLimit = BigInt(1500000); // 1.5M gas for retry
+            
+            // Get fresh nonce for retry (previous nonce was consumed by failed tx)
+            const retryNonce = await provider.getTransactionCount(userAddress as `0x${string}`, "pending");
+            console.log(`[Kodiak Deposit] Using fresh nonce for retry: ${retryNonce} (original was ${correctNonce})`);
             
             const { encoding: retryEncoding, signedTransaction: retrySignedTx } = await privy.walletApi.ethereum.signTransaction({
               walletId: wallet.id,
@@ -265,7 +278,7 @@ export async function executeDeposit(
                 gasLimit: ethers.toQuantity(retryGasLimit) as `0x${string}`,
                 maxFeePerGas: ethers.toQuantity(maxFee + priority) as `0x${string}`,
                 maxPriorityFeePerGas: ethers.toQuantity(priority) as `0x${string}`,
-                nonce: correctNonce,
+                nonce: retryNonce,
               },
               idempotencyKey: uuidv4() // New idempotency key for retry
             });
