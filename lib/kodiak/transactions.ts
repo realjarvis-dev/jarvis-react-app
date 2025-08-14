@@ -162,8 +162,18 @@ export async function executeDeposit(
       routeData: quoteResult.methodParameters!.calldata
     };
     
+    // Calculate reasonable minSharesReceived based on deposit size
+    const reasonableMinShares = calculateReasonableMinShares(
+      totalAmount.toString(), 
+      params.minSharesReceived
+    );
+    
+    if (reasonableMinShares !== params.minSharesReceived) {
+      console.log(`[Kodiak Deposit] Adjusted minSharesReceived from ${params.minSharesReceived} to ${reasonableMinShares} for small deposit`);
+    }
+    
     // For minSharesReceived, we should parse it with 18 decimals as LP tokens typically use 18 decimals
-    const minSharesReceived = ethers.parseUnits(params.minSharesReceived, 18);
+    const minSharesReceived = ethers.parseUnits(reasonableMinShares, 18);
     
     // Debug logging for swap parameters
     console.log("[Kodiak Deposit] Swap parameters:", {
@@ -172,6 +182,8 @@ export async function executeDeposit(
       zeroForOne: swapParams.zeroForOne,
       totalAmount: totalAmount.toString(),
       minShares: minSharesReceived.toString(),
+      minSharesDecimal: reasonableMinShares,
+      originalMinShares: params.minSharesReceived,
       originalSlippageBPS: params.slippageBPS,
       adjustedSlippageBPS: adjustedSlippageBPS,
       quoteAmount: quoteResult.quote,
@@ -380,6 +392,41 @@ export async function executeDeposit(
       status: 'fail',
       error_message: error instanceof Error ? error.message : String(error)
     };
+  }
+}
+
+/**
+ * Calculate reasonable minimum shares based on deposit amount
+ * @param totalAmountString Total amount being deposited (in wei as string)
+ * @param originalMinShares Original minimum shares parameter
+ * @returns Adjusted minimum shares as string
+ */
+function calculateReasonableMinShares(totalAmountString: string, originalMinShares: string): string {
+  try {
+    const totalAmount = BigInt(totalAmountString);
+    
+    // For very small deposits, use a much smaller minimum shares expectation
+    // This is a rough heuristic - in practice, LP tokens are usually worth more than underlying tokens
+    if (totalAmount < BigInt('1000000000000000')) { // < 0.001 tokens
+      return '0.000001'; // 1e-6 LP tokens minimum
+    }
+    
+    if (totalAmount < BigInt('10000000000000000')) { // < 0.01 tokens  
+      return '0.00001'; // 1e-5 LP tokens minimum
+    }
+    
+    if (totalAmount < BigInt('100000000000000000')) { // < 0.1 tokens
+      return '0.0001'; // 1e-4 LP tokens minimum
+    }
+    
+    if (totalAmount < BigInt('1000000000000000000')) { // < 1 token
+      return '0.001'; // 1e-3 LP tokens minimum
+    }
+    
+    return originalMinShares; // Use original for larger amounts
+  } catch (error) {
+    console.warn(`[Kodiak Deposit] Error calculating min shares, using original: ${error}`);
+    return originalMinShares;
   }
 }
 
