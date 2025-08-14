@@ -142,7 +142,17 @@ export async function executeDeposit(
     // Create RouterSwapParams object
     console.log("quoteResult", quoteResult)
 
-    const minAmountOut = calculateMinAmountOut(quoteResult.quote, params.slippageBPS);
+    // Adjust slippage for small amounts to prevent failures
+    const adjustedSlippageBPS = adjustSlippageForSmallAmounts(
+      swapResult.amountToSwap.toString(), 
+      params.slippageBPS
+    );
+    
+    if (adjustedSlippageBPS > params.slippageBPS) {
+      console.log(`[Kodiak Deposit] Adjusted slippage from ${params.slippageBPS} to ${adjustedSlippageBPS} BPS for small amount`);
+    }
+    
+    const minAmountOut = calculateMinAmountOut(quoteResult.quote, adjustedSlippageBPS);
     const swapParams = {
       // zeroForOne should be true if we're swapping token0 for token1
       // This matches the isToken0 flag which indicates if the input token is token0
@@ -152,15 +162,40 @@ export async function executeDeposit(
       routeData: quoteResult.methodParameters!.calldata
     };
     
+    // Calculate reasonable minSharesReceived based on deposit size
+    const reasonableMinShares = calculateReasonableMinShares(
+      totalAmount.toString(), 
+      params.minSharesReceived
+    );
+    
+    if (reasonableMinShares !== params.minSharesReceived) {
+      console.log(`[Kodiak Deposit] Adjusted minSharesReceived from ${params.minSharesReceived} to ${reasonableMinShares} for small deposit`);
+    }
+    
+    // For minSharesReceived, we should parse it with 18 decimals as LP tokens typically use 18 decimals
+    const minSharesReceived = ethers.parseUnits(reasonableMinShares, 18);
+    
+    // Debug logging for swap parameters
+    console.log("[Kodiak Deposit] Swap parameters:", {
+      amountIn: swapParams.amountIn,
+      minAmountOut: swapParams.minAmountOut,
+      zeroForOne: swapParams.zeroForOne,
+      totalAmount: totalAmount.toString(),
+      minShares: minSharesReceived.toString(),
+      minSharesDecimal: reasonableMinShares,
+      originalMinShares: params.minSharesReceived,
+      originalSlippageBPS: params.slippageBPS,
+      adjustedSlippageBPS: adjustedSlippageBPS,
+      quoteAmount: quoteResult.quote,
+      routeDataLength: swapParams.routeData?.length || 0
+    });
+    
     // Create contract instance
     const kodiakRouter = new ethers.Contract(
       KODIAK_ROUTER_ADDRESS,
       KODIAK_ROUTER_FULL_ABI,
       provider
     );
-    
-    // For minSharesReceived, we should still parse it with 18 decimals as LP tokens typically use 18 decimals
-    const minSharesReceived = ethers.parseUnits(params.minSharesReceived, 18);
 
     console.log("sending txRequest")
     console.log("params.islandAddress", params.islandAddress)
@@ -198,6 +233,52 @@ export async function executeDeposit(
     }
     const correctNonce = await provider.getTransactionCount(userAddress as `0x${string}`, "pending");
 
+    // Validate transaction by simulating it first
+    console.log(`[Kodiak Deposit] Simulating transaction before execution...`);
+    try {
+      // Try to simulate the transaction using staticCall to catch revert reasons
+      const result = await provider.call({
+        to: KODIAK_ROUTER_ADDRESS as `0x${string}`,
+        from: userAddress as `0x${string}`,
+        data: depositData as `0x${string}`,
+        value: BigInt(0)
+      });
+      console.log(`[Kodiak Deposit] Transaction simulation successful`);
+    } catch (simulationError) {
+      console.error(`[Kodiak Deposit] Transaction simulation failed:`, simulationError);
+      
+      // Extract revert reason if available
+      const simErrorMessage = simulationError instanceof Error ? simulationError.message : String(simulationError);
+      
+      // Common revert reasons and fixes
+      if (simErrorMessage.includes('insufficient') || simErrorMessage.includes('allowance')) {
+        throw new Error('Insufficient token allowance. Please ensure token approval completed successfully.');
+      } else if (simErrorMessage.includes('slippage') || simErrorMessage.includes('amount')) {
+        throw new Error('Slippage tolerance too low or invalid swap amounts. Try increasing slippage or adjusting amounts.');
+      } else if (simErrorMessage.includes('deadline')) {
+        throw new Error('Transaction deadline exceeded. Please retry with a longer deadline.');
+      } else {
+        throw new Error(`Transaction would revert: ${simErrorMessage}`);
+      }
+    }
+
+    // Dynamic gas estimation for deposit transaction
+    let gasLimit: bigint;
+    try {
+      const gasEstimate = await provider.estimateGas({
+        to: KODIAK_ROUTER_ADDRESS as `0x${string}`,
+        from: userAddress as `0x${string}`,
+        data: depositData as `0x${string}`,
+        value: BigInt(0)
+      });
+      // Add a 30% buffer for complex swaps (more than approval's 20%)
+      gasLimit = gasEstimate + (gasEstimate * BigInt(3)) / BigInt(10);
+      console.log(`[Kodiak Deposit] Estimated gas: ${gasEstimate}, with buffer: ${gasLimit}`);
+    } catch (gasError) {
+      console.warn(`[Kodiak Deposit] Gas estimation failed, using fallback: ${gasError}`);
+      // Use a higher fallback for complex deposit operations
+      gasLimit = BigInt(1000000); // 1M gas fallback for complex operations
+    }
     
     try {
       // Send deposit transaction using Privy
@@ -208,7 +289,7 @@ export async function executeDeposit(
           data: depositData as `0x${string}`,
           chainId: berachainConfig.chainId,
           from: userAddress as `0x${string}`,
-          gasLimit: 650000,
+          gasLimit: ethers.toQuantity(gasLimit) as `0x${string}`,
           maxFeePerGas: ethers.toQuantity(maxFee + priority) as `0x${string}`,
           maxPriorityFeePerGas: ethers.toQuantity(priority) as `0x${string}`,
           nonce: correctNonce,
@@ -219,6 +300,29 @@ export async function executeDeposit(
       
       const txResponse = await provider.broadcastTransaction(signedTransaction)
       const receipt = await txResponse.wait()
+      
+      // Check if transaction was successful
+      if (receipt && receipt.status === 0) {
+        console.error('[Kodiak Deposit] Transaction mined but reverted in block', receipt.blockNumber);
+        console.error('[Kodiak Deposit] Gas used:', receipt.gasUsed.toString());
+        
+        // Try to get revert reason by replaying the transaction
+        try {
+          await provider.call({
+            to: txResponse.to,
+            from: txResponse.from,
+            data: txResponse.data,
+            blockTag: receipt.blockNumber - 1 // Use block before transaction
+          });
+        } catch (revertError) {
+          const revertReason = revertError instanceof Error ? revertError.message : 'Unknown revert reason';
+          console.error('[Kodiak Deposit] Revert reason:', revertReason);
+          throw new Error(`Transaction reverted: ${revertReason}`);
+        }
+        
+        throw new Error('Transaction was mined but reverted with no clear reason');
+      }
+      
       if (receipt) {
         console.log('[Kodiak Deposit] Mined in block', receipt.blockNumber)
       }
@@ -226,6 +330,61 @@ export async function executeDeposit(
       return { status: 'success', hash: txResponse.hash };
     } catch (txError) {
       console.error("[Kodiak Deposit] Transaction failed:", txError);
+      
+      // Check if it's a gas-related error and provide more specific error message
+      const errorMessage = txError instanceof Error ? txError.message : String(txError);
+      
+      // Handle nonce-related errors specifically
+      if (errorMessage.includes('nonce') || errorMessage.includes('NONCE_EXPIRED') || errorMessage.includes('nonce too low')) {
+        console.error("[Kodiak Deposit] Nonce-related error detected:", errorMessage);
+        // For nonce errors, we should not retry as the transaction may have actually succeeded
+        // Let the error propagate to inform user to check transaction status
+        throw txError;
+      }
+      
+      if (errorMessage.includes('gas') || errorMessage.includes('insufficient') || errorMessage.includes('cumulative')) {
+        console.error("[Kodiak Deposit] Gas-related error detected. Consider retrying with higher gas limit.");
+        
+        // If gas estimation failed initially and we used fallback, try with even higher gas
+        if (gasLimit === BigInt(1000000)) {
+          console.log("[Kodiak Deposit] Attempting retry with increased gas limit...");
+          try {
+            const retryGasLimit = BigInt(1500000); // 1.5M gas for retry
+            
+            // Get fresh nonce for retry (previous nonce was consumed by failed tx)
+            const retryNonce = await provider.getTransactionCount(userAddress as `0x${string}`, "pending");
+            console.log(`[Kodiak Deposit] Using fresh nonce for retry: ${retryNonce} (original was ${correctNonce})`);
+            
+            const { encoding: retryEncoding, signedTransaction: retrySignedTx } = await privy.walletApi.ethereum.signTransaction({
+              walletId: wallet.id,
+              transaction: {
+                to: KODIAK_ROUTER_ADDRESS as `0x${string}`,
+                data: depositData as `0x${string}`,
+                chainId: berachainConfig.chainId,
+                from: userAddress as `0x${string}`,
+                gasLimit: ethers.toQuantity(retryGasLimit) as `0x${string}`,
+                maxFeePerGas: ethers.toQuantity(maxFee + priority) as `0x${string}`,
+                maxPriorityFeePerGas: ethers.toQuantity(priority) as `0x${string}`,
+                nonce: retryNonce,
+              },
+              idempotencyKey: uuidv4() // New idempotency key for retry
+            });
+            
+            const retryTxResponse = await provider.broadcastTransaction(retrySignedTx);
+            const retryReceipt = await retryTxResponse.wait();
+            
+            if (retryReceipt) {
+              console.log('[Kodiak Deposit] Retry successful, mined in block', retryReceipt.blockNumber);
+            }
+            console.log("[Kodiak Deposit] Retry transaction successful with hash:", retryTxResponse.hash);
+            return { status: 'success', hash: retryTxResponse.hash };
+          } catch (retryError) {
+            console.error("[Kodiak Deposit] Retry also failed:", retryError);
+            throw retryError;
+          }
+        }
+      }
+      
       throw txError;
     }
   } catch (error) {
@@ -233,6 +392,74 @@ export async function executeDeposit(
       status: 'fail',
       error_message: error instanceof Error ? error.message : String(error)
     };
+  }
+}
+
+/**
+ * Calculate reasonable minimum shares based on deposit amount
+ * @param totalAmountString Total amount being deposited (in wei as string)
+ * @param originalMinShares Original minimum shares parameter
+ * @returns Adjusted minimum shares as string
+ */
+function calculateReasonableMinShares(totalAmountString: string, originalMinShares: string): string {
+  try {
+    const totalAmount = BigInt(totalAmountString);
+    
+    // For very small deposits, use a much smaller minimum shares expectation
+    // This is a rough heuristic - in practice, LP tokens are usually worth more than underlying tokens
+    if (totalAmount < BigInt('1000000000000000')) { // < 0.001 tokens
+      return '0.000001'; // 1e-6 LP tokens minimum
+    }
+    
+    if (totalAmount < BigInt('10000000000000000')) { // < 0.01 tokens  
+      return '0.00001'; // 1e-5 LP tokens minimum
+    }
+    
+    if (totalAmount < BigInt('100000000000000000')) { // < 0.1 tokens
+      return '0.0001'; // 1e-4 LP tokens minimum
+    }
+    
+    if (totalAmount < BigInt('1000000000000000000')) { // < 1 token
+      return '0.001'; // 1e-3 LP tokens minimum
+    }
+    
+    return originalMinShares; // Use original for larger amounts
+  } catch (error) {
+    console.warn(`[Kodiak Deposit] Error calculating min shares, using original: ${error}`);
+    return originalMinShares;
+  }
+}
+
+/**
+ * Adjust slippage tolerance for small amounts to prevent transaction failures
+ * @param amountToSwap The amount being swapped (as string)
+ * @param originalSlippageBPS Original slippage in basis points
+ * @returns Adjusted slippage in basis points
+ */
+function adjustSlippageForSmallAmounts(amountToSwap: string, originalSlippageBPS: number): number {
+  try {
+    const swapAmount = BigInt(amountToSwap);
+    
+    // For very small amounts (< 1e15 wei, roughly 0.001 tokens with 18 decimals)
+    // increase slippage to account for rounding errors and price impact
+    if (swapAmount < BigInt('1000000000000000')) { // < 0.001 tokens
+      return Math.max(originalSlippageBPS, 200); // At least 2%
+    }
+    
+    // For small amounts (< 1e16 wei, roughly 0.01 tokens)
+    if (swapAmount < BigInt('10000000000000000')) { // < 0.01 tokens  
+      return Math.max(originalSlippageBPS, 150); // At least 1.5%
+    }
+    
+    // For micro amounts (< 1e17 wei, roughly 0.1 tokens)
+    if (swapAmount < BigInt('100000000000000000')) { // < 0.1 tokens
+      return Math.max(originalSlippageBPS, 100); // At least 1%
+    }
+    
+    return originalSlippageBPS; // Use original slippage for larger amounts
+  } catch (error) {
+    console.warn(`[Kodiak Deposit] Error adjusting slippage, using original: ${error}`);
+    return originalSlippageBPS;
   }
 }
 
