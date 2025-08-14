@@ -1,7 +1,7 @@
-import { Network } from 'alchemy-sdk'
-import type { ChainType, NetworkConfig } from './types'
-import { base, mainnet, polygon, optimism, arbitrum, berachain, bsc, sonic, mantle, unichain } from 'viem/chains'
 import { solana } from '@metalayer/viem-chains'
+import { Network } from 'alchemy-sdk'
+import { arbitrum, base, berachain, bsc, mainnet, mantle, optimism, polygon, sonic, unichain } from 'viem/chains'
+import type { ChainType, NetworkConfig } from './types'
 
 // Individual network configurations
 // These objects must match the NetworkConfig interface from types.ts
@@ -238,33 +238,50 @@ export function getAvailableChains(isDemoMode: boolean): ChainType[] {
 }
 
 /**
- * Get a network configuration by its chain ID.
- * This function searches through `allNetworkConfigs`.
- * Note: This does not explicitly return demo configurations unless their chainId is unique and searched.
- * `getActiveNetworkConfig` is the preferred way to get demo-aware configs.
+ * Get a network configuration by its chain ID with proper RPC URL handling.
+ * This function searches through `allNetworkConfigs` and handles TEST_RPC_URL override logic.
  * @param chainId - The chain ID to search for.
- * @returns The `NetworkConfig` if found, otherwise `undefined`.
+ * @param isDemo - Whether this is demo mode (affects RPC URL selection).
+ * @returns The `NetworkConfig` with appropriate RPC URL.
  */
 export function getConfigByChainId(
   chainId: number,
   isDemo: boolean
 ): NetworkConfig {
+  let baseConfig: NetworkConfig;
+  
   if (isDemo) {
-    return TENDERLY_DEMO_CONFIG
-  }
-  if (chainId === LIFI_SOLANA_CHAIN_ID) {
-    return solanaConfig
-  }
-  for (const key in allNetworkConfigs) {
-    const network = allNetworkConfigs[key as ChainType]
-    if (network.chainId === chainId) {
-      return network
+    baseConfig = TENDERLY_DEMO_CONFIG;
+  } else if (chainId === LIFI_SOLANA_CHAIN_ID) {
+    baseConfig = solanaConfig;
+  } else {
+    let found = false;
+    for (const key in allNetworkConfigs) {
+      const network = allNetworkConfigs[key as ChainType];
+      if (network.chainId === chainId) {
+        baseConfig = network;
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      throw new Error(`No network config found for chainId: ${chainId}`);
     }
   }
-  // Optionally, check TENDERLY_DEMO_CONFIG if its chainId might be queried directly
-  // However, be mindful of chainId clashes (e.g., demo using chainId 1)
-  // if (TENDERLY_DEMO_CONFIG.chainId === chainId) {
-  //   return TENDERLY_DEMO_CONFIG;
-  // }
-  throw new Error(`No network config found for chainId: ${chainId}`)
+  
+  // Handle TEST_RPC_URL override - ONLY in demo mode
+  if (isDemo && process.env.TEST_RPC_URL) {
+    console.log(`🔧 Demo mode: Using TEST_RPC_URL override: ${process.env.TEST_RPC_URL}`);
+    return {
+      ...baseConfig!,
+      rpcUrl: process.env.TEST_RPC_URL
+    };
+  }
+  
+  // In production mode, always use the configured RPC URL (ignore TEST_RPC_URL)
+  if (!isDemo && process.env.TEST_RPC_URL) {
+    console.log(`🚫 Production mode: Ignoring TEST_RPC_URL, using configured RPC: ${baseConfig!.rpcUrl}`);
+  }
+  
+  return baseConfig!;
 }

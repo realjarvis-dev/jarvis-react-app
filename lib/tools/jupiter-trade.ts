@@ -9,6 +9,7 @@ import { clusterApiUrl, Connection, SendTransactionError } from '@solana/web3.js
 import { getUserSolWalletAddress } from '../privy/client'
 import * as _ from "lodash";
 import { broadcastSolanaTransaction, signSolanaTransactionString } from '../privy/solana-utils'
+import { withTransactionTimeout, withApiTimeout } from '../utils/tool-timeout'
 
 const commonTokenMap = {
   SOL: 'So11111111111111111111111111111111111111112',
@@ -58,10 +59,10 @@ export const jupiterQuote = tool({
         tokenOutDisplayName: z.string().describe('The name or symbol of the token to buy, for displaying purpose'),
         tokenIn: z.string().describe('The token to sell. You should prefer address if available. Name or symbol is also acceptable.'),
         tokenOut: z.string().describe('The token to buy. You should prefer address if available. Name or symbol is also acceptable.'),
-        amountIn: z.number().describe('The amount of tokenIn in human readable format'),
+        amountIn: z.number().describe('The amount of tokenIn in human readable format')
 
     }),
-    execute: async (params, context: ToolContext) => {
+    execute: withApiTimeout(async (params, context: ToolContext) => {
         const { tokenIn, tokenOut, amountIn } = params
         const userSolanaAddress = await getUserSolWalletAddress()
         
@@ -69,10 +70,14 @@ export const jupiterQuote = tool({
         const tokenInResult = await resolveToken(tokenIn)
         if ('error' in tokenInResult) {
             return {
-                status: tokenInResult.tokenOptions ? "Warning" : "Failed",
-                instruction: tokenInResult.tokenOptions ? "User can choose one of the following tokens" : undefined,
-                tokenOptions: tokenInResult.tokenOptions,
-                error: tokenInResult.error
+                _uiDisplayTool: true,
+                summary: tokenInResult.tokenOptions ? `Multiple ${tokenIn} tokens found` : `Token ${tokenIn} not found`,
+                data: {
+                    status: tokenInResult.tokenOptions ? "Warning" : "Failed",
+                    instruction: tokenInResult.tokenOptions ? "User can choose one of the following tokens" : undefined,
+                    tokenOptions: tokenInResult.tokenOptions,
+                    error: tokenInResult.error
+                }
             }
         }
         const { address: tokenInAddress, decimals: tokenInDecimals } = tokenInResult
@@ -81,10 +86,14 @@ export const jupiterQuote = tool({
         const tokenOutResult = await resolveToken(tokenOut)
         if ('error' in tokenOutResult) {
             return {
-                status: tokenOutResult.tokenOptions ? "Warning" : "Failed",
-                instruction: tokenOutResult.tokenOptions ? "User can choose one of the following tokens" : undefined,
-                tokenOptions: tokenOutResult.tokenOptions,
-                error: tokenOutResult.error
+                _uiDisplayTool: true,
+                summary: tokenOutResult.tokenOptions ? `Multiple ${tokenOut} tokens found` : `Token ${tokenOut} not found`,
+                data: {
+                    status: tokenOutResult.tokenOptions ? "Warning" : "Failed",
+                    instruction: tokenOutResult.tokenOptions ? "User can choose one of the following tokens" : undefined,
+                    tokenOptions: tokenOutResult.tokenOptions,
+                    error: tokenOutResult.error
+                }
             }
         }
         const { address: tokenOutAddress, decimals: tokenOutDecimals } = tokenOutResult
@@ -110,8 +119,15 @@ export const jupiterQuote = tool({
                 })
             } catch (error) {
                 return {
-                    status: "Failed",
-                    error: "Failed to get quote"
+                    _uiDisplayTool: true,
+                    summary: "Jupiter quote failed",
+                    data: {
+                        status: "Failed",
+                        error: "Failed to get quote",
+                        tokenIn: params.tokenInDisplayName,
+                        tokenOut: params.tokenOutDisplayName,
+                        amountIn: params.amountIn
+                    }
                 }
             }
             
@@ -131,33 +147,35 @@ export const jupiterQuote = tool({
         const amountOut = formatUnits(BigInt(quoteResult.outAmount), tokenOutDecimals)
         const enoughBalance = quoteResult.transaction && quoteResult.transaction !== ""
         return {
-            status: "Success",
-            instruction: enoughBalance ? "User has enough balance, you can ask if they want to proceed with the trade" : `User does not have enough balance of ${tokenIn} to trade ${amountIn} ${tokenIn}`,
-            swapDetails: {
-                amountOut: amountOut,
-                networkFee: networkFee || 0,
-                numMarkets: numMarkets,
-                routeMarketNames: allMarkets,
-                routeMarketAddresses: allMarketAddresses,
-                tokenOutDecimals: tokenOutDecimals,
-                tokenOutAddress: tokenOutAddress,
-                amountIn: amountIn,
-                tokenInAddress: tokenInAddress,
-                tokenInDecimals: tokenInDecimals,
-                router: quoteResult.router,
-                priceImpactPct: quoteResult.priceImpact,
-                amountInUsd: quoteResult.inUsdValue,
-                amountOutUsd: quoteResult.outUsdValue,
-                feeBps: quoteResult.feeBps,
-                completeTime: new Date().toISOString()
-                
+            _uiDisplayTool: true,
+            summary: enoughBalance ? `${params.tokenInDisplayName} → ${params.tokenOutDisplayName}: ${amountOut} ${params.tokenOutDisplayName}` : `Insufficient ${params.tokenInDisplayName} balance`,
+            data: {
+                status: "Success",
+                instruction: enoughBalance ? "User has enough balance, you can ask if they want to proceed with the trade" : `User does not have enough balance of ${tokenIn} to trade ${amountIn} ${tokenIn}`,
+                swapDetails: {
+                    amountOut: amountOut,
+                    networkFee: networkFee || 0,
+                    numMarkets: numMarkets,
+                    routeMarketNames: allMarkets,
+                    routeMarketAddresses: allMarketAddresses,
+                    tokenOutDecimals: tokenOutDecimals,
+                    tokenOutAddress: tokenOutAddress,
+                    amountIn: amountIn,
+                    tokenInAddress: tokenInAddress,
+                    tokenInDecimals: tokenInDecimals,
+                    router: quoteResult.router,
+                    priceImpactPct: quoteResult.priceImpact,
+                    amountInUsd: quoteResult.inUsdValue,
+                    amountOutUsd: quoteResult.outUsdValue,
+                    feeBps: quoteResult.feeBps,
+                    completeTime: new Date().toISOString()
+                }
             }
-            
         }
         
         
 
-    }
+    }, 'Jupiter Quote')
 })
 
 export const jupiterExecute = tool({
@@ -170,8 +188,12 @@ export const jupiterExecute = tool({
         amountIn: z.number().describe('The amount of tokenIn in human readable format'),
         tokenInDecimals: z.number().describe('The decimals of the token to sell'),
         tokenOutDecimals: z.number().describe('The decimals of the token to buy'),
+        confirmed_high_price_impact: z
+          .boolean()
+          .optional()
+          .describe('Set to true if user has confirmed they want to proceed despite high price impact warning.')
     }),
-    execute: async (params, context: ToolContext) => {
+    execute: withTransactionTimeout(async (params, context: ToolContext) => {
         try {
         const { tokenInAddress, tokenOutAddress, amountIn, tokenInDecimals, tokenOutDecimals, tokenInDisplayName } = params
         const amountInLamports = parseUnits(amountIn.toString(), tokenInDecimals)
@@ -195,21 +217,42 @@ export const jupiterExecute = tool({
                     swapMode: "ExactIn"
                 })
                 return {
-                    status: "Failed",
-                    error: `Insufficient ${tokenInDisplayName}`
+                    _uiDisplayTool: true,
+                    summary: `Jupiter swap failed: Insufficient ${tokenInDisplayName}`,
+                    data: {
+                        status: "Failed",
+                        error: `Insufficient ${tokenInDisplayName}`,
+                        tokenIn: params.tokenInDisplayName,
+                        tokenOut: params.tokenOutDisplayName,
+                        amountIn: params.amountIn
+                    }
                 }
             } catch (error) {
             return {
-                status: "Failed",
-                error: "Failed to execute. No route found."
+                _uiDisplayTool: true,
+                summary: "Jupiter swap failed: No route found",
+                data: {
+                    status: "Failed",
+                    error: "Failed to execute. No route found.",
+                    tokenIn: params.tokenInDisplayName,
+                    tokenOut: params.tokenOutDisplayName,
+                    amountIn: params.amountIn
+                }
             }
         }
     }
 
     if (!quoteResult.transaction || quoteResult.transaction === "") {
         return {
-            status: "Failed",
-            error: "Failed to execute. No route found."
+            _uiDisplayTool: true,
+            summary: "Jupiter swap failed: No route found",
+            data: {
+                status: "Failed",
+                error: "Failed to execute. No route found.",
+                tokenIn: params.tokenInDisplayName,
+                tokenOut: params.tokenOutDisplayName,
+                amountIn: params.amountIn
+            }
         }
     }
 
@@ -222,43 +265,75 @@ export const jupiterExecute = tool({
         const amountOut = formatUnits(BigInt(quoteResult.outAmount), tokenOutDecimals)
         const explorerUrl = `https://solscan.io/tx/${txid}`
         return {
-            status: "Success",
-            swapDetails: {
-                signature: txid,
-                explorerUrl: explorerUrl,
-                amountIn: amountIn,
-                amountOut: amountOut,
-                amountInUsd: quoteResult.inUsdValue,
-                amountOutUsd: quoteResult.outUsdValue,
-                completeTime: new Date().toISOString()
+            _uiDisplayTool: true,
+            summary: `Jupiter swap successful: ${params.tokenInDisplayName} → ${params.tokenOutDisplayName}`,
+            data: {
+                status: "Success",
+                swapDetails: {
+                    signature: txid,
+                    explorerUrl: explorerUrl,
+                    amountIn: amountIn,
+                    amountOut: amountOut,
+                    amountInUsd: quoteResult.inUsdValue,
+                    amountOutUsd: quoteResult.outUsdValue,
+                    completeTime: new Date().toISOString()
+                }
             }
         }
     } else {
         return {
-            status: "Failed",
-            error: "Failed to execute. "
+            _uiDisplayTool: true,
+            summary: "Jupiter swap failed: Transaction failed",
+            data: {
+                status: "Failed",
+                error: "Failed to execute. ",
+                tokenIn: params.tokenInDisplayName,
+                tokenOut: params.tokenOutDisplayName,
+                amountIn: params.amountIn
+            }
         }
     }
     } catch (error) {
         if (error instanceof SendTransactionError) {
             console.error(error)
             return {
-                status: "Failed",
-                error: "Failed to execute. " + (error as Error).message
+                _uiDisplayTool: true,
+                summary: "Jupiter swap failed: Send transaction error",
+                data: {
+                    status: "Failed",
+                    error: "Failed to execute. " + (error as Error).message,
+                    tokenIn: params.tokenInDisplayName,
+                    tokenOut: params.tokenOutDisplayName,
+                    amountIn: params.amountIn
+                }
             }
         }
         return {
-            status: "Failed",
-            error: "Failed to execute. " + (error as Error).message
+            _uiDisplayTool: true,
+            summary: "Jupiter swap failed: Execution error",
+            data: {
+                status: "Failed",
+                error: "Failed to execute. " + (error as Error).message,
+                tokenIn: params.tokenInDisplayName,
+                tokenOut: params.tokenOutDisplayName,
+                amountIn: params.amountIn
+            }
         }
     }
     }
     catch (error) {
         console.error(error)
         return {
-            status: "Failed",
-            error: "Failed to execute. " + (error as Error).message
+            _uiDisplayTool: true,
+            summary: "Jupiter swap failed: Unexpected error",
+            data: {
+                status: "Failed",
+                error: "Failed to execute. " + (error as Error).message,
+                tokenIn: params.tokenInDisplayName,
+                tokenOut: params.tokenOutDisplayName,
+                amountIn: params.amountIn
+            }
         }
     }
-}
+}, 'Jupiter Execute')
 })
