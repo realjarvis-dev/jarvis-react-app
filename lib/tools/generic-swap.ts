@@ -10,6 +10,7 @@ import { parseUsdAmount, getUsdSupportDescription, createUsdConversionInfo, getE
 import { erc20Approval, executeTransaction } from '../privy/utils';
 import { getUserEvmWalletAddress } from '../privy/client';
 import { NetworkContext } from '../types/context';
+import { withTransactionTimeout } from '../utils/tool-timeout';
 
 interface ToolContext {
   toolCallId?: string
@@ -61,7 +62,7 @@ export const genericSwapTool = tool({
     "swap ETH to USDC", "convert ETH to DAI", "trade ETH for tokens", or "exchange ETH for BERA".
     `,
   parameters: parameters,
-  execute: async (params, context: ToolContext) => {
+  execute: withTransactionTimeout(async (params, context: ToolContext) => {
     const networkContext = context?.networkContext;
     
     const {
@@ -185,46 +186,53 @@ export const genericSwapTool = tool({
       const completeTime = new Date().toISOString()
 
       return {
-        success: true,
-        transaction_hash: result.hash,
-        swap_details: {
-          protocol: 'none',
-          from_token_symbol: upperTokenInSymbol,
-          from_token_address:
-            actualTokenInAddress ===
-            '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
-              ? 'ETH'
-              : actualTokenInAddress,
-          to_token_symbol:
-            tokenOutSymbol ||
-            ethers.getAddress(tokenOutAddress.toLowerCase()).slice(0, 6) +
-              '...',
-          to_token_address: ethers.getAddress(tokenOutAddress.toLowerCase()),
-          amount_in_human: amountInHuman,
-          amount_in_base_units: amountInBaseUnits,
-          chain_id: effectiveChainId,
-          complete_time: completeTime,
-          usd_conversion: createUsdConversionInfo(usdConversionResult)
+        _uiDisplayTool: true,
+        summary: `Generic swap successful: ${upperTokenInSymbol} → ${tokenOutSymbol}`,
+        data: {
+          success: true,
+          transaction_hash: result.hash,
+          swap_details: {
+            protocol: 'none',
+            from_token_symbol: upperTokenInSymbol,
+            from_token_address:
+              actualTokenInAddress ===
+              '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
+                ? 'ETH'
+                : actualTokenInAddress,
+            to_token_symbol:
+              tokenOutSymbol ||
+              ethers.getAddress(tokenOutAddress.toLowerCase()).slice(0, 6) +
+                '...',
+            to_token_address: ethers.getAddress(tokenOutAddress.toLowerCase()),
+            amount_in_human: amountInHuman,
+            amount_in_base_units: amountInBaseUnits,
+            chain_id: effectiveChainId,
+            complete_time: completeTime,
+            usd_conversion: createUsdConversionInfo(usdConversionResult)
+          }
         }
       }
     } catch (error: any) {
         console.log(error)
       return {
-
-        success: false,
-        error: error.message || 'Failed to execute generic swap.',
-        swap_details: {
-          // Provide as much detail as possible even in failure
-          protocol: 'none',
-          from_token_symbol: tokenInSymbol?.toUpperCase(),
-          from_token_address: tokenInAddress,
-          to_token_address: tokenOutAddress,
-          amount_in_human: amountInHuman,
-          chain_id: effectiveChainId
+        _uiDisplayTool: true,
+        summary: `Generic swap failed: ${tokenInSymbol?.toUpperCase()} → ${tokenOutSymbol}`,
+        data: {
+          success: false,
+          error: error.message || 'Failed to execute generic swap.',
+          swap_details: {
+            // Provide as much detail as possible even in failure
+            protocol: 'none',
+            from_token_symbol: tokenInSymbol?.toUpperCase(),
+            from_token_address: tokenInAddress,
+            to_token_address: tokenOutAddress,
+            amount_in_human: amountInHuman,
+            chain_id: effectiveChainId
+          }
         }
       }
     }
-  }
+  }, 'Generic Swap')
 })
 const appendFileAsync = promisify(appendFile)
 async function logToFile(path: string, message: string) {

@@ -26,7 +26,7 @@ export async function getERC20Details(
 ): Promise<{ decimals: number; symbol: string; name: string }> {
   try {
     const provider = new ethers.JsonRpcProvider(
-      process.env.TEST_RPC_URL || getConfigByChainId(chainId, false).rpcUrl
+      getConfigByChainId(chainId, false).rpcUrl
     )
     const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider)
     const [decimals, symbol, name] = await Promise.all([
@@ -61,7 +61,7 @@ export async function erc20Transfer(
   timeoutMs: number = 60000
 ): Promise<{ status: string; hash?: string; message?: string; timeout?: boolean }> {
   const provider = new ethers.JsonRpcProvider(
-    process.env.TEST_RPC_URL || getConfigByChainId(chainId, isDemo).rpcUrl
+    getConfigByChainId(chainId, isDemo).rpcUrl
   )
   const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider)
   const transferData = tokenContract.interface.encodeFunctionData('transfer', [
@@ -130,13 +130,10 @@ export async function erc20Approval(
   chainId: number,
   isDemo: boolean
 ): Promise<{ status: string; hash?: string; message?: string }> {
-  // default to use the TEST_RPC_URL in env
-  // on localhost can put 127.0.0.1:8545 for local testing
-  // TODO: on deployment have to remove the TEST_RPC_URL for multichain support
   const provider = new ethers.JsonRpcProvider(
-    process.env.TEST_RPC_URL || getConfigByChainId(chainId, isDemo).rpcUrl
+    getConfigByChainId(chainId, isDemo).rpcUrl
   )
-  console.log(process.env.TEST_RPC_URL || getConfigByChainId(chainId, isDemo).rpcUrl)
+  console.log('Using RPC URL:', getConfigByChainId(chainId, isDemo).rpcUrl)
   const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider)
   const allowance = await tokenContract.allowance(userAddress, spenderAddress)
   console.log("allowance", allowance)
@@ -240,7 +237,7 @@ export async function signTransaction(
   }
 
   // Get provider for gas estimation
-  const rpcUrl = process.env.TEST_RPC_URL || getConfigByChainId(chainId, isDemo).rpcUrl
+  const rpcUrl = getConfigByChainId(chainId, isDemo).rpcUrl
   console.log('Using RPC URL:', rpcUrl)
   
   // Check if this is a Tenderly RPC URL and add appropriate configuration
@@ -344,6 +341,32 @@ export async function signTransaction(
     gasLimit = ethers.toQuantity(
       gasEstimate + gasEstimate / BigInt(5)
     ) as `0x${string}`
+    
+    // Check if user has enough balance to cover gas fees + transaction value
+    const userBalance = await provider.getBalance(userAddress);
+    const transactionValue = BigInt(txData.value || '0');
+    const gasLimitBigInt = BigInt(gasLimit);
+    
+    let totalGasCost: bigint;
+    if (isLegacyGasModeChain) {
+      totalGasCost = gasLimitBigInt * fixGasPrice;
+    } else {
+      totalGasCost = gasLimitBigInt * maxFeePerGas;
+    }
+    
+    const totalCost = transactionValue + totalGasCost;
+    
+    if (userBalance < totalCost) {
+      const gasCostInEth = ethers.formatEther(totalGasCost);
+      const balanceInEth = ethers.formatEther(userBalance);
+      const shortfallInEth = ethers.formatEther(totalCost - userBalance);
+      
+      throw new Error(
+        `Insufficient balance for transaction. Your balance: ${balanceInEth} ETH. ` +
+        `Required: ${ethers.formatEther(totalCost)} ETH (${ethers.formatEther(transactionValue)} ETH transaction + ${gasCostInEth} ETH gas fees). ` +
+        `You need ${shortfallInEth} ETH more.`
+      );
+    }
   } else {
     // Use higher gas limit for complex transactions when estimation is disabled
     const fallbackGasLimit = isDemo ? 3000000 : 1000000
@@ -478,6 +501,29 @@ export async function broadcastTransaction(
       )
     ])
 
+    // Check if transaction was successful
+    if (receipt && receipt.status === 0) {
+      console.error('Transaction mined but reverted in block', receipt.blockNumber);
+      console.error('Gas used:', receipt.gasUsed.toString());
+      
+      // Try to get revert reason by replaying the transaction
+      let revertReason = 'Transaction reverted with no revert reason';
+      try {
+        await provider.call({
+          to: txResponse.to,
+          from: txResponse.from,
+          data: txResponse.data,
+          value: txResponse.value,
+          blockTag: receipt.blockNumber - 1 // Use block before transaction
+        });
+      } catch (revertError) {
+        revertReason = revertError instanceof Error ? revertError.message : 'Unknown revert reason';
+        console.error('Revert reason:', revertReason);
+      }
+      
+      throw new Error(`Transaction was mined but reverted: ${revertReason}`);
+    }
+
     return {
       hash: txResponse.hash,
       receipt
@@ -495,6 +541,53 @@ export async function broadcastTransaction(
       reason: error.reason,
       revert: error.revert
     })
+    
+    // Handle CALL_EXCEPTION with receipt (transaction was mined but reverted)
+    if (error.code === 'CALL_EXCEPTION' && error.receipt) {
+      const receipt = error.receipt;
+      console.error('Transaction was mined but reverted:', {
+        hash: receipt.hash,
+        blockNumber: receipt.blockNumber,
+        gasUsed: receipt.gasUsed.toString(),
+        status: receipt.status
+      });
+      
+      // Try to get revert reason by replaying the transaction
+      let revertReason = 'Transaction reverted with no revert reason';
+      try {
+        if (error.transaction && hash) {
+          const provider = new ethers.JsonRpcProvider(getConfigByChainId(1, false).rpcUrl);
+          await provider.call({
+            to: error.transaction.to,
+            from: error.transaction.from,
+            data: error.transaction.data,
+            value: error.transaction.value || '0x0',
+            blockTag: receipt.blockNumber - 1
+          });
+        }
+      } catch (revertError) {
+        revertReason = revertError instanceof Error ? revertError.message : 'Unknown revert reason';
+        console.error('Detailed revert reason:', revertReason);
+      }
+      
+      // Provide specific error messages based on common revert patterns
+      let specificReason = revertReason;
+      if (revertReason.includes('slippage') || revertReason.includes('SLIPPAGE_EXCEEDED')) {
+        specificReason = 'Transaction reverted due to slippage. Try increasing slippage tolerance or waiting for better market conditions.';
+      } else if (revertReason.includes('INSUFFICIENT_OUTPUT_AMOUNT')) {
+        specificReason = 'Transaction reverted because expected output amount was not met. Price moved unfavorably during execution.';
+      } else if (revertReason.includes('EXPIRED') || revertReason.includes('deadline')) {
+        specificReason = 'Transaction reverted due to deadline expiry. Market conditions changed during execution.';
+      } else if (revertReason.includes('insufficient balance') || revertReason.includes('transfer amount exceeds balance')) {
+        specificReason = 'Transaction reverted due to insufficient token balance.';
+      } else if (revertReason.includes('TRANSFER_FROM_FAILED')) {
+        specificReason = 'Transaction reverted due to token transfer failure. Check token approvals.';
+      } else {
+        specificReason = `Transaction was mined but reverted: ${revertReason}`;
+      }
+      
+      throw new Error(specificReason);
+    }
     if (hash) {
       // If we have a hash but confirmation failed/timed out, still return the hash
       if (error.message.includes('Transaction confirmation timeout')) {
@@ -653,10 +746,10 @@ export async function approvePendleTokens(
     
     console.log(`Found market: ${foundMarket.name}`);
     
-    // Get provider for reading contract state
-    const provider = new ethers.JsonRpcProvider(
-      process.env.TEST_RPC_URL || getConfigByChainId(chainId, isDemo).rpcUrl
-    );
+  // Get provider for reading contract state
+  const provider = new ethers.JsonRpcProvider(
+    getConfigByChainId(chainId, isDemo).rpcUrl
+  );
     
     // ERC20 ABI for approve and allowance functions
     const ERC20_ABI = [
@@ -806,7 +899,7 @@ export async function approvePendleTokensBruteForce(
     
     // Get provider for reading contract state
     const provider = new ethers.JsonRpcProvider(
-      process.env.TEST_RPC_URL || getConfigByChainId(chainId, isDemo).rpcUrl
+      getConfigByChainId(chainId, isDemo).rpcUrl
     );
     
     // ERC20 ABI for approve and allowance functions
