@@ -236,6 +236,17 @@ describe('CrossChainMatcher Singleton', () => {
         if (query === toChainStr) return [mockToChain]
         return []
       })
+      
+      // Ensure toToken is found so we can reach the fromChain validation
+      mockTokenMatchFn.mockImplementation(function (
+        this: { chainId: number },
+        query: string
+      ) {
+        if (this.chainId === mockToChain.id && query === toTokenStr)
+          return [mockToTokenExact]
+        return []
+      })
+      
       await expect(
         matcherInstance.fuzzyIntentDetect(
           fromChainStr,
