@@ -1,5 +1,5 @@
-import { tokensByChain } from '../config/lifi/tokens' // Assuming this provides the token data
-import { TokenMatcher } from '../fuzzy-token-matcher'
+import { tokensByChain } from '../config/lifi/tokens'; // Assuming this provides the token data
+import { TokenMatcher } from '../fuzzy-token-matcher';
 
 // Helper to get a chain ID that has tokens for testing
 const getChainIdWithTokens = () => {
@@ -46,11 +46,11 @@ describe('TokenMatcher', () => {
     it('should load tokens for the given chainId', () => {
       const matcher = new TokenMatcher(testChainIdWithTokens)
       // Accessing private list for testing purposes, alternative is to infer from match results
-      expect(matcher['tokenList'].length).toEqual(
-        tokensByChain[
-          String(testChainIdWithTokens) as keyof typeof tokensByChain
-        ]?.length || 0
-      )
+      // The token list now includes both LiFi tokens and Pendle tokens, so it should be >= LiFi tokens count
+      const lifiTokensCount = tokensByChain[
+        String(testChainIdWithTokens) as keyof typeof tokensByChain
+      ]?.length || 0
+      expect(matcher['tokenList'].length).toBeGreaterThanOrEqual(lifiTokensCount)
     })
 
     it('should handle a chainId with no tokens gracefully', () => {
@@ -166,6 +166,189 @@ describe('TokenMatcher', () => {
       expect(resultsUpperName[0].name).toBe(knownTokenOnTestChain.name)
       expect(resultsLowerName.length).toBeGreaterThan(0)
       expect(resultsLowerName[0].name).toBe(knownTokenOnTestChain.name)
+    })
+
+    it('should prioritize exact matches over fuzzy matches', () => {
+      // Create a test token list with both "yUSD" and "syUSD" tokens
+      const testTokens = [
+        {
+          chainId: 1,
+          address: '0x1111111111111111111111111111111111111111',
+          symbol: 'yyDAI+yUSDC+yUSDT+yTUSD',
+          name: 'yUSD',
+          decimals: 18
+        },
+        {
+          chainId: 1,
+          address: '0x2222222222222222222222222222222222222222',
+          symbol: 'syUSD',
+          name: 'Synnax Stablecoin',
+          decimals: 18
+        }
+      ]
+      
+      const testMatcher = new TokenMatcher(1, 0.3, testTokens)
+      const results = testMatcher.match('yUSD')
+      
+      // The token with name "yUSD" should be first (exact name match)
+      expect(results.length).toBeGreaterThan(0)
+      expect(results[0].name).toBe('yUSD')
+      expect(results[0].score).toBe(0) // Exact match should have score 0
+    })
+
+    it('should prioritize prefix matches over substring matches', () => {
+      const testTokens = [
+        {
+          chainId: 1,
+          address: '0x1111111111111111111111111111111111111111',
+          symbol: 'USDCoin',
+          name: 'USD Coin',
+          decimals: 6
+        },
+        {
+          chainId: 1,
+          address: '0x2222222222222222222222222222222222222222',
+          symbol: 'syUSDC',
+          name: 'Synthetic USDC',
+          decimals: 18
+        }
+      ]
+      
+      const testMatcher = new TokenMatcher(1, 0.3, testTokens)
+      const results = testMatcher.match('USDC')
+      
+      // USDCoin should come before syUSDC because it's a prefix match
+      expect(results.length).toBeGreaterThan(0)
+      expect(results[0].symbol).toBe('USDCoin')
+      expect(results[0].score).toBe(0.1) // Prefix match score
+    })
+
+    it('should filter out misleading substring matches', () => {
+      const testTokens = [
+        {
+          chainId: 1,
+          address: '0x1111111111111111111111111111111111111111',
+          symbol: 'ABC',
+          name: 'ABC Token',
+          decimals: 18
+        },
+        {
+          chainId: 1,
+          address: '0x2222222222222222222222222222222222222222',
+          symbol: 'VeryLongTokenNameWithABCInTheMiddle',
+          name: 'Very Long Token Name',
+          decimals: 18
+        }
+      ]
+      
+      const testMatcher = new TokenMatcher(1, 0.3, testTokens)
+      const results = testMatcher.match('ABC')
+      
+      // Should prioritize exact match and filter out misleading substring
+      expect(results.length).toBeGreaterThan(0)
+      expect(results[0].symbol).toBe('ABC')
+      
+      // The long token name should be filtered out or ranked much lower
+      const longTokenResult = results.find(r => r.symbol === 'VeryLongTokenNameWithABCInTheMiddle')
+      expect(longTokenResult).toBeUndefined()
+    })
+
+    it('should handle empty or whitespace queries gracefully', () => {
+      const results1 = tokenMatcher.match('')
+      const results2 = tokenMatcher.match('   ')
+      const results3 = tokenMatcher.match('\t\n')
+      
+      expect(results1).toEqual([])
+      expect(results2).toEqual([])
+      expect(results3).toEqual([])
+    })
+
+    it('should maintain correct scoring order within each match type', () => {
+      const testTokens = [
+        {
+          chainId: 1,
+          address: '0x1111111111111111111111111111111111111111',
+          symbol: 'USD',
+          name: 'US Dollar',
+          decimals: 18
+        },
+        {
+          chainId: 1,
+          address: '0x2222222222222222222222222222222222222222',
+          symbol: 'USDC',
+          name: 'USD Coin',
+          decimals: 6
+        },
+        {
+          chainId: 1,
+          address: '0x3333333333333333333333333333333333333333',
+          symbol: 'USDT',
+          name: 'USD Tether',
+          decimals: 6
+        }
+      ]
+      
+      const testMatcher = new TokenMatcher(1, 0.3, testTokens)
+      const results = testMatcher.match('USD')
+      
+      // Should have exact match first, then prefix matches
+      expect(results.length).toBe(3)
+      expect(results[0].symbol).toBe('USD') // Exact match
+      expect(results[0].score).toBe(0)
+      
+      // Next two should be prefix matches with score 0.1
+      expect(results[1].score).toBe(0.1)
+      expect(results[2].score).toBe(0.1)
+      expect(['USDC', 'USDT']).toContain(results[1].symbol)
+      expect(['USDC', 'USDT']).toContain(results[2].symbol)
+    })
+
+    it('should correctly prioritize yUSD PT over sYUSD PT for multi-word queries', () => {
+      const testTokens = [
+        {
+          chainId: 1,
+          address: '0x1111111111111111111111111111111111111111',
+          symbol: 'PT-yUSD-27NOV2025',
+          name: 'PT yUSD 27NOV2025',
+          decimals: 18
+        },
+        {
+          chainId: 1,
+          address: '0x2222222222222222222222222222222222222222',
+          symbol: 'PT-sYUSD-04SEP2025',
+          name: 'PT sYUSD 04SEP2025',
+          decimals: 18
+        },
+        {
+          chainId: 1,
+          address: '0x3333333333333333333333333333333333333333',
+          symbol: 'PT-vyUSD-27NOV2025',
+          name: 'PT vyUSD 27NOV2025',
+          decimals: 18
+        }
+      ]
+      
+      const testMatcher = new TokenMatcher(1, 0.3, testTokens)
+      
+      // Test "yUSD PT" query
+      const results1 = testMatcher.match('yUSD PT')
+      expect(results1.length).toBeGreaterThan(0)
+      expect(results1[0].name).toBe('PT yUSD 27NOV2025')
+      expect(results1[0].score).toBeLessThan(0.01) // Should have very low score (high priority)
+      
+      // Test "PT yUSD" query
+      const results2 = testMatcher.match('PT yUSD')
+      expect(results2.length).toBeGreaterThan(0)
+      expect(results2[0].name).toBe('PT yUSD 27NOV2025')
+      expect(results2[0].score).toBeLessThan(0.01) // Should have very low score (high priority)
+      
+      // Ensure sYUSD appears later in results if at all
+      const sYUSDIndex = results2.findIndex(token => token.name.includes('PT sYUSD'))
+      const yUSDIndex = results2.findIndex(token => token.name.includes('PT yUSD'))
+      expect(yUSDIndex).toBe(0) // yUSD should be first
+      if (sYUSDIndex !== -1) {
+        expect(sYUSDIndex).toBeGreaterThan(yUSDIndex) // sYUSD should come after yUSD if present
+      }
     })
   })
 })

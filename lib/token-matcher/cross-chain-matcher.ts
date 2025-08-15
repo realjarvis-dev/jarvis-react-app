@@ -102,7 +102,7 @@ class CrossChainMatcher {
   }
 
   private validateTokenMatches(tokenMatches: Token[], token: string, chainName: string, tokenType: 'from' | 'to'): Token[] {
-    if (tokenMatches.length === 0) {
+    if (!tokenMatches || tokenMatches.length === 0) {
       throw new MissingTokenError(
         `No token matches found for ${tokenType}Token ${token} on chain ${chainName}`
       )
