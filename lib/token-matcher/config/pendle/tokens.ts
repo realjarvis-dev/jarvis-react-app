@@ -3549,6 +3549,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 146,
+      "address": "0xbab91a3046003a5be46693d14e28d3b48252cf93",
+      "symbol": "PT-lstRZR-18DEC2025",
+      "name": "PT lstRZR 18DEC2025",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0xabfc41b413891c647d0d1cd66bf64bc6ed8fee71",
+      "expiry": "2025-12-18T00:00:00.000Z",
+      "underlyingAsset": "0x67a298e5b65db2b4616e05c3b455e017275f53cb"
+    },
+    {
+      "chainId": 146,
+      "address": "0x9691b32ad2ac224695b8e071673a2441b0d3dbe0",
+      "symbol": "YT-lstRZR-18DEC2025",
+      "name": "YT lstRZR 18DEC2025",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0xabfc41b413891c647d0d1cd66bf64bc6ed8fee71",
+      "expiry": "2025-12-18T00:00:00.000Z",
+      "underlyingAsset": "0x67a298e5b65db2b4616e05c3b455e017275f53cb"
+    },
+    {
+      "chainId": 146,
+      "address": "0x30ccf4bbee313fcd19f3e295b3ba2920a24e2f62",
+      "symbol": "SY-lstRZR",
+      "name": "SY lstRZR",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0xabfc41b413891c647d0d1cd66bf64bc6ed8fee71",
+      "expiry": "2025-12-18T00:00:00.000Z",
+      "underlyingAsset": "0x67a298e5b65db2b4616e05c3b455e017275f53cb"
+    },
+    {
+      "chainId": 146,
       "address": "0x01d6dafa8b3bd04bdf7ba6ff76104d15e2b7485c",
       "symbol": "PT-USDC-Silo Greenhouse-18DEC2025",
       "name": "PT USDC-Silo Greenhouse 18DEC2025",
