@@ -3,6 +3,7 @@
 import { ToolInvocation } from 'ai'
 import { DeFiLlamaProtocolsSection } from './defillama-protocols-section'
 import { DeFiLlamaYieldsSection } from './defillama-yields-section'
+import { EthAlertSubscription } from './eth-alert-subscription'
 import { GenericSwapCard } from './generic-swap-card'
 import { GetGasPriceSection } from './get-gas-price-section'
 import { JupiterSwapExecuteSection } from './jupiter/swap-execute-section'
@@ -14,6 +15,7 @@ import { KodiakOpportunitiesSection } from './kodiak-opportunities-section'
 import { LifiSwapExecuteSection } from './lifi-swap-execute-section'
 import { LifiSwapQuoteSection } from './lifi-swap-quote-section'
 import { MarketChartSection } from './market-chart-section'
+import { NewsSection } from './news-section'
 import { PendleOpportunitiesSection } from './pendle-opportunities-section'
 import { PendleZapInExecutionCard } from './pendle/pendle-zap-in-execution-card'
 import { PendleZapInQuoteDisplay } from './pendle/pendle-zap-in-quote-display'
@@ -31,7 +33,6 @@ import { TransferSection } from './transfer-section'
 import { VideoSearchSection } from './video-search-section'
 import { WalletBalanceSection } from './wallet-balance-section'
 import { WalletFundingSection } from './wallet-funding-section'
-import { EthAlertSubscription } from './eth-alert-subscription'
 
 
 interface ToolSectionProps {
@@ -134,6 +135,14 @@ export function ToolSection({
     case 'retrieve':
       return (
         <RetrieveSection
+          tool={tool}
+          isOpen={isOpen}
+          onOpenChange={onOpenChange}
+        />
+      )
+    case 'crypto_news':
+      return (
+        <NewsSection
           tool={tool}
           isOpen={isOpen}
           onOpenChange={onOpenChange}
