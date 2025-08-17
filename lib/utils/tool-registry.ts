@@ -3,7 +3,9 @@ import { z } from 'zod'
 import { searchSchema } from '../schema/search'
 import { createTargetAllocationTool } from '../tools/create-target-allocation'
 import { defiProtocolsTool } from '../tools/defillama-protocols'
+import { defillamaYieldExecute, defillamaYieldQuote } from '../tools/defillama-yield-execute'
 import { defiYieldsTool } from '../tools/defillama-yields'
+import { ethAlert } from '../tools/eth-alert'
 import { executeRebalancingTool } from '../tools/execute-rebalancing'
 import { getGasPriceTool } from '../tools/gas-price'
 import { getTargetAllocationTool } from '../tools/get-target-allocation'
@@ -45,17 +47,6 @@ import {
   walletBalanceTool
 } from '../tools/wallet'
 import { xStockList } from '../tools/xstock-search'
-import { 
-  ensoYieldMaximizer, 
-  ensoExecuteStrategy 
-} from '../tools/enso-yield-maximizer'
-import { 
-  ensoCrossChainOptimizer, 
-  ensoLPOptimizer, 
-  ensoStablecoinOptimizer 
-} from '../tools/enso-cross-chain-optimizer'
-import { defillamaYieldExecute, defillamaYieldQuote } from '../tools/defillama-yield-execute'
-import { ethAlert } from '../tools/eth-alert'
 import { NetworkContext, ToolContext } from '../types/context'
 
 /**
@@ -953,6 +944,21 @@ export function createToolRegistry(model: string): ToolRegistry {
       } as any),
     category: ToolCategory.WEB3_WRITE,
     supportedNetworks: ['solana']
+  })
+
+  // ChainGPT News Tool
+  const { chainGPTNewsTool } = require('../tools/chaingpt-news')
+  registry.registerTool({
+    name: 'crypto_news',
+    description: 'Fetch contextually relevant crypto and Web3 news from ChainGPT AI News based on user intent. Always include the user_query parameter with the original user question to enable intelligent news filtering.',
+    schema: chainGPTNewsTool.parameters,
+    execute: async (params, context) =>
+      chainGPTNewsTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.WEB
   })
 
   return registry
