@@ -402,6 +402,69 @@ export function ToolSection({
           onOpenChange={onOpenChange}
         />
       )
+    case 'chaingpt_web3_agent':
+      // Import the component dynamically to avoid circular dependencies
+      const ChainGPTWeb3Section = require('./chaingpt-web3-section').ChainGPTWeb3Section
+      const ToolCallingAnimation = require('./tool-calling-animation').ToolCallingAnimation
+      
+      // Show tool calling animation when the tool is being called
+      if (tool.state === 'call') {
+        return (
+          <div className="space-y-4">
+            <ToolCallingAnimation
+              toolName="chaingpt_web3_agent"
+              stage="processing"
+              description="Consulting ChainGPT Web3 AI specialist..."
+            />
+          </div>
+        )
+      }
+      
+      // Show result when available
+      if (tool.state === 'result' && 'result' in tool) {
+        return (
+          <ChainGPTWeb3Section
+            response={tool.result}
+            isLoading={false}
+            isOpen={isOpen}
+            onOpenChange={onOpenChange}
+          />
+        )
+      }
+      
+      return null
+      
+    case 'chaingpt_web3_agent_stream':
+      const ChainGPTStreamSection = require('./chaingpt-web3-section').ChainGPTStreamSection
+      const ToolCallingAnimationStream = require('./tool-calling-animation').ToolCallingAnimation
+      
+      // Show tool calling animation when the tool is being called
+      if (tool.state === 'call') {
+        return (
+          <div className="space-y-4">
+            <ToolCallingAnimationStream
+              toolName="chaingpt_web3_agent_stream"
+              stage="processing"
+              description="Starting ChainGPT Web3 AI streaming response..."
+            />
+          </div>
+        )
+      }
+      
+      // Show streaming result when available
+      if (tool.state === 'result' && 'result' in tool) {
+        return (
+          <ChainGPTStreamSection
+            streamResponse={tool.result}
+            isStreaming={false}
+            isOpen={isOpen}
+            onOpenChange={onOpenChange}
+          />
+        )
+      }
+      
+      return null
+      
     default:
       return null
   }
