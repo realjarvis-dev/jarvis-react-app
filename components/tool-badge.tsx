@@ -1,4 +1,4 @@
-import { BarChart, Bot, DollarSign, Film, Lightbulb, Link, RefreshCw, Search, Target, TrendingUp } from 'lucide-react'
+import { DollarSign, Link, Search, Film, Lightbulb, TrendingUp, BarChart, Target, RefreshCw } from 'lucide-react'
 import React from 'react'
 import { Badge } from './ui/badge'
 
@@ -25,9 +25,7 @@ export const ToolBadge: React.FC<ToolBadgeProps> = ({
     defillama_protocols: <BarChart size={14} />,
     create_target_allocation: <Target size={14} />,
     get_target_allocation: <Target size={14} />,
-    execute_rebalancing: <RefreshCw size={14} />,
-    chaingpt_web3_agent: <Bot size={14} />,
-    chaingpt_web3_agent_stream: <Bot size={14} />
+    execute_rebalancing: <RefreshCw size={14} />
   }
 
   return (

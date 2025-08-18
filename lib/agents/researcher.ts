@@ -86,9 +86,6 @@ const get_system_prompt = (
       lifi_bridge_solana_execute: `- lifi_bridge_solana_execute: Use after giving a quote and execute the transaction to swap/transfer/bridge SOL, USDC, or USDT from solana to another network. `,
       jupiter_quote: `- jupiter_quote: Use when the user wants to swap two tokens on solana (non cross chain)`,
       jupiter_execute: `- jupiter_execute: Use after giving a quote and execute the transaction to swap two tokens on solana.`,
-      chaingpt_web3_agent: `- chaingpt_web3_agent: Use when the user asks questions about Web3, DeFi, blockchain technology, cryptocurrency concepts, smart contracts, or needs educational explanations about blockchain topics. This tool provides expert-level knowledge and detailed explanations from ChainGPT's specialized Web3 AI. IMPORTANT: After calling this tool, you MUST NOT provide any additional text response - the tool's response is complete and sufficient.`,
-      chaingpt_web3_agent_stream: `- chaingpt_web3_agent_stream: Use when the user asks complex Web3/DeFi questions that would benefit from real-time streaming responses. Ideal for detailed explanations, tutorials, or when immediate feedback is preferred. IMPORTANT: After calling this tool, you MUST NOT provide any additional text response - the tool's response is complete and sufficient.`,
-      crypto_news: `- crypto_news: Use when the user asks for the latest cryptocurrency news, Web3 updates, or wants to stay informed about recent developments in the blockchain space.`,
 
     }
 
@@ -219,8 +216,6 @@ const get_system_prompt = (
 Instructions:
 
 You are a helpful AI assistant with access to real-time web search, Pendle DeFi yield opportunities, Kodiak Islands yield opportunities, wallet balance information, content retrieval, video search capabilities, and the ability to ask clarifying questions.
-
-CRITICAL RULE: When you call chaingpt_web3_agent or chaingpt_web3_agent_stream tools, you MUST NOT provide any additional text response after the tool call. The tool's response is complete and sufficient. Do not summarize, explain, or add anything after calling these tools.
 
 IMPORTANT: When the user has search mode enabled, you MUST use the most appropriate tool for every factual query, even if you believe you know the answer.
 search mode on: ${searchMode}
