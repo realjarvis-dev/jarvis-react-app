@@ -961,6 +961,34 @@ export function createToolRegistry(model: string): ToolRegistry {
     category: ToolCategory.WEB
   })
 
+  // ChainGPT Web3 Agent Tools
+  const { chainGPTWeb3AgentTool, chainGPTWeb3AgentStreamTool } = require('../tools/chaingpt-web3-agent')
+  registry.registerTool({
+    name: 'chaingpt_web3_agent',
+    description: 'Use ChainGPT Web3 AI agent to answer complex Web3, DeFi, blockchain, and cryptocurrency questions with expert knowledge and real-time insights. Perfect for detailed explanations, technical guidance, and educational content.',
+    schema: chainGPTWeb3AgentTool.parameters,
+    execute: async (params, context) =>
+      chainGPTWeb3AgentTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.WEB
+  })
+
+  registry.registerTool({
+    name: 'chaingpt_web3_agent_stream',
+    description: 'Use ChainGPT Web3 AI agent with streaming responses for real-time Web3/DeFi guidance. Ideal for interactive conversations and immediate feedback.',
+    schema: chainGPTWeb3AgentStreamTool.parameters,
+    execute: async (params, context) =>
+      chainGPTWeb3AgentStreamTool.execute(params, {
+        toolCallId: context?.toolCallId || 'unknown',
+        messages: context?.messages || [],
+        networkContext: context?.networkContext!
+      } as any),
+    category: ToolCategory.WEB
+  })
+
   return registry
 }
 
