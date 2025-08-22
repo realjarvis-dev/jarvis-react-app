@@ -208,6 +208,14 @@ export const chains = [
     "mainnet": true
   },
   {
+    "key": "flr",
+    "chainType": "EVM",
+    "name": "Flare",
+    "coin": "FLR",
+    "id": 14,
+    "mainnet": true
+  },
+  {
     "key": "son",
     "chainType": "EVM",
     "name": "Sonic",
