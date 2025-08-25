@@ -428,6 +428,11 @@ export async function getSwapQuote(
   userWalletAddress: string
 ) {
   
+  // Use placeholder address for anonymous quotes if no valid address provided
+  const receiverAddress = userWalletAddress && ethers.isAddress(userWalletAddress) 
+    ? userWalletAddress 
+    : '0x0000000000000000000000000000000000000001';
+  
   const swapResult = await getPendleSwapTokensData(
     marketAddress,
     tokenIn,
@@ -436,7 +441,7 @@ export async function getSwapQuote(
     slippage,
     enableAggregator,
     chainId,
-    userWalletAddress
+    receiverAddress
   );
 
   return swapResult.data; // Return only the swap data, not the transaction

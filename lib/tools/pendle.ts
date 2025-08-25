@@ -862,7 +862,7 @@ export const pendleQuoteTool = tool({
         chainId
       );
       
-      // Call the getSwapQuote function
+      // Call the getSwapQuote function (handles anonymous users)
       const swapData = await getSwapQuote(
         swapConfig.marketAddress,
         swapConfig.tokenIn,
@@ -871,7 +871,7 @@ export const pendleQuoteTool = tool({
         PENDLE_CONFIG.DEFAULT_SLIPPAGE,
         PENDLE_CONFIG.ENABLE_AGGREGATOR,
         networkContext?.selectedChainId!,
-        user_wallet_address
+        user_wallet_address || '0x0000000000000000000000000000000000000001'
       );
 
       const outputData = await formatSwapOutput(
@@ -1012,6 +1012,29 @@ export const pendleSwapTool = tool({
       slippage = PENDLE_CONFIG.DEMO_SLIPPAGE
     }
 
+    // Check if user has a valid wallet address for swap execution
+    if (!user_wallet_address || !ethers.isAddress(user_wallet_address)) {
+      return {
+        _uiDisplayTool: true,
+        summary: '🔐 Wallet connection required for swapping',
+        data: {
+          success: false,
+          error: 'Please connect your wallet to execute swaps',
+          error_category: 'Authentication Required',
+          suggested_action: 'Connect your wallet and try again. You can still view quotes without connecting.',
+          swap_parameters: {
+            from: 'Unknown',
+            to: 'Unknown',
+            amount_in: `${amount_in_human}`,
+            token_address,
+            direction,
+            amount_in_human,
+            slippage
+          }
+        }
+      };
+    }
+
     let displayTokenIn, displayTokenOut;
     
     try {
@@ -1049,7 +1072,7 @@ export const pendleSwapTool = tool({
       displayTokenIn = swapConfig.inputToken;
       displayTokenOut = swapConfig.outputToken;
 
-      // First get a quote to check price impact
+      // First get a quote to check price impact (handles anonymous users)
       const quoteData = await getSwapQuote(
         swapConfig.marketAddress,
         swapConfig.tokenIn,
@@ -1058,7 +1081,7 @@ export const pendleSwapTool = tool({
         slippage,
         PENDLE_CONFIG.ENABLE_AGGREGATOR,
         chainId,
-        user_wallet_address
+        user_wallet_address || '0x0000000000000000000000000000000000000001'
       );
 
       // Check if price impact requires confirmation (unless already confirmed)
