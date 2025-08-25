@@ -49,8 +49,36 @@ async function resolveTokenAddress(
   
   if (!isAddress) {
     const { TokenMatcher } = await import('../token-matcher/fuzzy-token-matcher');
-    const tokenMatcher = new TokenMatcher(chainId);
-    const matches = tokenMatcher.match(tokenAddressOrName, 5);
+    const { pendleTokenMatcher } = await import('../token-matcher/pendle-token-matcher');
+    
+    // Get all Pendle tokens for the chain first to filter by expiry and network
+    const allPendleTokens = pendleTokenMatcher.getAllTokensForChain(chainId);
+    const now = new Date();
+    
+    // Filter tokens by chain, type, and expiry status
+    const activeTokens = allPendleTokens.filter(token => {
+      const symbol = token.symbol.toLowerCase();
+      const isCorrectType = token_type === 'pt' ? symbol.includes('pt-') : symbol.includes('yt-');
+      const isActiveToken = new Date(token.expiry) > now; // Not expired
+      const isCorrectChain = token.chainId === chainId; // Match network context
+      
+      return isCorrectType && isActiveToken && isCorrectChain;
+    });
+    
+    if (activeTokens.length === 0) {
+      throw new Error(`No active Pendle ${token_type.toUpperCase()} tokens found on chain ${chainId}`);
+    }
+    
+    // Use TokenMatcher with filtered active tokens only
+    const tokenMatcher = new TokenMatcher(chainId, 0.3, activeTokens.map(token => ({
+      chainId: token.chainId,
+      address: token.address,
+      symbol: token.symbol,
+      name: token.name,
+      decimals: token.decimals
+    })));
+    
+    const matches = tokenMatcher.match(tokenAddressOrName, 10); // Get more matches to sort by expiry
     
     const pendleMatches = matches.filter(token => {
       const symbol = token.symbol.toLowerCase();
@@ -86,13 +114,51 @@ async function resolveTokenAddress(
     });
     
     if (pendleMatches.length > 0) {
-      resolvedTokenAddress = pendleMatches[0].address;
-      resolvedMarketName = pendleMatches[0].name.replace(/^(PT|YT)\s+/, '');
-    } else {
-      const { pendleTokenMatcher } = await import('../token-matcher/pendle-token-matcher');
-      const allPendleTokens = pendleTokenMatcher.getAllTokensForChain(chainId);
+      // Fetch market data to get APY information for better token selection
+      let marketsWithApy: any[] = [];
+      try {
+        const { getPendleMarkets } = await import('../pendle/api');
+        marketsWithApy = await getPendleMarkets('active', chainId);
+      } catch (error) {
+        console.warn('Could not fetch market APY data for token selection:', error);
+        marketsWithApy = [];
+      }
+
+      // Create a mapping from PT/YT address to market APY for prioritization
+      const tokenApyMap = new Map<string, number>();
+      for (const market of marketsWithApy) {
+        if (market.pt) tokenApyMap.set(market.pt.toLowerCase(), market.impliedApy);
+        if (market.yt) tokenApyMap.set(market.yt.toLowerCase(), market.impliedApy);
+      }
+
+      // Sort by match score first, then by APY (higher is better), then by expiry
+      const sortedMatches = pendleMatches.map(token => {
+        const pendleToken = activeTokens.find(pt => pt.address === token.address);
+        const tokenApy = tokenApyMap.get(token.address.toLowerCase()) || 0;
+        return {
+          ...token,
+          expiry: pendleToken?.expiry,
+          expiryDate: pendleToken ? new Date(pendleToken.expiry) : now,
+          apy: tokenApy
+        };
+      }).sort((a, b) => {
+        // First sort by match score (lower is better)
+        if (Math.abs(a.score - b.score) > 0.01) {
+          return a.score - b.score;
+        }
+        // Then by APY (higher is better for better returns)
+        if (Math.abs(a.apy - b.apy) > 0.001) {
+          return b.apy - a.apy;
+        }
+        // Finally by expiry date (later expiry is better as fallback)
+        return b.expiryDate.getTime() - a.expiryDate.getTime();
+      });
       
-      const similarTokens = allPendleTokens
+      resolvedTokenAddress = sortedMatches[0].address;
+      resolvedMarketName = sortedMatches[0].name.replace(/^(PT|YT)\s+/, '');
+    } else {
+      // Fallback: suggest similar active tokens
+      const similarTokens = activeTokens
         .filter(token => {
           const symbol = token.symbol.toLowerCase();
           const isCorrectType = token_type === 'pt' ? symbol.includes('pt-') : symbol.includes('yt-');
@@ -108,13 +174,14 @@ async function resolveTokenAddress(
             query.includes(tokenSymbol.substring(3, 7))
           );
         })
+        .sort((a, b) => new Date(b.expiry).getTime() - new Date(a.expiry).getTime()) // Sort by expiry
         .slice(0, 3)
         .map(token => token.name.replace(/^(PT|YT)\s+/, ''))
         .join(', ');
       
       const suggestion = similarTokens 
-        ? `Could not find a Pendle ${token_type.toUpperCase()} token matching "${tokenAddressOrName}" on chain ${chainId}. Did you mean one of these: ${similarTokens}? Please provide a valid token address or try a different token name.`
-        : `Could not find a Pendle ${token_type.toUpperCase()} token matching "${tokenAddressOrName}" on chain ${chainId}. Please provide a valid token address or try a different token name.`;
+        ? `Could not find an active Pendle ${token_type.toUpperCase()} token matching "${tokenAddressOrName}" on chain ${chainId}. Did you mean one of these active tokens: ${similarTokens}? Please provide a valid token address or try a different token name.`
+        : `Could not find an active Pendle ${token_type.toUpperCase()} token matching "${tokenAddressOrName}" on chain ${chainId}. Please provide a valid token address or try a different token name.`;
       
       throw new Error(suggestion);
     }
