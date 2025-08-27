@@ -411,7 +411,7 @@ export const chains = [
     "key": "plu",
     "chainType": "EVM",
     "name": "Plume",
-    "coin": "PLU",
+    "coin": "PLUME",
     "id": 98866,
     "mainnet": true
   },
