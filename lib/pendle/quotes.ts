@@ -32,10 +32,11 @@ const BASE_URL = 'https://api-v2.pendle.finance/core/v1'
  * Get a quote for swapping between ETH and PT/YT tokens
  * @param market The Pendle market or market address
  * @param token The PT/YT token address
+ * @param chainId Chain ID (default: 1 for Ethereum Mainnet)
  * @param marketName Optional market name for display purposes
  * @param amountIn Amount to swap (in ETH or token units)
  * @param direction 'ethToToken' or 'tokenToEth' to specify swap direction
- * @param chainId Chain ID (default: 1 for Ethereum Mainnet)
+ * @param userWalletAddress User's wallet address for quote calculation
  * @returns Promise with the formatted quote
  * @throws Error if API call fails or returns invalid data
  */
@@ -45,7 +46,8 @@ export async function getQuote(
   chainId: number,
   marketName?: string,
   amountIn: string = "1",
-  direction: 'ethToToken' | 'tokenToEth' = 'ethToToken'
+  direction: 'ethToToken' | 'tokenToEth' = 'ethToToken',
+  userWalletAddress?: string
 ): Promise<FormattedQuote> {
   try {
     // Handle both market object and market address string
@@ -62,12 +64,22 @@ export async function getQuote(
       throw new Error(`Invalid amount: ${amountIn}`);
     }
     
-    const evmWalletAddress = await getUserEvmWalletAddress();
-    if (!evmWalletAddress) {
-      throw new Error('EVM wallet not found')
+    let RECEIVER: string;
+    
+    if (userWalletAddress) {
+      // Use provided wallet address
+      RECEIVER = userWalletAddress;
+    } else {
+      // Try to get user's wallet address
+      const evmWalletAddress = await getUserEvmWalletAddress();
+      if (evmWalletAddress) {
+        RECEIVER = evmWalletAddress;
+      } else {
+        // Use a placeholder address for anonymous quotes (common practice)
+        // This allows users to see quotes before connecting their wallet
+        RECEIVER = '0x0000000000000000000000000000000000000001';
+      }
     }
-
-    const RECEIVER = evmWalletAddress;
     
     // Format the URL
     const url = `${BASE_URL}/sdk/${chainId}/markets/${marketAddress}/swap`;
