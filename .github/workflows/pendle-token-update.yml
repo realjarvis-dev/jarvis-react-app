@@ -13,7 +13,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          persist-credentials: true  # so GitHub token is available to push
+          token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
       - name: Set up Node.js
@@ -21,15 +21,31 @@ jobs:
         with:
           node-version: 18
 
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Pull latest changes
+        run: |
+          git pull origin main --rebase || true
+
       - name: Generate Pendle tokens list
         run: node scripts/generate-pendle-tokens.js
 
-      - name: Commit & Push changes
-        uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          commit_message: "chore: daily update of Pendle tokens list"
-          file_pattern: |
-            lib/token-matcher/config/pendle/tokens.ts
-          branch: main
-          commit_user_name: github-actions
-          commit_user_email: actions@github.com
+      - name: Check for changes
+        id: verify-changed-files
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push changes
+        if: steps.verify-changed-files.outputs.changed == 'true'
+        run: |
+          git add lib/token-matcher/config/pendle/tokens.ts
+          git commit -m "chore: daily update of Pendle tokens list"
+          git pull origin main --rebase || true
+          git push origin main
