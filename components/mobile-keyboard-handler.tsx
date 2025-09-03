@@ -32,17 +32,6 @@ export function useMobileKeyboardHandler({ inputRef }: MobileKeyboardHandlerProp
         if (isKeyboardVisible) {
           // Keyboard is opening
           document.body.classList.add('keyboard-visible')
-
-          // Scroll the input into view after a short delay
-          setTimeout(() => {
-            const textarea = inputRef.current?.getTextareaRef()
-            if (textarea) {
-              textarea.scrollIntoView({
-                behavior: 'smooth',
-                block: 'center'
-              })
-            }
-          }, 300)
         } else {
           // Keyboard is closing
           document.body.classList.remove('keyboard-visible')
@@ -61,23 +50,6 @@ export function useMobileKeyboardHandler({ inputRef }: MobileKeyboardHandlerProp
 
           if (isKeyboardVisible) {
             document.body.classList.add('keyboard-visible')
-
-            // Ensure input stays visible
-            setTimeout(() => {
-              const textarea = inputRef.current?.getTextareaRef()
-              if (textarea) {
-                const rect = textarea.getBoundingClientRect()
-                const viewportHeight = window.visualViewport!.height
-
-                // If input is below the visible area, scroll it into view
-                if (rect.bottom > viewportHeight) {
-                  textarea.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'end'
-                  })
-                }
-              }
-            }, 100)
           } else {
             document.body.classList.remove('keyboard-visible')
           }
