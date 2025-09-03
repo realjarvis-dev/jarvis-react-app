@@ -121,8 +121,17 @@
 
 /* Mobile keyboard handling - improved approach */
 @media (max-width: 768px) {
-  /* Ensure chat input container is always fixed on mobile */
+  /* Only fix position when keyboard is visible, otherwise use normal sticky */
   .group\/form-container {
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+  }
+  
+  /* When keyboard is visible, fix position to prevent input from moving */
+  .keyboard-visible .group\/form-container {
     position: fixed !important;
     bottom: env(safe-area-inset-bottom, 0px);
     left: 0;
@@ -132,17 +141,8 @@
     border-top: 1px solid var(--border);
   }
   
-  /* When keyboard is visible, keep input visible and accessible */
-  .keyboard-visible .group\/form-container {
-    position: fixed !important;
-    bottom: 0;
-    transform: translateY(0);
-    transition: none;
-    background: var(--background);
-  }
-  
-  /* Adjust main content to account for fixed input area */
-  main {
+  /* Adjust main content only when keyboard is visible */
+  .keyboard-visible main {
     padding-bottom: 120px; /* Space for fixed input area */
   }
   
@@ -164,7 +164,7 @@
 
 /* Fix for very small screens and landscape mode */
 @media (max-height: 500px) {
-  .group\/form-container {
+  .keyboard-visible .group\/form-container {
     position: fixed !important;
     bottom: 0;
     left: 0;
@@ -172,7 +172,7 @@
     z-index: 50;
   }
   
-  main {
+  .keyboard-visible main {
     padding-bottom: 100px; /* Smaller padding for landscape */
   }
 }
