@@ -16,6 +16,7 @@ export function useMobileKeyboardHandler({ inputRef }: MobileKeyboardHandlerProp
     
     if (!isMobile) return
 
+    // Simple approach - just detect keyboard and add class for CSS to handle
     let isKeyboardVisible = false
 
     // Handle Visual Viewport API (iOS Safari, modern browsers)
@@ -28,21 +29,9 @@ export function useMobileKeyboardHandler({ inputRef }: MobileKeyboardHandlerProp
           isKeyboardVisible = keyboardVisible
           
           if (isKeyboardVisible) {
-            // Keyboard is opening - just add class, no position changes
             document.body.classList.add('keyboard-visible')
-            
-            // Set CSS custom property for keyboard height
-            document.documentElement.style.setProperty(
-              '--keyboard-height',
-              `${keyboardHeight}px`
-            )
-            
           } else {
-            // Keyboard is closing
             document.body.classList.remove('keyboard-visible')
-            
-            // Reset keyboard height
-            document.documentElement.style.setProperty('--keyboard-height', '0px')
           }
         }
       }
@@ -52,7 +41,6 @@ export function useMobileKeyboardHandler({ inputRef }: MobileKeyboardHandlerProp
       return () => {
         window.visualViewport?.removeEventListener('resize', handleVisualViewportChange)
         document.body.classList.remove('keyboard-visible')
-        document.documentElement.style.setProperty('--keyboard-height', '0px')
       }
     } else {
       // Fallback for older browsers
@@ -68,13 +56,8 @@ export function useMobileKeyboardHandler({ inputRef }: MobileKeyboardHandlerProp
           
           if (isKeyboardVisible) {
             document.body.classList.add('keyboard-visible')
-            document.documentElement.style.setProperty(
-              '--keyboard-height',
-              `${heightDifference}px`
-            )
           } else {
             document.body.classList.remove('keyboard-visible')
-            document.documentElement.style.setProperty('--keyboard-height', '0px')
           }
         }
       }
@@ -84,7 +67,6 @@ export function useMobileKeyboardHandler({ inputRef }: MobileKeyboardHandlerProp
       return () => {
         window.removeEventListener('resize', handleViewportChange)
         document.body.classList.remove('keyboard-visible')
-        document.documentElement.style.setProperty('--keyboard-height', '0px')
       }
     }
   }, [inputRef])

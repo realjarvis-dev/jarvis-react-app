@@ -119,63 +119,66 @@
   }
 }
 
-/* Mobile keyboard handling - CSS-only approach to prevent shaking */
+/* Mobile keyboard handling - work with browser behavior instead of fighting it */
 @media (max-width: 768px) {
-  /* Use environment variables for dynamic viewport */
+  /* Use viewport units that account for keyboard */
   html {
     height: 100vh;
-    height: 100dvh; /* Dynamic viewport height */
+    height: 100svh; /* Small viewport height - excludes keyboard */
   }
   
   body {
     height: 100vh;
-    height: 100dvh;
+    height: 100svh;
     overflow-x: hidden;
   }
   
-  /* Normal sticky positioning for mobile */
+  /* Make input area always visible using viewport units */
   .group\/form-container {
-    position: sticky;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 50;
-  }
-  
-  /* When keyboard is visible, use CSS containment to prevent layout shifts */
-  .keyboard-visible {
-    /* Prevent layout shifts by containing the layout */
-    contain: layout style;
-  }
-  
-  .keyboard-visible .group\/form-container {
-    /* Use transform instead of position changes to avoid shaking */
-    position: sticky;
+    position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
     z-index: 50;
     background: var(--background);
-    /* Ensure it stays above keyboard using CSS custom property */
-    transform: translateY(calc(-1 * var(--keyboard-height, 0px) * 0.1));
-    transition: transform 0.2s ease-out;
+    border-top: 1px solid var(--border);
+    /* Use small viewport height to ensure it's always visible */
+    max-height: 30svh;
   }
   
-  /* Prevent body scroll when keyboard is visible */
-  .keyboard-visible {
-    overflow: hidden;
-    position: relative;
+  /* Adjust main content to account for fixed input */
+  main {
+    padding-bottom: 120px;
+    height: calc(100svh - 120px);
+    overflow-y: auto;
+  }
+  
+  /* Ensure scroll container works with fixed input */
+  #scroll-container {
+    height: calc(100svh - 120px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
 
-/* Ensure input area is always visible on very small screens */
+/* Handle very small screens */
 @media (max-height: 500px) {
   .group\/form-container {
-    position: sticky;
+    position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
     z-index: 50;
+    max-height: 25svh;
+  }
+  
+  main {
+    padding-bottom: 100px;
+    height: calc(100svh - 100px);
+  }
+  
+  #scroll-container {
+    height: calc(100svh - 100px);
   }
 }
 
