@@ -618,6 +618,12 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
         return
       }
 
+      // Don't update suggestions when keyboard is visible to prevent flashing
+      const isKeyboardVisible = document.body.classList.contains('keyboard-visible')
+      if (isKeyboardVisible && isOpen) {
+        return
+      }
+
       // Clear previous suggestion timeout
       if (suggestionTimeoutRef.current) {
         clearTimeout(suggestionTimeoutRef.current)
@@ -1020,6 +1026,12 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
             sideOffset={8}
             onOpenAutoFocus={(e) => e.preventDefault()}
             onCloseAutoFocus={(e) => e.preventDefault()}
+            avoidCollisions={false}
+            sticky="always"
+            style={{
+              position: 'fixed',
+              zIndex: 9999
+            }}
           >
             <Command className="border-0 bg-transparent" shouldFilter={false}>
               <CommandList className="max-h-[200px] overflow-y-auto" role="listbox">
