@@ -119,7 +119,51 @@
   }
 }
 
-/* Completely remove keyboard-visible CSS rules - let browser handle naturally */
+/* Mobile keyboard handling styles */
+@media (max-width: 768px) {
+  .keyboard-visible .group\/form-container {
+    position: fixed !important;
+    bottom: 0;
+    transform: translateY(0);
+    transition: none;
+    background: var(--background);
+  }
+
+  /* Adjust main content to account for fixed input area */
+  main {
+    padding-bottom: 120px; /* Space for fixed input area */
+  }
+
+  /* When keyboard is visible, prevent body scroll issues */
+  .keyboard-visible {
+    position: fixed;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* Ensure scroll container works properly with keyboard */
+  .keyboard-visible #scroll-container {
+    height: calc(100vh - 120px); /* Account for input area */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Fix for very small screens and landscape mode */
+@media (max-height: 500px) {
+  .group\/form-container {
+    position: fixed !important;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+  }
+
+  main {
+    padding-bottom: 100px; /* Smaller padding for landscape */
+  }
+}
 
 html, body, #__next {
   height: 100dvh;

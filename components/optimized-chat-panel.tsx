@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useArtifact } from './artifact/artifact-context'
 import { AutoCompleteInput, AutoCompleteInputRef } from './autocomplete-input'
 import { SuggestionPills } from './chat-panel/suggestion-pills'
+import { useMobileKeyboardHandler } from './mobile-keyboard-handler'
 import { LazyWallet } from './wallet'
 
 import { MarketPulse } from './market-pulse'
@@ -69,7 +70,8 @@ export function ChatPanel({
   const { selectedChain, setSelectedChain, isDemoMode, setIsDemoMode } =
     useNetwork()
 
-  // Remove mobile keyboard handler - let browser handle naturally
+  // Use mobile keyboard handler
+  useMobileKeyboardHandler({ inputRef })
 
   function handleCompositionStart() {
     return setIsComposing(true)
@@ -184,22 +186,6 @@ export function ChatPanel({
           'px-2 sm:px-4',
           'z-10'
         )}
-        style={{
-          position: 'fixed',
-          left: 0,
-          right: 0,
-          // Use CSS custom property for dynamic positioning
-          ...(messages.length === 0 
-            ? { 
-                top: '50%',
-                transform: 'translateY(-50%)' 
-              }
-            : { 
-                // Use bottom 0 with overflow hidden on parent
-                bottom: 0,
-                transform: 'none'
-              })
-        }}
       >
         <div className="w-full max-w-3xl">
           {showEmptyScreenContent && ( // Or use showVideoBg if content should only appear with video

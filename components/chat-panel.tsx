@@ -19,6 +19,7 @@ import { AutoCompleteInput, AutoCompleteInputRef } from './autocomplete-input'
 import { SuggestionPills } from './chat-panel/suggestion-pills'
 import { CopyableWalletAddress } from './copyable-wallet-address'
 import { CopyableWalletAddressSkeleton } from './copyable-wallet-address-skeleton'
+import { useMobileKeyboardHandler } from './mobile-keyboard-handler'
 
 import { MarketPulse } from './market-pulse'
 
@@ -84,7 +85,8 @@ export function ChatPanel({
   // Network selection state
   const { selectedChain, setSelectedChain, isDemoMode, setIsDemoMode } = useNetwork()
 
-  // Remove mobile keyboard handler - let browser handle naturally
+  // Use mobile keyboard handler
+  useMobileKeyboardHandler({ inputRef })
 
   function handleCompositionStart() {
     return setIsComposing(true)
@@ -266,22 +268,6 @@ export function ChatPanel({
           'px-2 sm:px-4',
           'z-10' // Ensure ChatPanel content is above the z-0 video
         )}
-        style={{
-          position: 'fixed',
-          left: 0,
-          right: 0,
-          // Use CSS custom property for dynamic positioning
-          ...(messages.length === 0 
-            ? { 
-                top: '50%',
-                transform: 'translateY(-50%)' 
-              }
-            : { 
-                // Use bottom 0 with overflow hidden on parent
-                bottom: 0,
-                transform: 'none'
-              })
-        }}
       >
         <div className="w-full max-w-3xl">
           {showEmptyScreenContent && ( // Or use showVideoBg if content should only appear with video
