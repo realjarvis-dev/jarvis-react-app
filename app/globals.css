@@ -119,40 +119,7 @@
   }
 }
 
-/* Mobile keyboard handling - stabilize autocomplete and reduce shaking */
-@media (max-width: 768px) {
-  /* Ensure input stays stable when keyboard is visible */
-  .keyboard-visible .group\/form-container {
-    position: sticky;
-    bottom: 0;
-    z-index: 50;
-    background: var(--background);
-    /* Prevent any transform or transition effects that cause shaking */
-    transform: none !important;
-    transition: none !important;
-  }
-  
-  /* Stabilize autocomplete popover on mobile */
-  .keyboard-visible [data-radix-popper-content-wrapper] {
-    /* Prevent popover from repositioning when keyboard appears */
-    position: fixed !important;
-    transform: none !important;
-    transition: none !important;
-  }
-  
-  /* Reduce motion and transitions on mobile when keyboard is visible */
-  .keyboard-visible * {
-    animation-duration: 0s !important;
-    transition-duration: 0s !important;
-  }
-  
-  /* Ensure text input doesn't shake */
-  .keyboard-visible textarea,
-  .keyboard-visible input {
-    transform: none !important;
-    transition: none !important;
-  }
-}
+/* Remove all mobile keyboard handling - let browser work naturally */
 
 html, body, #__next {
   height: 100dvh;

@@ -84,9 +84,7 @@ export function ChatPanel({
   // Network selection state
   const { selectedChain, setSelectedChain, isDemoMode, setIsDemoMode } = useNetwork()
 
-  // Apply mobile keyboard handler
-  const { useMobileKeyboardHandler } = require('./mobile-keyboard-handler')
-  useMobileKeyboardHandler({ inputRef })
+  // Remove mobile keyboard handler - let browser handle naturally
 
   function handleCompositionStart() {
     return setIsComposing(true)
