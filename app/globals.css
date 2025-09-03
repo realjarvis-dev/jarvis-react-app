@@ -125,13 +125,14 @@
   .keyboard-visible .group\/form-container,
   .keyboard-visible [class*="group/form-container"] {
     position: fixed !important;
-    bottom: 0;
+    top: 50%;
     left: 0;
     right: 0;
-    transform: translateY(0);
+    transform: translateY(-50%);
     transition: none;
     background: var(--background);
     z-index: 50;
+    max-height: 200px; /* Prevent input from taking too much space */
   }
 
   /* Adjust main content to account for fixed input area */
@@ -146,7 +147,7 @@
 
   /* Ensure scroll container works properly with keyboard */
   .keyboard-visible #scroll-container {
-    height: calc(100vh - 120px); /* Account for input area */
+    height: calc(50% - 100px); /* Account for input area positioned in middle */
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
