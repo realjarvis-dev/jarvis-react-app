@@ -135,10 +135,10 @@
     max-height: 150px;
   }
 
-  /* After user starts typing, move input lower to show more content */
+  /* After user starts typing, move input to middle position to show content and suggestions */
   .keyboard-visible-typing .group\/form-container,
   .keyboard-visible-typing [class*="group/form-container"] {
-    top: 70% !important;
+    top: 55% !important;
   }
 
   /* Adjust main content to account for fixed input area */
@@ -161,7 +161,7 @@
 
   /* Expand scroll area when input moves down after typing */
   .keyboard-visible-typing #scroll-container {
-    height: calc(70% - 75px);
+    height: calc(55% - 75px);
   }
 }
 
