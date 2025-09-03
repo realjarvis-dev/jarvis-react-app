@@ -9,65 +9,68 @@ interface MobileKeyboardHandlerProps {
 
 export function useMobileKeyboardHandler({ inputRef }: MobileKeyboardHandlerProps) {
   useEffect(() => {
-    // Only run on mobile devices
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-      navigator.userAgent
-    )
-
+    // Run on iOS and Android devices
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    const isAndroid = /Android/.test(navigator.userAgent)
+    const isMobile = isIOS || isAndroid
+    
     if (!isMobile) return
 
-    let initialViewportHeight = window.innerHeight
+    let initialViewportHeight = window.visualViewport?.height || window.innerHeight
     let isKeyboardVisible = false
 
     const handleViewportChange = () => {
-      const currentHeight = window.innerHeight
-      const heightDifference = initialViewportHeight - currentHeight
-
-      // Keyboard is considered visible if viewport height decreased by more than 150px
-      const keyboardVisible = heightDifference > 150
-
-      if (keyboardVisible !== isKeyboardVisible) {
-        isKeyboardVisible = keyboardVisible
-
-        if (isKeyboardVisible) {
-          // Keyboard is opening
-          document.body.classList.add('keyboard-visible')
-        } else {
-          // Keyboard is closing
-          document.body.classList.remove('keyboard-visible')
-        }
-      }
-    }
-
-    // Use Visual Viewport API if available (iOS Safari, modern browsers)
-    if (window.visualViewport) {
-      const handleVisualViewportChange = () => {
-        const keyboardHeight = window.innerHeight - window.visualViewport!.height
-        const keyboardVisible = keyboardHeight > 150
-
-        if (keyboardVisible !== isKeyboardVisible) {
-          isKeyboardVisible = keyboardVisible
-
-          if (isKeyboardVisible) {
+      if (window.visualViewport) {
+        const currentHeight = window.visualViewport.height
+        const heightDifference = initialViewportHeight - currentHeight
+        
+        if (heightDifference > 150) { // Keyboard likely open
+          if (!isKeyboardVisible) {
+            isKeyboardVisible = true
             document.body.classList.add('keyboard-visible')
-          } else {
+          }
+        } else { // Keyboard likely closed
+          if (isKeyboardVisible) {
+            isKeyboardVisible = false
             document.body.classList.remove('keyboard-visible')
           }
         }
       }
+    }
 
-      window.visualViewport.addEventListener('resize', handleVisualViewportChange)
+    const handleFocusIn = () => {
+      // Small delay to allow keyboard animation
+      setTimeout(() => {
+        if (window.visualViewport) {
+          handleViewportChange()
+        }
+      }, 300)
+    }
 
-      return () => {
-        window.visualViewport?.removeEventListener('resize', handleVisualViewportChange)
+    const handleFocusOut = () => {
+      setTimeout(() => {
+        if (isKeyboardVisible) {
+          isKeyboardVisible = false
+          document.body.classList.remove('keyboard-visible')
+        }
+      }, 300)
+    }
+
+    // Use Visual Viewport API if available
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleViewportChange)
+    }
+
+    // Fallback for older browsers and additional reliability
+    document.addEventListener('focusin', handleFocusIn)
+    document.addEventListener('focusout', handleFocusOut)
+
+    return () => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleViewportChange)
       }
-    } else {
-      // Fallback for older browsers
-      window.addEventListener('resize', handleViewportChange)
-
-      return () => {
-        window.removeEventListener('resize', handleViewportChange)
-      }
+      document.removeEventListener('focusin', handleFocusIn)
+      document.removeEventListener('focusout', handleFocusOut)
     }
   }, [inputRef])
 }
