@@ -265,7 +265,8 @@ export function ChatPanel({
           'w-full group/form-container shrink-0 flex justify-center',
           // MODIFIED: ChatPanel main container becomes transparent if video is active
           showVideoBg ? 'bg-transparent' : 'bg-background',
-          'px-2 sm:px-4',
+          'sticky bottom-0 px-2 sm:px-4',
+          'pb-[env(safe-area-inset-bottom,4px)]',
           'z-10' // Ensure ChatPanel content is above the z-0 video
         )}
       >

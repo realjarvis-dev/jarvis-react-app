@@ -121,24 +121,26 @@
 
 /* Mobile keyboard handling styles */
 @media (max-width: 768px) {
-  .keyboard-visible .group\/form-container {
+  /* Target the form container directly when keyboard is visible */
+  .keyboard-visible .group\/form-container,
+  .keyboard-visible [class*="group/form-container"] {
     position: fixed !important;
     bottom: 0;
+    left: 0;
+    right: 0;
     transform: translateY(0);
     transition: none;
     background: var(--background);
+    z-index: 50;
   }
 
   /* Adjust main content to account for fixed input area */
-  main {
+  .keyboard-visible main {
     padding-bottom: 120px; /* Space for fixed input area */
   }
 
   /* When keyboard is visible, prevent body scroll issues */
   .keyboard-visible {
-    position: fixed;
-    width: 100%;
-    height: 100vh;
     overflow: hidden;
   }
 
