@@ -24,11 +24,13 @@ export function useMobileKeyboardHandler({ inputRef }: MobileKeyboardHandlerProp
       lastScrollTop = window.scrollY || document.documentElement.scrollTop
     }
 
-    // Prevent scroll and restore position
+    // Prevent scroll and restore position (less aggressive to reduce shaking)
     const handleScroll = () => {
       if (isKeyboardVisible) {
-        // Immediately restore scroll position
-        window.scrollTo(0, lastScrollTop)
+        // Use requestAnimationFrame for smoother restoration
+        requestAnimationFrame(() => {
+          window.scrollTo(0, lastScrollTop)
+        })
       }
     }
 

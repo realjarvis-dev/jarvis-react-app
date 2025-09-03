@@ -785,10 +785,13 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
         }
       }
 
-      // Generate suggestions in real-time as user types
-      // Use different delays based on whether user is typing or deleting
+      // Generate suggestions with longer delays on mobile to reduce shaking
       if (value.trim().length > 0) {
-        const delay = isDeleting ? 150 : 50 // Longer delay when deleting for stability
+        // Check if we're on mobile for longer delays
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+        const baseDelay = isMobile ? 200 : 50 // Much longer delay on mobile
+        const delay = isDeleting ? baseDelay + 100 : baseDelay
+        
         suggestionTimeoutRef.current = setTimeout(generateSuggestions, delay)
       } else {
         // Hide suggestions only when input is empty
