@@ -181,15 +181,10 @@ export function ChatPanel({
         className={cn(
           'w-full group/form-container shrink-0 flex justify-center',
           showVideoBg ? 'bg-transparent' : 'bg-background',
-          'sticky bottom-0 px-2 sm:px-4',
-          'pb-[calc(var(--keyboard-inset,0px)+env(safe-area-inset-bottom,4px))]',
-          'z-10' // Ensure ChatPanel content is above the z-0 video
+          'fixed bottom-0 left-0 right-0 px-2 sm:px-4',
+          'pb-[env(safe-area-inset-bottom,4px)]',
+          'z-10'
         )}
-        style={{
-          position: 'sticky',
-          bottom: 0,
-          overflow: 'hidden'
-        }}
       >
         <div className="w-full max-w-3xl">
           {showEmptyScreenContent && ( // Or use showVideoBg if content should only appear with video
