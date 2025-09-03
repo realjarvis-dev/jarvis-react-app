@@ -70,6 +70,16 @@ export function useMobileKeyboardHandler({ inputRef }: MobileKeyboardHandlerProp
       }, 300)
     }
 
+    const handleFormSubmit = () => {
+      // When form is submitted (generating response), remove keyboard classes
+      // This will return input to bottom position
+      setTimeout(() => {
+        document.body.classList.remove('keyboard-visible')
+        document.body.classList.remove('keyboard-visible-typing')
+        isKeyboardVisible = false
+      }, 100)
+    }
+
     const handleInput = () => {
       if (isKeyboardVisible) {
         checkInputContent()
@@ -91,6 +101,12 @@ export function useMobileKeyboardHandler({ inputRef }: MobileKeyboardHandlerProp
       textarea.addEventListener('input', handleInput)
     }
 
+    // Listen for form submission to return input to bottom
+    const form = textarea?.closest('form')
+    if (form) {
+      form.addEventListener('submit', handleFormSubmit)
+    }
+
     return () => {
       if (window.visualViewport) {
         window.visualViewport.removeEventListener('resize', handleViewportChange)
@@ -101,6 +117,11 @@ export function useMobileKeyboardHandler({ inputRef }: MobileKeyboardHandlerProp
       const textarea = inputRef.current?.getTextareaRef()
       if (textarea) {
         textarea.removeEventListener('input', handleInput)
+      }
+
+      const form = textarea?.closest('form')
+      if (form) {
+        form.removeEventListener('submit', handleFormSubmit)
       }
     }
   }, [inputRef])
