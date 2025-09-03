@@ -263,12 +263,25 @@ export function ChatPanel({
           'w-full group/form-container shrink-0 flex justify-center',
           // MODIFIED: ChatPanel main container becomes transparent if video is active
           showVideoBg ? 'bg-transparent' : 'bg-background',
-          // Position in middle when no messages, fixed at bottom when messages exist
-          messages.length === 0 
-            ? 'absolute top-1/2 left-0 right-0 -translate-y-1/2 px-2 sm:px-4'
-            : 'fixed bottom-0 left-0 right-0 px-2 sm:px-4 pb-[env(safe-area-inset-bottom,4px)]',
+          'px-2 sm:px-4',
           'z-10' // Ensure ChatPanel content is above the z-0 video
         )}
+        style={{
+          position: 'fixed',
+          left: 0,
+          right: 0,
+          // Use CSS custom property for dynamic positioning
+          ...(messages.length === 0 
+            ? { 
+                top: '50%',
+                transform: 'translateY(-50%)' 
+              }
+            : { 
+                // Use bottom 0 with overflow hidden on parent
+                bottom: 0,
+                transform: 'none'
+              })
+        }}
       >
         <div className="w-full max-w-3xl">
           {showEmptyScreenContent && ( // Or use showVideoBg if content should only appear with video
