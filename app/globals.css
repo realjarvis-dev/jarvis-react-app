@@ -119,25 +119,7 @@
   }
 }
 
-/* Fix the original problematic CSS rule that caused input to go up */
-.keyboard-visible .group\/form-container {
-  /* Use sticky instead of fixed to prevent input from moving up */
-  position: sticky;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 50;
-}
-
-/* Fix for very small screens - also use sticky instead of fixed */
-@media (max-height: 500px) {
-  .group\/form-container {
-    position: sticky;
-    bottom: 0;
-    left: 0;
-    right: 0;
-  }
-}
+/* Completely remove keyboard-visible CSS rules - let browser handle naturally */
 
 html, body, #__next {
   height: 100dvh;
