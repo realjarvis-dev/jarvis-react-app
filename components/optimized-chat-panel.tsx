@@ -23,8 +23,7 @@ import { IconLogo } from './ui/icons'
 import { WelcomeMessage } from './welcome-messages'
 import { WithTooltip } from './with-tooltip'
 
-// Import mobile keyboard handler
-const { useMobileKeyboardHandler } = require('./mobile-keyboard-handler')
+// Mobile keyboard handler removed - let browser handle naturally
 
 interface ChatPanelProps {
   input: string
