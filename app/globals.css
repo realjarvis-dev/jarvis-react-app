@@ -119,8 +119,20 @@
   }
 }
 
-/* Mobile keyboard handling - prevent scroll approach */
+/* Mobile keyboard handling - CSS-only approach to prevent shaking */
 @media (max-width: 768px) {
+  /* Use environment variables for dynamic viewport */
+  html {
+    height: 100vh;
+    height: 100dvh; /* Dynamic viewport height */
+  }
+  
+  body {
+    height: 100vh;
+    height: 100dvh;
+    overflow-x: hidden;
+  }
+  
   /* Normal sticky positioning for mobile */
   .group\/form-container {
     position: sticky;
@@ -130,19 +142,29 @@
     z-index: 50;
   }
   
-  /* When keyboard is visible, body is fixed so input stays in place */
+  /* When keyboard is visible, use CSS containment to prevent layout shifts */
   .keyboard-visible {
-    /* Body will be fixed by JS, no additional CSS needed */
+    /* Prevent layout shifts by containing the layout */
+    contain: layout style;
   }
   
   .keyboard-visible .group\/form-container {
-    /* Keep normal sticky positioning, body scroll lock prevents movement */
+    /* Use transform instead of position changes to avoid shaking */
     position: sticky;
     bottom: 0;
     left: 0;
     right: 0;
     z-index: 50;
     background: var(--background);
+    /* Ensure it stays above keyboard using CSS custom property */
+    transform: translateY(calc(-1 * var(--keyboard-height, 0px) * 0.1));
+    transition: transform 0.2s ease-out;
+  }
+  
+  /* Prevent body scroll when keyboard is visible */
+  .keyboard-visible {
+    overflow: hidden;
+    position: relative;
   }
 }
 
