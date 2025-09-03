@@ -19,6 +19,17 @@ export function useMobileKeyboardHandler({ inputRef }: MobileKeyboardHandlerProp
     let initialViewportHeight = window.visualViewport?.height || window.innerHeight
     let isKeyboardVisible = false
 
+    const checkInputContent = () => {
+      const textarea = inputRef.current?.getTextareaRef()
+      if (textarea) {
+        if (textarea.value.trim().length > 0) {
+          document.body.classList.add('keyboard-visible-typing')
+        } else {
+          document.body.classList.remove('keyboard-visible-typing')
+        }
+      }
+    }
+
     const handleViewportChange = () => {
       if (window.visualViewport) {
         const currentHeight = window.visualViewport.height
@@ -28,11 +39,13 @@ export function useMobileKeyboardHandler({ inputRef }: MobileKeyboardHandlerProp
           if (!isKeyboardVisible) {
             isKeyboardVisible = true
             document.body.classList.add('keyboard-visible')
+            checkInputContent()
           }
         } else { // Keyboard likely closed
           if (isKeyboardVisible) {
             isKeyboardVisible = false
             document.body.classList.remove('keyboard-visible')
+            document.body.classList.remove('keyboard-visible-typing')
           }
         }
       }
@@ -52,8 +65,15 @@ export function useMobileKeyboardHandler({ inputRef }: MobileKeyboardHandlerProp
         if (isKeyboardVisible) {
           isKeyboardVisible = false
           document.body.classList.remove('keyboard-visible')
+          document.body.classList.remove('keyboard-visible-typing')
         }
       }, 300)
+    }
+
+    const handleInput = () => {
+      if (isKeyboardVisible) {
+        checkInputContent()
+      }
     }
 
     // Use Visual Viewport API if available
@@ -64,6 +84,12 @@ export function useMobileKeyboardHandler({ inputRef }: MobileKeyboardHandlerProp
     // Fallback for older browsers and additional reliability
     document.addEventListener('focusin', handleFocusIn)
     document.addEventListener('focusout', handleFocusOut)
+    
+    // Listen for input changes to detect typing
+    const textarea = inputRef.current?.getTextareaRef()
+    if (textarea) {
+      textarea.addEventListener('input', handleInput)
+    }
 
     return () => {
       if (window.visualViewport) {
@@ -71,6 +97,11 @@ export function useMobileKeyboardHandler({ inputRef }: MobileKeyboardHandlerProp
       }
       document.removeEventListener('focusin', handleFocusIn)
       document.removeEventListener('focusout', handleFocusOut)
+      
+      const textarea = inputRef.current?.getTextareaRef()
+      if (textarea) {
+        textarea.removeEventListener('input', handleInput)
+      }
     }
   }, [inputRef])
 }

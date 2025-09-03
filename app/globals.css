@@ -121,23 +121,29 @@
 
 /* Mobile keyboard handling styles */
 @media (max-width: 768px) {
-  /* Target the form container directly when keyboard is visible */
+  /* Initial state: when keyboard first appears, position input higher for visibility */
   .keyboard-visible .group\/form-container,
   .keyboard-visible [class*="group/form-container"] {
     position: fixed !important;
-    top: 60%;
+    top: 40%;
     left: 0;
     right: 0;
     transform: translateY(-50%);
-    transition: none;
+    transition: top 0.3s ease;
     background: var(--background);
     z-index: 50;
-    max-height: 150px; /* Reduce height for more compact appearance */
+    max-height: 150px;
+  }
+
+  /* After user starts typing, move input lower to show more content */
+  .keyboard-visible-typing .group\/form-container,
+  .keyboard-visible-typing [class*="group/form-container"] {
+    top: 70% !important;
   }
 
   /* Adjust main content to account for fixed input area */
   .keyboard-visible main {
-    padding-bottom: 120px; /* Space for fixed input area */
+    padding-bottom: 120px;
   }
 
   /* When keyboard is visible, prevent body scroll issues */
@@ -147,9 +153,15 @@
 
   /* Ensure scroll container works properly with keyboard */
   .keyboard-visible #scroll-container {
-    height: calc(60% - 75px); /* Give more space for content above input */
+    height: calc(40% - 75px); /* Initial smaller area */
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    transition: height 0.3s ease;
+  }
+
+  /* Expand scroll area when input moves down after typing */
+  .keyboard-visible-typing #scroll-container {
+    height: calc(70% - 75px);
   }
 }
 
