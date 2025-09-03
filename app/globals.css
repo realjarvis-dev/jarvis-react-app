@@ -119,66 +119,14 @@
   }
 }
 
-/* Mobile keyboard handling - work with browser behavior instead of fighting it */
+/* Mobile keyboard handling - minimal approach */
 @media (max-width: 768px) {
-  /* Use viewport units that account for keyboard */
-  html {
-    height: 100vh;
-    height: 100svh; /* Small viewport height - excludes keyboard */
-  }
-  
-  body {
-    height: 100vh;
-    height: 100svh;
-    overflow-x: hidden;
-  }
-  
-  /* Make input area always visible using viewport units */
-  .group\/form-container {
-    position: fixed;
+  /* Just ensure input stays visible without complex positioning */
+  .keyboard-visible .group\/form-container {
+    position: sticky;
     bottom: 0;
-    left: 0;
-    right: 0;
     z-index: 50;
     background: var(--background);
-    border-top: 1px solid var(--border);
-    /* Use small viewport height to ensure it's always visible */
-    max-height: 30svh;
-  }
-  
-  /* Adjust main content to account for fixed input */
-  main {
-    padding-bottom: 120px;
-    height: calc(100svh - 120px);
-    overflow-y: auto;
-  }
-  
-  /* Ensure scroll container works with fixed input */
-  #scroll-container {
-    height: calc(100svh - 120px);
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-}
-
-/* Handle very small screens */
-@media (max-height: 500px) {
-  .group\/form-container {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 50;
-    max-height: 25svh;
-  }
-  
-  main {
-    padding-bottom: 100px;
-    height: calc(100svh - 100px);
-  }
-  
-  #scroll-container {
-    height: calc(100svh - 100px);
   }
 }
 

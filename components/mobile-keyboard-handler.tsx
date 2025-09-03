@@ -9,65 +9,21 @@ interface MobileKeyboardHandlerProps {
 
 export function useMobileKeyboardHandler({ inputRef }: MobileKeyboardHandlerProps) {
   useEffect(() => {
-    // Only run on mobile devices
+    // Actually, let's not interfere at all and let the browser handle it naturally
+    // The CSS sticky positioning should be enough
+    
+    // Only add a simple class for potential CSS styling if needed
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
       navigator.userAgent
     )
     
-    if (!isMobile) return
+    if (isMobile) {
+      document.body.classList.add('mobile-device')
+    }
 
-    // Simple approach - just detect keyboard and add class for CSS to handle
-    let isKeyboardVisible = false
-
-    // Handle Visual Viewport API (iOS Safari, modern browsers)
-    if (window.visualViewport) {
-      const handleVisualViewportChange = () => {
-        const keyboardHeight = window.innerHeight - window.visualViewport!.height
-        const keyboardVisible = keyboardHeight > 150
-        
-        if (keyboardVisible !== isKeyboardVisible) {
-          isKeyboardVisible = keyboardVisible
-          
-          if (isKeyboardVisible) {
-            document.body.classList.add('keyboard-visible')
-          } else {
-            document.body.classList.remove('keyboard-visible')
-          }
-        }
-      }
-
-      window.visualViewport.addEventListener('resize', handleVisualViewportChange)
-      
-      return () => {
-        window.visualViewport?.removeEventListener('resize', handleVisualViewportChange)
-        document.body.classList.remove('keyboard-visible')
-      }
-    } else {
-      // Fallback for older browsers
-      let initialViewportHeight = window.innerHeight
-
-      const handleViewportChange = () => {
-        const currentHeight = window.innerHeight
-        const heightDifference = initialViewportHeight - currentHeight
-        const keyboardVisible = heightDifference > 150
-        
-        if (keyboardVisible !== isKeyboardVisible) {
-          isKeyboardVisible = keyboardVisible
-          
-          if (isKeyboardVisible) {
-            document.body.classList.add('keyboard-visible')
-          } else {
-            document.body.classList.remove('keyboard-visible')
-          }
-        }
-      }
-
-      window.addEventListener('resize', handleViewportChange)
-      
-      return () => {
-        window.removeEventListener('resize', handleViewportChange)
-        document.body.classList.remove('keyboard-visible')
-      }
+    return () => {
+      document.body.classList.remove('mobile-device')
+      document.body.classList.remove('keyboard-visible')
     }
   }, [inputRef])
 }
