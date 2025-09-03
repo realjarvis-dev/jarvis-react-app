@@ -119,23 +119,61 @@
   }
 }
 
-/* Add to your global CSS */
-.keyboard-visible .group\/form-container {
-  /* Ensure the container stays visible when keyboard is open */
-  position: fixed;
-  bottom: env(safe-area-inset-bottom, 0);
-  left: 0;
-  right: 0;
-  z-index: 50;
-}
-
-/* Fix for very small screens */
-@media (max-height: 500px) {
+/* Mobile keyboard handling - improved approach */
+@media (max-width: 768px) {
+  /* Ensure chat input container is always fixed on mobile */
   .group\/form-container {
-    position: fixed;
-    bottom: env(safe-area-inset-bottom, 0);
+    position: fixed !important;
+    bottom: env(safe-area-inset-bottom, 0px);
     left: 0;
     right: 0;
+    z-index: 50;
+    background: var(--background);
+    border-top: 1px solid var(--border);
+  }
+  
+  /* When keyboard is visible, keep input visible and accessible */
+  .keyboard-visible .group\/form-container {
+    position: fixed !important;
+    bottom: 0;
+    transform: translateY(0);
+    transition: none;
+    background: var(--background);
+  }
+  
+  /* Adjust main content to account for fixed input area */
+  main {
+    padding-bottom: 120px; /* Space for fixed input area */
+  }
+  
+  /* When keyboard is visible, prevent body scroll issues */
+  .keyboard-visible {
+    position: fixed;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+  }
+  
+  /* Ensure scroll container works properly with keyboard */
+  .keyboard-visible #scroll-container {
+    height: calc(100vh - 120px); /* Account for input area */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Fix for very small screens and landscape mode */
+@media (max-height: 500px) {
+  .group\/form-container {
+    position: fixed !important;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+  }
+  
+  main {
+    padding-bottom: 100px; /* Smaller padding for landscape */
   }
 }
 
@@ -159,4 +197,3 @@ html, body, #__next {
     box-shadow: 0 0 10px rgba(250, 204, 21, 0.6), 0 0 20px rgba(250, 204, 21, 0.4);
   }
 }
-

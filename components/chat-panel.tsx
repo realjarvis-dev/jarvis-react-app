@@ -11,12 +11,11 @@ import {
 import { Message } from 'ai'
 import { ArrowUp, ChevronDown, MessageCirclePlus, Square } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { RefObject, useEffect, useRef, useState } from 'react'
-import Textarea from 'react-textarea-autosize'
-import { AutoCompleteInput, AutoCompleteInputRef } from './autocomplete-input'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { useWalletAddresses } from '../lib/hooks/use-evm-and-sol-addresses'
 import { useArtifact } from './artifact/artifact-context'
+import { AutoCompleteInput, AutoCompleteInputRef } from './autocomplete-input'
 import { SuggestionPills } from './chat-panel/suggestion-pills'
 import { CopyableWalletAddress } from './copyable-wallet-address'
 import { CopyableWalletAddressSkeleton } from './copyable-wallet-address-skeleton'
@@ -31,167 +30,6 @@ import { Button } from './ui/button'
 import { IconLogo } from './ui/icons'
 import { VideoBackground } from './ui/video-background'
 import { WelcomeMessage } from './welcome-messages'
-
-
-// Custom hook for keyboard avoidance on mobile
-function useKeyboardAvoidance({
-  ref
-}: {
-  ref: RefObject<AutoCompleteInputRef>
-}): void {
-  useEffect(() => {
-    // Check if visualViewport API is available
-    const hasVisualViewport =
-      typeof window !== 'undefined' && 'visualViewport' in window
-    const hasVirtualKeyboard =
-      typeof navigator !== 'undefined' && 'virtualKeyboard' in navigator
-
-    // Function to handle visual viewport changes
-    const handleVisualViewportChange = () => {
-      if (!window.visualViewport) return
-
-      // Calculate keyboard height as difference between window height and visual viewport height
-      // This works on both iOS and Android
-      const keyboardHeight = Math.max(
-        0,
-        window.innerHeight - window.visualViewport.height
-      )
-
-      // Set the CSS variable
-      document.documentElement.style.setProperty(
-        '--keyboard-inset',
-        `${keyboardHeight}px`
-      )
-
-      // Add a class to the body when keyboard is visible (for potential CSS adjustments)
-      if (keyboardHeight > 0) {
-        document.body.classList.add('keyboard-visible')
-
-        // Wait for the layout to stabilize before scrolling
-        setTimeout(() => {
-          const scrollContainer = document.getElementById('scroll-container')
-          if (scrollContainer && ref.current) {
-            scrollContainer.scrollTo({
-              top: scrollContainer.scrollHeight,
-              behavior: 'smooth'
-            })
-          }
-        }, 300) // Increased from 100ms to 300ms for better reliability
-      } else {
-        document.body.classList.remove('keyboard-visible')
-      }
-    }
-
-    // Handle VirtualKeyboard API if available (modern Chrome/Android)
-    if (hasVirtualKeyboard) {
-      // @ts-ignore - VirtualKeyboard API may not be in types yet
-      navigator.virtualKeyboard.overlaysContent = true
-
-      const updateInset = () => {
-        // @ts-ignore - VirtualKeyboard API may not be in types yet
-        const keyboardHeight = navigator.virtualKeyboard.boundingRect.height
-        document.documentElement.style.setProperty(
-          '--keyboard-inset',
-          `${keyboardHeight}px`
-        )
-
-        if (keyboardHeight > 0) {
-          document.body.classList.add('keyboard-visible')
-
-          // Wait before scrolling to ensure layout is updated
-          setTimeout(() => {
-            const scrollContainer = document.getElementById('scroll-container')
-            if (scrollContainer && ref.current) {
-              scrollContainer.scrollTo({
-                top: scrollContainer.scrollHeight,
-                behavior: 'smooth'
-              })
-            }
-          }, 300)
-        } else {
-          document.body.classList.remove('keyboard-visible')
-        }
-      }
-
-      // @ts-ignore - VirtualKeyboard API may not be in types yet
-      navigator.virtualKeyboard.addEventListener('geometrychange', updateInset)
-
-      return () => {
-        // @ts-ignore - VirtualKeyboard API may not be in types yet
-        navigator.virtualKeyboard.removeEventListener(
-          'geometrychange',
-          updateInset
-        )
-      }
-    }
-    // Fallback to Visual Viewport API (works on iOS Safari)
-    else if (hasVisualViewport && window.visualViewport) {
-      window.visualViewport.addEventListener(
-        'resize',
-        handleVisualViewportChange
-      )
-      window.visualViewport.addEventListener(
-        'scroll',
-        handleVisualViewportChange
-      )
-
-      return () => {
-        if (window.visualViewport) {
-          window.visualViewport.removeEventListener(
-            'resize',
-            handleVisualViewportChange
-          )
-          window.visualViewport.removeEventListener(
-            'scroll',
-            handleVisualViewportChange
-          )
-        }
-      }
-    }
-    // Last resort fallback for older browsers
-    else {
-      const handleResize = () => {
-        // More reliable detection using aspect ratio rather than fixed percentage
-        const portraitOrientation = window.innerHeight > window.innerWidth
-        const normalAspectRatio = portraitOrientation ? 1.6 : 0.625 // Typical aspect ratios
-        const currentAspectRatio = window.innerWidth / window.innerHeight
-
-        // Keyboard is likely visible if aspect ratio changes significantly
-        const isKeyboardVisible =
-          Math.abs(currentAspectRatio - normalAspectRatio) > 0.3
-
-        if (isKeyboardVisible) {
-          // Estimate keyboard height (rough approximation)
-          const estimatedKeyboardHeight = window.innerHeight * 0.4
-          document.documentElement.style.setProperty(
-            '--keyboard-inset',
-            `${estimatedKeyboardHeight}px`
-          )
-          document.body.classList.add('keyboard-visible')
-
-          setTimeout(() => {
-            const scrollContainer = document.getElementById('scroll-container')
-            if (scrollContainer) {
-              scrollContainer.scrollTo({
-                top: scrollContainer.scrollHeight,
-                behavior: 'smooth'
-              })
-            }
-          }, 300)
-        } else {
-          document.documentElement.style.setProperty('--keyboard-inset', '0px')
-          document.body.classList.remove('keyboard-visible')
-        }
-      }
-
-      window.addEventListener('resize', handleResize)
-
-      return () => {
-        window.removeEventListener('resize', handleResize)
-      }
-    }
-  }, [ref])
-}
 
 interface ChatPanelProps {
   input: string
@@ -246,8 +84,9 @@ export function ChatPanel({
   // Network selection state
   const { selectedChain, setSelectedChain, isDemoMode, setIsDemoMode } = useNetwork()
 
-  // Apply keyboard avoidance hook
-  useKeyboardAvoidance({ ref: inputRef })
+  // Apply mobile keyboard handler
+  const { useMobileKeyboardHandler } = require('./mobile-keyboard-handler')
+  useMobileKeyboardHandler({ inputRef })
 
   function handleCompositionStart() {
     return setIsComposing(true)
