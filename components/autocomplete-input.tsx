@@ -567,6 +567,7 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
     const [previousValue, setPreviousValue] = useState('')
     const [isDeleting, setIsDeleting] = useState(false)
     const [justAppliedSuggestion, setJustAppliedSuggestion] = useState(false)
+    const [stableOpen, setStableOpen] = useState(false)
     
     const textareaRef = useRef<HTMLTextAreaElement>(null)
     const suggestionEngine = useRef<any>(null)
@@ -574,6 +575,7 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
     const networkContext = useNetwork()
     const typingTimeoutRef = useRef<NodeJS.Timeout>()
     const suggestionTimeoutRef = useRef<NodeJS.Timeout>()
+    const stableOpenTimeoutRef = useRef<NodeJS.Timeout>()
     const selectedItemRef = useRef<HTMLDivElement>(null)
     const currentSuggestionsRef = useRef<any[]>([])
     
@@ -601,6 +603,9 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
         }
         if (suggestionTimeoutRef.current) {
           clearTimeout(suggestionTimeoutRef.current)
+        }
+        if (stableOpenTimeoutRef.current) {
+          clearTimeout(stableOpenTimeoutRef.current)
         }
       }
     }, [])
@@ -747,22 +752,31 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
           }
           
           
-          // Show popover when there are relevant suggestions
-          if (finalSuggestions.length > 0 && value.trim().length > 0) {
-            setIsOpen(true)
-            // Auto-select first item when dropdown opens or suggestions change
-            if (!isDeleting) {
-              setSelectedIndex(0) // Always select first item
+          // Use debounced state management to prevent flashing
+          const shouldOpen = finalSuggestions.length > 0 && value.trim().length > 0
+          
+          if (shouldOpen !== isOpen) {
+            // Clear any pending stable open timeout
+            if (stableOpenTimeoutRef.current) {
+              clearTimeout(stableOpenTimeoutRef.current)
             }
-          } else if (value.trim().length > 0) {
-            // Keep dropdown open even without suggestions to prevent flashing
-            setIsOpen(true)
-            if (!isDeleting) {
-              setSelectedIndex(-1)
+            
+            if (shouldOpen) {
+              // Open immediately when we have suggestions
+              setIsOpen(true)
+              if (!isDeleting) {
+                setSelectedIndex(0)
+              }
+            } else {
+              // Delay closing to prevent flashing
+              stableOpenTimeoutRef.current = setTimeout(() => {
+                setIsOpen(false)
+                setSelectedIndex(-1)
+              }, 100)
             }
-          } else {
-            setIsOpen(false)
-            setSelectedIndex(-1)
+          } else if (shouldOpen && !isDeleting) {
+            // Update selection if we're still open and have suggestions
+            setSelectedIndex(0)
           }
         } catch (error) {
           console.error('Error generating suggestions:', error)
@@ -772,9 +786,8 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
       }
 
       // Generate suggestions in real-time as user types
-      // Use different delays based on whether user is typing or deleting
       if (value.trim().length > 0) {
-        const delay = isDeleting ? 150 : 50 // Longer delay when deleting for stability
+        const delay = isDeleting ? 150 : 50 // Standard delays for all devices
         suggestionTimeoutRef.current = setTimeout(generateSuggestions, delay)
       } else {
         // Hide suggestions only when input is empty
@@ -1020,6 +1033,12 @@ export const AutoCompleteInput = forwardRef<AutoCompleteInputRef, AutoCompleteIn
             sideOffset={8}
             onOpenAutoFocus={(e) => e.preventDefault()}
             onCloseAutoFocus={(e) => e.preventDefault()}
+            avoidCollisions={false}
+            sticky="always"
+            style={{
+              position: 'fixed',
+              zIndex: 9999
+            }}
           >
             <Command className="border-0 bg-transparent" shouldFilter={false}>
               <CommandList className="max-h-[200px] overflow-y-auto" role="listbox">

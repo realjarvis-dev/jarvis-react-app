@@ -1,9 +1,9 @@
 import AppSidebar from '@/components/app-sidebar'
 import ArtifactRoot from '@/components/artifact/artifact-root'
 import Header from '@/components/header'
+import { PriceAlertProvider } from '@/components/price-alert-provider'
 import WrappedPrivyProvider from '@/components/privy-provider'
 import { QueryProvider } from '@/components/query-provider'
-import { PriceAlertProvider } from '@/components/price-alert-provider'
 import { ThemeProvider } from '@/components/theme-provider'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { Toaster } from '@/components/ui/sonner'
@@ -46,7 +46,8 @@ export const viewport: Viewport = {
   minimumScale: 1,
   maximumScale: 1,
   userScalable: false,
-  viewportFit: 'cover'
+  viewportFit: 'cover',
+  interactiveWidget: 'resizes-content'
 }
 
 export default async function RootLayout({
