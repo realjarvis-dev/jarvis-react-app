@@ -411,7 +411,7 @@ export const chains = [
     "key": "kai",
     "chainType": "EVM",
     "name": "Kaia",
-    "coin": "KLAY",
+    "coin": "KAIA",
     "id": 8217,
     "mainnet": true
   },
