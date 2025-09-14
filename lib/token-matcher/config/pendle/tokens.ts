@@ -2819,39 +2819,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
-      "address": "0xd7158ee345dab25b4fc95266c2bd8d062f243a13",
-      "symbol": "PT-YU-04DEC2025",
-      "name": "PT YU 04DEC2025",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0x8585177b041cd3c3fbec607fb620230259cd70db",
-      "expiry": "2025-12-04T00:00:00.000Z",
-      "underlyingAsset": "0xe868084cf08f3c3db11f4b73a95473762d9463f7"
-    },
-    {
-      "chainId": 1,
-      "address": "0x2c4f6e06ff4ffa2424ebf24dc4823f31a9b03d7d",
-      "symbol": "YT-YU-04DEC2025",
-      "name": "YT YU 04DEC2025",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0x8585177b041cd3c3fbec607fb620230259cd70db",
-      "expiry": "2025-12-04T00:00:00.000Z",
-      "underlyingAsset": "0xe868084cf08f3c3db11f4b73a95473762d9463f7"
-    },
-    {
-      "chainId": 1,
-      "address": "0x385d17215295a186c1ff0d1fd121831694dd9ba4",
-      "symbol": "SY-YU",
-      "name": "SY YU",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0x8585177b041cd3c3fbec607fb620230259cd70db",
-      "expiry": "2025-12-04T00:00:00.000Z",
-      "underlyingAsset": "0xe868084cf08f3c3db11f4b73a95473762d9463f7"
-    },
-    {
-      "chainId": 1,
       "address": "0xbe2f09fba2e51553306971f4d759128857d84ea9",
       "symbol": "PT-sGHO-18DEC2025",
       "name": "PT sGHO 18DEC2025",
@@ -4540,39 +4507,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0x53fb20ff03ef94ef224557cc6262e0f11c20f718",
       "expiry": "2026-01-29T00:00:00.000Z",
       "underlyingAsset": "0x548d3b444da39686d1a6f1544781d154e7cd1ef7"
-    },
-    {
-      "chainId": 8453,
-      "address": "0x945c047af002588f17efd1cba951a5a447284d3c",
-      "symbol": "PT-YU-04DEC2025",
-      "name": "PT YU 04DEC2025",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0x10c2b26cb728b672f78c5badda8c5376d08cbfd0",
-      "expiry": "2025-12-04T00:00:00.000Z",
-      "underlyingAsset": "0xe868084cf08f3c3db11f4b73a95473762d9463f7"
-    },
-    {
-      "chainId": 8453,
-      "address": "0x6df7e4c782a19cbfd3c6d9020b4ce5eb5272fa6b",
-      "symbol": "YT-YU-04DEC2025",
-      "name": "YT YU 04DEC2025",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0x10c2b26cb728b672f78c5badda8c5376d08cbfd0",
-      "expiry": "2025-12-04T00:00:00.000Z",
-      "underlyingAsset": "0xe868084cf08f3c3db11f4b73a95473762d9463f7"
-    },
-    {
-      "chainId": 8453,
-      "address": "0xe36ed9610a514977f18530c5897e1ebae5c578a5",
-      "symbol": "SY-YU",
-      "name": "SY YU",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0x10c2b26cb728b672f78c5badda8c5376d08cbfd0",
-      "expiry": "2025-12-04T00:00:00.000Z",
-      "underlyingAsset": "0xe868084cf08f3c3db11f4b73a95473762d9463f7"
     },
     {
       "chainId": 8453,
