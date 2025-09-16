@@ -3182,6 +3182,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
+      "address": "0xc03c7a196577aa2d0e616091c58d5e25aee5ff8d",
+      "symbol": "PT-sENA-27NOV2025",
+      "name": "PT sENA 27NOV2025",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x78728b6a081e800204d5abaaa559a84f2404335e",
+      "expiry": "2025-11-27T00:00:00.000Z",
+      "underlyingAsset": "0x8be3460a480c80728a8c4d7a5d5303c85ba7b3b9"
+    },
+    {
+      "chainId": 1,
+      "address": "0xd69c646274e192222cc26787fd4b1cf5498cf98a",
+      "symbol": "YT-sENA-27NOV2025",
+      "name": "YT sENA 27NOV2025",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x78728b6a081e800204d5abaaa559a84f2404335e",
+      "expiry": "2025-11-27T00:00:00.000Z",
+      "underlyingAsset": "0x8be3460a480c80728a8c4d7a5d5303c85ba7b3b9"
+    },
+    {
+      "chainId": 1,
+      "address": "0xa36ecca8b7624d224f01cd6649c8afad3da12c3d",
+      "symbol": "SY-sENA",
+      "name": "SY sENA",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x78728b6a081e800204d5abaaa559a84f2404335e",
+      "expiry": "2025-11-27T00:00:00.000Z",
+      "underlyingAsset": "0x8be3460a480c80728a8c4d7a5d5303c85ba7b3b9"
+    },
+    {
+      "chainId": 1,
       "address": "0xfceeb7586bab730fa400a5bf3fcf298d0db4c7e7",
       "symbol": "PT-wstUSR-29JAN2026",
       "name": "PT wstUSR 29JAN2026",
@@ -5040,6 +5073,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 42161,
+      "address": "0xc3869d889fdf0d6e0a2df0992e46027405701890",
+      "symbol": "PT-gmETH (WETH-WETH)-29JAN2026",
+      "name": "PT gmETH (WETH-WETH) 29JAN2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x358925d171380e05b12036a2bf7051704cb85fab",
+      "expiry": "2026-01-29T00:00:00.000Z",
+      "underlyingAsset": "0x450bb6774dd8a756274e0ab4107953259d2ac541"
+    },
+    {
+      "chainId": 42161,
+      "address": "0x950a0875b67c716c64a4ff13fb5ef818e02286ec",
+      "symbol": "YT-gmETH (WETH-WETH)-29JAN2026",
+      "name": "YT gmETH (WETH-WETH) 29JAN2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x358925d171380e05b12036a2bf7051704cb85fab",
+      "expiry": "2026-01-29T00:00:00.000Z",
+      "underlyingAsset": "0x450bb6774dd8a756274e0ab4107953259d2ac541"
+    },
+    {
+      "chainId": 42161,
+      "address": "0xb85ae9fb0fb67949b6b4e846e661c88956767da5",
+      "symbol": "SY-gmETH (WETH-WETH)",
+      "name": "SY gmETH (WETH-WETH)",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x358925d171380e05b12036a2bf7051704cb85fab",
+      "expiry": "2026-01-29T00:00:00.000Z",
+      "underlyingAsset": "0x450bb6774dd8a756274e0ab4107953259d2ac541"
+    },
+    {
+      "chainId": 42161,
       "address": "0x6a7f876141b776c9df43697af16c916c1ca26bf1",
       "symbol": "PT-RLP-29JAN2026",
       "name": "PT RLP 29JAN2026",
@@ -5103,6 +5169,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0x4ed09847377c30aa4e74ad071e719c5814ad9ead",
       "expiry": "2025-11-27T00:00:00.000Z",
       "underlyingAsset": "0xfdd22ce6d1f66bc0ec89b20bf16ccb6670f55a5a"
+    },
+    {
+      "chainId": 42161,
+      "address": "0xd34f5c82490d1aab7a6f66d338c06d791a36b6e9",
+      "symbol": "PT-wstUSR-29JAN2026",
+      "name": "PT wstUSR 29JAN2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x6dd74def62c5877d7b3e1748f3bfa7d2646e41dc",
+      "expiry": "2026-01-29T00:00:00.000Z",
+      "underlyingAsset": "0x66cfbd79257dc5217903a36293120282548e2254"
+    },
+    {
+      "chainId": 42161,
+      "address": "0x1a4e2416aecbaff968797228d9aa6109fa1b814a",
+      "symbol": "YT-wstUSR-29JAN2026",
+      "name": "YT wstUSR 29JAN2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x6dd74def62c5877d7b3e1748f3bfa7d2646e41dc",
+      "expiry": "2026-01-29T00:00:00.000Z",
+      "underlyingAsset": "0x66cfbd79257dc5217903a36293120282548e2254"
+    },
+    {
+      "chainId": 42161,
+      "address": "0x9e9093a12b343c0f4d519ab093bef989b1936f73",
+      "symbol": "SY-wstUSR",
+      "name": "SY wstUSR",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x6dd74def62c5877d7b3e1748f3bfa7d2646e41dc",
+      "expiry": "2026-01-29T00:00:00.000Z",
+      "underlyingAsset": "0x66cfbd79257dc5217903a36293120282548e2254"
     }
   ],
   "80094": [
