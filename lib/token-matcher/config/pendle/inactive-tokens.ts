@@ -8069,6 +8069,39 @@ export const pendleInactiveTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0xec3fb79d229ef53c8b5cd64c171097ffc8a00dc5",
       "expiry": "2025-06-26T00:00:00.000Z",
       "underlyingAsset": "0xe6829d9a7ee3040e1276fa75293bde931859e8fa"
+    },
+    {
+      "chainId": 5000,
+      "address": "0x698eb002a4ec013a33286f7f2ba0be3970e66455",
+      "symbol": "PT-cmETH-18SEP2025",
+      "name": "PT cmETH 18SEP2025",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x6304ccbda63a7fb94919c705de54f9889f3ce047",
+      "expiry": "2025-09-18T00:00:00.000Z",
+      "underlyingAsset": "0xe6829d9a7ee3040e1276fa75293bde931859e8fa"
+    },
+    {
+      "chainId": 5000,
+      "address": "0xaffe4b1b1eebe6dd1ee31ad27c88a918825c89f8",
+      "symbol": "YT-cmETH-18SEP2025",
+      "name": "YT cmETH 18SEP2025",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x6304ccbda63a7fb94919c705de54f9889f3ce047",
+      "expiry": "2025-09-18T00:00:00.000Z",
+      "underlyingAsset": "0xe6829d9a7ee3040e1276fa75293bde931859e8fa"
+    },
+    {
+      "chainId": 5000,
+      "address": "0x2ab88ac7458faec2e952bb79cc1be6577bf63e70",
+      "symbol": "SY-cmETH",
+      "name": "SY cmETH",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x6304ccbda63a7fb94919c705de54f9889f3ce047",
+      "expiry": "2025-09-18T00:00:00.000Z",
+      "underlyingAsset": "0xe6829d9a7ee3040e1276fa75293bde931859e8fa"
     }
   ],
   "8453": [
