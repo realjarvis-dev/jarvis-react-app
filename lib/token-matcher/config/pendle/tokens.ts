@@ -4511,39 +4511,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 42161,
-      "address": "0xc3869d889fdf0d6e0a2df0992e46027405701890",
-      "symbol": "PT-gmETH (WETH-WETH)-29JAN2026",
-      "name": "PT gmETH (WETH-WETH) 29JAN2026",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0x358925d171380e05b12036a2bf7051704cb85fab",
-      "expiry": "2026-01-29T00:00:00.000Z",
-      "underlyingAsset": "0x450bb6774dd8a756274e0ab4107953259d2ac541"
-    },
-    {
-      "chainId": 42161,
-      "address": "0x950a0875b67c716c64a4ff13fb5ef818e02286ec",
-      "symbol": "YT-gmETH (WETH-WETH)-29JAN2026",
-      "name": "YT gmETH (WETH-WETH) 29JAN2026",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0x358925d171380e05b12036a2bf7051704cb85fab",
-      "expiry": "2026-01-29T00:00:00.000Z",
-      "underlyingAsset": "0x450bb6774dd8a756274e0ab4107953259d2ac541"
-    },
-    {
-      "chainId": 42161,
-      "address": "0xb85ae9fb0fb67949b6b4e846e661c88956767da5",
-      "symbol": "SY-gmETH (WETH-WETH)",
-      "name": "SY gmETH (WETH-WETH)",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0x358925d171380e05b12036a2bf7051704cb85fab",
-      "expiry": "2026-01-29T00:00:00.000Z",
-      "underlyingAsset": "0x450bb6774dd8a756274e0ab4107953259d2ac541"
-    },
-    {
-      "chainId": 42161,
       "address": "0x6a7f876141b776c9df43697af16c916c1ca26bf1",
       "symbol": "PT-RLP-29JAN2026",
       "name": "PT RLP 29JAN2026",
