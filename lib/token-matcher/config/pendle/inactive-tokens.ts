@@ -7274,6 +7274,39 @@ export const pendleInactiveTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
+      "address": "0x13d4cf01484be3c7d7445d11ec0736d307217ca6",
+      "symbol": "PT-upUSDC-02OCT2025",
+      "name": "PT upUSDC 02OCT2025",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x992d1e72b9c6b7b80747c56770c660e5ef7d5ec9",
+      "expiry": "2025-10-02T00:00:00.000Z",
+      "underlyingAsset": "0x80e1048ede66ec4c364b4f22c8768fc657ff6a42"
+    },
+    {
+      "chainId": 1,
+      "address": "0x3fd1b245aaab399bd7c80bd86be8d4de026db92f",
+      "symbol": "YT-upUSDC-02OCT2025",
+      "name": "YT upUSDC 02OCT2025",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x992d1e72b9c6b7b80747c56770c660e5ef7d5ec9",
+      "expiry": "2025-10-02T00:00:00.000Z",
+      "underlyingAsset": "0x80e1048ede66ec4c364b4f22c8768fc657ff6a42"
+    },
+    {
+      "chainId": 1,
+      "address": "0x9a68bba8074f78727a7b129e30175388e02a5b9d",
+      "symbol": "SY-upUSDC",
+      "name": "SY upUSDC",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x992d1e72b9c6b7b80747c56770c660e5ef7d5ec9",
+      "expiry": "2025-10-02T00:00:00.000Z",
+      "underlyingAsset": "0x80e1048ede66ec4c364b4f22c8768fc657ff6a42"
+    },
+    {
+      "chainId": 1,
       "address": "0x19c240ba234bf46458640cc40e33d9ed0ef9c841",
       "symbol": "PT-slpETH-25SEP2025",
       "name": "PT slpETH 25SEP2025",
