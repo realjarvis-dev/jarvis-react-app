@@ -368,6 +368,14 @@ export const chains = [
     "mainnet": true
   },
   {
+    "key": "sop",
+    "chainType": "EVM",
+    "name": "Sophon",
+    "coin": "SOPH",
+    "id": 50104,
+    "mainnet": true
+  },
+  {
     "key": "sup",
     "chainType": "EVM",
     "name": "Superposition",
