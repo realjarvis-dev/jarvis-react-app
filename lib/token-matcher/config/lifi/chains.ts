@@ -264,6 +264,14 @@ export const chains = [
     "mainnet": true
   },
   {
+    "key": "ron",
+    "chainType": "EVM",
+    "name": "Ronin",
+    "coin": "RON",
+    "id": 2020,
+    "mainnet": true
+  },
+  {
     "key": "opb",
     "chainType": "EVM",
     "name": "opBNB",
