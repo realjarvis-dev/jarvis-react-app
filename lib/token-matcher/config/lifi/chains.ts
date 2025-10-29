@@ -352,6 +352,14 @@ export const chains = [
     "mainnet": true
   },
   {
+    "key": "hmi",
+    "chainType": "EVM",
+    "name": "Hemi",
+    "coin": "ETH",
+    "id": 43111,
+    "mainnet": true
+  },
+  {
     "key": "wcc",
     "chainType": "EVM",
     "name": "World Chain",
@@ -405,6 +413,14 @@ export const chains = [
     "name": "BOB",
     "coin": "ETH",
     "id": 60808,
+    "mainnet": true
+  },
+  {
+    "key": "flw",
+    "chainType": "EVM",
+    "name": "Flow",
+    "coin": "FLOW",
+    "id": 747,
     "mainnet": true
   },
   {
