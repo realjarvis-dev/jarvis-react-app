@@ -3346,6 +3346,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0x6113943361e4dbaeedc0ba260195a84adebd1b9f",
       "expiry": "2026-04-16T00:00:00.000Z",
       "underlyingAsset": "0x32c830f5c34122c6afb8ae87aba541b7900a2c5f"
+    },
+    {
+      "chainId": 56,
+      "address": "0xcd18d94fda553bb956d6130ad217b63ef65888d0",
+      "symbol": "PT-cUSDO-29OCT2026",
+      "name": "PT cUSDO 29OCT2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x03bc522d619fe24b788b9a2a39944f7de1685239",
+      "expiry": "2026-10-29T00:00:00.000Z",
+      "underlyingAsset": "0x64748ea3e31d0b7916f0ff91b017b9f404ded8ef"
+    },
+    {
+      "chainId": 56,
+      "address": "0x4894ad20c952c6e4a91c2e9ba6b96e65d9bc2664",
+      "symbol": "YT-cUSDO-29OCT2026",
+      "name": "YT cUSDO 29OCT2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x03bc522d619fe24b788b9a2a39944f7de1685239",
+      "expiry": "2026-10-29T00:00:00.000Z",
+      "underlyingAsset": "0x64748ea3e31d0b7916f0ff91b017b9f404ded8ef"
+    },
+    {
+      "chainId": 56,
+      "address": "0x7a657c50c6b640ecaab7bb8dad86344169bf8c16",
+      "symbol": "SY-cUSDO",
+      "name": "SY cUSDO",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x03bc522d619fe24b788b9a2a39944f7de1685239",
+      "expiry": "2026-10-29T00:00:00.000Z",
+      "underlyingAsset": "0x64748ea3e31d0b7916f0ff91b017b9f404ded8ef"
     }
   ],
   "146": [
