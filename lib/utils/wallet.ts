@@ -1,12 +1,11 @@
-import { ethers } from 'ethers'
 import { getTokenBalances } from '../alchemy/get-token-balance'
-import { TokenData } from '../types/wallet-token'
 import { getTokenBalances as getTokenBalancesSolana } from '../helius/get-token-balance'
+import { getLocalForkTokenBalances, isLocalForkEnvironment } from '../local-fork/token-balance'
 import { allNetworkConfigs, TENDERLY_DEMO_CONFIG } from '../network/config'
 import { NetworkConfig } from '../network/types'
 import { getPendleMarkets } from '../pendle/api'
 import { getUserEvmWalletAddress, getUserSolWalletAddress } from '../privy/client'
-import { getLocalForkTokenBalances, isLocalForkEnvironment } from '../local-fork/token-balance'
+import { TokenData } from '../types/wallet-token'
 
 // Error handling wrapper for EVM token balances
 async function getTokenBalancesWithErrorHandling(
@@ -85,15 +84,8 @@ export async function getWalletBalances(
   // Use provided wallet address or environment variable
   const walletAddress = walletAddressParam || (await getUserEvmWalletAddress())
   const solanaWalletAddress = solanaWalletAddressParam || (await getUserSolWalletAddress())
-  if (!walletAddress) {
-    throw new Error(
-      'No wallet address provided and user does not have EVM wallet.'
-    )
-  }
-  if (!solanaWalletAddress) {
-    throw new Error(
-      'No solana wallet address provided and user does not have Solana wallet.'
-    )
+  if (!walletAddress && !solanaWalletAddress) {
+    throw new Error('No wallets found. Please sign in to view balances.')
   }
 
   try {
@@ -102,25 +94,36 @@ export async function getWalletBalances(
     // Add promises for all networks in allNetworkConfigs with error handling
     Object.values(allNetworkConfigs).forEach((network: NetworkConfig) => {
       if (network.id === "solana") {
-        tokenDataPromises.push(
-          getTokenBalancesSolanaWithErrorHandling(solanaWalletAddress, network.displayName)
-        )
+        if (solanaWalletAddress) {
+          tokenDataPromises.push(
+            getTokenBalancesSolanaWithErrorHandling(solanaWalletAddress, network.displayName)
+          )
+        }
       } else {
-        tokenDataPromises.push(
-          getTokenBalancesWithErrorHandling(walletAddress, network.chainId, network.isDemo, network.displayName, bypassCache)
-        )
+        if (walletAddress) {
+          tokenDataPromises.push(
+            getTokenBalancesWithErrorHandling(walletAddress, network.chainId, network.isDemo, network.displayName, bypassCache)
+          )
+        }
       }
     })
 
-    // Add a specific promise for the Tenderly demo network
-    // This ensures it's included, as it was in the original tokenBalanceFunctions array.
-    // The getTokenBalances function handles the isDemo flag correctly.
-    tokenDataPromises.push(
-      getTokenBalancesWithErrorHandling(walletAddress, TENDERLY_DEMO_CONFIG.chainId, true, TENDERLY_DEMO_CONFIG.displayName, bypassCache)
-    )
+    // Add a specific promise for the Sepolia demo network (formerly Tenderly alias)
+    // Only include if we have an EVM wallet address
+    if (walletAddress) {
+      tokenDataPromises.push(
+        getTokenBalancesWithErrorHandling(
+          walletAddress,
+          TENDERLY_DEMO_CONFIG.chainId,
+          true,
+          TENDERLY_DEMO_CONFIG.displayName,
+          bypassCache
+        )
+      )
+    }
 
     // Add local fork token balances if in local fork environment
-    if (isLocalForkEnvironment()) {
+    if (isLocalForkEnvironment() && walletAddress) {
       tokenDataPromises.push(
         (async () => {
           try {

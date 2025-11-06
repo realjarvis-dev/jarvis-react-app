@@ -92,16 +92,20 @@ export const walletBalanceTool = tool({
       }
     } catch (error) {
       console.error('Error in wallet balance tool:', error)
-      const errorData = {
-        success: false,
-        message: 'Failed to fetch wallet balances',
-        tokens: []
+      const rawMessage = error instanceof Error ? error.message : String(error)
+      let userMessage = 'Failed to fetch wallet balances'
+      // Provide actionable guidance for signed-out users
+      if (rawMessage.includes('No wallets found')) {
+        userMessage = 'You are not signed in. Please sign in to view your wallet balances.'
       }
-      
       return {
         _uiDisplayTool: true,
-        summary: 'Error fetching wallet balances',
-        data: errorData
+        summary: userMessage,
+        data: {
+          success: false,
+          message: userMessage,
+          tokens: []
+        }
       }
     }
   }
