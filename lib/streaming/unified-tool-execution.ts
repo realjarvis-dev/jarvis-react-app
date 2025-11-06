@@ -10,6 +10,7 @@ import { ErrorType, createErrorResponse, executeWithRetry } from '../utils/error
 import { getModel, isToolCallSupported } from '../utils/registry'
 import { ToolRegistry, getToolRegistry } from '../utils/tool-registry'
 
+import { TENDERLY_DEMO_CONFIG } from '../network/config'
 import { NetworkContext } from '../types/context'
 import { parseToolCallXml } from './parse-tool-call'
 
@@ -109,11 +110,11 @@ const toolResultCache = new ToolResultCache()
 
 // Create a default network context for tools that require it
 const defaultNetworkContext: NetworkContext = {
-  selectedNetwork: 'ethereum',
-  selectedChainId: 1,
-  isDemo: false,
-  rpcUrl: '',
-  config: {} as any
+  selectedNetwork: 'sepolia',
+  selectedChainId: 11155111,
+  isDemo: true,
+  rpcUrl: TENDERLY_DEMO_CONFIG.rpcUrl,
+  config: TENDERLY_DEMO_CONFIG as any
 };
 
 /**
