@@ -1,20 +1,20 @@
 'use client'
 
-import { getCookie, setCookie } from '@/lib/utils/cookies' // Import from centralized cookie utilities
+import { getCookie, setCookie } from '@/lib/utils/cookies'; // Import from centralized cookie utilities
 import {
   createContext,
   ReactNode,
   useContext,
   useEffect,
   useState
-} from 'react'
-import { allNetworkConfigs, getActiveNetworkConfig } from './config' // Updated import path
+} from 'react';
+import { allNetworkConfigs, getActiveNetworkConfig } from './config'; // Updated import path
 import {
   ChainType,
   NetworkConfig,
   USER_DEMO_MODE_COOKIE_KEY,
   USER_SELECTED_NETWORK_COOKIE_KEY
-} from './types' // Updated import path
+} from './types'; // Updated import path
 // const USER_SELECTED_NETWORK_COOKIE_KEY = 'user_selected_network'
 // const USER_DEMO_MODE_COOKIE_KEY = 'user_demo_mode' // New cookie key for demo mode
 
@@ -85,7 +85,7 @@ export function NetworkProvider({ children }: NetworkProviderProps) {
 
     // Initialize isDemoMode from cookie
     const demoCookieValue = getCookie(USER_DEMO_MODE_COOKIE_KEY)
-    let demoModeToSet = true // Default if cookie not set or invalid
+    let demoModeToSet = false // Default if cookie not set or invalid
     if (demoCookieValue === 'true') {
       demoModeToSet = true
     } else if (demoCookieValue === 'false') {
@@ -97,8 +97,8 @@ export function NetworkProvider({ children }: NetworkProviderProps) {
     }
 
     // Adjust chainToSet based on the (potentially updated) demoModeToSet
-    if (demoModeToSet && chainToSet !== 'ethereum') {
-      chainToSet = 'ethereum'
+    if (demoModeToSet && chainToSet !== 'sepolia') {
+      chainToSet = 'sepolia'
     }
 
     if (selectedChain !== chainToSet) {
@@ -121,8 +121,8 @@ export function NetworkProvider({ children }: NetworkProviderProps) {
   // When isDemoMode is changed by user, adjust selectedChain if necessary
   useEffect(() => {
     if (!mounted) return
-    if (isDemoMode && selectedChain !== 'ethereum') {
-      setSelectedChainInternal('ethereum')
+    if (isDemoMode && selectedChain !== 'sepolia') {
+      setSelectedChainInternal('sepolia')
       // The selectedChain cookie will be updated by its own useEffect
     }
   }, [mounted, isDemoMode, selectedChain]) // Add selectedChain here to re-evaluate if it changes

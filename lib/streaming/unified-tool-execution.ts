@@ -10,6 +10,8 @@ import { ErrorType, createErrorResponse, executeWithRetry } from '../utils/error
 import { getModel, isToolCallSupported } from '../utils/registry'
 import { ToolRegistry, getToolRegistry } from '../utils/tool-registry'
 
+import { TENDERLY_DEMO_CONFIG } from '../network/config'
+import { getUserEvmWalletAddress, getUserSolWalletAddress } from '../privy/client'
 import { NetworkContext } from '../types/context'
 import { parseToolCallXml } from './parse-tool-call'
 
@@ -109,11 +111,11 @@ const toolResultCache = new ToolResultCache()
 
 // Create a default network context for tools that require it
 const defaultNetworkContext: NetworkContext = {
-  selectedNetwork: 'ethereum',
-  selectedChainId: 1,
-  isDemo: false,
-  rpcUrl: '',
-  config: {} as any
+  selectedNetwork: 'sepolia',
+  selectedChainId: 11155111,
+  isDemo: true,
+  rpcUrl: TENDERLY_DEMO_CONFIG.rpcUrl,
+  config: TENDERLY_DEMO_CONFIG as any
 };
 
 /**
@@ -152,6 +154,17 @@ async function executeNativeToolCall(
   isNewUser?: boolean
 ): Promise<ToolExecutionResult> {
   const availableTools = registry.getSupportedToolNames(model)
+  // Gate wallet tools when user is not logged in
+  let filteredTools = availableTools
+  try {
+    const evm = await getUserEvmWalletAddress()
+    const sol = await getUserSolWalletAddress()
+    if (!evm && !sol) {
+      filteredTools = availableTools.filter(name => name !== 'wallet_balance')
+    }
+  } catch (e) {
+    // If auth state cannot be determined, keep as-is
+  }
   const toolDefinitions: Record<string, any> = {}
   
   // Prepare tool definitions for OpenAI native tool calling
@@ -193,8 +206,33 @@ async function executeManualToolCall(
   isNewUser?: boolean
 ): Promise<ToolExecutionResult> {
   const availableTools = registry.getSupportedToolNames(model)
-  
-  const toolSchemasString = availableTools
+  // Gate wallet tools when user is not logged in and provide polite guidance
+  let filteredTools = availableTools
+  try {
+    const evm = await getUserEvmWalletAddress()
+    const sol = await getUserSolWalletAddress()
+    if (!evm && !sol) {
+      filteredTools = availableTools.filter(name => name !== 'wallet_balance')
+      // If the last user message is about balance, short-circuit with sign-in guidance
+      const lastUser = [...coreMessages].reverse().find(m => m.role === 'user')
+      const text = typeof lastUser?.content === 'string'
+        ? lastUser.content
+        : Array.isArray(lastUser?.content)
+          ? (lastUser!.content as any[]).map((p: any) => typeof p === 'string' ? p : (p?.type === 'text' ? p.text : '')).join(' ')
+          : ''
+      if (/\b(balance|wallet)\b/i.test(text)) {
+        const toolCallMessages: CoreMessage[] = [
+          { role: 'assistant', content: 'You are not signed in. Please sign in to view your wallet balances.' },
+          { role: 'user', content: 'Now answer the user question.' }
+        ]
+        return { toolCallDataAnnotation: null, toolCallMessages }
+      }
+    }
+  } catch (e) {
+    // ignore auth check errors
+  }
+
+  const toolSchemasString = filteredTools
     .map(toolName => {
       const tool = registry.getTool(toolName)
       if (!tool) return ''
@@ -219,7 +257,7 @@ async function executeManualToolCall(
               </tool_call>
 
               Available tools:
-              ${availableTools.map(name => {
+              ${filteredTools.map(name => {
                 const tool = registry.getTool(name)
                 return `- ${name}: ${tool?.description || ''}`
               }).join('\n')}
@@ -237,7 +275,7 @@ async function executeManualToolCall(
 
   let toolCall, toolName, toolParams
   
-  for (const availableTool of availableTools) {
+  for (const availableTool of filteredTools) {
     const tool = registry.getTool(availableTool)
     if (!tool) continue
     

@@ -30,7 +30,7 @@ export function ChainSelector() {
   )
 
   const dropdownChainOptions = isDemoMode
-    ? availableChainOptions.filter(option => option.id === 'ethereum')
+    ? availableChainOptions.filter(option => option.id === 'sepolia')
     : availableChainOptions.filter(option => !option.disabled)
 
   return (

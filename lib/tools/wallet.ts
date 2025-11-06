@@ -9,6 +9,7 @@ import { addBalanceAnvilFork } from '../anvil-fork/fund'
 import { getUserId } from '../privy/client'
 import { balanceChangePub } from '../pubsub/balance-change-pub'
 import { addBalanceVnet, ethToWei, INITIAL_REWARD_AMOUNT, REQUESTED_FUNDING_AMOUNT, TenderlyRpcResponse } from '../tenderly/fund'
+import { addBalanceTestnet } from '../testnet-faucet/fund'
 
 interface ToolContext {
   toolCallId?: string
@@ -91,16 +92,20 @@ export const walletBalanceTool = tool({
       }
     } catch (error) {
       console.error('Error in wallet balance tool:', error)
-      const errorData = {
-        success: false,
-        message: 'Failed to fetch wallet balances',
-        tokens: []
+      const rawMessage = error instanceof Error ? error.message : String(error)
+      let userMessage = 'Failed to fetch wallet balances'
+      // Provide actionable guidance for signed-out users
+      if (rawMessage.includes('No wallets found')) {
+        userMessage = 'You are not signed in. Please sign in to view your wallet balances.'
       }
-      
       return {
         _uiDisplayTool: true,
-        summary: 'Error fetching wallet balances',
-        data: errorData
+        summary: userMessage,
+        data: {
+          success: false,
+          message: userMessage,
+          tokens: []
+        }
       }
     }
   }
@@ -278,11 +283,24 @@ export async function fundUserWallet(
     
     console.log(`Funding wallet ${walletAddress} with ${fundingAmount} ETH (${isNewUser ? 'initial reward' : 'incremental funding'})`);
     
+    // Decide funding mechanism based on environment:
+    // - Local fork (anvil): use preset anvil accounts
+    // - Hosted Tenderly (dev only): use Tenderly VNet
+    // - Public testnet (Sepolia): use faucet private key
+    const rpcUrl = TENDERLY_DEMO_CONFIG.rpcUrl || '';
+    const isLocalFork = rpcUrl.includes('127.0.0.1') || rpcUrl.includes('anvil-fork');
+    const isTenderlyVnet = rpcUrl.includes('tenderly');
+    
     let result;
-    if (process.env.NEXT_PUBLIC_TEST_NET_ENV === "development" && TENDERLY_DEMO_CONFIG.rpcUrl.includes('tenderly')) {
+    if (isLocalFork) {
+      // Local anvil fork
+      result = await addBalanceAnvilFork(walletAddress, BigInt(fundAmount));
+    } else if (isTenderlyVnet && process.env.NEXT_PUBLIC_TEST_NET_ENV === 'development') {
+      // Legacy Tenderly VNet path (dev only)
       result = await addBalanceVnet([walletAddress], fundAmount);
     } else {
-      result = await addBalanceAnvilFork(walletAddress, BigInt(fundAmount));
+      // Public testnet (Sepolia) via faucet private key
+      result = await addBalanceTestnet(walletAddress, BigInt(fundAmount));
     }
     return result;
   } catch (error) {
@@ -291,4 +309,4 @@ export async function fundUserWallet(
       error: `Failed to fund wallet: ${error instanceof Error ? error.message : String(error)}`
     };
   }
-}                
+}

@@ -1,6 +1,6 @@
 import { solana } from '@metalayer/viem-chains'
 import { Network } from 'alchemy-sdk'
-import { arbitrum, base, berachain, bsc, mainnet, mantle, optimism, polygon, sonic, unichain } from 'viem/chains'
+import { arbitrum, arbitrumSepolia, base, baseSepolia, berachain, bsc, mainnet, mantle, optimism, polygon, sepolia, sonic, unichain } from 'viem/chains'
 import type { ChainType, NetworkConfig } from './types'
 
 // Individual network configurations
@@ -21,6 +21,20 @@ export const ethereumConfig: NetworkConfig = {
   icon: '/icons/chains/ethereum-eth.svg',
   nativeAsset: { name: 'Ether', symbol: 'ETH', decimals: 18 },
   viemChain: mainnet
+}
+
+export const sepoliaConfig: NetworkConfig = {
+  id: 'sepolia' as const,
+  displayName: 'Sepolia',
+  chainId: 11155111,
+  rpcUrl: `https://eth-sepolia.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
+  scanLink: 'sepolia.etherscan.io',
+  isDemo: false,
+  alchemyNetwork: Network.ETH_SEPOLIA,
+  icon: '/icons/chains/ethereum-eth.svg',
+  nativeAsset: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+  viemChain: sepolia,
+  disabled: process.env.NEXT_PUBLIC_TEST_NET_ENV !== 'testnet'
 }
 
 export const unichainConfig: NetworkConfig = {
@@ -91,6 +105,20 @@ export const baseConfig: NetworkConfig = {
   viemChain: base
 }
 
+export const baseSepoliaConfig: NetworkConfig = {
+  id: 'base-sepolia' as const,
+  displayName: 'Base Sepolia',
+  chainId: 84532,
+  rpcUrl: `https://base-sepolia.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
+  scanLink: 'sepolia.basescan.org',
+  isDemo: false,
+  alchemyNetwork: Network.BASE_SEPOLIA,
+  icon: 'https://raw.githubusercontent.com/Aero25x/Cryptocurrencies-Logo/main/Base.svg',
+  nativeAsset: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+  viemChain: baseSepolia,
+  disabled: process.env.NEXT_PUBLIC_TEST_NET_ENV !== 'testnet'
+}
+
 export const arbitrumConfig: NetworkConfig = {
   id: 'arbitrum' as const,
   displayName: 'Arbitrum',
@@ -103,6 +131,20 @@ export const arbitrumConfig: NetworkConfig = {
   icon: 'https://raw.githubusercontent.com/Aero25x/Cryptocurrencies-Logo/main/Arbitrum.svg',
   nativeAsset: { name: 'Ether', symbol: 'ETH', decimals: 18 },
   viemChain: arbitrum
+}
+
+export const arbitrumSepoliaConfig: NetworkConfig = {
+  id: 'arbitrum-sepolia' as const,
+  displayName: 'Arbitrum Sepolia',
+  chainId: 421614,
+  rpcUrl: `https://arb-sepolia.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
+  scanLink: 'sepolia.arbiscan.io',
+  isDemo: false,
+  alchemyNetwork: Network.ARB_SEPOLIA,
+  icon: 'https://raw.githubusercontent.com/Aero25x/Cryptocurrencies-Logo/main/Arbitrum.svg',
+  nativeAsset: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+  viemChain: arbitrumSepolia,
+  disabled: process.env.NEXT_PUBLIC_TEST_NET_ENV !== 'testnet'
 }
 
 export const polygonConfig: NetworkConfig = {
@@ -166,9 +208,12 @@ export const solanaConfig: NetworkConfig = {
  */
 export const allNetworkConfigs = {
   ethereum: ethereumConfig,
+  sepolia: sepoliaConfig,
   berachain: berachainConfig,
   base: baseConfig,
+  'base-sepolia': baseSepoliaConfig,
   arbitrum: arbitrumConfig,
+  'arbitrum-sepolia': arbitrumSepoliaConfig,
   polygon: polygonConfig,
   optimism: optimismConfig,
   unichain: unichainConfig,
@@ -184,22 +229,20 @@ export const allNetworkConfigs = {
  * It currently mimics Ethereum Mainnet but uses Tenderly's RPC.
  */
 export const TENDERLY_DEMO_CONFIG: NetworkConfig = {
-  id: 'ethereum' as const, // In demo mode, selectedChain is forced to 'ethereum'
-  displayName: 'Ethereum (Demo)',
-  chainId: 1, // Match Ethereum Mainnet for consistency in demo, was TenderlyDemoConfig.chainId
+  id: 'sepolia' as const, // In demo mode, selectedChain is forced to 'sepolia'
+  displayName: 'Sepolia (Demo)',
+  chainId: 11155111,
   rpcUrl:
-    process.env.TEST_RPC_URL || // Respect TEST_RPC_URL override first
-    (process.env.NEXT_PUBLIC_TEST_NET_ENV === 'development'
-      ? (process.env.NEXT_PUBLIC_DEMO_RPC_URL || "http://127.0.0.1:8545")
-      : 'http://anvil-fork:8545'),
-  scanLink: process.env.NEXT_PUBLIC_TEST_NET_ENV === 'development' ? 
-  (process.env.NEXT_PUBLIC_EXPLORER_URL || undefined)
-  : undefined, // Tenderly vnet explorer might not have a simple base URL like etherscan
+    process.env.TEST_RPC_URL ||
+    (process.env.ALCHEMY_API_KEY
+      ? `https://eth-sepolia.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`
+      : 'https://rpc.sepolia.org'),
+  scanLink: 'sepolia.etherscan.io',
   isDemo: true,
-  alchemyNetwork: Network.ETH_MAINNET,
+  alchemyNetwork: Network.ETH_SEPOLIA,
   icon: '/icons/chains/ethereum-eth.svg', // Use Ethereum icon for demo
   nativeAsset: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-  viemChain: mainnet
+  viemChain: sepolia
 }
 
 /**
@@ -230,8 +273,8 @@ export function getActiveNetworkConfig(
  */
 export function getAvailableChains(isDemoMode: boolean): ChainType[] {
   if (isDemoMode) {
-    // In demo mode, only Ethereum (which maps to TENDERLY_DEMO_CONFIG) is available.
-    return ['ethereum']
+    // In demo mode, only Sepolia (which maps to TENDERLY_DEMO_CONFIG) is available.
+    return ['sepolia']
   }
   // In normal mode, all chains defined in `allNetworkConfigs` are available.
   return Object.keys(allNetworkConfigs) as ChainType[]

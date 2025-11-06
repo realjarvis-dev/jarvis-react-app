@@ -3,9 +3,9 @@
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { TokenData } from '@/lib/types/wallet-token'
-import { allNetworkConfigs } from '@/lib/network/config'
+import { allNetworkConfigs, TENDERLY_DEMO_CONFIG } from '@/lib/network/config'
 import { useNetwork } from '@/lib/network/context'
+import { TokenData } from '@/lib/types/wallet-token'
 import { cn } from '@/lib/utils'
 import { CopyableWalletAddress } from './copyable-wallet-address'
 
@@ -115,9 +115,8 @@ export function WalletBalance({
   const matchesSelectedNetwork = (tokenNetwork: string) => {
     // tokenNetwork is assumed to be the alchemyNetwork string, e.g., 'eth-mainnet'
     if (isDemoMode) {
-      // In demo mode, TENDERLY_DEMO_CONFIG defines the active network.
-      // Its alchemyNetwork might be, for example, Network.ETH_MAINNET ('eth-mainnet')
-      return tokenNetwork === 'Ethereum (Demo)'
+      // In demo mode, match tokens by the demo network's display name
+      return tokenNetwork === TENDERLY_DEMO_CONFIG.displayName
     }
 
     // For non-demo mode, match based on the selected chain's alchemyNetwork
