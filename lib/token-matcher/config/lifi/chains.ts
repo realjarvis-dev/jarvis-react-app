@@ -96,14 +96,6 @@ export const chains = [
     "mainnet": true
   },
   {
-    "key": "dai",
-    "chainType": "EVM",
-    "name": "Gnosis",
-    "coin": "DAI",
-    "id": 100,
-    "mainnet": true
-  },
-  {
     "key": "ftm",
     "chainType": "EVM",
     "name": "Fantom",
