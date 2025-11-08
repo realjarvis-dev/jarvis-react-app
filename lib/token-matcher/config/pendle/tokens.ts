@@ -3516,39 +3516,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 146,
-      "address": "0x4ec936df4a703929361bd7dea86038feba6ebfac",
-      "symbol": "PT-USDC-Silo Apostro-18DEC2025",
-      "name": "PT USDC-Silo Apostro 18DEC2025",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0xb92dd6487a9644ce384b4a2198aa2dd230e00b72",
-      "expiry": "2025-12-18T00:00:00.000Z",
-      "underlyingAsset": "0xcca902f2d3d265151f123d8ce8fdac38ba9745ed"
-    },
-    {
-      "chainId": 146,
-      "address": "0x9c306e72771e77dca71d608e4073926fefdf3480",
-      "symbol": "YT-USDC-Silo Apostro-18DEC2025",
-      "name": "YT USDC-Silo Apostro 18DEC2025",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0xb92dd6487a9644ce384b4a2198aa2dd230e00b72",
-      "expiry": "2025-12-18T00:00:00.000Z",
-      "underlyingAsset": "0xcca902f2d3d265151f123d8ce8fdac38ba9745ed"
-    },
-    {
-      "chainId": 146,
-      "address": "0x89a3cfaac1905bb42ee834ac79178705f098a76c",
-      "symbol": "SY-USDC-Silo Apostro",
-      "name": "SY USDC-Silo Apostro",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0xb92dd6487a9644ce384b4a2198aa2dd230e00b72",
-      "expiry": "2025-12-18T00:00:00.000Z",
-      "underlyingAsset": "0xcca902f2d3d265151f123d8ce8fdac38ba9745ed"
-    },
-    {
-      "chainId": 146,
       "address": "0xbab91a3046003a5be46693d14e28d3b48252cf93",
       "symbol": "PT-lstRZR-18DEC2025",
       "name": "PT lstRZR 18DEC2025",
@@ -3579,39 +3546,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0xabfc41b413891c647d0d1cd66bf64bc6ed8fee71",
       "expiry": "2025-12-18T00:00:00.000Z",
       "underlyingAsset": "0x67a298e5b65db2b4616e05c3b455e017275f53cb"
-    },
-    {
-      "chainId": 146,
-      "address": "0x01d6dafa8b3bd04bdf7ba6ff76104d15e2b7485c",
-      "symbol": "PT-USDC-Silo Greenhouse-18DEC2025",
-      "name": "PT USDC-Silo Greenhouse 18DEC2025",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0x784abe614738e4b30add5ae8cc96e59b5728d936",
-      "expiry": "2025-12-18T00:00:00.000Z",
-      "underlyingAsset": "0xf6bc16b79c469b94cdd25f3e2334dd4fee47a581"
-    },
-    {
-      "chainId": 146,
-      "address": "0xad6825518b0d38200a2311489bb3b025df38ec72",
-      "symbol": "YT-USDC-Silo Greenhouse-18DEC2025",
-      "name": "YT USDC-Silo Greenhouse 18DEC2025",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0x784abe614738e4b30add5ae8cc96e59b5728d936",
-      "expiry": "2025-12-18T00:00:00.000Z",
-      "underlyingAsset": "0xf6bc16b79c469b94cdd25f3e2334dd4fee47a581"
-    },
-    {
-      "chainId": 146,
-      "address": "0x3a9dc0b33ab3b6e6ce1ead61909f59acd7682036",
-      "symbol": "SY-USDC-Silo Greenhouse",
-      "name": "SY USDC-Silo Greenhouse",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0x784abe614738e4b30add5ae8cc96e59b5728d936",
-      "expiry": "2025-12-18T00:00:00.000Z",
-      "underlyingAsset": "0xf6bc16b79c469b94cdd25f3e2334dd4fee47a581"
     },
     {
       "chainId": 146,
