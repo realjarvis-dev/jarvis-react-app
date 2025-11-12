@@ -2060,6 +2060,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
+      "address": "0x3e7736d0b1ed0f6a0a555355b72c2c2d416564e1",
+      "symbol": "PT-USD (Midas mFARM)-11DEC2025",
+      "name": "PT USD (Midas mFARM) 11DEC2025",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x56649da435f9a9a57ee9c4c06b728e4ba84fcc6b",
+      "expiry": "2025-12-11T00:00:00.000Z",
+      "underlyingAsset": "0xa19f6e0df08a7917f2f8a33db66d0af31ff5eca6"
+    },
+    {
+      "chainId": 1,
+      "address": "0xb1c7d752d0fb01cf7b0f5cbdcbdbfb8162634264",
+      "symbol": "YT-USD (Midas mFARM)-11DEC2025",
+      "name": "YT USD (Midas mFARM) 11DEC2025",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x56649da435f9a9a57ee9c4c06b728e4ba84fcc6b",
+      "expiry": "2025-12-11T00:00:00.000Z",
+      "underlyingAsset": "0xa19f6e0df08a7917f2f8a33db66d0af31ff5eca6"
+    },
+    {
+      "chainId": 1,
+      "address": "0x690f305e51650e7549fb60182cd0db81bafb7687",
+      "symbol": "SY-USD (Midas mFARM)",
+      "name": "SY USD (Midas mFARM)",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x56649da435f9a9a57ee9c4c06b728e4ba84fcc6b",
+      "expiry": "2025-12-11T00:00:00.000Z",
+      "underlyingAsset": "0xa19f6e0df08a7917f2f8a33db66d0af31ff5eca6"
+    },
+    {
+      "chainId": 1,
       "address": "0x53f3373f0d811902405f91eb0d5cc3957887220d",
       "symbol": "PT-jrUSDe-15JAN2026",
       "name": "PT jrUSDe 15JAN2026",
