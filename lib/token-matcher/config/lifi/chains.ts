@@ -8,14 +8,6 @@ export const chains = [
     "mainnet": true
   },
   {
-    "key": "bsc",
-    "chainType": "EVM",
-    "name": "BSC",
-    "coin": "BNB",
-    "id": 56,
-    "mainnet": true
-  },
-  {
     "key": "arb",
     "chainType": "EVM",
     "name": "Arbitrum",
@@ -32,35 +24,35 @@ export const chains = [
     "mainnet": true
   },
   {
-    "key": "bls",
+    "key": "hpl",
     "chainType": "EVM",
-    "name": "Blast",
-    "coin": "ETH",
-    "id": 81457,
+    "name": "Hyperliquid",
+    "coin": "USDC",
+    "id": 1337,
     "mainnet": true
   },
   {
-    "key": "ava",
+    "key": "hyp",
     "chainType": "EVM",
-    "name": "Avalanche",
-    "coin": "AVAX",
-    "id": 43114,
+    "name": "HyperEVM",
+    "coin": "HYPE",
+    "id": 999,
     "mainnet": true
   },
   {
-    "key": "pol",
+    "key": "mon",
     "chainType": "EVM",
-    "name": "Polygon",
-    "coin": "POL",
-    "id": 137,
+    "name": "Monad",
+    "coin": "MON",
+    "id": 143,
     "mainnet": true
   },
   {
-    "key": "scl",
+    "key": "bsc",
     "chainType": "EVM",
-    "name": "Scroll",
-    "coin": "ETH",
-    "id": 534352,
+    "name": "BSC",
+    "coin": "BNB",
+    "id": 56,
     "mainnet": true
   },
   {
@@ -72,27 +64,19 @@ export const chains = [
     "mainnet": true
   },
   {
-    "key": "lna",
+    "key": "pol",
     "chainType": "EVM",
-    "name": "Linea",
-    "coin": "ETH",
-    "id": 59144,
+    "name": "Polygon",
+    "coin": "POL",
+    "id": 137,
     "mainnet": true
   },
   {
-    "key": "era",
+    "key": "ava",
     "chainType": "EVM",
-    "name": "zkSync",
-    "coin": "ETH",
-    "id": 324,
-    "mainnet": true
-  },
-  {
-    "key": "pze",
-    "chainType": "EVM",
-    "name": "Polygon zkEVM",
-    "coin": "ETH",
-    "id": 1101,
+    "name": "Avalanche",
+    "coin": "AVAX",
+    "id": 43114,
     "mainnet": true
   },
   {
@@ -104,19 +88,27 @@ export const chains = [
     "mainnet": true
   },
   {
-    "key": "mor",
+    "key": "mam",
     "chainType": "EVM",
-    "name": "Moonriver",
-    "coin": "MOVR",
-    "id": 1285,
+    "name": "Metis",
+    "coin": "METIS",
+    "id": 1088,
     "mainnet": true
   },
   {
-    "key": "moo",
+    "key": "pze",
     "chainType": "EVM",
-    "name": "Moonbeam",
-    "coin": "GLMR",
-    "id": 1284,
+    "name": "Polygon zkEVM",
+    "coin": "ETH",
+    "id": 1101,
+    "mainnet": true
+  },
+  {
+    "key": "lsk",
+    "chainType": "EVM",
+    "name": "Lisk",
+    "coin": "ETH",
+    "id": 1135,
     "mainnet": true
   },
   {
@@ -128,35 +120,19 @@ export const chains = [
     "mainnet": true
   },
   {
-    "key": "bob",
+    "key": "moo",
     "chainType": "EVM",
-    "name": "Boba",
-    "coin": "ETH",
-    "id": 288,
+    "name": "Moonbeam",
+    "coin": "GLMR",
+    "id": 1284,
     "mainnet": true
   },
   {
-    "key": "mod",
+    "key": "mor",
     "chainType": "EVM",
-    "name": "Mode",
-    "coin": "ETH",
-    "id": 34443,
-    "mainnet": true
-  },
-  {
-    "key": "mam",
-    "chainType": "EVM",
-    "name": "Metis",
-    "coin": "METIS",
-    "id": 1088,
-    "mainnet": true
-  },
-  {
-    "key": "lsk",
-    "chainType": "EVM",
-    "name": "Lisk",
-    "coin": "ETH",
-    "id": 1135,
+    "name": "Moonriver",
+    "coin": "MOVR",
+    "id": 1285,
     "mainnet": true
   },
   {
@@ -184,14 +160,6 @@ export const chains = [
     "mainnet": true
   },
   {
-    "key": "hpl",
-    "chainType": "EVM",
-    "name": "Hyperliquid",
-    "coin": "USDC",
-    "id": 1337,
-    "mainnet": true
-  },
-  {
     "key": "imx",
     "chainType": "EVM",
     "name": "Immutable zkEVM",
@@ -205,14 +173,6 @@ export const chains = [
     "name": "Flare",
     "coin": "FLR",
     "id": 14,
-    "mainnet": true
-  },
-  {
-    "key": "mon",
-    "chainType": "EVM",
-    "name": "Monad",
-    "coin": "MON",
-    "id": 143,
     "mainnet": true
   },
   {
@@ -320,6 +280,14 @@ export const chains = [
     "mainnet": true
   },
   {
+    "key": "bob",
+    "chainType": "EVM",
+    "name": "Boba",
+    "coin": "ETH",
+    "id": 288,
+    "mainnet": true
+  },
+  {
     "key": "rsk",
     "chainType": "EVM",
     "name": "Rootstock",
@@ -328,11 +296,27 @@ export const chains = [
     "mainnet": true
   },
   {
+    "key": "era",
+    "chainType": "EVM",
+    "name": "zkSync",
+    "coin": "ETH",
+    "id": 324,
+    "mainnet": true
+  },
+  {
     "key": "ape",
     "chainType": "EVM",
     "name": "Apechain",
     "coin": "APE",
     "id": 33139,
+    "mainnet": true
+  },
+  {
+    "key": "mod",
+    "chainType": "EVM",
+    "name": "Mode",
+    "coin": "ETH",
+    "id": 34443,
     "mainnet": true
   },
   {
@@ -392,6 +376,14 @@ export const chains = [
     "mainnet": true
   },
   {
+    "key": "scl",
+    "chainType": "EVM",
+    "name": "Scroll",
+    "coin": "ETH",
+    "id": 534352,
+    "mainnet": true
+  },
+  {
     "key": "sup",
     "chainType": "EVM",
     "name": "Superposition",
@@ -405,6 +397,14 @@ export const chains = [
     "name": "Ink",
     "coin": "ETH",
     "id": 57073,
+    "mainnet": true
+  },
+  {
+    "key": "lna",
+    "chainType": "EVM",
+    "name": "Linea",
+    "coin": "ETH",
+    "id": 59144,
     "mainnet": true
   },
   {
@@ -440,6 +440,14 @@ export const chains = [
     "mainnet": true
   },
   {
+    "key": "bls",
+    "chainType": "EVM",
+    "name": "Blast",
+    "coin": "ETH",
+    "id": 81457,
+    "mainnet": true
+  },
+  {
     "key": "kai",
     "chainType": "EVM",
     "name": "Kaia",
@@ -461,14 +469,6 @@ export const chains = [
     "name": "Plume",
     "coin": "PLUME",
     "id": 98866,
-    "mainnet": true
-  },
-  {
-    "key": "hyp",
-    "chainType": "EVM",
-    "name": "HyperEVM",
-    "coin": "HYPE",
-    "id": 999,
     "mainnet": true
   }
 ]
