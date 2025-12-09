@@ -464,6 +464,14 @@ export const chains = [
     "mainnet": true
   },
   {
+    "key": "sta",
+    "chainType": "EVM",
+    "name": "Stable",
+    "coin": "GUSDT",
+    "id": 988,
+    "mainnet": true
+  },
+  {
     "key": "plu",
     "chainType": "EVM",
     "name": "Plume",
