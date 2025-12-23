@@ -2587,6 +2587,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0xbad43138c9bf4f546c1d326f30963084a1e40c2e",
       "expiry": "2026-03-26T00:00:00.000Z",
       "underlyingAsset": "0x03d9c4e4bc5d3678a9076cac50db0251d8676872"
+    },
+    {
+      "chainId": 56,
+      "address": "0xab785c6eecb26376ceb49c2730d46bdf675098a7",
+      "symbol": "PT-SolvBTC.BNB-26MAR2026",
+      "name": "PT SolvBTC.BNB 26MAR2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x840e68e3a27c6927cb7fbb36a44d94ecf96ee924",
+      "expiry": "2026-03-26T00:00:00.000Z",
+      "underlyingAsset": "0x6c948a4c31d013515d871930fe3807276102f25d"
+    },
+    {
+      "chainId": 56,
+      "address": "0xb30d6918316cb4df05111388bfe6382ae83b0cc9",
+      "symbol": "YT-SolvBTC.BNB-26MAR2026",
+      "name": "YT SolvBTC.BNB 26MAR2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x840e68e3a27c6927cb7fbb36a44d94ecf96ee924",
+      "expiry": "2026-03-26T00:00:00.000Z",
+      "underlyingAsset": "0x6c948a4c31d013515d871930fe3807276102f25d"
+    },
+    {
+      "chainId": 56,
+      "address": "0x58b4441b97c577b66e46aa155e04dc4652fd0d34",
+      "symbol": "SY-SolvBTC.BNB",
+      "name": "SY SolvBTC.BNB",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x840e68e3a27c6927cb7fbb36a44d94ecf96ee924",
+      "expiry": "2026-03-26T00:00:00.000Z",
+      "underlyingAsset": "0x6c948a4c31d013515d871930fe3807276102f25d"
     }
   ],
   "146": [
