@@ -123,5 +123,9 @@
   },
   "engines": {
     "bun": "1.2.12"
+  },
+  "overrides": {
+    "@noble/curves": "1.9.1",
+    "@noble/hashes": "1.8.0"
   }
 }
