@@ -96,14 +96,6 @@ export const chains = [
     "mainnet": true
   },
   {
-    "key": "pze",
-    "chainType": "EVM",
-    "name": "Polygon zkEVM",
-    "coin": "ETH",
-    "id": 1101,
-    "mainnet": true
-  },
-  {
     "key": "lsk",
     "chainType": "EVM",
     "name": "Lisk",
@@ -128,27 +120,11 @@ export const chains = [
     "mainnet": true
   },
   {
-    "key": "mor",
-    "chainType": "EVM",
-    "name": "Moonriver",
-    "coin": "MOVR",
-    "id": 1285,
-    "mainnet": true
-  },
-  {
     "key": "uni",
     "chainType": "EVM",
     "name": "Unichain",
     "coin": "ETH",
     "id": 130,
-    "mainnet": true
-  },
-  {
-    "key": "aur",
-    "chainType": "EVM",
-    "name": "Aurora",
-    "coin": "ETH",
-    "id": 1313161554,
     "mainnet": true
   },
   {
@@ -453,6 +429,14 @@ export const chains = [
     "name": "Kaia",
     "coin": "KAIA",
     "id": 8217,
+    "mainnet": true
+  },
+  {
+    "key": "vic",
+    "chainType": "EVM",
+    "name": "Viction",
+    "coin": "VIC",
+    "id": 88,
     "mainnet": true
   },
   {
