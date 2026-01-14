@@ -2456,6 +2456,72 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
+      "address": "0x450e39fe80936c502c7c0d9d032c46c9a8b040b3",
+      "symbol": "PT-mHyperBTC-30APR2026",
+      "name": "PT mHyperBTC 30APR2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0xc60b85cef3ccfa46d9ead992c6f2c3ba319f71ed",
+      "expiry": "2026-04-30T00:00:00.000Z",
+      "underlyingAsset": "0xc8495eaff71d3a563b906295fcf2f685b1783085"
+    },
+    {
+      "chainId": 1,
+      "address": "0x716f2d368e8a90f708c2c52d4fa0b081e0a451a1",
+      "symbol": "YT-mHyperBTC-30APR2026",
+      "name": "YT mHyperBTC 30APR2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0xc60b85cef3ccfa46d9ead992c6f2c3ba319f71ed",
+      "expiry": "2026-04-30T00:00:00.000Z",
+      "underlyingAsset": "0xc8495eaff71d3a563b906295fcf2f685b1783085"
+    },
+    {
+      "chainId": 1,
+      "address": "0x95fc228a926828b4d95f52c1d52b345e743153f0",
+      "symbol": "SY-mHyperBTC",
+      "name": "SY mHyperBTC",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0xc60b85cef3ccfa46d9ead992c6f2c3ba319f71ed",
+      "expiry": "2026-04-30T00:00:00.000Z",
+      "underlyingAsset": "0xc8495eaff71d3a563b906295fcf2f685b1783085"
+    },
+    {
+      "chainId": 1,
+      "address": "0xc1eb2aef318994fd3e077626ffd0749b039ed8bd",
+      "symbol": "PT-mHyperETH-30APR2026",
+      "name": "PT mHyperETH 30APR2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0xeee30668b155fe40706b728b9667d7eb71f0a246",
+      "expiry": "2026-04-30T00:00:00.000Z",
+      "underlyingAsset": "0x5a42864b14c0c8241ef5ab62dae975b163a2e0c1"
+    },
+    {
+      "chainId": 1,
+      "address": "0x472de1281154ff9d36c81dc3ed9d5c860ef5e8f0",
+      "symbol": "YT-mHyperETH-30APR2026",
+      "name": "YT mHyperETH 30APR2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0xeee30668b155fe40706b728b9667d7eb71f0a246",
+      "expiry": "2026-04-30T00:00:00.000Z",
+      "underlyingAsset": "0x5a42864b14c0c8241ef5ab62dae975b163a2e0c1"
+    },
+    {
+      "chainId": 1,
+      "address": "0x4fb450e67e7a5e968e5315dc00f2e52d7f837b54",
+      "symbol": "SY-mHyperETH",
+      "name": "SY mHyperETH",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0xeee30668b155fe40706b728b9667d7eb71f0a246",
+      "expiry": "2026-04-30T00:00:00.000Z",
+      "underlyingAsset": "0x5a42864b14c0c8241ef5ab62dae975b163a2e0c1"
+    },
+    {
+      "chainId": 1,
       "address": "0xaebf0bb9f57e89260d57f31af34eb58657d96ce0",
       "symbol": "PT-USDe-07MAY2026",
       "name": "PT USDe 07MAY2026",
