@@ -938,39 +938,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
-      "address": "0x97ca796aed60a4e34a7d7878f399b51e8718fbf7",
-      "symbol": "PT-DUSD-29JAN2026",
-      "name": "PT DUSD 29JAN2026",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0x0f998fa5ecaf0f08d877d73773f76e227a5e517b",
-      "expiry": "2026-01-29T00:00:00.000Z",
-      "underlyingAsset": "0x1e33e98af620f1d563fcd3cfd3c75ace841204ef"
-    },
-    {
-      "chainId": 1,
-      "address": "0x0d572721d36f672a5391a9907a063904a9252efc",
-      "symbol": "YT-DUSD-29JAN2026",
-      "name": "YT DUSD 29JAN2026",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0x0f998fa5ecaf0f08d877d73773f76e227a5e517b",
-      "expiry": "2026-01-29T00:00:00.000Z",
-      "underlyingAsset": "0x1e33e98af620f1d563fcd3cfd3c75ace841204ef"
-    },
-    {
-      "chainId": 1,
-      "address": "0x4a312fca9b7e568ab99e4e5ccbfb409221e1ed36",
-      "symbol": "SY-DUSD",
-      "name": "SY DUSD",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0x0f998fa5ecaf0f08d877d73773f76e227a5e517b",
-      "expiry": "2026-01-29T00:00:00.000Z",
-      "underlyingAsset": "0x1e33e98af620f1d563fcd3cfd3c75ace841204ef"
-    },
-    {
-      "chainId": 1,
       "address": "0x3a8c94ac357b693dc1b962ac3fbfbc43c21844f8",
       "symbol": "PT-USN-29JAN2026",
       "name": "PT USN 29JAN2026",
@@ -1166,72 +1133,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0xc78b885d42821a8ac5b46cba2b8f929cdee87dfc",
       "expiry": "2026-01-22T00:00:00.000Z",
       "underlyingAsset": "0x9fb442d6b612a6dcd2acc67bb53771ef1d9f661a"
-    },
-    {
-      "chainId": 1,
-      "address": "0xe93694da1becaacd3ce5e1aeb484d43beec3e83b",
-      "symbol": "PT-DBIT-29JAN2026",
-      "name": "PT DBIT 29JAN2026",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0x9a4e45841ddb012f1946372e8bd9d65bb17a7768",
-      "expiry": "2026-01-29T00:00:00.000Z",
-      "underlyingAsset": "0x972966bcc17f7d818de4f27dc146ef539c231bdf"
-    },
-    {
-      "chainId": 1,
-      "address": "0x469c74c25c6bdedff41ab69370ceea55f9f64e6d",
-      "symbol": "YT-DBIT-29JAN2026",
-      "name": "YT DBIT 29JAN2026",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0x9a4e45841ddb012f1946372e8bd9d65bb17a7768",
-      "expiry": "2026-01-29T00:00:00.000Z",
-      "underlyingAsset": "0x972966bcc17f7d818de4f27dc146ef539c231bdf"
-    },
-    {
-      "chainId": 1,
-      "address": "0x725e18142472384e45e15084e308dbeae43381aa",
-      "symbol": "SY-DBIT",
-      "name": "SY DBIT",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0x9a4e45841ddb012f1946372e8bd9d65bb17a7768",
-      "expiry": "2026-01-29T00:00:00.000Z",
-      "underlyingAsset": "0x972966bcc17f7d818de4f27dc146ef539c231bdf"
-    },
-    {
-      "chainId": 1,
-      "address": "0x8209b01357946a64a0793e9773f6f3fe5a5f2526",
-      "symbol": "PT-DETH-29JAN2026",
-      "name": "PT DETH 29JAN2026",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0x937c7868824ae53db3b7c634de209fb7a74e362c",
-      "expiry": "2026-01-29T00:00:00.000Z",
-      "underlyingAsset": "0x871ab8e36cae9af35c6a3488b049965233deb7ed"
-    },
-    {
-      "chainId": 1,
-      "address": "0xa60c325069b2b10bc63926818a4f4320a28b5bba",
-      "symbol": "YT-DETH-29JAN2026",
-      "name": "YT DETH 29JAN2026",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0x937c7868824ae53db3b7c634de209fb7a74e362c",
-      "expiry": "2026-01-29T00:00:00.000Z",
-      "underlyingAsset": "0x871ab8e36cae9af35c6a3488b049965233deb7ed"
-    },
-    {
-      "chainId": 1,
-      "address": "0xc34e7d9d5ec0626ed14b6b7cee02fe904bec4c8d",
-      "symbol": "SY-DETH",
-      "name": "SY DETH",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0x937c7868824ae53db3b7c634de209fb7a74e362c",
-      "expiry": "2026-01-29T00:00:00.000Z",
-      "underlyingAsset": "0x871ab8e36cae9af35c6a3488b049965233deb7ed"
     },
     {
       "chainId": 1,
