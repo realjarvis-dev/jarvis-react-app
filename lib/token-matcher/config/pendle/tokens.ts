@@ -1532,39 +1532,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
-      "address": "0xa91751e6f7fba8a6a4f5a7803fabb85bca78b0d6",
-      "symbol": "PT-hwHLP-25JUN2026",
-      "name": "PT hwHLP 25JUN2026",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0x4b4f0d16bfb4ddf24748a0e058d29552db985fd8",
-      "expiry": "2026-06-25T00:00:00.000Z",
-      "underlyingAsset": "0x9fd7466f987fd4c45a5bbde22ed8aba5bc8d72d1"
-    },
-    {
-      "chainId": 1,
-      "address": "0x9843672811cfabec5640e49b1e508e3454058c55",
-      "symbol": "YT-hwHLP-25JUN2026",
-      "name": "YT hwHLP 25JUN2026",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0x4b4f0d16bfb4ddf24748a0e058d29552db985fd8",
-      "expiry": "2026-06-25T00:00:00.000Z",
-      "underlyingAsset": "0x9fd7466f987fd4c45a5bbde22ed8aba5bc8d72d1"
-    },
-    {
-      "chainId": 1,
-      "address": "0x86f6817c22a14393550b135710ea58f311e457ed",
-      "symbol": "SY-hwHLP",
-      "name": "SY hwHLP",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0x4b4f0d16bfb4ddf24748a0e058d29552db985fd8",
-      "expiry": "2026-06-25T00:00:00.000Z",
-      "underlyingAsset": "0x9fd7466f987fd4c45a5bbde22ed8aba5bc8d72d1"
-    },
-    {
-      "chainId": 1,
       "address": "0xaadf90d29ef2866801d177962fae85dd81e65f04",
       "symbol": "PT-tETH-30APR2026",
       "name": "PT tETH 30APR2026",
