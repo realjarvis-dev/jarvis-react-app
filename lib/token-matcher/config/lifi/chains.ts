@@ -58,7 +58,7 @@ export const chains = [
   {
     "key": "opt",
     "chainType": "EVM",
-    "name": "Optimism",
+    "name": "OP Mainnet",
     "coin": "ETH",
     "id": 10,
     "mainnet": true
