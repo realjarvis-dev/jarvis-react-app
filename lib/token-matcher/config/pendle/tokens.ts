@@ -3320,6 +3320,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0x0934e592cee932b04b3967162b3cd6c85748c470",
       "expiry": "2026-06-25T00:00:00.000Z",
       "underlyingAsset": "0xd3443ee1e91af28e5fb858fbd0d72a63ba8046e0"
+    },
+    {
+      "chainId": 42161,
+      "address": "0xe46271ecb1d5c7c5134868760f10c18b03021ef1",
+      "symbol": "PT-thBILL-18JUN2026",
+      "name": "PT thBILL 18JUN2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x22d95cec2b962c142fff9be88cfc7ef15043419f",
+      "expiry": "2026-06-18T00:00:00.000Z",
+      "underlyingAsset": "0xfdd22ce6d1f66bc0ec89b20bf16ccb6670f55a5a"
+    },
+    {
+      "chainId": 42161,
+      "address": "0x58c40bf59d1714d7b84060de9f7197accc0b3954",
+      "symbol": "YT-thBILL-18JUN2026",
+      "name": "YT thBILL 18JUN2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x22d95cec2b962c142fff9be88cfc7ef15043419f",
+      "expiry": "2026-06-18T00:00:00.000Z",
+      "underlyingAsset": "0xfdd22ce6d1f66bc0ec89b20bf16ccb6670f55a5a"
+    },
+    {
+      "chainId": 42161,
+      "address": "0xc32e96b4c7eb7959b6a92f3f7ed5d2321e6ed3d4",
+      "symbol": "SY-thBILL",
+      "name": "SY thBILL",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x22d95cec2b962c142fff9be88cfc7ef15043419f",
+      "expiry": "2026-06-18T00:00:00.000Z",
+      "underlyingAsset": "0xfdd22ce6d1f66bc0ec89b20bf16ccb6670f55a5a"
     }
   ],
   "80094": []
