@@ -320,6 +320,14 @@ export const chains = [
     "mainnet": true
   },
   {
+    "key": "meg",
+    "chainType": "EVM",
+    "name": "MegaETH",
+    "coin": "ETH",
+    "id": 4326,
+    "mainnet": true
+  },
+  {
     "key": "wcc",
     "chainType": "EVM",
     "name": "World Chain",
