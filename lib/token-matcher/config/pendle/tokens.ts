@@ -2456,6 +2456,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
+      "address": "0x3ffaa9ce7cfa5688277b97bf6a8c22249404d129",
+      "symbol": "PT-USP-25JUN2026",
+      "name": "PT USP 25JUN2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x6354b7dd06050da44a21d680436838a08e7dcec4",
+      "expiry": "2026-06-25T00:00:00.000Z",
+      "underlyingAsset": "0x098697ba3fee4ea76294c5d6a466a4e3b3e95fe6"
+    },
+    {
+      "chainId": 1,
+      "address": "0xacd577ccc29e88a2b7aaa15026533abd91fdd6be",
+      "symbol": "YT-USP-25JUN2026",
+      "name": "YT USP 25JUN2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x6354b7dd06050da44a21d680436838a08e7dcec4",
+      "expiry": "2026-06-25T00:00:00.000Z",
+      "underlyingAsset": "0x098697ba3fee4ea76294c5d6a466a4e3b3e95fe6"
+    },
+    {
+      "chainId": 1,
+      "address": "0xf5145335540c4116956c0936b7db08d1a862a2d9",
+      "symbol": "SY-USP",
+      "name": "SY USP",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x6354b7dd06050da44a21d680436838a08e7dcec4",
+      "expiry": "2026-06-25T00:00:00.000Z",
+      "underlyingAsset": "0x098697ba3fee4ea76294c5d6a466a4e3b3e95fe6"
+    },
+    {
+      "chainId": 1,
       "address": "0x3ae763d13becd4f96ced845660a672e414556ce8",
       "symbol": "PT-superWETH-30APR2026",
       "name": "PT superWETH 30APR2026",
@@ -2486,6 +2519,72 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0x90d7eb710d021e243f60fbb32e95aaa83f5bbaea",
       "expiry": "2026-04-30T00:00:00.000Z",
       "underlyingAsset": "0xa036823b9a24f63c32553367bf181ee04229c3ac"
+    },
+    {
+      "chainId": 1,
+      "address": "0x82b853db31f025858792d8fa969f2a1dc245c179",
+      "symbol": "PT-srNUSD-28MAY2026",
+      "name": "PT srNUSD 28MAY2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x723fcaa9830f6b6f68ebf7e30c097532a4cbbd26",
+      "expiry": "2026-05-28T00:00:00.000Z",
+      "underlyingAsset": "0x65a44528e8868166401ea08b549e19552af589db"
+    },
+    {
+      "chainId": 1,
+      "address": "0xcc1c9ff3cd2f63053512d491c37855056cd587d2",
+      "symbol": "YT-srNUSD-28MAY2026",
+      "name": "YT srNUSD 28MAY2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x723fcaa9830f6b6f68ebf7e30c097532a4cbbd26",
+      "expiry": "2026-05-28T00:00:00.000Z",
+      "underlyingAsset": "0x65a44528e8868166401ea08b549e19552af589db"
+    },
+    {
+      "chainId": 1,
+      "address": "0xdb8f1d15880b97dc38edfa46d8a5a7e5b506c45f",
+      "symbol": "SY-srNUSD",
+      "name": "SY srNUSD",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x723fcaa9830f6b6f68ebf7e30c097532a4cbbd26",
+      "expiry": "2026-05-28T00:00:00.000Z",
+      "underlyingAsset": "0x65a44528e8868166401ea08b549e19552af589db"
+    },
+    {
+      "chainId": 1,
+      "address": "0x3a0f4beeb1bb41bb545a1ce54b905fa13c162e34",
+      "symbol": "PT-jrNUSD-28MAY2026",
+      "name": "PT jrNUSD 28MAY2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x9f56fbe66110f4a0bc9a6ced9c35c4cfdfefb92f",
+      "expiry": "2026-05-28T00:00:00.000Z",
+      "underlyingAsset": "0xfc807058a352b61aeef6a38e2d0fc3990225e772"
+    },
+    {
+      "chainId": 1,
+      "address": "0x5a2e9209a7c521ca9b7e1f0e17229c7e57f9294d",
+      "symbol": "YT-jrNUSD-28MAY2026",
+      "name": "YT jrNUSD 28MAY2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x9f56fbe66110f4a0bc9a6ced9c35c4cfdfefb92f",
+      "expiry": "2026-05-28T00:00:00.000Z",
+      "underlyingAsset": "0xfc807058a352b61aeef6a38e2d0fc3990225e772"
+    },
+    {
+      "chainId": 1,
+      "address": "0x92899026d06343929c61e0987e09caeea6873fe5",
+      "symbol": "SY-jrNUSD",
+      "name": "SY jrNUSD",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x9f56fbe66110f4a0bc9a6ced9c35c4cfdfefb92f",
+      "expiry": "2026-05-28T00:00:00.000Z",
+      "underlyingAsset": "0xfc807058a352b61aeef6a38e2d0fc3990225e772"
     }
   ],
   "56": [
