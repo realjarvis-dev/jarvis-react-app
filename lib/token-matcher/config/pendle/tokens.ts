@@ -806,39 +806,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
-      "address": "0xec4402d1389e749c14a7caeef3e4c1f861e09bc8",
-      "symbol": "PT-iUSD-19FEB2026",
-      "name": "PT iUSD 19FEB2026",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0x3d39e4d42b3f6b493ee52ad5a0d8cb222f03f152",
-      "expiry": "2026-02-19T00:00:00.000Z",
-      "underlyingAsset": "0x48f9e38f3070ad8945dfeae3fa70987722e3d89c"
-    },
-    {
-      "chainId": 1,
-      "address": "0x60fd558d1dff7a4adfcd1f8be09fd73861d50e6a",
-      "symbol": "YT-iUSD-19FEB2026",
-      "name": "YT iUSD 19FEB2026",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0x3d39e4d42b3f6b493ee52ad5a0d8cb222f03f152",
-      "expiry": "2026-02-19T00:00:00.000Z",
-      "underlyingAsset": "0x48f9e38f3070ad8945dfeae3fa70987722e3d89c"
-    },
-    {
-      "chainId": 1,
-      "address": "0x47743a9203e636674467ff58b7ab0ae0ee6f97cb",
-      "symbol": "SY-iUSD",
-      "name": "SY iUSD",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0x3d39e4d42b3f6b493ee52ad5a0d8cb222f03f152",
-      "expiry": "2026-02-19T00:00:00.000Z",
-      "underlyingAsset": "0x48f9e38f3070ad8945dfeae3fa70987722e3d89c"
-    },
-    {
-      "chainId": 1,
       "address": "0x380e68536dfebafee63321d25e9dfefc67d0fe71",
       "symbol": "PT-strETH-26MAR2026",
       "name": "PT strETH 26MAR2026",
@@ -968,39 +935,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0x6d8c4de7071d5aee27fc3a810764e62a4a00ceb9",
       "expiry": "2026-03-05T00:00:00.000Z",
       "underlyingAsset": "0x08efcc2f3e61185d0ea7f8830b3fec9bfa2ee313"
-    },
-    {
-      "chainId": 1,
-      "address": "0x89e0b2b7ef52cc1d84489f409138ca00294909d1",
-      "symbol": "PT-uniBTC-19FEB2026",
-      "name": "PT uniBTC 19FEB2026",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0xcdeb0bab0d9188aab00f06410254a4943403c44b",
-      "expiry": "2026-02-19T00:00:00.000Z",
-      "underlyingAsset": "0x004e9c3ef86bc1ca1f0bb5c7662861ee93350568"
-    },
-    {
-      "chainId": 1,
-      "address": "0x6b490e37c165f6c1d1d788accc6b59740e2da0ef",
-      "symbol": "YT-uniBTC-19FEB2026",
-      "name": "YT uniBTC 19FEB2026",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0xcdeb0bab0d9188aab00f06410254a4943403c44b",
-      "expiry": "2026-02-19T00:00:00.000Z",
-      "underlyingAsset": "0x004e9c3ef86bc1ca1f0bb5c7662861ee93350568"
-    },
-    {
-      "chainId": 1,
-      "address": "0x87b8e462080fa443a06d2bb119adb3828c407d78",
-      "symbol": "SY-uniBTC",
-      "name": "SY uniBTC",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0xcdeb0bab0d9188aab00f06410254a4943403c44b",
-      "expiry": "2026-02-19T00:00:00.000Z",
-      "underlyingAsset": "0x004e9c3ef86bc1ca1f0bb5c7662861ee93350568"
     },
     {
       "chainId": 1,
@@ -2585,6 +2519,72 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0x9f56fbe66110f4a0bc9a6ced9c35c4cfdfefb92f",
       "expiry": "2026-05-28T00:00:00.000Z",
       "underlyingAsset": "0xfc807058a352b61aeef6a38e2d0fc3990225e772"
+    },
+    {
+      "chainId": 1,
+      "address": "0x5dbf246b37e1b9ac5d08bb38233d71322ae7d166",
+      "symbol": "PT-iUSD-25JUN2026",
+      "name": "PT iUSD 25JUN2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x517e54f58b5c587726c577abbcab3e74aa51161e",
+      "expiry": "2026-06-25T00:00:00.000Z",
+      "underlyingAsset": "0x48f9e38f3070ad8945dfeae3fa70987722e3d89c"
+    },
+    {
+      "chainId": 1,
+      "address": "0x26564c11d16e5b5e58061ba513deb4d1fd6fdaa2",
+      "symbol": "YT-iUSD-25JUN2026",
+      "name": "YT iUSD 25JUN2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x517e54f58b5c587726c577abbcab3e74aa51161e",
+      "expiry": "2026-06-25T00:00:00.000Z",
+      "underlyingAsset": "0x48f9e38f3070ad8945dfeae3fa70987722e3d89c"
+    },
+    {
+      "chainId": 1,
+      "address": "0x47743a9203e636674467ff58b7ab0ae0ee6f97cb",
+      "symbol": "SY-iUSD",
+      "name": "SY iUSD",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x517e54f58b5c587726c577abbcab3e74aa51161e",
+      "expiry": "2026-06-25T00:00:00.000Z",
+      "underlyingAsset": "0x48f9e38f3070ad8945dfeae3fa70987722e3d89c"
+    },
+    {
+      "chainId": 1,
+      "address": "0xba41c7e27abf380ab1d529bb1275fadfccdbf437",
+      "symbol": "PT-uniBTC-25JUN2026",
+      "name": "PT uniBTC 25JUN2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0xd625528a8c912fe0b4ed0a73541e2a5db44976cb",
+      "expiry": "2026-06-25T00:00:00.000Z",
+      "underlyingAsset": "0x846350bb944c9f9924d4feca0f948b73e5af5a57"
+    },
+    {
+      "chainId": 1,
+      "address": "0x3b36ed8f55c141d6653301ab606d1d5f3e508afe",
+      "symbol": "YT-uniBTC-25JUN2026",
+      "name": "YT uniBTC 25JUN2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0xd625528a8c912fe0b4ed0a73541e2a5db44976cb",
+      "expiry": "2026-06-25T00:00:00.000Z",
+      "underlyingAsset": "0x846350bb944c9f9924d4feca0f948b73e5af5a57"
+    },
+    {
+      "chainId": 1,
+      "address": "0xb9950954d965550fabbe635a8ccb7ee1fe8d7353",
+      "symbol": "SY-uniBTC",
+      "name": "SY uniBTC",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0xd625528a8c912fe0b4ed0a73541e2a5db44976cb",
+      "expiry": "2026-06-25T00:00:00.000Z",
+      "underlyingAsset": "0x846350bb944c9f9924d4feca0f948b73e5af5a57"
     }
   ],
   "56": [
@@ -2689,39 +2689,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 56,
-      "address": "0x5fd66835a3d6a5eed719ea80b744cda6d84bc41f",
-      "symbol": "PT-uniBTC-19FEB2026",
-      "name": "PT uniBTC 19FEB2026",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0xfa05379178cc53c995c675813b72d5ef712a6f06",
-      "expiry": "2026-02-19T00:00:00.000Z",
-      "underlyingAsset": "0x6b2a01a5f79deb4c2f3c0eda7b01df456fbd726a"
-    },
-    {
-      "chainId": 56,
-      "address": "0xee977e26c44152df1254bf237250c59449c2270a",
-      "symbol": "YT-uniBTC-19FEB2026",
-      "name": "YT uniBTC 19FEB2026",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0xfa05379178cc53c995c675813b72d5ef712a6f06",
-      "expiry": "2026-02-19T00:00:00.000Z",
-      "underlyingAsset": "0x6b2a01a5f79deb4c2f3c0eda7b01df456fbd726a"
-    },
-    {
-      "chainId": 56,
-      "address": "0x09f317b127bcc9d16f5dd17cadbeda9d034c0f8c",
-      "symbol": "SY-uniBTC",
-      "name": "SY uniBTC",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0xfa05379178cc53c995c675813b72d5ef712a6f06",
-      "expiry": "2026-02-19T00:00:00.000Z",
-      "underlyingAsset": "0x6b2a01a5f79deb4c2f3c0eda7b01df456fbd726a"
-    },
-    {
-      "chainId": 56,
       "address": "0x6e3e626f8741cd0e48ba1367b35be5622b426ea0",
       "symbol": "PT-satUSD+-26MAR2026",
       "name": "PT satUSD+ 26MAR2026",
@@ -2818,6 +2785,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0x3b5f4ac56dab45f43dbad9b41c6a57f0f85fbb4c",
       "expiry": "2026-04-23T00:00:00.000Z",
       "underlyingAsset": "0x385c279445581a186a4182a5503094ebb652ec71"
+    },
+    {
+      "chainId": 56,
+      "address": "0x0af2b242a526447fefd6e29cd531ecb89616afd2",
+      "symbol": "PT-uniBTC-25JUN2026",
+      "name": "PT uniBTC 25JUN2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x21558067e3ed5d3cdbe2dd3662bd9035a8e3315a",
+      "expiry": "2026-06-25T00:00:00.000Z",
+      "underlyingAsset": "0x53176cadd446700fa6b89f840357ac586d7e33db"
+    },
+    {
+      "chainId": 56,
+      "address": "0xb36863b33d021fbbc88e81bd9d372e4ebbb38d2a",
+      "symbol": "YT-uniBTC-25JUN2026",
+      "name": "YT uniBTC 25JUN2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x21558067e3ed5d3cdbe2dd3662bd9035a8e3315a",
+      "expiry": "2026-06-25T00:00:00.000Z",
+      "underlyingAsset": "0x53176cadd446700fa6b89f840357ac586d7e33db"
+    },
+    {
+      "chainId": 56,
+      "address": "0xe10b8c2b029c3369f7a910710ed4fa2b25059674",
+      "symbol": "SY-uniBTC",
+      "name": "SY uniBTC",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x21558067e3ed5d3cdbe2dd3662bd9035a8e3315a",
+      "expiry": "2026-06-25T00:00:00.000Z",
+      "underlyingAsset": "0x53176cadd446700fa6b89f840357ac586d7e33db"
     }
   ],
   "146": [
@@ -2991,39 +2991,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 8453,
-      "address": "0xf2a69e0191aad3a7a124397972d0ca0405c1d8d1",
-      "symbol": "PT-uniBTC-19FEB2026",
-      "name": "PT uniBTC 19FEB2026",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0x4ac60d0f9f98287764681df14298c1a11006aefd",
-      "expiry": "2026-02-19T00:00:00.000Z",
-      "underlyingAsset": "0x93919784c523f39cacaa98ee0a9d96c3f32b593e"
-    },
-    {
-      "chainId": 8453,
-      "address": "0x28888f74ca99924d5a2d48e82bf3d32cc7ec0355",
-      "symbol": "YT-uniBTC-19FEB2026",
-      "name": "YT uniBTC 19FEB2026",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0x4ac60d0f9f98287764681df14298c1a11006aefd",
-      "expiry": "2026-02-19T00:00:00.000Z",
-      "underlyingAsset": "0x93919784c523f39cacaa98ee0a9d96c3f32b593e"
-    },
-    {
-      "chainId": 8453,
-      "address": "0xda89510d10f1ba01d45669049aa885d66fef2588",
-      "symbol": "SY-uniBTC",
-      "name": "SY uniBTC",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0x4ac60d0f9f98287764681df14298c1a11006aefd",
-      "expiry": "2026-02-19T00:00:00.000Z",
-      "underlyingAsset": "0x93919784c523f39cacaa98ee0a9d96c3f32b593e"
-    },
-    {
-      "chainId": 8453,
       "address": "0x87244f834fc4f74266f6e1c247c7f0dfc8b21d81",
       "symbol": "PT-sKAITO-30JUL2026",
       "name": "PT sKAITO 30JUL2026",
@@ -3054,6 +3021,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0xb0eb82ba25ffa51641d8613d270ad79183171fac",
       "expiry": "2026-07-30T00:00:00.000Z",
       "underlyingAsset": "0x548d3b444da39686d1a6f1544781d154e7cd1ef7"
+    },
+    {
+      "chainId": 8453,
+      "address": "0xc45139488b7ab235affad981cbdb5c898581d04f",
+      "symbol": "PT-uniBTC-25JUN2026",
+      "name": "PT uniBTC 25JUN2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0xb2ba97b3e4ecba5af1e098bf65f5d33c9e2a7525",
+      "expiry": "2026-06-25T00:00:00.000Z",
+      "underlyingAsset": "0xae8fc9288685516d2eca717056ca69303b348752"
+    },
+    {
+      "chainId": 8453,
+      "address": "0x8be9c693d70ede17bec65893b8f3fe2096c4128c",
+      "symbol": "YT-uniBTC-25JUN2026",
+      "name": "YT uniBTC 25JUN2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0xb2ba97b3e4ecba5af1e098bf65f5d33c9e2a7525",
+      "expiry": "2026-06-25T00:00:00.000Z",
+      "underlyingAsset": "0xae8fc9288685516d2eca717056ca69303b348752"
+    },
+    {
+      "chainId": 8453,
+      "address": "0x73838d7ae05294b2f4d648971e33e812ee048f56",
+      "symbol": "SY-uniBTC",
+      "name": "SY uniBTC",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0xb2ba97b3e4ecba5af1e098bf65f5d33c9e2a7525",
+      "expiry": "2026-06-25T00:00:00.000Z",
+      "underlyingAsset": "0xae8fc9288685516d2eca717056ca69303b348752"
     }
   ],
   "42161": [
@@ -3287,105 +3287,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0x44688047c0a8bab55bf0b19f9d47d567b2c3319f",
       "expiry": "2026-03-26T00:00:00.000Z",
       "underlyingAsset": "0x37227785a1f4545ed914690e395e4cfe96b8319f"
-    },
-    {
-      "chainId": 42161,
-      "address": "0x5b2c615e22272234aacf187632a0531ca1243279",
-      "symbol": "PT-USDai-19FEB2026",
-      "name": "PT USDai 19FEB2026",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0x3308574370f19ea639f4671838e01cfb77d8db70",
-      "expiry": "2026-02-19T00:00:00.000Z",
-      "underlyingAsset": "0x0a1a1a107e45b7ced86833863f482bc5f4ed82ef"
-    },
-    {
-      "chainId": 42161,
-      "address": "0xdb795dc5e359f3c53b83f603e10fd9901f851190",
-      "symbol": "YT-USDai-19FEB2026",
-      "name": "YT USDai 19FEB2026",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0x3308574370f19ea639f4671838e01cfb77d8db70",
-      "expiry": "2026-02-19T00:00:00.000Z",
-      "underlyingAsset": "0x0a1a1a107e45b7ced86833863f482bc5f4ed82ef"
-    },
-    {
-      "chainId": 42161,
-      "address": "0x5edcbc20cac67adc2e724d4348ff85132b085b82",
-      "symbol": "SY-USDai",
-      "name": "SY USDai",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0x3308574370f19ea639f4671838e01cfb77d8db70",
-      "expiry": "2026-02-19T00:00:00.000Z",
-      "underlyingAsset": "0x0a1a1a107e45b7ced86833863f482bc5f4ed82ef"
-    },
-    {
-      "chainId": 42161,
-      "address": "0x1bf1311fcf914a69dd5805c9b06b72f80539cb3f",
-      "symbol": "PT-sUSDai-19FEB2026",
-      "name": "PT sUSDai 19FEB2026",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0x2092fa5d02276b3136a50f3c2c3a6ed45413183e",
-      "expiry": "2026-02-19T00:00:00.000Z",
-      "underlyingAsset": "0x0b2b2b2076d95dda7817e785989fe353fe955ef9"
-    },
-    {
-      "chainId": 42161,
-      "address": "0x214d1950027863f5e1ec6369797d9a51ef1bb66f",
-      "symbol": "YT-sUSDai-19FEB2026",
-      "name": "YT sUSDai 19FEB2026",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0x2092fa5d02276b3136a50f3c2c3a6ed45413183e",
-      "expiry": "2026-02-19T00:00:00.000Z",
-      "underlyingAsset": "0x0b2b2b2076d95dda7817e785989fe353fe955ef9"
-    },
-    {
-      "chainId": 42161,
-      "address": "0x30ccf4bbee313fcd19f3e295b3ba2920a24e2f62",
-      "symbol": "SY-sUSDai",
-      "name": "SY sUSDai",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0x2092fa5d02276b3136a50f3c2c3a6ed45413183e",
-      "expiry": "2026-02-19T00:00:00.000Z",
-      "underlyingAsset": "0x0b2b2b2076d95dda7817e785989fe353fe955ef9"
-    },
-    {
-      "chainId": 42161,
-      "address": "0x9b3924f9652cabf3db48b7b4c92e474c571b3ab4",
-      "symbol": "PT-thBILL-19FEB2026",
-      "name": "PT thBILL 19FEB2026",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0xfad63f0a2ff618edde23561dff212edfeddbe89d",
-      "expiry": "2026-02-19T00:00:00.000Z",
-      "underlyingAsset": "0xfdd22ce6d1f66bc0ec89b20bf16ccb6670f55a5a"
-    },
-    {
-      "chainId": 42161,
-      "address": "0x12da049222953b558008789d1b54a0630d6ef51e",
-      "symbol": "YT-thBILL-19FEB2026",
-      "name": "YT thBILL 19FEB2026",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0xfad63f0a2ff618edde23561dff212edfeddbe89d",
-      "expiry": "2026-02-19T00:00:00.000Z",
-      "underlyingAsset": "0xfdd22ce6d1f66bc0ec89b20bf16ccb6670f55a5a"
-    },
-    {
-      "chainId": 42161,
-      "address": "0xc32e96b4c7eb7959b6a92f3f7ed5d2321e6ed3d4",
-      "symbol": "SY-thBILL",
-      "name": "SY thBILL",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0xfad63f0a2ff618edde23561dff212edfeddbe89d",
-      "expiry": "2026-02-19T00:00:00.000Z",
-      "underlyingAsset": "0xfdd22ce6d1f66bc0ec89b20bf16ccb6670f55a5a"
     },
     {
       "chainId": 42161,
