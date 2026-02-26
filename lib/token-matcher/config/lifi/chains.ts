@@ -296,6 +296,14 @@ export const chains = [
     "mainnet": true
   },
   {
+    "key": "tlo",
+    "chainType": "EVM",
+    "name": "Telos",
+    "coin": "TLOS",
+    "id": 40,
+    "mainnet": true
+  },
+  {
     "key": "cel",
     "chainType": "EVM",
     "name": "Celo",
