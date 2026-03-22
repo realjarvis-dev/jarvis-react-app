@@ -2027,39 +2027,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
-      "address": "0x90a2d7a50692f2620b467747a32cfa61889997b1",
-      "symbol": "PT-wstUSR-25JUN2026",
-      "name": "PT wstUSR 25JUN2026",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0x70d87838387bd8876c9e9ecf509d1130d4ac7530",
-      "expiry": "2026-06-25T00:00:00.000Z",
-      "underlyingAsset": "0x1202f5c7b4b9e47a1a484e8b270be34dbbc75055"
-    },
-    {
-      "chainId": 1,
-      "address": "0x343580002208c98e48fab1ca3d15265f99c0541d",
-      "symbol": "YT-wstUSR-25JUN2026",
-      "name": "YT wstUSR 25JUN2026",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0x70d87838387bd8876c9e9ecf509d1130d4ac7530",
-      "expiry": "2026-06-25T00:00:00.000Z",
-      "underlyingAsset": "0x1202f5c7b4b9e47a1a484e8b270be34dbbc75055"
-    },
-    {
-      "chainId": 1,
-      "address": "0x6c78661c00d797c9c7fcbe4bcacbd9612a61c07f",
-      "symbol": "SY-wstUSR",
-      "name": "SY wstUSR",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0x70d87838387bd8876c9e9ecf509d1130d4ac7530",
-      "expiry": "2026-06-25T00:00:00.000Z",
-      "underlyingAsset": "0x1202f5c7b4b9e47a1a484e8b270be34dbbc75055"
-    },
-    {
-      "chainId": 1,
       "address": "0x5d99ff7bcd32c432cbc07fbb0a593ef4cc9d019d",
       "symbol": "PT-superUSDC-30APR2026",
       "name": "PT superUSDC 30APR2026",
