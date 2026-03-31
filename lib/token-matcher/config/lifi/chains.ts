@@ -312,6 +312,14 @@ export const chains = [
     "mainnet": true
   },
   {
+    "key": "tem",
+    "chainType": "EVM",
+    "name": "Tempo",
+    "coin": "PathUSD",
+    "id": 4217,
+    "mainnet": true
+  },
+  {
     "key": "cel",
     "chainType": "EVM",
     "name": "Celo",
