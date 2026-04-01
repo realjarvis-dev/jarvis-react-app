@@ -96,6 +96,14 @@ export const chains = [
     "mainnet": true
   },
   {
+    "key": "opst",
+    "chainType": "EVM",
+    "name": "OP Sepolia Testnet",
+    "coin": "ETH",
+    "id": 11155420,
+    "mainnet": false
+  },
+  {
     "key": "lsk",
     "chainType": "EVM",
     "name": "Lisk",
@@ -382,6 +390,14 @@ export const chains = [
     "coin": "SOPH",
     "id": 50104,
     "mainnet": true
+  },
+  {
+    "key": "arct",
+    "chainType": "EVM",
+    "name": "Arc Testnet",
+    "coin": "USDC",
+    "id": 5042002,
+    "mainnet": false
   },
   {
     "key": "scl",
