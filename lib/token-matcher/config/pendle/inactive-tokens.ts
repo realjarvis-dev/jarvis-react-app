@@ -11432,6 +11432,72 @@ export const pendleInactiveTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
+      "address": "0xd0609ac13000d88b0bebf5bb21074916edd92bb1",
+      "symbol": "PT-jrUSDe-02APR2026",
+      "name": "PT jrUSDe 02APR2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0xfabeefc5369aa5270b401f4ee062d17fb5f1ec2a",
+      "expiry": "2026-04-02T00:00:00.000Z",
+      "underlyingAsset": "0xc58d044404d8b14e953c115e67823784dea53d8f"
+    },
+    {
+      "chainId": 1,
+      "address": "0xa595fc1b1d45ea8c3f1cd73078f5104e716327bc",
+      "symbol": "YT-jrUSDe-02APR2026",
+      "name": "YT jrUSDe 02APR2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0xfabeefc5369aa5270b401f4ee062d17fb5f1ec2a",
+      "expiry": "2026-04-02T00:00:00.000Z",
+      "underlyingAsset": "0xc58d044404d8b14e953c115e67823784dea53d8f"
+    },
+    {
+      "chainId": 1,
+      "address": "0x4f6673346ab4813f1665327ab39087008cc7d76f",
+      "symbol": "SY-jrUSDe",
+      "name": "SY jrUSDe",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0xfabeefc5369aa5270b401f4ee062d17fb5f1ec2a",
+      "expiry": "2026-04-02T00:00:00.000Z",
+      "underlyingAsset": "0xc58d044404d8b14e953c115e67823784dea53d8f"
+    },
+    {
+      "chainId": 1,
+      "address": "0x9bf45ab47747f4b4dd09b3c2c73953484b4eb375",
+      "symbol": "PT-srUSDe-02APR2026",
+      "name": "PT srUSDe 02APR2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0xafb7d6d1e9bca5b675adc9b4f52f0cdfddec9654",
+      "expiry": "2026-04-02T00:00:00.000Z",
+      "underlyingAsset": "0x3d7d6fdf07ee548b939a80edbc9b2256d0cdc003"
+    },
+    {
+      "chainId": 1,
+      "address": "0x31f9e6692e87d81ff8d64de1f475fce6880a030f",
+      "symbol": "YT-srUSDe-02APR2026",
+      "name": "YT srUSDe 02APR2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0xafb7d6d1e9bca5b675adc9b4f52f0cdfddec9654",
+      "expiry": "2026-04-02T00:00:00.000Z",
+      "underlyingAsset": "0x3d7d6fdf07ee548b939a80edbc9b2256d0cdc003"
+    },
+    {
+      "chainId": 1,
+      "address": "0xc9bfebc79a722c05dc34bd2a227ef2db19fd1b8e",
+      "symbol": "SY-srUSDe",
+      "name": "SY srUSDe",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0xafb7d6d1e9bca5b675adc9b4f52f0cdfddec9654",
+      "expiry": "2026-04-02T00:00:00.000Z",
+      "underlyingAsset": "0x3d7d6fdf07ee548b939a80edbc9b2256d0cdc003"
+    },
+    {
+      "chainId": 1,
       "address": "0xaf76b3af3477e4a2cd0b7f80c3152108c19a25e5",
       "symbol": "PT-siUSD-26MAR2026",
       "name": "PT siUSD 26MAR2026",
@@ -11495,6 +11561,39 @@ export const pendleInactiveTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0x696a9d9d4b0ba471ac309da8e168a2962af6ab22",
       "expiry": "2026-03-19T00:00:00.000Z",
       "underlyingAsset": "0x056b269eb1f75477a8666ae8c7fe01b64dd55ecc"
+    },
+    {
+      "chainId": 1,
+      "address": "0xe7ccb16fd92407c9ad8869ee8ac1d9804ec7eaec",
+      "symbol": "PT-SIERRA-02APR2026",
+      "name": "PT SIERRA 02APR2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x403b2cfd3e82e614ae170eb81d5d012ffc46be4e",
+      "expiry": "2026-04-02T00:00:00.000Z",
+      "underlyingAsset": "0x6bf7788eaa948d9ffba7e9bb386e2d3c9810e0fc"
+    },
+    {
+      "chainId": 1,
+      "address": "0x1252db084c23cc8b7e38192d146262438b84e69f",
+      "symbol": "YT-SIERRA-02APR2026",
+      "name": "YT SIERRA 02APR2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x403b2cfd3e82e614ae170eb81d5d012ffc46be4e",
+      "expiry": "2026-04-02T00:00:00.000Z",
+      "underlyingAsset": "0x6bf7788eaa948d9ffba7e9bb386e2d3c9810e0fc"
+    },
+    {
+      "chainId": 1,
+      "address": "0x399e426e6812943ac22976333698e16eaa80a209",
+      "symbol": "SY-SIERRA",
+      "name": "SY SIERRA",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x403b2cfd3e82e614ae170eb81d5d012ffc46be4e",
+      "expiry": "2026-04-02T00:00:00.000Z",
+      "underlyingAsset": "0x6bf7788eaa948d9ffba7e9bb386e2d3c9810e0fc"
     }
   ],
   "56": [
