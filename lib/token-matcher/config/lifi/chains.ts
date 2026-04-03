@@ -320,6 +320,14 @@ export const chains = [
     "mainnet": true
   },
   {
+    "key": "arbs",
+    "chainType": "EVM",
+    "name": "Arbitrum Sepolia Testnet",
+    "coin": "ETH",
+    "id": 421614,
+    "mainnet": false
+  },
+  {
     "key": "tem",
     "chainType": "EVM",
     "name": "Tempo",
@@ -478,6 +486,14 @@ export const chains = [
     "coin": "KAIA",
     "id": 8217,
     "mainnet": true
+  },
+  {
+    "key": "bast",
+    "chainType": "EVM",
+    "name": "Base Sepolia Testnet",
+    "coin": "ETH",
+    "id": 84532,
+    "mainnet": false
   },
   {
     "key": "vic",
