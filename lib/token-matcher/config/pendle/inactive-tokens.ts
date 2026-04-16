@@ -12556,6 +12556,39 @@ export const pendleInactiveTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 56,
+      "address": "0x0010604431e5e0d37785b135c2f9c421a9f1837d",
+      "symbol": "PT-ynBNBx-16APR2026",
+      "name": "PT ynBNBx 16APR2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x6113943361e4dbaeedc0ba260195a84adebd1b9f",
+      "expiry": "2026-04-16T00:00:00.000Z",
+      "underlyingAsset": "0x32c830f5c34122c6afb8ae87aba541b7900a2c5f"
+    },
+    {
+      "chainId": 56,
+      "address": "0xbfb2f78be89165039492aa5e650e3787d8ff5ab4",
+      "symbol": "YT-ynBNBx-16APR2026",
+      "name": "YT ynBNBx 16APR2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x6113943361e4dbaeedc0ba260195a84adebd1b9f",
+      "expiry": "2026-04-16T00:00:00.000Z",
+      "underlyingAsset": "0x32c830f5c34122c6afb8ae87aba541b7900a2c5f"
+    },
+    {
+      "chainId": 56,
+      "address": "0x23a052dfcabd4fa7bd52e7e67e0fb0ee596e7383",
+      "symbol": "SY-ynBNBx",
+      "name": "SY ynBNBx",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x6113943361e4dbaeedc0ba260195a84adebd1b9f",
+      "expiry": "2026-04-16T00:00:00.000Z",
+      "underlyingAsset": "0x32c830f5c34122c6afb8ae87aba541b7900a2c5f"
+    },
+    {
+      "chainId": 56,
       "address": "0x5fd66835a3d6a5eed719ea80b744cda6d84bc41f",
       "symbol": "PT-uniBTC-19FEB2026",
       "name": "PT uniBTC 19FEB2026",
