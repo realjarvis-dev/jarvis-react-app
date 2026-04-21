@@ -336,6 +336,14 @@ export const chains = [
     "mainnet": true
   },
   {
+    "key": "arn",
+    "chainType": "EVM",
+    "name": "Arbitrum Nova",
+    "coin": "ETH",
+    "id": 42170,
+    "mainnet": true
+  },
+  {
     "key": "cel",
     "chainType": "EVM",
     "name": "Celo",
