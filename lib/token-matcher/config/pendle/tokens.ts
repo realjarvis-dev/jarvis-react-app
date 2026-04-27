@@ -2489,6 +2489,72 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
+      "address": "0xfae86383d512722a50192d9e6b414dc3f067519c",
+      "symbol": "PT-USD (Midas mHYPER)-24SEP2026",
+      "name": "PT USD (Midas mHYPER) 24SEP2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0xdf014ab15b68e3b8db53e8d307d01b81cce98739",
+      "expiry": "2026-09-24T00:00:00.000Z",
+      "underlyingAsset": "0x9b5528528656dbc094765e2abb79f293c21191b9"
+    },
+    {
+      "chainId": 1,
+      "address": "0x30a199e71f1b9b546e9fac63ab2512c05e661161",
+      "symbol": "YT-USD (Midas mHYPER)-24SEP2026",
+      "name": "YT USD (Midas mHYPER) 24SEP2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0xdf014ab15b68e3b8db53e8d307d01b81cce98739",
+      "expiry": "2026-09-24T00:00:00.000Z",
+      "underlyingAsset": "0x9b5528528656dbc094765e2abb79f293c21191b9"
+    },
+    {
+      "chainId": 1,
+      "address": "0x457904b54f47dd7a91253f225237a5b02ca059d6",
+      "symbol": "SY-USD (Midas mHYPER)",
+      "name": "SY USD (Midas mHYPER)",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0xdf014ab15b68e3b8db53e8d307d01b81cce98739",
+      "expiry": "2026-09-24T00:00:00.000Z",
+      "underlyingAsset": "0x9b5528528656dbc094765e2abb79f293c21191b9"
+    },
+    {
+      "chainId": 1,
+      "address": "0xc8ff5a1d899c2a453c6f10f4ea87978726cf9f63",
+      "symbol": "PT-mHyperBTC-24SEP2026",
+      "name": "PT mHyperBTC 24SEP2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0xeff6a9ff1f17adbe88c1a923fc197b00ef5f4ce2",
+      "expiry": "2026-09-24T00:00:00.000Z",
+      "underlyingAsset": "0xc8495eaff71d3a563b906295fcf2f685b1783085"
+    },
+    {
+      "chainId": 1,
+      "address": "0x5ec5f15917275469dc009deaaa3d00538a45f187",
+      "symbol": "YT-mHyperBTC-24SEP2026",
+      "name": "YT mHyperBTC 24SEP2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0xeff6a9ff1f17adbe88c1a923fc197b00ef5f4ce2",
+      "expiry": "2026-09-24T00:00:00.000Z",
+      "underlyingAsset": "0xc8495eaff71d3a563b906295fcf2f685b1783085"
+    },
+    {
+      "chainId": 1,
+      "address": "0x95fc228a926828b4d95f52c1d52b345e743153f0",
+      "symbol": "SY-mHyperBTC",
+      "name": "SY mHyperBTC",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0xeff6a9ff1f17adbe88c1a923fc197b00ef5f4ce2",
+      "expiry": "2026-09-24T00:00:00.000Z",
+      "underlyingAsset": "0xc8495eaff71d3a563b906295fcf2f685b1783085"
+    },
+    {
+      "chainId": 1,
       "address": "0x3069a30121dbbf37c88003b41204d6afaac7acbd",
       "symbol": "PT-USD (Midas mAPOLLO)-24SEP2026",
       "name": "PT USD (Midas mAPOLLO) 24SEP2026",
@@ -2519,6 +2585,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0xa268168e73791e2a0ab48ded41ecf6dc923cd17f",
       "expiry": "2026-09-24T00:00:00.000Z",
       "underlyingAsset": "0x7cf9dec92ca9fd46f8d86e7798b72624bc116c05"
+    },
+    {
+      "chainId": 1,
+      "address": "0x5d8975ca1626929c1b051abd6045f3a027541dcf",
+      "symbol": "PT-loAZND-02JUL2026",
+      "name": "PT loAZND 02JUL2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x58cfd9fe39bf91a1fd36497cbe74e997f4d5d7c7",
+      "expiry": "2026-07-02T00:00:00.000Z",
+      "underlyingAsset": "0xa6142276526724cfaee9151d280385bdf43e0503"
+    },
+    {
+      "chainId": 1,
+      "address": "0xc4528eeb04bd614e67426a37a3812ee46f1873cd",
+      "symbol": "YT-loAZND-02JUL2026",
+      "name": "YT loAZND 02JUL2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x58cfd9fe39bf91a1fd36497cbe74e997f4d5d7c7",
+      "expiry": "2026-07-02T00:00:00.000Z",
+      "underlyingAsset": "0xa6142276526724cfaee9151d280385bdf43e0503"
+    },
+    {
+      "chainId": 1,
+      "address": "0x4314107c44e8777d14185d6ac94e5fbcdf168203",
+      "symbol": "SY-loAZND",
+      "name": "SY loAZND",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x58cfd9fe39bf91a1fd36497cbe74e997f4d5d7c7",
+      "expiry": "2026-07-02T00:00:00.000Z",
+      "underlyingAsset": "0xa6142276526724cfaee9151d280385bdf43e0503"
     }
   ],
   "56": [
