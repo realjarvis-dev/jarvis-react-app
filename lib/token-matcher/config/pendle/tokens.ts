@@ -2588,6 +2588,72 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
+      "address": "0x3ec43f4158d51df0928979c09eaf33cad287065c",
+      "symbol": "PT-USDe-13AUG2026",
+      "name": "PT USDe 13AUG2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x43c97094da0e894d3af2fda6f507d59a29888251",
+      "expiry": "2026-08-13T00:00:00.000Z",
+      "underlyingAsset": "0x4c9edd5852cd905f086c759e8383e09bff1e68b3"
+    },
+    {
+      "chainId": 1,
+      "address": "0x8becb3beca07029ffddd2135082468cb8af19ca9",
+      "symbol": "YT-USDe-13AUG2026",
+      "name": "YT USDe 13AUG2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x43c97094da0e894d3af2fda6f507d59a29888251",
+      "expiry": "2026-08-13T00:00:00.000Z",
+      "underlyingAsset": "0x4c9edd5852cd905f086c759e8383e09bff1e68b3"
+    },
+    {
+      "chainId": 1,
+      "address": "0xf0bacd9c3d94fc924dbcaaf644208c4e3f4d3bb4",
+      "symbol": "SY-USDe",
+      "name": "SY USDe",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x43c97094da0e894d3af2fda6f507d59a29888251",
+      "expiry": "2026-08-13T00:00:00.000Z",
+      "underlyingAsset": "0x4c9edd5852cd905f086c759e8383e09bff1e68b3"
+    },
+    {
+      "chainId": 1,
+      "address": "0x5a19fa369f2895dcd8d2cee62e4ceae58ef92bbb",
+      "symbol": "PT-sUSDe-13AUG2026",
+      "name": "PT sUSDe 13AUG2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x177768caf9d0e036725a51d3f60d7e20f2d4d194",
+      "expiry": "2026-08-13T00:00:00.000Z",
+      "underlyingAsset": "0x9d39a5de30e57443bff2a8307a4256c8797a3497"
+    },
+    {
+      "chainId": 1,
+      "address": "0x45a699a11a4a17fe0931ef3cea4bfc3235e659f2",
+      "symbol": "YT-sUSDe-13AUG2026",
+      "name": "YT sUSDe 13AUG2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x177768caf9d0e036725a51d3f60d7e20f2d4d194",
+      "expiry": "2026-08-13T00:00:00.000Z",
+      "underlyingAsset": "0x9d39a5de30e57443bff2a8307a4256c8797a3497"
+    },
+    {
+      "chainId": 1,
+      "address": "0xbf98480425a29197e5d99d003017f63a1e595d02",
+      "symbol": "SY-sUSDe",
+      "name": "SY sUSDe",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x177768caf9d0e036725a51d3f60d7e20f2d4d194",
+      "expiry": "2026-08-13T00:00:00.000Z",
+      "underlyingAsset": "0x9d39a5de30e57443bff2a8307a4256c8797a3497"
+    },
+    {
+      "chainId": 1,
       "address": "0x5d8975ca1626929c1b051abd6045f3a027541dcf",
       "symbol": "PT-loAZND-02JUL2026",
       "name": "PT loAZND 02JUL2026",
