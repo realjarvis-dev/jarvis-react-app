@@ -192,6 +192,14 @@ export const chains = [
     "mainnet": true
   },
   {
+    "key": "phr",
+    "chainType": "EVM",
+    "name": "Pharos Mainnet",
+    "coin": "PROS",
+    "id": 1672,
+    "mainnet": true
+  },
+  {
     "key": "soe",
     "chainType": "EVM",
     "name": "Soneium",
