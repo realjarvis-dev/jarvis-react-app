@@ -2387,6 +2387,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0x05b5a8bd55d17a7cc8133d8ccd285f83be01a062",
       "expiry": "2026-08-06T00:00:00.000Z",
       "underlyingAsset": "0xb8d89678e75a973e74698c976716308abb8a46a4"
+    },
+    {
+      "chainId": 1,
+      "address": "0x82035c2f935c93d344b5f0904d8157409f0c3af4",
+      "symbol": "PT-USD (Midas mROX)-30JUL2026",
+      "name": "PT USD (Midas mROX) 30JUL2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0xb9891c75bccef3c55a4566efdb1cdc1e337087b6",
+      "expiry": "2026-07-30T00:00:00.000Z",
+      "underlyingAsset": "0x67e1f506b148d0fc95a4e3ffb49068ceb6855c05"
+    },
+    {
+      "chainId": 1,
+      "address": "0x20bab2678f6008bb4446f3ca0634cf7e069ae559",
+      "symbol": "YT-USD (Midas mROX)-30JUL2026",
+      "name": "YT USD (Midas mROX) 30JUL2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0xb9891c75bccef3c55a4566efdb1cdc1e337087b6",
+      "expiry": "2026-07-30T00:00:00.000Z",
+      "underlyingAsset": "0x67e1f506b148d0fc95a4e3ffb49068ceb6855c05"
+    },
+    {
+      "chainId": 1,
+      "address": "0x093bb931965e10af75349b97d133aa8dab81bb4a",
+      "symbol": "SY-USD (Midas mROX)",
+      "name": "SY USD (Midas mROX)",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0xb9891c75bccef3c55a4566efdb1cdc1e337087b6",
+      "expiry": "2026-07-30T00:00:00.000Z",
+      "underlyingAsset": "0x67e1f506b148d0fc95a4e3ffb49068ceb6855c05"
     }
   ],
   "56": [
