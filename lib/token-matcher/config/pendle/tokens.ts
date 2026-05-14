@@ -641,39 +641,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
-      "address": "0x606b5c773dc4d6e625c411cf60565f8c30c467d2",
-      "symbol": "PT-savUSD-14MAY2026",
-      "name": "PT savUSD 14MAY2026",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0xfb6a09634a3c1ac05318f85321980d1208372793",
-      "expiry": "2026-05-14T00:00:00.000Z",
-      "underlyingAsset": "0xb8d89678e75a973e74698c976716308abb8a46a4"
-    },
-    {
-      "chainId": 1,
-      "address": "0xc4924f9e6e1feea9f44ed117711af2ed14600081",
-      "symbol": "YT-savUSD-14MAY2026",
-      "name": "YT savUSD 14MAY2026",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0xfb6a09634a3c1ac05318f85321980d1208372793",
-      "expiry": "2026-05-14T00:00:00.000Z",
-      "underlyingAsset": "0xb8d89678e75a973e74698c976716308abb8a46a4"
-    },
-    {
-      "chainId": 1,
-      "address": "0x0caefeb807152fbd945bf947893e6feba5aed61b",
-      "symbol": "SY-savUSD",
-      "name": "SY savUSD",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0xfb6a09634a3c1ac05318f85321980d1208372793",
-      "expiry": "2026-05-14T00:00:00.000Z",
-      "underlyingAsset": "0xb8d89678e75a973e74698c976716308abb8a46a4"
-    },
-    {
-      "chainId": 1,
       "address": "0x2d3c279e5fcdf5b793c0a75ed90738d7369b0b83",
       "symbol": "PT-stcUSD-23JUL2026",
       "name": "PT stcUSD 23JUL2026",
@@ -935,39 +902,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0x926fac5b12544c2e7bfa8ce3dd83a4c8ed988da8",
       "expiry": "2026-06-25T00:00:00.000Z",
       "underlyingAsset": "0x50bd66d59911f5e086ec87ae43c811e0d059dd11"
-    },
-    {
-      "chainId": 1,
-      "address": "0xcc16cd49194e7aa3dca780c742580e2f9b418874",
-      "symbol": "PT-avUSD-14MAY2026",
-      "name": "PT avUSD 14MAY2026",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0xf968b785b4bfd5a6c0fc197b42264beeecf58d85",
-      "expiry": "2026-05-14T00:00:00.000Z",
-      "underlyingAsset": "0xf4c13d631450de6b12a19829e37c8e2826891dc4"
-    },
-    {
-      "chainId": 1,
-      "address": "0x5d928577454dfb826dd6163c75a487ab96032c2d",
-      "symbol": "YT-avUSD-14MAY2026",
-      "name": "YT avUSD 14MAY2026",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0xf968b785b4bfd5a6c0fc197b42264beeecf58d85",
-      "expiry": "2026-05-14T00:00:00.000Z",
-      "underlyingAsset": "0xf4c13d631450de6b12a19829e37c8e2826891dc4"
-    },
-    {
-      "chainId": 1,
-      "address": "0xaa6a8d538e36f23975beab59f5def2f19152d114",
-      "symbol": "SY-avUSD",
-      "name": "SY avUSD",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0xf968b785b4bfd5a6c0fc197b42264beeecf58d85",
-      "expiry": "2026-05-14T00:00:00.000Z",
-      "underlyingAsset": "0xf4c13d631450de6b12a19829e37c8e2826891dc4"
     },
     {
       "chainId": 1,
@@ -1397,39 +1331,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0x3c53fae231ad3c0408a8b6d33138bbff1caec330",
       "expiry": "2026-06-18T00:00:00.000Z",
       "underlyingAsset": "0x38eeb52f0771140d10c4e9a9a72349a329fe8a6a"
-    },
-    {
-      "chainId": 1,
-      "address": "0x5f0169d5bd3120d90d7673f20ac71d08e98968cd",
-      "symbol": "PT-savETH-14MAY2026",
-      "name": "PT savETH 14MAY2026",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0x83f689323d4c28b7e590804ea747086dc4321994",
-      "expiry": "2026-05-14T00:00:00.000Z",
-      "underlyingAsset": "0xda06ee2dacf9245aa80072a4407debdea0d7e341"
-    },
-    {
-      "chainId": 1,
-      "address": "0x2809387fb6ba29386a31ff042f3f04bec26bb8e4",
-      "symbol": "YT-savETH-14MAY2026",
-      "name": "YT savETH 14MAY2026",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0x83f689323d4c28b7e590804ea747086dc4321994",
-      "expiry": "2026-05-14T00:00:00.000Z",
-      "underlyingAsset": "0xda06ee2dacf9245aa80072a4407debdea0d7e341"
-    },
-    {
-      "chainId": 1,
-      "address": "0x47d3eeeca5f031d3862f0eca1ce84e1722111382",
-      "symbol": "SY-savETH",
-      "name": "SY savETH",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0x83f689323d4c28b7e590804ea747086dc4321994",
-      "expiry": "2026-05-14T00:00:00.000Z",
-      "underlyingAsset": "0xda06ee2dacf9245aa80072a4407debdea0d7e341"
     },
     {
       "chainId": 1,
