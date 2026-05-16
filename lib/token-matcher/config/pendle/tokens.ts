@@ -2387,6 +2387,72 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0xb9891c75bccef3c55a4566efdb1cdc1e337087b6",
       "expiry": "2026-07-30T00:00:00.000Z",
       "underlyingAsset": "0x67e1f506b148d0fc95a4e3ffb49068ceb6855c05"
+    },
+    {
+      "chainId": 1,
+      "address": "0x079c3469143804af5d0d645a878c371dbe8d038e",
+      "symbol": "PT-fxSAVE-29OCT2026",
+      "name": "PT fxSAVE 29OCT2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x8308e53f584a7e5f0c581059d9ba971c0bec9454",
+      "expiry": "2026-10-29T00:00:00.000Z",
+      "underlyingAsset": "0x7743e50f534a7f9f1791dde7dcd89f7783eefc39"
+    },
+    {
+      "chainId": 1,
+      "address": "0x1964590af52cd77c2f30970bdbcb4d6e3dbdc615",
+      "symbol": "YT-fxSAVE-29OCT2026",
+      "name": "YT fxSAVE 29OCT2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x8308e53f584a7e5f0c581059d9ba971c0bec9454",
+      "expiry": "2026-10-29T00:00:00.000Z",
+      "underlyingAsset": "0x7743e50f534a7f9f1791dde7dcd89f7783eefc39"
+    },
+    {
+      "chainId": 1,
+      "address": "0x13945b761b2ed3219a497a46d15a8923f418d2ab",
+      "symbol": "SY-fxSAVE",
+      "name": "SY fxSAVE",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x8308e53f584a7e5f0c581059d9ba971c0bec9454",
+      "expiry": "2026-10-29T00:00:00.000Z",
+      "underlyingAsset": "0x7743e50f534a7f9f1791dde7dcd89f7783eefc39"
+    },
+    {
+      "chainId": 1,
+      "address": "0xeccde3a92f8ad4884a2613d9ef1556103c26728f",
+      "symbol": "PT-WOUSD-17DEC2026",
+      "name": "PT WOUSD 17DEC2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x30ee7618e0ef0682f0f354d6f84be87de6b8878c",
+      "expiry": "2026-12-17T00:00:00.000Z",
+      "underlyingAsset": "0xd2af830e8cbdfed6cc11bab697bb25496ed6fa62"
+    },
+    {
+      "chainId": 1,
+      "address": "0x4f93641804ddd289ce8917533169a767ce17cd9a",
+      "symbol": "YT-WOUSD-17DEC2026",
+      "name": "YT WOUSD 17DEC2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x30ee7618e0ef0682f0f354d6f84be87de6b8878c",
+      "expiry": "2026-12-17T00:00:00.000Z",
+      "underlyingAsset": "0xd2af830e8cbdfed6cc11bab697bb25496ed6fa62"
+    },
+    {
+      "chainId": 1,
+      "address": "0xe22deabf5b174437092ae9ac79761b03ef178ca8",
+      "symbol": "SY-WOUSD",
+      "name": "SY WOUSD",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x30ee7618e0ef0682f0f354d6f84be87de6b8878c",
+      "expiry": "2026-12-17T00:00:00.000Z",
+      "underlyingAsset": "0xd2af830e8cbdfed6cc11bab697bb25496ed6fa62"
     }
   ],
   "56": [
