@@ -2519,6 +2519,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0xaf0349fb9b1ba07d34381870c59b560b31412660",
       "expiry": "2026-11-05T00:00:00.000Z",
       "underlyingAsset": "0x98a878b1cd98131b271883b390f68d2c90674665"
+    },
+    {
+      "chainId": 1,
+      "address": "0x7f47c3e6b2c00fc4eb4d5ae50d0ab0ab6888eb4d",
+      "symbol": "PT-USD3-17DEC2026",
+      "name": "PT USD3 17DEC2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x4a5067c3ff1abb7449244025b0e37feaf77d8e3e",
+      "expiry": "2026-12-17T00:00:00.000Z",
+      "underlyingAsset": "0x056b269eb1f75477a8666ae8c7fe01b64dd55ecc"
+    },
+    {
+      "chainId": 1,
+      "address": "0x5cffcc9ddef0fdcf395e2ea24ca5ed5a12032706",
+      "symbol": "YT-USD3-17DEC2026",
+      "name": "YT USD3 17DEC2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x4a5067c3ff1abb7449244025b0e37feaf77d8e3e",
+      "expiry": "2026-12-17T00:00:00.000Z",
+      "underlyingAsset": "0x056b269eb1f75477a8666ae8c7fe01b64dd55ecc"
+    },
+    {
+      "chainId": 1,
+      "address": "0xea3bc608f32847b97965c5e1648bdfcd4c2c40d0",
+      "symbol": "SY-USD3",
+      "name": "SY USD3",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x4a5067c3ff1abb7449244025b0e37feaf77d8e3e",
+      "expiry": "2026-12-17T00:00:00.000Z",
+      "underlyingAsset": "0x056b269eb1f75477a8666ae8c7fe01b64dd55ecc"
     }
   ],
   "56": [
