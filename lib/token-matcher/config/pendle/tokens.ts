@@ -2456,6 +2456,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
+      "address": "0xdc5c65c0ca7948fb3013f5ab9435bba02a2ac4e8",
+      "symbol": "PT-tmvUSDC-29OCT2026",
+      "name": "PT tmvUSDC 29OCT2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x9dbb0d00f965e22f51434c0ea2c2e09dfbcffb62",
+      "expiry": "2026-10-29T00:00:00.000Z",
+      "underlyingAsset": "0x697c54a84d83f37380d034e2bfc6f7ce8d89f4ee"
+    },
+    {
+      "chainId": 1,
+      "address": "0x4c9f973bea8f5a06240200deb2dd69e4bc380b46",
+      "symbol": "YT-tmvUSDC-29OCT2026",
+      "name": "YT tmvUSDC 29OCT2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x9dbb0d00f965e22f51434c0ea2c2e09dfbcffb62",
+      "expiry": "2026-10-29T00:00:00.000Z",
+      "underlyingAsset": "0x697c54a84d83f37380d034e2bfc6f7ce8d89f4ee"
+    },
+    {
+      "chainId": 1,
+      "address": "0xb4433d1bf3084e4e8ee1cf24ae2c580e6c45ebee",
+      "symbol": "SY-tmvUSDC",
+      "name": "SY tmvUSDC",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x9dbb0d00f965e22f51434c0ea2c2e09dfbcffb62",
+      "expiry": "2026-10-29T00:00:00.000Z",
+      "underlyingAsset": "0x697c54a84d83f37380d034e2bfc6f7ce8d89f4ee"
+    },
+    {
+      "chainId": 1,
       "address": "0xb5be35d8ff83d431899b95851cb17a2b4bcef150",
       "symbol": "PT-apyUSD-05NOV2026",
       "name": "PT apyUSD 05NOV2026",
