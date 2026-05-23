@@ -2390,6 +2390,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
+      "address": "0x0f700a1c6541021996a2c8aa00722d592ffe1322",
+      "symbol": "PT-PRIME-27AUG2026",
+      "name": "PT PRIME 27AUG2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x649325d40afa8448a9161a6cd9da27dedc2a9115",
+      "expiry": "2026-08-27T00:00:00.000Z",
+      "underlyingAsset": "0x19ebb35279a16207ec4ba82799cc64715065f7f6"
+    },
+    {
+      "chainId": 1,
+      "address": "0x625417897cad73807deb5d51f65ba84f6644bbb8",
+      "symbol": "YT-PRIME-27AUG2026",
+      "name": "YT PRIME 27AUG2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x649325d40afa8448a9161a6cd9da27dedc2a9115",
+      "expiry": "2026-08-27T00:00:00.000Z",
+      "underlyingAsset": "0x19ebb35279a16207ec4ba82799cc64715065f7f6"
+    },
+    {
+      "chainId": 1,
+      "address": "0xa9ab6ec90ff9059cd0b2ff27c325835d9179f4f7",
+      "symbol": "SY-PRIME",
+      "name": "SY PRIME",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x649325d40afa8448a9161a6cd9da27dedc2a9115",
+      "expiry": "2026-08-27T00:00:00.000Z",
+      "underlyingAsset": "0x19ebb35279a16207ec4ba82799cc64715065f7f6"
+    },
+    {
+      "chainId": 1,
       "address": "0x079c3469143804af5d0d645a878c371dbe8d038e",
       "symbol": "PT-fxSAVE-29OCT2026",
       "name": "PT fxSAVE 29OCT2026",
