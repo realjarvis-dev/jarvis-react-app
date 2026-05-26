@@ -2390,6 +2390,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
+      "address": "0xd341a146a4fd20ea89898e4d86ae1829bf3a1c23",
+      "symbol": "PT-sUSDD-27AUG2026",
+      "name": "PT sUSDD 27AUG2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x45252f9a932910abc436644f0b29f5531f0eb4cc",
+      "expiry": "2026-08-27T00:00:00.000Z",
+      "underlyingAsset": "0xc5d6a7b61d18afa11435a889557b068bb9f29930"
+    },
+    {
+      "chainId": 1,
+      "address": "0xf069c41f4b3ebf551fe0015e06333b15ee175c32",
+      "symbol": "YT-sUSDD-27AUG2026",
+      "name": "YT sUSDD 27AUG2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x45252f9a932910abc436644f0b29f5531f0eb4cc",
+      "expiry": "2026-08-27T00:00:00.000Z",
+      "underlyingAsset": "0xc5d6a7b61d18afa11435a889557b068bb9f29930"
+    },
+    {
+      "chainId": 1,
+      "address": "0x149bd983030e14e8b2f1ebdc8bbd9c419411fbc9",
+      "symbol": "SY-sUSDD",
+      "name": "SY sUSDD",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x45252f9a932910abc436644f0b29f5531f0eb4cc",
+      "expiry": "2026-08-27T00:00:00.000Z",
+      "underlyingAsset": "0xc5d6a7b61d18afa11435a889557b068bb9f29930"
+    },
+    {
+      "chainId": 1,
       "address": "0x0f700a1c6541021996a2c8aa00722d592ffe1322",
       "symbol": "PT-PRIME-27AUG2026",
       "name": "PT PRIME 27AUG2026",
@@ -2618,6 +2651,72 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0x4a5067c3ff1abb7449244025b0e37feaf77d8e3e",
       "expiry": "2026-12-17T00:00:00.000Z",
       "underlyingAsset": "0x056b269eb1f75477a8666ae8c7fe01b64dd55ecc"
+    },
+    {
+      "chainId": 1,
+      "address": "0x0f83ff733b756435ef4433607ebef9fe28d53275",
+      "symbol": "PT-jrNUSD-17SEP2026",
+      "name": "PT jrNUSD 17SEP2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x0fad2688313ec6883420118b6fcc74c6a5c86419",
+      "expiry": "2026-09-17T00:00:00.000Z",
+      "underlyingAsset": "0xfc807058a352b61aeef6a38e2d0fc3990225e772"
+    },
+    {
+      "chainId": 1,
+      "address": "0xace5eaa9348aa8a9e795784d62669d50e899ad43",
+      "symbol": "YT-jrNUSD-17SEP2026",
+      "name": "YT jrNUSD 17SEP2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x0fad2688313ec6883420118b6fcc74c6a5c86419",
+      "expiry": "2026-09-17T00:00:00.000Z",
+      "underlyingAsset": "0xfc807058a352b61aeef6a38e2d0fc3990225e772"
+    },
+    {
+      "chainId": 1,
+      "address": "0x92899026d06343929c61e0987e09caeea6873fe5",
+      "symbol": "SY-jrNUSD",
+      "name": "SY jrNUSD",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x0fad2688313ec6883420118b6fcc74c6a5c86419",
+      "expiry": "2026-09-17T00:00:00.000Z",
+      "underlyingAsset": "0xfc807058a352b61aeef6a38e2d0fc3990225e772"
+    },
+    {
+      "chainId": 1,
+      "address": "0x3f71ccce5641951cdaf573be760464a8fd74fe56",
+      "symbol": "PT-srNUSD-17SEP2026",
+      "name": "PT srNUSD 17SEP2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0xdb3b421176215ad746ecba51a10e1c522e02c261",
+      "expiry": "2026-09-17T00:00:00.000Z",
+      "underlyingAsset": "0x65a44528e8868166401ea08b549e19552af589db"
+    },
+    {
+      "chainId": 1,
+      "address": "0x77fe4cd64b5b37da507c1d69ced1e0497ed463f7",
+      "symbol": "YT-srNUSD-17SEP2026",
+      "name": "YT srNUSD 17SEP2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0xdb3b421176215ad746ecba51a10e1c522e02c261",
+      "expiry": "2026-09-17T00:00:00.000Z",
+      "underlyingAsset": "0x65a44528e8868166401ea08b549e19552af589db"
+    },
+    {
+      "chainId": 1,
+      "address": "0xdb8f1d15880b97dc38edfa46d8a5a7e5b506c45f",
+      "symbol": "SY-srNUSD",
+      "name": "SY srNUSD",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0xdb3b421176215ad746ecba51a10e1c522e02c261",
+      "expiry": "2026-09-17T00:00:00.000Z",
+      "underlyingAsset": "0x65a44528e8868166401ea08b549e19552af589db"
     }
   ],
   "56": [
@@ -2719,6 +2818,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0x21558067e3ed5d3cdbe2dd3662bd9035a8e3315a",
       "expiry": "2026-06-25T00:00:00.000Z",
       "underlyingAsset": "0x53176cadd446700fa6b89f840357ac586d7e33db"
+    },
+    {
+      "chainId": 56,
+      "address": "0x71f3408b1493eddf283e53e7bae6d36463e12737",
+      "symbol": "PT-apxUSD-05NOV2026",
+      "name": "PT apxUSD 05NOV2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x34a1caef9f303a33e5d15bc5bc85064a39b7d1df",
+      "expiry": "2026-11-05T00:00:00.000Z",
+      "underlyingAsset": "0x6b3788fd6604bbf03c5378d24e57bb334baad4af"
+    },
+    {
+      "chainId": 56,
+      "address": "0xc8ea9a8672ea5a61487cd596cc6dac7e288f7655",
+      "symbol": "YT-apxUSD-05NOV2026",
+      "name": "YT apxUSD 05NOV2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x34a1caef9f303a33e5d15bc5bc85064a39b7d1df",
+      "expiry": "2026-11-05T00:00:00.000Z",
+      "underlyingAsset": "0x6b3788fd6604bbf03c5378d24e57bb334baad4af"
+    },
+    {
+      "chainId": 56,
+      "address": "0x1a375dea39acad9a0625b92338e72112cab7f886",
+      "symbol": "SY-apxUSD",
+      "name": "SY apxUSD",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x34a1caef9f303a33e5d15bc5bc85064a39b7d1df",
+      "expiry": "2026-11-05T00:00:00.000Z",
+      "underlyingAsset": "0x6b3788fd6604bbf03c5378d24e57bb334baad4af"
     }
   ],
   "146": [],
