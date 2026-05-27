@@ -2654,6 +2654,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
+      "address": "0xc1906aecf868749a2dee203f59b904c0cf212140",
+      "symbol": "PT-USDG-24SEP2026",
+      "name": "PT USDG 24SEP2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0xf80b67a32df07960c731794769309e3d30e9717f",
+      "expiry": "2026-09-24T00:00:00.000Z",
+      "underlyingAsset": "0xe343167631d89b6ffc58b88d6b7fb0228795491d"
+    },
+    {
+      "chainId": 1,
+      "address": "0xb4d8860895dff6e30c6872075a7bdfff53b5e772",
+      "symbol": "YT-USDG-24SEP2026",
+      "name": "YT USDG 24SEP2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0xf80b67a32df07960c731794769309e3d30e9717f",
+      "expiry": "2026-09-24T00:00:00.000Z",
+      "underlyingAsset": "0xe343167631d89b6ffc58b88d6b7fb0228795491d"
+    },
+    {
+      "chainId": 1,
+      "address": "0xc1799cab1f201946f7cfafbaf1bcc089b2f08927",
+      "symbol": "SY-USDG",
+      "name": "SY USDG",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0xf80b67a32df07960c731794769309e3d30e9717f",
+      "expiry": "2026-09-24T00:00:00.000Z",
+      "underlyingAsset": "0xe343167631d89b6ffc58b88d6b7fb0228795491d"
+    },
+    {
+      "chainId": 1,
       "address": "0x0f83ff733b756435ef4433607ebef9fe28d53275",
       "symbol": "PT-jrNUSD-17SEP2026",
       "name": "PT jrNUSD 17SEP2026",
@@ -2818,6 +2851,72 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0x21558067e3ed5d3cdbe2dd3662bd9035a8e3315a",
       "expiry": "2026-06-25T00:00:00.000Z",
       "underlyingAsset": "0x53176cadd446700fa6b89f840357ac586d7e33db"
+    },
+    {
+      "chainId": 56,
+      "address": "0x3519f72144daae5ae933fac1bf91f8da57664d24",
+      "symbol": "PT-USDat-27AUG2026",
+      "name": "PT USDat 27AUG2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x9757834d0b31aa820b85f68705117691207152d9",
+      "expiry": "2026-08-27T00:00:00.000Z",
+      "underlyingAsset": "0x0bb150dfa86ea5d7742f07fefcd8e8eda81d64ef"
+    },
+    {
+      "chainId": 56,
+      "address": "0xb977399b1e25d5885831af34769ff47f94d391a6",
+      "symbol": "YT-USDat-27AUG2026",
+      "name": "YT USDat 27AUG2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x9757834d0b31aa820b85f68705117691207152d9",
+      "expiry": "2026-08-27T00:00:00.000Z",
+      "underlyingAsset": "0x0bb150dfa86ea5d7742f07fefcd8e8eda81d64ef"
+    },
+    {
+      "chainId": 56,
+      "address": "0x81a77db87618d51bc12c9eabe08cc298764b8277",
+      "symbol": "SY-USDat",
+      "name": "SY USDat",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x9757834d0b31aa820b85f68705117691207152d9",
+      "expiry": "2026-08-27T00:00:00.000Z",
+      "underlyingAsset": "0x0bb150dfa86ea5d7742f07fefcd8e8eda81d64ef"
+    },
+    {
+      "chainId": 56,
+      "address": "0x23f9a497a5d4d54eaf5e03d94774f17dc1219745",
+      "symbol": "PT-sUSDat-27AUG2026",
+      "name": "PT sUSDat 27AUG2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x1017e73ce9c219164ce841a980136eb023c55387",
+      "expiry": "2026-08-27T00:00:00.000Z",
+      "underlyingAsset": "0x9cd57d3685e6868cacaa8bdcaaf52cbdebf4fa25"
+    },
+    {
+      "chainId": 56,
+      "address": "0x11550114dc4c572e6c1eddfbcdbed9480f4847da",
+      "symbol": "YT-sUSDat-27AUG2026",
+      "name": "YT sUSDat 27AUG2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x1017e73ce9c219164ce841a980136eb023c55387",
+      "expiry": "2026-08-27T00:00:00.000Z",
+      "underlyingAsset": "0x9cd57d3685e6868cacaa8bdcaaf52cbdebf4fa25"
+    },
+    {
+      "chainId": 56,
+      "address": "0x68930887e1318ef30653a4b7942ab07544ebed4d",
+      "symbol": "SY-sUSDat",
+      "name": "SY sUSDat",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x1017e73ce9c219164ce841a980136eb023c55387",
+      "expiry": "2026-08-27T00:00:00.000Z",
+      "underlyingAsset": "0x9cd57d3685e6868cacaa8bdcaaf52cbdebf4fa25"
     },
     {
       "chainId": 56,
