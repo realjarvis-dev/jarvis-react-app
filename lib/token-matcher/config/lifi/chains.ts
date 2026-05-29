@@ -320,6 +320,14 @@ export const chains = [
     "mainnet": true
   },
   {
+    "key": "ltr",
+    "chainType": "EVM",
+    "name": "Lighter",
+    "coin": "USDC",
+    "id": 3586256,
+    "mainnet": true
+  },
+  {
     "key": "tlo",
     "chainType": "EVM",
     "name": "Telos",
