@@ -2585,6 +2585,72 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0xdb3b421176215ad746ecba51a10e1c522e02c261",
       "expiry": "2026-09-17T00:00:00.000Z",
       "underlyingAsset": "0x65a44528e8868166401ea08b549e19552af589db"
+    },
+    {
+      "chainId": 1,
+      "address": "0xee5c7cda577484b70b65c21235ecbd302bb290e2",
+      "symbol": "PT-apyUSD-27AUG2026",
+      "name": "PT apyUSD 27AUG2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x30bb9ee8dc6aab322dc3a0d36063cbf06a9e5952",
+      "expiry": "2026-08-27T00:00:00.000Z",
+      "underlyingAsset": "0x38eeb52f0771140d10c4e9a9a72349a329fe8a6a"
+    },
+    {
+      "chainId": 1,
+      "address": "0x67553fb2ab2a411029387e1c53c0a3e55f8d10c9",
+      "symbol": "YT-apyUSD-27AUG2026",
+      "name": "YT apyUSD 27AUG2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x30bb9ee8dc6aab322dc3a0d36063cbf06a9e5952",
+      "expiry": "2026-08-27T00:00:00.000Z",
+      "underlyingAsset": "0x38eeb52f0771140d10c4e9a9a72349a329fe8a6a"
+    },
+    {
+      "chainId": 1,
+      "address": "0x04f8dca7bccd8997ac57ca6fef7c705e17d6bcb6",
+      "symbol": "SY-apyUSD",
+      "name": "SY apyUSD",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x30bb9ee8dc6aab322dc3a0d36063cbf06a9e5952",
+      "expiry": "2026-08-27T00:00:00.000Z",
+      "underlyingAsset": "0x38eeb52f0771140d10c4e9a9a72349a329fe8a6a"
+    },
+    {
+      "chainId": 1,
+      "address": "0xd28b0d694b8e814fa905a8b480b30691e18396eb",
+      "symbol": "PT-apxUSD-27AUG2026",
+      "name": "PT apxUSD 27AUG2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0xc3e6cc9269dc780e0d55512c46cad1dd29cfbaa5",
+      "expiry": "2026-08-27T00:00:00.000Z",
+      "underlyingAsset": "0x98a878b1cd98131b271883b390f68d2c90674665"
+    },
+    {
+      "chainId": 1,
+      "address": "0xc95541af9925035eed46051466d7ae011574293c",
+      "symbol": "YT-apxUSD-27AUG2026",
+      "name": "YT apxUSD 27AUG2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0xc3e6cc9269dc780e0d55512c46cad1dd29cfbaa5",
+      "expiry": "2026-08-27T00:00:00.000Z",
+      "underlyingAsset": "0x98a878b1cd98131b271883b390f68d2c90674665"
+    },
+    {
+      "chainId": 1,
+      "address": "0x4f116ee5bcd227d1a1c4f57918d694a4abe7b3fc",
+      "symbol": "SY-apxUSD",
+      "name": "SY apxUSD",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0xc3e6cc9269dc780e0d55512c46cad1dd29cfbaa5",
+      "expiry": "2026-08-27T00:00:00.000Z",
+      "underlyingAsset": "0x98a878b1cd98131b271883b390f68d2c90674665"
     }
   ],
   "56": [
