@@ -2588,6 +2588,72 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
+      "address": "0x2cd3b102fe872cb92decb8d3fad827c6b6e2364d",
+      "symbol": "PT-sNUSD-24SEP2026",
+      "name": "PT sNUSD 24SEP2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0xb1edcea8f9be0b97a9c4065a16cfa3cd362c3bde",
+      "expiry": "2026-09-24T00:00:00.000Z",
+      "underlyingAsset": "0x08efcc2f3e61185d0ea7f8830b3fec9bfa2ee313"
+    },
+    {
+      "chainId": 1,
+      "address": "0x23da8bcedd4c66083c2ad655dd3555f4541200dd",
+      "symbol": "YT-sNUSD-24SEP2026",
+      "name": "YT sNUSD 24SEP2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0xb1edcea8f9be0b97a9c4065a16cfa3cd362c3bde",
+      "expiry": "2026-09-24T00:00:00.000Z",
+      "underlyingAsset": "0x08efcc2f3e61185d0ea7f8830b3fec9bfa2ee313"
+    },
+    {
+      "chainId": 1,
+      "address": "0x10c5e7711eaddc1b6b64e40ef1976fc462666409",
+      "symbol": "SY-sNUSD",
+      "name": "SY sNUSD",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0xb1edcea8f9be0b97a9c4065a16cfa3cd362c3bde",
+      "expiry": "2026-09-24T00:00:00.000Z",
+      "underlyingAsset": "0x08efcc2f3e61185d0ea7f8830b3fec9bfa2ee313"
+    },
+    {
+      "chainId": 1,
+      "address": "0x6f2aadcb972b2b84f6a1e109a1c89b3fa705232c",
+      "symbol": "PT-NUSD-24SEP2026",
+      "name": "PT NUSD 24SEP2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x01d143a7665bb5ae93fbb3120f1f679bb5ad6164",
+      "expiry": "2026-09-24T00:00:00.000Z",
+      "underlyingAsset": "0xe556aba6fe6036275ec1f87eda296be72c811bce"
+    },
+    {
+      "chainId": 1,
+      "address": "0x8d110ef5af895f35eab50b0b94cf2609495d6e34",
+      "symbol": "YT-NUSD-24SEP2026",
+      "name": "YT NUSD 24SEP2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x01d143a7665bb5ae93fbb3120f1f679bb5ad6164",
+      "expiry": "2026-09-24T00:00:00.000Z",
+      "underlyingAsset": "0xe556aba6fe6036275ec1f87eda296be72c811bce"
+    },
+    {
+      "chainId": 1,
+      "address": "0x29ac34026c369d21fe3b2c7735ec986e2880b347",
+      "symbol": "SY-NUSD",
+      "name": "SY NUSD",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x01d143a7665bb5ae93fbb3120f1f679bb5ad6164",
+      "expiry": "2026-09-24T00:00:00.000Z",
+      "underlyingAsset": "0xe556aba6fe6036275ec1f87eda296be72c811bce"
+    },
+    {
+      "chainId": 1,
       "address": "0xee5c7cda577484b70b65c21235ecbd302bb290e2",
       "symbol": "PT-apyUSD-27AUG2026",
       "name": "PT apyUSD 27AUG2026",
