@@ -432,6 +432,14 @@ export const chains = [
     "mainnet": true
   },
   {
+    "key": "arc",
+    "chainType": "EVM",
+    "name": "Arc",
+    "coin": "USDC",
+    "id": 5042,
+    "mainnet": true
+  },
+  {
     "key": "arct",
     "chainType": "EVM",
     "name": "Arc Testnet",
