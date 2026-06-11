@@ -1070,39 +1070,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
-      "address": "0x6c01b844f193c9ad6f7f1e3e17a19cfe73583c2f",
-      "symbol": "PT-siUSD-11JUN2026",
-      "name": "PT siUSD 11JUN2026",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0x4bc9b3bb7c494e8d90854dfb87dda47312856254",
-      "expiry": "2026-06-11T00:00:00.000Z",
-      "underlyingAsset": "0xdbdc1ef57537e34680b898e1febd3d68c7389bcb"
-    },
-    {
-      "chainId": 1,
-      "address": "0xf5d47f240e675199a28cc97b1e5acc4ac20472fb",
-      "symbol": "YT-siUSD-11JUN2026",
-      "name": "YT siUSD 11JUN2026",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0x4bc9b3bb7c494e8d90854dfb87dda47312856254",
-      "expiry": "2026-06-11T00:00:00.000Z",
-      "underlyingAsset": "0xdbdc1ef57537e34680b898e1febd3d68c7389bcb"
-    },
-    {
-      "chainId": 1,
-      "address": "0x9f30507c264cc6eb5be35b18ff9ad7b4539aa920",
-      "symbol": "SY-siUSD",
-      "name": "SY siUSD",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0x4bc9b3bb7c494e8d90854dfb87dda47312856254",
-      "expiry": "2026-06-11T00:00:00.000Z",
-      "underlyingAsset": "0xdbdc1ef57537e34680b898e1febd3d68c7389bcb"
-    },
-    {
-      "chainId": 1,
       "address": "0x619d75e3b790ebc21c289f2805bb7177a7d732e2",
       "symbol": "PT-srUSDe-25JUN2026",
       "name": "PT srUSDe 25JUN2026",
@@ -3152,6 +3119,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0xf5e6cf47ee975600786248cae0a80ab99daf0350",
       "expiry": "2026-11-05T00:00:00.000Z",
       "underlyingAsset": "0xd993935e13851dd7517af10687ec7e5022127228"
+    },
+    {
+      "chainId": 8453,
+      "address": "0x3623567972ad7f44242ec354a38bdbacfc73aa42",
+      "symbol": "PT-40acresUSDC-27AUG2026",
+      "name": "PT 40acresUSDC 27AUG2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x87e9a352d50146fa03373c52b9b21a32402a9597",
+      "expiry": "2026-08-27T00:00:00.000Z",
+      "underlyingAsset": "0xcd7079e32bf53093f60bf973c28e5d72937c12f2"
+    },
+    {
+      "chainId": 8453,
+      "address": "0x5a9d6722994ef06612d27054fef365e8e61ad6c7",
+      "symbol": "YT-40acresUSDC-27AUG2026",
+      "name": "YT 40acresUSDC 27AUG2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x87e9a352d50146fa03373c52b9b21a32402a9597",
+      "expiry": "2026-08-27T00:00:00.000Z",
+      "underlyingAsset": "0xcd7079e32bf53093f60bf973c28e5d72937c12f2"
+    },
+    {
+      "chainId": 8453,
+      "address": "0xc2e639ca5fcb8583bd9c85b07e21919850390f05",
+      "symbol": "SY-40acresUSDC",
+      "name": "SY 40acresUSDC",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x87e9a352d50146fa03373c52b9b21a32402a9597",
+      "expiry": "2026-08-27T00:00:00.000Z",
+      "underlyingAsset": "0xcd7079e32bf53093f60bf973c28e5d72937c12f2"
     }
   ],
   "42161": [
