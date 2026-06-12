@@ -184,6 +184,14 @@ export const chains = [
     "mainnet": true
   },
   {
+    "key": "zerog",
+    "chainType": "EVM",
+    "name": "0G Mainnet",
+    "coin": "0G",
+    "id": 16661,
+    "mainnet": true
+  },
+  {
     "key": "tai",
     "chainType": "EVM",
     "name": "Taiko",
@@ -213,6 +221,14 @@ export const chains = [
     "name": "Swellchain",
     "coin": "ETH",
     "id": 1923,
+    "mainnet": true
+  },
+  {
+    "key": "xly",
+    "chainType": "EVM",
+    "name": "XLayer",
+    "coin": "OKB",
+    "id": 196,
     "mainnet": true
   },
   {
