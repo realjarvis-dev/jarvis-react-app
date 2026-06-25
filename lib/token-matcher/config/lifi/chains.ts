@@ -416,6 +416,14 @@ export const chains = [
     "mainnet": true
   },
   {
+    "key": "out",
+    "chainType": "EVM",
+    "name": "Outlaw",
+    "coin": "ETH",
+    "id": 4663,
+    "mainnet": true
+  },
+  {
     "key": "wcc",
     "chainType": "EVM",
     "name": "World Chain",
