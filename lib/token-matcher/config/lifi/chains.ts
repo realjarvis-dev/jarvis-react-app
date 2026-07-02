@@ -16,6 +16,14 @@ export const chains = [
     "mainnet": true
   },
   {
+    "key": "out",
+    "chainType": "EVM",
+    "name": "Robinhood Chain",
+    "coin": "ETH",
+    "id": 4663,
+    "mainnet": true
+  },
+  {
     "key": "bas",
     "chainType": "EVM",
     "name": "Base",
@@ -248,14 +256,6 @@ export const chains = [
     "mainnet": true
   },
   {
-    "key": "crn",
-    "chainType": "EVM",
-    "name": "Corn",
-    "coin": "BTCN",
-    "id": 21000000,
-    "mainnet": true
-  },
-  {
     "key": "lns",
     "chainType": "EVM",
     "name": "Lens",
@@ -413,14 +413,6 @@ export const chains = [
     "name": "MegaETH",
     "coin": "ETH",
     "id": 4326,
-    "mainnet": true
-  },
-  {
-    "key": "out",
-    "chainType": "EVM",
-    "name": "Outlaw",
-    "coin": "ETH",
-    "id": 4663,
     "mainnet": true
   },
   {
