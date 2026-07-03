@@ -1796,6 +1796,72 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
+      "address": "0x0ee083964c815baed1a2d7f5e3cec851ec394e7d",
+      "symbol": "PT-SIERRA-06AUG2026",
+      "name": "PT SIERRA 06AUG2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x1f40b9a1d21afedbe3c49776e7790ed2139ec075",
+      "expiry": "2026-08-06T00:00:00.000Z",
+      "underlyingAsset": "0x6bf7788eaa948d9ffba7e9bb386e2d3c9810e0fc"
+    },
+    {
+      "chainId": 1,
+      "address": "0xdf0bd47a116be19f2d4a2577372bd773060a01dc",
+      "symbol": "YT-SIERRA-06AUG2026",
+      "name": "YT SIERRA 06AUG2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x1f40b9a1d21afedbe3c49776e7790ed2139ec075",
+      "expiry": "2026-08-06T00:00:00.000Z",
+      "underlyingAsset": "0x6bf7788eaa948d9ffba7e9bb386e2d3c9810e0fc"
+    },
+    {
+      "chainId": 1,
+      "address": "0x399e426e6812943ac22976333698e16eaa80a209",
+      "symbol": "SY-SIERRA",
+      "name": "SY SIERRA",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x1f40b9a1d21afedbe3c49776e7790ed2139ec075",
+      "expiry": "2026-08-06T00:00:00.000Z",
+      "underlyingAsset": "0x6bf7788eaa948d9ffba7e9bb386e2d3c9810e0fc"
+    },
+    {
+      "chainId": 1,
+      "address": "0xa3e7ccf0d0fa014892372c0321731a1ed977068c",
+      "symbol": "PT-wstETH-27AUG2026",
+      "name": "PT wstETH 27AUG2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0xba1cbaece600beec76dabc0a4ead31e0339cbe37",
+      "expiry": "2026-08-27T00:00:00.000Z",
+      "underlyingAsset": "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0"
+    },
+    {
+      "chainId": 1,
+      "address": "0xb6549a039f0c151a1f195bf0cd2d42d43e2c6cfb",
+      "symbol": "YT-wstETH-27AUG2026",
+      "name": "YT wstETH 27AUG2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0xba1cbaece600beec76dabc0a4ead31e0339cbe37",
+      "expiry": "2026-08-27T00:00:00.000Z",
+      "underlyingAsset": "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0"
+    },
+    {
+      "chainId": 1,
+      "address": "0xcbc72d92b2dc8187414f6734718563898740c0bc",
+      "symbol": "SY-wstETH",
+      "name": "SY wstETH",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0xba1cbaece600beec76dabc0a4ead31e0339cbe37",
+      "expiry": "2026-08-27T00:00:00.000Z",
+      "underlyingAsset": "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0"
+    },
+    {
+      "chainId": 1,
       "address": "0xec583f0b31d71a6b661f857391865174d8035778",
       "symbol": "PT-eEARN-24SEP2026",
       "name": "PT eEARN 24SEP2026",
