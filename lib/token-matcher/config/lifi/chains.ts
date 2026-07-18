@@ -216,6 +216,14 @@ export const chains = [
     "mainnet": true
   },
   {
+    "key": "inj",
+    "chainType": "EVM",
+    "name": "Injective",
+    "coin": "INJ",
+    "id": 1776,
+    "mainnet": true
+  },
+  {
     "key": "soe",
     "chainType": "EVM",
     "name": "Soneium",
