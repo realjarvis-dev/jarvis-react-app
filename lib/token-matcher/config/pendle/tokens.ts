@@ -80,72 +80,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
-      "address": "0x2d3c279e5fcdf5b793c0a75ed90738d7369b0b83",
-      "symbol": "PT-stcUSD-23JUL2026",
-      "name": "PT stcUSD 23JUL2026",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0xac24a6f0068d9701eaea76ab0b418021017f8d59",
-      "expiry": "2026-07-23T00:00:00.000Z",
-      "underlyingAsset": "0x88887be419578051ff9f4eb6c858a951921d8888"
-    },
-    {
-      "chainId": 1,
-      "address": "0x1c24abce084f1e5b337a7e5236803ce0577b6d26",
-      "symbol": "YT-stcUSD-23JUL2026",
-      "name": "YT stcUSD 23JUL2026",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0xac24a6f0068d9701eaea76ab0b418021017f8d59",
-      "expiry": "2026-07-23T00:00:00.000Z",
-      "underlyingAsset": "0x88887be419578051ff9f4eb6c858a951921d8888"
-    },
-    {
-      "chainId": 1,
-      "address": "0x27010ce8d14b4e73ef48af1cf9a5a91e8356d10f",
-      "symbol": "SY-stcUSD",
-      "name": "SY stcUSD",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0xac24a6f0068d9701eaea76ab0b418021017f8d59",
-      "expiry": "2026-07-23T00:00:00.000Z",
-      "underlyingAsset": "0x88887be419578051ff9f4eb6c858a951921d8888"
-    },
-    {
-      "chainId": 1,
-      "address": "0x928fb6ed39100a92b2480f5cbb93453f98d9f4ce",
-      "symbol": "PT-cUSD-23JUL2026",
-      "name": "PT cUSD 23JUL2026",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0x9eaaeda23177b7168c55a3a0f937f67919733449",
-      "expiry": "2026-07-23T00:00:00.000Z",
-      "underlyingAsset": "0xcccc62962d17b8914c62d74ffb843d73b2a3cccc"
-    },
-    {
-      "chainId": 1,
-      "address": "0x46f963c52d5fa0ad2bd1199cbc6453f0d7b9e7bd",
-      "symbol": "YT-cUSD-23JUL2026",
-      "name": "YT cUSD 23JUL2026",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0x9eaaeda23177b7168c55a3a0f937f67919733449",
-      "expiry": "2026-07-23T00:00:00.000Z",
-      "underlyingAsset": "0xcccc62962d17b8914c62d74ffb843d73b2a3cccc"
-    },
-    {
-      "chainId": 1,
-      "address": "0x3eaf6c8425b40c554099beed4dcb9f4601942fcb",
-      "symbol": "SY-cUSD",
-      "name": "SY cUSD",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0x9eaaeda23177b7168c55a3a0f937f67919733449",
-      "expiry": "2026-07-23T00:00:00.000Z",
-      "underlyingAsset": "0xcccc62962d17b8914c62d74ffb843d73b2a3cccc"
-    },
-    {
-      "chainId": 1,
       "address": "0xbf3e030a77f215a77434f084392d9159a66963d2",
       "symbol": "PT-sAID-30JUL2026",
       "name": "PT sAID 30JUL2026",
@@ -1892,6 +1826,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0x932a3432ee6a2556b5de0020845f62081c637a2c",
       "expiry": "2026-09-24T00:00:00.000Z",
       "underlyingAsset": "0x9be9294722f8aad37b11a9792be2c782182cafa2"
+    },
+    {
+      "chainId": 1,
+      "address": "0x6a0efc272e8dd4fc5affea17376dcf107cbcbc0f",
+      "symbol": "PT-sUSN-22JUL2027",
+      "name": "PT sUSN 22JUL2027",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x16d3126ee82ee36816499fb9db6f647c6addd09c",
+      "expiry": "2027-07-22T00:00:00.000Z",
+      "underlyingAsset": "0xe24a3dc889621612422a64e6388927901608b91d"
+    },
+    {
+      "chainId": 1,
+      "address": "0xdfaacdd9035febaba7e582f660da3c43fb85e292",
+      "symbol": "YT-sUSN-22JUL2027",
+      "name": "YT sUSN 22JUL2027",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x16d3126ee82ee36816499fb9db6f647c6addd09c",
+      "expiry": "2027-07-22T00:00:00.000Z",
+      "underlyingAsset": "0xe24a3dc889621612422a64e6388927901608b91d"
+    },
+    {
+      "chainId": 1,
+      "address": "0xa0a2c8c94bf30227f84af6e054025945a51d0eff",
+      "symbol": "SY-sUSN",
+      "name": "SY sUSN",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x16d3126ee82ee36816499fb9db6f647c6addd09c",
+      "expiry": "2027-07-22T00:00:00.000Z",
+      "underlyingAsset": "0xe24a3dc889621612422a64e6388927901608b91d"
     }
   ],
   "56": [
