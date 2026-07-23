@@ -200,14 +200,6 @@ export const chains = [
     "mainnet": true
   },
   {
-    "key": "tai",
-    "chainType": "EVM",
-    "name": "Taiko",
-    "coin": "ETH",
-    "id": 167000,
-    "mainnet": true
-  },
-  {
     "key": "phr",
     "chainType": "EVM",
     "name": "Pharos Mainnet",
@@ -229,22 +221,6 @@ export const chains = [
     "name": "Soneium",
     "coin": "ETH",
     "id": 1868,
-    "mainnet": true
-  },
-  {
-    "key": "swl",
-    "chainType": "EVM",
-    "name": "Swellchain",
-    "coin": "ETH",
-    "id": 1923,
-    "mainnet": true
-  },
-  {
-    "key": "xly",
-    "chainType": "EVM",
-    "name": "XLayer",
-    "coin": "OKB",
-    "id": 196,
     "mainnet": true
   },
   {
@@ -352,14 +328,6 @@ export const chains = [
     "mainnet": true
   },
   {
-    "key": "bot",
-    "chainType": "EVM",
-    "name": "Botanix",
-    "coin": "BTC",
-    "id": 3637,
-    "mainnet": true
-  },
-  {
     "key": "tlo",
     "chainType": "EVM",
     "name": "Telos",
@@ -448,14 +416,6 @@ export const chains = [
     "mainnet": true
   },
   {
-    "key": "sop",
-    "chainType": "EVM",
-    "name": "Sophon",
-    "coin": "SOPH",
-    "id": 50104,
-    "mainnet": true
-  },
-  {
     "key": "som",
     "chainType": "EVM",
     "name": "Somnia",
@@ -485,14 +445,6 @@ export const chains = [
     "name": "Scroll",
     "coin": "ETH",
     "id": 534352,
-    "mainnet": true
-  },
-  {
-    "key": "sup",
-    "chainType": "EVM",
-    "name": "Superposition",
-    "coin": "ETH",
-    "id": 55244,
     "mainnet": true
   },
   {
