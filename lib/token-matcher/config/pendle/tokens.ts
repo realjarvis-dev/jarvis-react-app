@@ -1829,6 +1829,72 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
+      "address": "0x45c00ec1a2797b507d3e955b208fb275795da669",
+      "symbol": "PT-mixUSDC-29OCT2026",
+      "name": "PT mixUSDC 29OCT2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x4b912476356c914b154524c59b5a438a88e99429",
+      "expiry": "2026-10-29T00:00:00.000Z",
+      "underlyingAsset": "0x9b44efca3e2a707b63dc00ce79d646e5e5d24ba5"
+    },
+    {
+      "chainId": 1,
+      "address": "0x89c7d1cdb6b2a5c09f25de59fd4bee47921bbf4d",
+      "symbol": "YT-mixUSDC-29OCT2026",
+      "name": "YT mixUSDC 29OCT2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x4b912476356c914b154524c59b5a438a88e99429",
+      "expiry": "2026-10-29T00:00:00.000Z",
+      "underlyingAsset": "0x9b44efca3e2a707b63dc00ce79d646e5e5d24ba5"
+    },
+    {
+      "chainId": 1,
+      "address": "0x0e012d6a77a7f6c91de7cb74c2732553876d1d61",
+      "symbol": "SY-mixUSDC",
+      "name": "SY mixUSDC",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x4b912476356c914b154524c59b5a438a88e99429",
+      "expiry": "2026-10-29T00:00:00.000Z",
+      "underlyingAsset": "0x9b44efca3e2a707b63dc00ce79d646e5e5d24ba5"
+    },
+    {
+      "chainId": 1,
+      "address": "0xcc8ca5c2a0862a37ee3946b80e12ebb2bfb524f0",
+      "symbol": "PT-mixWETH-29OCT2026",
+      "name": "PT mixWETH 29OCT2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x392ac82951ef3b32512bc5be0dfb6a762c43bb81",
+      "expiry": "2026-10-29T00:00:00.000Z",
+      "underlyingAsset": "0x29bcfed246ce37319d94eba107db90c453d4c43d"
+    },
+    {
+      "chainId": 1,
+      "address": "0x729c3798d061eb9fbd88f1348aa73a244ec166e9",
+      "symbol": "YT-mixWETH-29OCT2026",
+      "name": "YT mixWETH 29OCT2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x392ac82951ef3b32512bc5be0dfb6a762c43bb81",
+      "expiry": "2026-10-29T00:00:00.000Z",
+      "underlyingAsset": "0x29bcfed246ce37319d94eba107db90c453d4c43d"
+    },
+    {
+      "chainId": 1,
+      "address": "0x3870cf5e2eab623a74d2af1007295963b1c5a12f",
+      "symbol": "SY-mixWETH",
+      "name": "SY mixWETH",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x392ac82951ef3b32512bc5be0dfb6a762c43bb81",
+      "expiry": "2026-10-29T00:00:00.000Z",
+      "underlyingAsset": "0x29bcfed246ce37319d94eba107db90c453d4c43d"
+    },
+    {
+      "chainId": 1,
       "address": "0x6a0efc272e8dd4fc5affea17376dcf107cbcbc0f",
       "symbol": "PT-sUSN-22JUL2027",
       "name": "PT sUSN 22JUL2027",
