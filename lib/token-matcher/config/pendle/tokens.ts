@@ -1793,6 +1793,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0x50d746e1c7987396b47b0a95ebd94bccaaf7a2d9",
       "expiry": "2026-12-31T00:00:00.000Z",
       "underlyingAsset": "0xb3b3c527ba57cd61648e2ec2f5e006a0b390a9f8"
+    },
+    {
+      "chainId": 1,
+      "address": "0x2a21f68b60156860615bd27ac958df817df45aa3",
+      "symbol": "PT-sBOLD-04FEB2027",
+      "name": "PT sBOLD 04FEB2027",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0xeb603c5a42d49d3b2e078191c23bf3f5d25bc219",
+      "expiry": "2027-02-04T00:00:00.000Z",
+      "underlyingAsset": "0x50bd66d59911f5e086ec87ae43c811e0d059dd11"
+    },
+    {
+      "chainId": 1,
+      "address": "0xc802c127ac01e06610a6a5c12ce5b70ce93924e4",
+      "symbol": "YT-sBOLD-04FEB2027",
+      "name": "YT sBOLD 04FEB2027",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0xeb603c5a42d49d3b2e078191c23bf3f5d25bc219",
+      "expiry": "2027-02-04T00:00:00.000Z",
+      "underlyingAsset": "0x50bd66d59911f5e086ec87ae43c811e0d059dd11"
+    },
+    {
+      "chainId": 1,
+      "address": "0xa73fb4f3a3f3889e41387973afc542fa06785981",
+      "symbol": "SY-sBOLD",
+      "name": "SY sBOLD",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0xeb603c5a42d49d3b2e078191c23bf3f5d25bc219",
+      "expiry": "2027-02-04T00:00:00.000Z",
+      "underlyingAsset": "0x50bd66d59911f5e086ec87ae43c811e0d059dd11"
     }
   ],
   "56": [
