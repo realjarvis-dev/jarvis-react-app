@@ -1793,6 +1793,72 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0x22fcdf7be34a72bddbf4a6eeeb489b1f29062f0b",
       "expiry": "2026-10-22T00:00:00.000Z",
       "underlyingAsset": "0xbceb5f6877d979ec621ae694da1102cb95691ad3"
+    },
+    {
+      "chainId": 1,
+      "address": "0xba96292ee7673e3b546cc90db6d97111cd9a314f",
+      "symbol": "PT-USDat-14JAN2027",
+      "name": "PT USDat 14JAN2027",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x4ccf6deb3d1895373f604b418ff55d8adae8b846",
+      "expiry": "2027-01-14T00:00:00.000Z",
+      "underlyingAsset": "0x23238f20b894f29041f48d88ee91131c395aaa71"
+    },
+    {
+      "chainId": 1,
+      "address": "0x480c3c9470fa4bbda030f6396fa4b17adefc1ce0",
+      "symbol": "YT-USDat-14JAN2027",
+      "name": "YT USDat 14JAN2027",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x4ccf6deb3d1895373f604b418ff55d8adae8b846",
+      "expiry": "2027-01-14T00:00:00.000Z",
+      "underlyingAsset": "0x23238f20b894f29041f48d88ee91131c395aaa71"
+    },
+    {
+      "chainId": 1,
+      "address": "0x7a7de491e1be5287874904e2b7c8488249a4d0a9",
+      "symbol": "SY-USDat",
+      "name": "SY USDat",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x4ccf6deb3d1895373f604b418ff55d8adae8b846",
+      "expiry": "2027-01-14T00:00:00.000Z",
+      "underlyingAsset": "0x23238f20b894f29041f48d88ee91131c395aaa71"
+    },
+    {
+      "chainId": 1,
+      "address": "0x0b985c624bb2949432cce77cfd246f01390a0517",
+      "symbol": "PT-sUSDat-14JAN2027",
+      "name": "PT sUSDat 14JAN2027",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0xb6fe0f0811931a38aa97534bac3c147437223e38",
+      "expiry": "2027-01-14T00:00:00.000Z",
+      "underlyingAsset": "0xd166337499e176bbc38a1fbd113ab144e5bd2df7"
+    },
+    {
+      "chainId": 1,
+      "address": "0xc38901aa77112efc519a1f8bd501eb2f68055689",
+      "symbol": "YT-sUSDat-14JAN2027",
+      "name": "YT sUSDat 14JAN2027",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0xb6fe0f0811931a38aa97534bac3c147437223e38",
+      "expiry": "2027-01-14T00:00:00.000Z",
+      "underlyingAsset": "0xd166337499e176bbc38a1fbd113ab144e5bd2df7"
+    },
+    {
+      "chainId": 1,
+      "address": "0x8917f8c7feb840b5837edc7e128123baa2f289f9",
+      "symbol": "SY-sUSDat",
+      "name": "SY sUSDat",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0xb6fe0f0811931a38aa97534bac3c147437223e38",
+      "expiry": "2027-01-14T00:00:00.000Z",
+      "underlyingAsset": "0xd166337499e176bbc38a1fbd113ab144e5bd2df7"
     }
   ],
   "56": [
@@ -1960,6 +2026,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0xe2a8b724885bdc8412a4f12f8aad461de6071b2a",
       "expiry": "2026-10-29T00:00:00.000Z",
       "underlyingAsset": "0xb0b84d294e0c75a6abe60171b70edeb2efd14a1b"
+    },
+    {
+      "chainId": 56,
+      "address": "0x476aa4205b4eac187011fd8fa07e53d445f213fc",
+      "symbol": "PT-USDat-14JAN2027",
+      "name": "PT USDat 14JAN2027",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x48fd92fd80e0256d455e82b7709b265fe44da9d2",
+      "expiry": "2027-01-14T00:00:00.000Z",
+      "underlyingAsset": "0x0bb150dfa86ea5d7742f07fefcd8e8eda81d64ef"
+    },
+    {
+      "chainId": 56,
+      "address": "0x99010c74fb8733d399b21a5880cee15b35dc5773",
+      "symbol": "YT-USDat-14JAN2027",
+      "name": "YT USDat 14JAN2027",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x48fd92fd80e0256d455e82b7709b265fe44da9d2",
+      "expiry": "2027-01-14T00:00:00.000Z",
+      "underlyingAsset": "0x0bb150dfa86ea5d7742f07fefcd8e8eda81d64ef"
+    },
+    {
+      "chainId": 56,
+      "address": "0x81a77db87618d51bc12c9eabe08cc298764b8277",
+      "symbol": "SY-USDat",
+      "name": "SY USDat",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x48fd92fd80e0256d455e82b7709b265fe44da9d2",
+      "expiry": "2027-01-14T00:00:00.000Z",
+      "underlyingAsset": "0x0bb150dfa86ea5d7742f07fefcd8e8eda81d64ef"
     }
   ],
   "146": [],
