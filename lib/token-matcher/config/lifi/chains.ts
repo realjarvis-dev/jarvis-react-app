@@ -224,6 +224,14 @@ export const chains = [
     "mainnet": true
   },
   {
+    "key": "xly",
+    "chainType": "EVM",
+    "name": "XLayer",
+    "coin": "OKB",
+    "id": 196,
+    "mainnet": true
+  },
+  {
     "key": "ron",
     "chainType": "EVM",
     "name": "Ronin",
