@@ -128,14 +128,6 @@ export const chains = [
     "mainnet": true
   },
   {
-    "key": "moo",
-    "chainType": "EVM",
-    "name": "Moonbeam",
-    "coin": "GLMR",
-    "id": 1284,
-    "mainnet": true
-  },
-  {
     "key": "uni",
     "chainType": "EVM",
     "name": "Unichain",
