@@ -104,6 +104,14 @@ export const chains = [
     "mainnet": true
   },
   {
+    "key": "eths",
+    "chainType": "EVM",
+    "name": "Ethereum Sepolia Testnet",
+    "coin": "ETH",
+    "id": 11155111,
+    "mainnet": false
+  },
+  {
     "key": "opst",
     "chainType": "EVM",
     "name": "OP Sepolia Testnet",
@@ -245,14 +253,6 @@ export const chains = [
     "name": "Lens",
     "coin": "GHO",
     "id": 232,
-    "mainnet": true
-  },
-  {
-    "key": "cro",
-    "chainType": "EVM",
-    "name": "Cronos",
-    "coin": "CRO",
-    "id": 25,
     "mainnet": true
   },
   {
