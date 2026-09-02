@@ -256,6 +256,14 @@ export const chains = [
     "mainnet": true
   },
   {
+    "key": "cro",
+    "chainType": "EVM",
+    "name": "Cronos",
+    "coin": "CRO",
+    "id": 25,
+    "mainnet": true
+  },
+  {
     "key": "fra",
     "chainType": "EVM",
     "name": "Fraxtal",
