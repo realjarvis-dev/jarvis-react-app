@@ -1571,6 +1571,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
   "8453": [
     {
       "chainId": 8453,
+      "address": "0xe9ea8a16398171d8113fe2b71f05dda6ac9b86a7",
+      "symbol": "PT-yoETH-24SEP2026",
+      "name": "PT yoETH 24SEP2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x829a0d0b0261a3b96208631c19d5380422e2ca54",
+      "expiry": "2026-09-24T00:00:00.000Z",
+      "underlyingAsset": "0x3a43aec53490cb9fa922847385d82fe25d0e9de7"
+    },
+    {
+      "chainId": 8453,
+      "address": "0x3eb91557e41c19848c7725cb3279029073efaf8d",
+      "symbol": "YT-yoETH-24SEP2026",
+      "name": "YT yoETH 24SEP2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x829a0d0b0261a3b96208631c19d5380422e2ca54",
+      "expiry": "2026-09-24T00:00:00.000Z",
+      "underlyingAsset": "0x3a43aec53490cb9fa922847385d82fe25d0e9de7"
+    },
+    {
+      "chainId": 8453,
+      "address": "0xe574de45b4ea2c5db7dd6f4074349f270ee97c64",
+      "symbol": "SY-yoETH",
+      "name": "SY yoETH",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x829a0d0b0261a3b96208631c19d5380422e2ca54",
+      "expiry": "2026-09-24T00:00:00.000Z",
+      "underlyingAsset": "0x3a43aec53490cb9fa922847385d82fe25d0e9de7"
+    },
+    {
+      "chainId": 8453,
       "address": "0x1fec97ca2817da87f266fd1741bba61caf7cde29",
       "symbol": "PT-yoUSD-24SEP2026",
       "name": "PT yoUSD 24SEP2026",
