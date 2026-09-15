@@ -1529,6 +1529,72 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0xd44f2630260ff3805d7cb317d4f6740b0044c408",
       "expiry": "2027-01-07T00:00:00.000Z",
       "underlyingAsset": "0xdbdc1ef57537e34680b898e1febd3d68c7389bcb"
+    },
+    {
+      "chainId": 1,
+      "address": "0x1e20339f4449de327b64a5a9c8dcabb1e72ce016",
+      "symbol": "PT-srnOPAL-07JAN2027",
+      "name": "PT srnOPAL 07JAN2027",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x3e81f92001cd428dd6f2ef1421939da6a3d9f1bd",
+      "expiry": "2027-01-07T00:00:00.000Z",
+      "underlyingAsset": "0x8a646edc4633adba5ec87dedaf3af958e268fe96"
+    },
+    {
+      "chainId": 1,
+      "address": "0xad20225471238b56274302fe6866beb250c0c397",
+      "symbol": "YT-srnOPAL-07JAN2027",
+      "name": "YT srnOPAL 07JAN2027",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x3e81f92001cd428dd6f2ef1421939da6a3d9f1bd",
+      "expiry": "2027-01-07T00:00:00.000Z",
+      "underlyingAsset": "0x8a646edc4633adba5ec87dedaf3af958e268fe96"
+    },
+    {
+      "chainId": 1,
+      "address": "0xefc86eda0d06f6c608f75e4bc918d079c6779cec",
+      "symbol": "SY-srnOPAL",
+      "name": "SY srnOPAL",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x3e81f92001cd428dd6f2ef1421939da6a3d9f1bd",
+      "expiry": "2027-01-07T00:00:00.000Z",
+      "underlyingAsset": "0x8a646edc4633adba5ec87dedaf3af958e268fe96"
+    },
+    {
+      "chainId": 1,
+      "address": "0xd9fa32c4a0d9d58d1e75e8159b9c4b1c545143d8",
+      "symbol": "PT-mAPOLLO-18MAR2027",
+      "name": "PT mAPOLLO 18MAR2027",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0xb8858f53f71a127a7a6e2d015c722bfbeb1810c3",
+      "expiry": "2027-03-18T00:00:00.000Z",
+      "underlyingAsset": "0x7cf9dec92ca9fd46f8d86e7798b72624bc116c05"
+    },
+    {
+      "chainId": 1,
+      "address": "0xf503c7af30ff1813de175c43429763315e299e45",
+      "symbol": "YT-mAPOLLO-18MAR2027",
+      "name": "YT mAPOLLO 18MAR2027",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0xb8858f53f71a127a7a6e2d015c722bfbeb1810c3",
+      "expiry": "2027-03-18T00:00:00.000Z",
+      "underlyingAsset": "0x7cf9dec92ca9fd46f8d86e7798b72624bc116c05"
+    },
+    {
+      "chainId": 1,
+      "address": "0xe1e22d55e23900f30599d8bee74a0801f09b4e58",
+      "symbol": "SY-mAPOLLO",
+      "name": "SY mAPOLLO",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0xb8858f53f71a127a7a6e2d015c722bfbeb1810c3",
+      "expiry": "2027-03-18T00:00:00.000Z",
+      "underlyingAsset": "0x7cf9dec92ca9fd46f8d86e7798b72624bc116c05"
     }
   ],
   "56": [
