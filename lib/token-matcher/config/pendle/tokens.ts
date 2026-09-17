@@ -608,39 +608,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
-      "address": "0x5e1ff5c857f1d2251600507f2031d2aa2a5fc468",
-      "symbol": "PT-nOPAL-17SEP2026",
-      "name": "PT nOPAL 17SEP2026",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0x4af2e5411636b5bc460ebf44b83fd1f4e8c7b783",
-      "expiry": "2026-09-17T00:00:00.000Z",
-      "underlyingAsset": "0x119dd7daff816f29d7ee47596ae5e4bdc4299165"
-    },
-    {
-      "chainId": 1,
-      "address": "0x58ca8ac7214189cc4db18de660d653da44fd728a",
-      "symbol": "YT-nOPAL-17SEP2026",
-      "name": "YT nOPAL 17SEP2026",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0x4af2e5411636b5bc460ebf44b83fd1f4e8c7b783",
-      "expiry": "2026-09-17T00:00:00.000Z",
-      "underlyingAsset": "0x119dd7daff816f29d7ee47596ae5e4bdc4299165"
-    },
-    {
-      "chainId": 1,
-      "address": "0x57badd19a4756d0190bfcd8f444ae6ebcdb38e86",
-      "symbol": "SY-nOPAL",
-      "name": "SY nOPAL",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0x4af2e5411636b5bc460ebf44b83fd1f4e8c7b783",
-      "expiry": "2026-09-17T00:00:00.000Z",
-      "underlyingAsset": "0x119dd7daff816f29d7ee47596ae5e4bdc4299165"
-    },
-    {
-      "chainId": 1,
       "address": "0x9786a09cbb2efb23046542576ffd9a235aa3ca07",
       "symbol": "PT-jrUSDe-22OCT2026",
       "name": "PT jrUSDe 22OCT2026",
@@ -1868,39 +1835,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 8453,
-      "address": "0x0d18b7bab00988a442e31065e76286844809dc9a",
-      "symbol": "PT-USDC (Morpho cbBTC/USDC)-17SEP2026",
-      "name": "PT USDC (Morpho cbBTC/USDC) 17SEP2026",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0xa97bb0de338b23c088dba9bf8c948da726e49033",
-      "expiry": "2026-09-17T00:00:00.000Z",
-      "underlyingAsset": "0x665062e427d53f3f1b851c12f26e4ccfabf8636b"
-    },
-    {
-      "chainId": 8453,
-      "address": "0x17cb5dadc2e5c1bc3402df6ec88ec7a2010ab1ec",
-      "symbol": "YT-USDC (Morpho cbBTC/USDC)-17SEP2026",
-      "name": "YT USDC (Morpho cbBTC/USDC) 17SEP2026",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0xa97bb0de338b23c088dba9bf8c948da726e49033",
-      "expiry": "2026-09-17T00:00:00.000Z",
-      "underlyingAsset": "0x665062e427d53f3f1b851c12f26e4ccfabf8636b"
-    },
-    {
-      "chainId": 8453,
-      "address": "0x5f452145cae609f21921608c93a5fbb91322dac6",
-      "symbol": "SY-USDC (Morpho cbBTC/USDC)",
-      "name": "SY USDC (Morpho cbBTC/USDC)",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0xa97bb0de338b23c088dba9bf8c948da726e49033",
-      "expiry": "2026-09-17T00:00:00.000Z",
-      "underlyingAsset": "0x665062e427d53f3f1b851c12f26e4ccfabf8636b"
-    },
-    {
-      "chainId": 8453,
       "address": "0x5137c0505dde0e7f104ab96b41ebc55fc2057e5d",
       "symbol": "PT-sKAITO-28JAN2027",
       "name": "PT sKAITO 28JAN2027",
@@ -1931,6 +1865,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0x8f3b4cb0310209055b5b28e6160ca46b9db3b0d6",
       "expiry": "2027-01-28T00:00:00.000Z",
       "underlyingAsset": "0x548d3b444da39686d1a6f1544781d154e7cd1ef7"
+    },
+    {
+      "chainId": 8453,
+      "address": "0x9422260f457c686cb4bacc13aa5f35f3b4ab8ed4",
+      "symbol": "PT-hBTC-25FEB2027",
+      "name": "PT hBTC 25FEB2027",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0xe27c94805b0c4d7ea9dce3c787eae3430acfcbe9",
+      "expiry": "2027-02-25T00:00:00.000Z",
+      "underlyingAsset": "0x0b2bb16dc89cb05d8e7ff73312fa3f103ba5cd9b"
+    },
+    {
+      "chainId": 8453,
+      "address": "0xa690097a7a6913a3376ebff13ac9b9283551cc14",
+      "symbol": "YT-hBTC-25FEB2027",
+      "name": "YT hBTC 25FEB2027",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0xe27c94805b0c4d7ea9dce3c787eae3430acfcbe9",
+      "expiry": "2027-02-25T00:00:00.000Z",
+      "underlyingAsset": "0x0b2bb16dc89cb05d8e7ff73312fa3f103ba5cd9b"
+    },
+    {
+      "chainId": 8453,
+      "address": "0x161d1ddda8d47b62d2a979549939559f6d90f758",
+      "symbol": "SY-hBTC",
+      "name": "SY hBTC",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0xe27c94805b0c4d7ea9dce3c787eae3430acfcbe9",
+      "expiry": "2027-02-25T00:00:00.000Z",
+      "underlyingAsset": "0x0b2bb16dc89cb05d8e7ff73312fa3f103ba5cd9b"
     }
   ],
   "42161": [
