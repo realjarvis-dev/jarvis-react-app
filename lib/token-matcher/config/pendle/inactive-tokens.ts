@@ -14435,6 +14435,39 @@ export const pendleInactiveTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
+      "address": "0x5e1ff5c857f1d2251600507f2031d2aa2a5fc468",
+      "symbol": "PT-nOPAL-17SEP2026",
+      "name": "PT nOPAL 17SEP2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x4af2e5411636b5bc460ebf44b83fd1f4e8c7b783",
+      "expiry": "2026-09-17T00:00:00.000Z",
+      "underlyingAsset": "0x119dd7daff816f29d7ee47596ae5e4bdc4299165"
+    },
+    {
+      "chainId": 1,
+      "address": "0x58ca8ac7214189cc4db18de660d653da44fd728a",
+      "symbol": "YT-nOPAL-17SEP2026",
+      "name": "YT nOPAL 17SEP2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x4af2e5411636b5bc460ebf44b83fd1f4e8c7b783",
+      "expiry": "2026-09-17T00:00:00.000Z",
+      "underlyingAsset": "0x119dd7daff816f29d7ee47596ae5e4bdc4299165"
+    },
+    {
+      "chainId": 1,
+      "address": "0x57badd19a4756d0190bfcd8f444ae6ebcdb38e86",
+      "symbol": "SY-nOPAL",
+      "name": "SY nOPAL",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x4af2e5411636b5bc460ebf44b83fd1f4e8c7b783",
+      "expiry": "2026-09-17T00:00:00.000Z",
+      "underlyingAsset": "0x119dd7daff816f29d7ee47596ae5e4bdc4299165"
+    },
+    {
+      "chainId": 1,
       "address": "0xee5c7cda577484b70b65c21235ecbd302bb290e2",
       "symbol": "PT-apyUSD-27AUG2026",
       "name": "PT apyUSD 27AUG2026",
@@ -17608,6 +17641,39 @@ export const pendleInactiveTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0x87e9a352d50146fa03373c52b9b21a32402a9597",
       "expiry": "2026-08-27T00:00:00.000Z",
       "underlyingAsset": "0xcd7079e32bf53093f60bf973c28e5d72937c12f2"
+    },
+    {
+      "chainId": 8453,
+      "address": "0x0d18b7bab00988a442e31065e76286844809dc9a",
+      "symbol": "PT-USDC (Morpho cbBTC/USDC)-17SEP2026",
+      "name": "PT USDC (Morpho cbBTC/USDC) 17SEP2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0xa97bb0de338b23c088dba9bf8c948da726e49033",
+      "expiry": "2026-09-17T00:00:00.000Z",
+      "underlyingAsset": "0x665062e427d53f3f1b851c12f26e4ccfabf8636b"
+    },
+    {
+      "chainId": 8453,
+      "address": "0x17cb5dadc2e5c1bc3402df6ec88ec7a2010ab1ec",
+      "symbol": "YT-USDC (Morpho cbBTC/USDC)-17SEP2026",
+      "name": "YT USDC (Morpho cbBTC/USDC) 17SEP2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0xa97bb0de338b23c088dba9bf8c948da726e49033",
+      "expiry": "2026-09-17T00:00:00.000Z",
+      "underlyingAsset": "0x665062e427d53f3f1b851c12f26e4ccfabf8636b"
+    },
+    {
+      "chainId": 8453,
+      "address": "0x5f452145cae609f21921608c93a5fbb91322dac6",
+      "symbol": "SY-USDC (Morpho cbBTC/USDC)",
+      "name": "SY USDC (Morpho cbBTC/USDC)",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0xa97bb0de338b23c088dba9bf8c948da726e49033",
+      "expiry": "2026-09-17T00:00:00.000Z",
+      "underlyingAsset": "0x665062e427d53f3f1b851c12f26e4ccfabf8636b"
     }
   ],
   "42161": [
