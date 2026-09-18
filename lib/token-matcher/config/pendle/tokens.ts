@@ -1466,6 +1466,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
+      "address": "0x47f4d6505e39998bbabf325def4c4861695ac8f5",
+      "symbol": "PT-NGI+-10DEC2026",
+      "name": "PT NGI+ 10DEC2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x03005432d0f02c46d48ccd859d677d261640e5e1",
+      "expiry": "2026-12-10T00:00:00.000Z",
+      "underlyingAsset": "0xf252c5bd43907a6cab079e990845a37a7c5730d9"
+    },
+    {
+      "chainId": 1,
+      "address": "0x7a3d12d8262b0246f4bbf8da354272e73a831a4b",
+      "symbol": "YT-NGI+-10DEC2026",
+      "name": "YT NGI+ 10DEC2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x03005432d0f02c46d48ccd859d677d261640e5e1",
+      "expiry": "2026-12-10T00:00:00.000Z",
+      "underlyingAsset": "0xf252c5bd43907a6cab079e990845a37a7c5730d9"
+    },
+    {
+      "chainId": 1,
+      "address": "0xcad69479358c1ef3560f29f278966df772abf42f",
+      "symbol": "SY-NGI+",
+      "name": "SY NGI+",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x03005432d0f02c46d48ccd859d677d261640e5e1",
+      "expiry": "2026-12-10T00:00:00.000Z",
+      "underlyingAsset": "0xf252c5bd43907a6cab079e990845a37a7c5730d9"
+    },
+    {
+      "chainId": 1,
       "address": "0x76543ac61ba84c6feeee76c6a918127bf0ca5fd1",
       "symbol": "PT-siUSD-07JAN2027",
       "name": "PT siUSD 07JAN2027",
