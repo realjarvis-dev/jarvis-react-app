@@ -47,39 +47,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
-      "address": "0x77db49ac43107f0cef6f65837aa55ee8ae4cd9fa",
-      "symbol": "PT-ynRWAx-15OCT2026",
-      "name": "PT ynRWAx 15OCT2026",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0xfce3f966a131c46a51b896ceea3917bc4c302577",
-      "expiry": "2026-10-15T00:00:00.000Z",
-      "underlyingAsset": "0x01ba69727e2860b37bc1a2bd56999c1afb4c15d8"
-    },
-    {
-      "chainId": 1,
-      "address": "0x2263fdec108939ae8fd0ab41901fa9755203b232",
-      "symbol": "YT-ynRWAx-15OCT2026",
-      "name": "YT ynRWAx 15OCT2026",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0xfce3f966a131c46a51b896ceea3917bc4c302577",
-      "expiry": "2026-10-15T00:00:00.000Z",
-      "underlyingAsset": "0x01ba69727e2860b37bc1a2bd56999c1afb4c15d8"
-    },
-    {
-      "chainId": 1,
-      "address": "0x5271be3516a36316465ee50c4288ce91e58f7759",
-      "symbol": "SY-ynRWAx",
-      "name": "SY ynRWAx",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0xfce3f966a131c46a51b896ceea3917bc4c302577",
-      "expiry": "2026-10-15T00:00:00.000Z",
-      "underlyingAsset": "0x01ba69727e2860b37bc1a2bd56999c1afb4c15d8"
-    },
-    {
-      "chainId": 1,
       "address": "0x42959e174fe28029de5ce250b58699229a3362b0",
       "symbol": "PT-sYUSD-24SEP2026",
       "name": "PT sYUSD 24SEP2026",
