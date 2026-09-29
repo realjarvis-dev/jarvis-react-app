@@ -1397,6 +1397,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0xb986fe3f6ecf16c13e769b0d6d2a0bc41449d54f",
       "expiry": "2027-03-25T00:00:00.000Z",
       "underlyingAsset": "0xe343167631d89b6ffc58b88d6b7fb0228795491d"
+    },
+    {
+      "chainId": 1,
+      "address": "0xe2dbd6bafcd6b1da90483108f0f437addf7bd885",
+      "symbol": "PT-sUSG-26NOV2026",
+      "name": "PT sUSG 26NOV2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x68b647308f86f8669eaced155a9168769ce72265",
+      "expiry": "2026-11-26T00:00:00.000Z",
+      "underlyingAsset": "0xf17d6f98a5c6eaa99d149079984119e0a4ef6900"
+    },
+    {
+      "chainId": 1,
+      "address": "0x89cedb3c823315c9922d8eb841c114782d5a4de2",
+      "symbol": "YT-sUSG-26NOV2026",
+      "name": "YT sUSG 26NOV2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x68b647308f86f8669eaced155a9168769ce72265",
+      "expiry": "2026-11-26T00:00:00.000Z",
+      "underlyingAsset": "0xf17d6f98a5c6eaa99d149079984119e0a4ef6900"
+    },
+    {
+      "chainId": 1,
+      "address": "0xe31b01ce6f29107cf8870599911703fa2aa36e1c",
+      "symbol": "SY-sUSG",
+      "name": "SY sUSG",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x68b647308f86f8669eaced155a9168769ce72265",
+      "expiry": "2026-11-26T00:00:00.000Z",
+      "underlyingAsset": "0xf17d6f98a5c6eaa99d149079984119e0a4ef6900"
     }
   ],
   "56": [
