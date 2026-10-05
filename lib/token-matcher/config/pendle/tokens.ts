@@ -1430,6 +1430,72 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0x68b647308f86f8669eaced155a9168769ce72265",
       "expiry": "2026-11-26T00:00:00.000Z",
       "underlyingAsset": "0xf17d6f98a5c6eaa99d149079984119e0a4ef6900"
+    },
+    {
+      "chainId": 1,
+      "address": "0x1e47528b06e814e7a3d5aa7518d640edc8b407e5",
+      "symbol": "PT-jrUSDe-25FEB2027",
+      "name": "PT jrUSDe 25FEB2027",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x64c809c69d8881341afe7d67c559a048ddd9d129",
+      "expiry": "2027-02-25T00:00:00.000Z",
+      "underlyingAsset": "0xc58d044404d8b14e953c115e67823784dea53d8f"
+    },
+    {
+      "chainId": 1,
+      "address": "0xb52ff2ee15ed61564f150f12ce28b350e3dce26a",
+      "symbol": "YT-jrUSDe-25FEB2027",
+      "name": "YT jrUSDe 25FEB2027",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x64c809c69d8881341afe7d67c559a048ddd9d129",
+      "expiry": "2027-02-25T00:00:00.000Z",
+      "underlyingAsset": "0xc58d044404d8b14e953c115e67823784dea53d8f"
+    },
+    {
+      "chainId": 1,
+      "address": "0x4f6673346ab4813f1665327ab39087008cc7d76f",
+      "symbol": "SY-jrUSDe",
+      "name": "SY jrUSDe",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x64c809c69d8881341afe7d67c559a048ddd9d129",
+      "expiry": "2027-02-25T00:00:00.000Z",
+      "underlyingAsset": "0xc58d044404d8b14e953c115e67823784dea53d8f"
+    },
+    {
+      "chainId": 1,
+      "address": "0xd2e5a2467552a8df873177c02fc6fde4720d1bf1",
+      "symbol": "PT-srUSDe-25FEB2027",
+      "name": "PT srUSDe 25FEB2027",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0xb7c7eafa97c0a2322c977576b88e71e6b8e8242d",
+      "expiry": "2027-02-25T00:00:00.000Z",
+      "underlyingAsset": "0x3d7d6fdf07ee548b939a80edbc9b2256d0cdc003"
+    },
+    {
+      "chainId": 1,
+      "address": "0x1d03e1859e0b10fc4943fd9204c008c8293d416d",
+      "symbol": "YT-srUSDe-25FEB2027",
+      "name": "YT srUSDe 25FEB2027",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0xb7c7eafa97c0a2322c977576b88e71e6b8e8242d",
+      "expiry": "2027-02-25T00:00:00.000Z",
+      "underlyingAsset": "0x3d7d6fdf07ee548b939a80edbc9b2256d0cdc003"
+    },
+    {
+      "chainId": 1,
+      "address": "0xc9bfebc79a722c05dc34bd2a227ef2db19fd1b8e",
+      "symbol": "SY-srUSDe",
+      "name": "SY srUSDe",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0xb7c7eafa97c0a2322c977576b88e71e6b8e8242d",
+      "expiry": "2027-02-25T00:00:00.000Z",
+      "underlyingAsset": "0x3d7d6fdf07ee548b939a80edbc9b2256d0cdc003"
     }
   ],
   "56": [
