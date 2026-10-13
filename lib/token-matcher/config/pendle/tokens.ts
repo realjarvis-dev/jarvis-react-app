@@ -1898,6 +1898,72 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0x858539e155d870ecbbd27f5fb9d9521aa39251f1",
       "expiry": "2026-12-17T00:00:00.000Z",
       "underlyingAsset": "0xba515eed0119acb7cfe8fab3acd6b362f3ed5319"
+    },
+    {
+      "chainId": 8453,
+      "address": "0x7cd489d9afc11578c16524fc1a61265e45f4a33d",
+      "symbol": "PT-superNVDA-08APR2027",
+      "name": "PT superNVDA 08APR2027",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0xb06e7781ad4d205c67368fd01bf817977cfdecbe",
+      "expiry": "2027-04-08T00:00:00.000Z",
+      "underlyingAsset": "0xa4526dedb05efd6fbd889b6cd3d7e6a968afef4a"
+    },
+    {
+      "chainId": 8453,
+      "address": "0x3144e311f7dcfa12c7e57a531df94d7d88b2db49",
+      "symbol": "YT-superNVDA-08APR2027",
+      "name": "YT superNVDA 08APR2027",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0xb06e7781ad4d205c67368fd01bf817977cfdecbe",
+      "expiry": "2027-04-08T00:00:00.000Z",
+      "underlyingAsset": "0xa4526dedb05efd6fbd889b6cd3d7e6a968afef4a"
+    },
+    {
+      "chainId": 8453,
+      "address": "0xcf8d0b0e4488b390cd83bcd67e4f101623d21ee7",
+      "symbol": "SY-superNVDA",
+      "name": "SY superNVDA",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0xb06e7781ad4d205c67368fd01bf817977cfdecbe",
+      "expiry": "2027-04-08T00:00:00.000Z",
+      "underlyingAsset": "0xa4526dedb05efd6fbd889b6cd3d7e6a968afef4a"
+    },
+    {
+      "chainId": 8453,
+      "address": "0xf28ac4d7f0be9b7bcdeb3db9537802fb8102b1ea",
+      "symbol": "PT-superTSLA-08APR2027",
+      "name": "PT superTSLA 08APR2027",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0xadb822593f62752a15edefe9a31e1e9e05dcc13d",
+      "expiry": "2027-04-08T00:00:00.000Z",
+      "underlyingAsset": "0x0db207f8c9a74fbda3299ee4f482322d0498f291"
+    },
+    {
+      "chainId": 8453,
+      "address": "0xcfcf6b5d2bae054399c40171ab28ac0c55776548",
+      "symbol": "YT-superTSLA-08APR2027",
+      "name": "YT superTSLA 08APR2027",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0xadb822593f62752a15edefe9a31e1e9e05dcc13d",
+      "expiry": "2027-04-08T00:00:00.000Z",
+      "underlyingAsset": "0x0db207f8c9a74fbda3299ee4f482322d0498f291"
+    },
+    {
+      "chainId": 8453,
+      "address": "0x785685b3a6a2af752694fda7058965302e59f8e6",
+      "symbol": "SY-superTSLA",
+      "name": "SY superTSLA",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0xadb822593f62752a15edefe9a31e1e9e05dcc13d",
+      "expiry": "2027-04-08T00:00:00.000Z",
+      "underlyingAsset": "0x0db207f8c9a74fbda3299ee4f482322d0498f291"
     }
   ],
   "42161": [
