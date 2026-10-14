@@ -1499,6 +1499,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
+      "address": "0xf1a905616171e1472b0c71eaa9caf7f224f04916",
+      "symbol": "PT-FLHYon-10DEC2026",
+      "name": "PT FLHYon 10DEC2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x81516d5c0924bdaed5ecffc65ba23d555d1511a1",
+      "expiry": "2026-12-10T00:00:00.000Z",
+      "underlyingAsset": "0x54c1ff361b402f66c13107421e6a431c3375ef24"
+    },
+    {
+      "chainId": 1,
+      "address": "0x509f15b4608d703516f4fc8544b0e5e7eef9d416",
+      "symbol": "YT-FLHYon-10DEC2026",
+      "name": "YT FLHYon 10DEC2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x81516d5c0924bdaed5ecffc65ba23d555d1511a1",
+      "expiry": "2026-12-10T00:00:00.000Z",
+      "underlyingAsset": "0x54c1ff361b402f66c13107421e6a431c3375ef24"
+    },
+    {
+      "chainId": 1,
+      "address": "0x3387db684c5cefe4244a243a4468c086591a5c12",
+      "symbol": "SY-FLHYon",
+      "name": "SY FLHYon",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x81516d5c0924bdaed5ecffc65ba23d555d1511a1",
+      "expiry": "2026-12-10T00:00:00.000Z",
+      "underlyingAsset": "0x54c1ff361b402f66c13107421e6a431c3375ef24"
+    },
+    {
+      "chainId": 1,
       "address": "0x1d5aaa79322d825bc4689ee25ccb868374af2662",
       "symbol": "PT-USDfr-28JAN2027",
       "name": "PT USDfr 28JAN2027",
