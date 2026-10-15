@@ -240,22 +240,6 @@ export const chains = [
     "mainnet": true
   },
   {
-    "key": "opb",
-    "chainType": "EVM",
-    "name": "opBNB",
-    "coin": "BNB",
-    "id": 204,
-    "mainnet": true
-  },
-  {
-    "key": "lns",
-    "chainType": "EVM",
-    "name": "Lens",
-    "coin": "GHO",
-    "id": 232,
-    "mainnet": true
-  },
-  {
     "key": "cro",
     "chainType": "EVM",
     "name": "Cronos",
@@ -285,14 +269,6 @@ export const chains = [
     "name": "Morph",
     "coin": "ETH",
     "id": 2818,
-    "mainnet": true
-  },
-  {
-    "key": "bob",
-    "chainType": "EVM",
-    "name": "Boba",
-    "coin": "ETH",
-    "id": 288,
     "mainnet": true
   },
   {
@@ -472,14 +448,6 @@ export const chains = [
     "mainnet": true
   },
   {
-    "key": "boc",
-    "chainType": "EVM",
-    "name": "BOB",
-    "coin": "ETH",
-    "id": 60808,
-    "mainnet": true
-  },
-  {
     "key": "flw",
     "chainType": "EVM",
     "name": "Flow",
@@ -501,14 +469,6 @@ export const chains = [
     "name": "Berachain",
     "coin": "BERA",
     "id": 80094,
-    "mainnet": true
-  },
-  {
-    "key": "bls",
-    "chainType": "EVM",
-    "name": "Blast",
-    "coin": "ETH",
-    "id": 81457,
     "mainnet": true
   },
   {
