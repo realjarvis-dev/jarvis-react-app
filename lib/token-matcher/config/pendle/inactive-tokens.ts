@@ -20880,6 +20880,72 @@ export const pendleInactiveTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 42161,
+      "address": "0xc9d24ad0bb25f34098e226a8c5192dea7bacccae",
+      "symbol": "PT-USDai-15OCT2026",
+      "name": "PT USDai 15OCT2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0xa8a0dea40174cfc30fea9e3a77f182ab33f46e25",
+      "expiry": "2026-10-15T00:00:00.000Z",
+      "underlyingAsset": "0x0a1a1a107e45b7ced86833863f482bc5f4ed82ef"
+    },
+    {
+      "chainId": 42161,
+      "address": "0xaf67341456151ab8c270e0962966092181c2eb80",
+      "symbol": "YT-USDai-15OCT2026",
+      "name": "YT USDai 15OCT2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0xa8a0dea40174cfc30fea9e3a77f182ab33f46e25",
+      "expiry": "2026-10-15T00:00:00.000Z",
+      "underlyingAsset": "0x0a1a1a107e45b7ced86833863f482bc5f4ed82ef"
+    },
+    {
+      "chainId": 42161,
+      "address": "0x5edcbc20cac67adc2e724d4348ff85132b085b82",
+      "symbol": "SY-USDai",
+      "name": "SY USDai",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0xa8a0dea40174cfc30fea9e3a77f182ab33f46e25",
+      "expiry": "2026-10-15T00:00:00.000Z",
+      "underlyingAsset": "0x0a1a1a107e45b7ced86833863f482bc5f4ed82ef"
+    },
+    {
+      "chainId": 42161,
+      "address": "0xb459db106f645d698e74027eef6019a26a0675cc",
+      "symbol": "PT-sUSDai-15OCT2026",
+      "name": "PT sUSDai 15OCT2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0xcbf629c8d396b1261f81f55175afa010e94787d8",
+      "expiry": "2026-10-15T00:00:00.000Z",
+      "underlyingAsset": "0x0b2b2b2076d95dda7817e785989fe353fe955ef9"
+    },
+    {
+      "chainId": 42161,
+      "address": "0x11456849c38ea4af212ab8d4324b39983716516a",
+      "symbol": "YT-sUSDai-15OCT2026",
+      "name": "YT sUSDai 15OCT2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0xcbf629c8d396b1261f81f55175afa010e94787d8",
+      "expiry": "2026-10-15T00:00:00.000Z",
+      "underlyingAsset": "0x0b2b2b2076d95dda7817e785989fe353fe955ef9"
+    },
+    {
+      "chainId": 42161,
+      "address": "0x30ccf4bbee313fcd19f3e295b3ba2920a24e2f62",
+      "symbol": "SY-sUSDai",
+      "name": "SY sUSDai",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0xcbf629c8d396b1261f81f55175afa010e94787d8",
+      "expiry": "2026-10-15T00:00:00.000Z",
+      "underlyingAsset": "0x0b2b2b2076d95dda7817e785989fe353fe955ef9"
+    },
+    {
+      "chainId": 42161,
       "address": "0x07bc5bd6ce9a17f0e7aa91e0adbc9070dcb1d1de",
       "symbol": "PT-sUSDai-18JUN2026",
       "name": "PT sUSDai 18JUN2026",
