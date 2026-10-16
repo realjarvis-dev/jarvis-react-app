@@ -1664,6 +1664,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
+      "address": "0x1a984c796efa96957746f8127fb205fa3a8226cd",
+      "symbol": "PT-PPLUS-28JAN2027",
+      "name": "PT PPLUS 28JAN2027",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x2928811b5fb320cef61a86650899d055cb0512c4",
+      "expiry": "2027-01-28T00:00:00.000Z",
+      "underlyingAsset": "0x555c26e265b4e8e0e4026adaa8971cfcdcac9043"
+    },
+    {
+      "chainId": 1,
+      "address": "0x05b33b68c4ed0807e8824fe2ae6e5b657b5117ec",
+      "symbol": "YT-PPLUS-28JAN2027",
+      "name": "YT PPLUS 28JAN2027",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x2928811b5fb320cef61a86650899d055cb0512c4",
+      "expiry": "2027-01-28T00:00:00.000Z",
+      "underlyingAsset": "0x555c26e265b4e8e0e4026adaa8971cfcdcac9043"
+    },
+    {
+      "chainId": 1,
+      "address": "0x836b888976294f75e006fb457760442d5903835e",
+      "symbol": "SY-PPLUS",
+      "name": "SY PPLUS",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x2928811b5fb320cef61a86650899d055cb0512c4",
+      "expiry": "2027-01-28T00:00:00.000Z",
+      "underlyingAsset": "0x555c26e265b4e8e0e4026adaa8971cfcdcac9043"
+    },
+    {
+      "chainId": 1,
       "address": "0xc1ea9419dd1dab4dd54aa13b13a766e4de22ebc3",
       "symbol": "PT-fxSAVE-29APR2027",
       "name": "PT fxSAVE 29APR2027",
