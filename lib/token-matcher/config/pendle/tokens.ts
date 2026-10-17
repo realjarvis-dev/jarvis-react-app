@@ -2129,6 +2129,72 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0xadb822593f62752a15edefe9a31e1e9e05dcc13d",
       "expiry": "2027-04-08T00:00:00.000Z",
       "underlyingAsset": "0x0db207f8c9a74fbda3299ee4f482322d0498f291"
+    },
+    {
+      "chainId": 8453,
+      "address": "0xe177d57cba726c7697e3845b8d0db8d593636842",
+      "symbol": "PT-GOOGLc-24DEC2026",
+      "name": "PT GOOGLc 24DEC2026",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x9d91977cba597d910b1755b8acb3b616e3552f17",
+      "expiry": "2026-12-24T00:00:00.000Z",
+      "underlyingAsset": "0xa84fd9a6c622044c4228cbc36574e10d4ed9795f"
+    },
+    {
+      "chainId": 8453,
+      "address": "0x9e6a26bcdd73b7299526af6845590dc06907afe5",
+      "symbol": "YT-GOOGLc-24DEC2026",
+      "name": "YT GOOGLc 24DEC2026",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x9d91977cba597d910b1755b8acb3b616e3552f17",
+      "expiry": "2026-12-24T00:00:00.000Z",
+      "underlyingAsset": "0xa84fd9a6c622044c4228cbc36574e10d4ed9795f"
+    },
+    {
+      "chainId": 8453,
+      "address": "0x24b6adcf6b5890006e67f71b03d706c1b8e0c8a3",
+      "symbol": "SY-GOOGLc",
+      "name": "SY GOOGLc",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x9d91977cba597d910b1755b8acb3b616e3552f17",
+      "expiry": "2026-12-24T00:00:00.000Z",
+      "underlyingAsset": "0xa84fd9a6c622044c4228cbc36574e10d4ed9795f"
+    },
+    {
+      "chainId": 8453,
+      "address": "0x61d4358d37e6e3dd85fa395bacd308d923267be0",
+      "symbol": "PT-NVDAc-07JAN2027",
+      "name": "PT NVDAc 07JAN2027",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0xffcf0f4805a61003d9f0f31873f2e353aa0b7b19",
+      "expiry": "2027-01-07T00:00:00.000Z",
+      "underlyingAsset": "0xe551fd7c4cb9271ad16b763f40f581451388bcd5"
+    },
+    {
+      "chainId": 8453,
+      "address": "0x9076e34fcfe66cf130f2f8982a8421d777649e25",
+      "symbol": "YT-NVDAc-07JAN2027",
+      "name": "YT NVDAc 07JAN2027",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0xffcf0f4805a61003d9f0f31873f2e353aa0b7b19",
+      "expiry": "2027-01-07T00:00:00.000Z",
+      "underlyingAsset": "0xe551fd7c4cb9271ad16b763f40f581451388bcd5"
+    },
+    {
+      "chainId": 8453,
+      "address": "0xaf8857ae2d2ddeaa23b2e8414d2031eb10621e19",
+      "symbol": "SY-NVDAc",
+      "name": "SY NVDAc",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0xffcf0f4805a61003d9f0f31873f2e353aa0b7b19",
+      "expiry": "2027-01-07T00:00:00.000Z",
+      "underlyingAsset": "0xe551fd7c4cb9271ad16b763f40f581451388bcd5"
     }
   ],
   "42161": [
