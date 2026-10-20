@@ -2263,6 +2263,72 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0x46f545683d8494ef4c54b7ea40ca762c620846ef",
       "expiry": "2027-02-25T00:00:00.000Z",
       "underlyingAsset": "0x0a1a1a107e45b7ced86833863f482bc5f4ed82ef"
+    },
+    {
+      "chainId": 42161,
+      "address": "0x42240f4ab4a8b9d95fba1b3d22d272f5a62f4ad0",
+      "symbol": "PT-USDai-24JUN2027",
+      "name": "PT USDai 24JUN2027",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0xdf8c542a772a3a6a5daeed0f41296c2c3d2473df",
+      "expiry": "2027-06-24T00:00:00.000Z",
+      "underlyingAsset": "0x0a1a1a107e45b7ced86833863f482bc5f4ed82ef"
+    },
+    {
+      "chainId": 42161,
+      "address": "0xdbe6f20a3c8fa9dd95a28bfc5c8d414cd0cd6a67",
+      "symbol": "YT-USDai-24JUN2027",
+      "name": "YT USDai 24JUN2027",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0xdf8c542a772a3a6a5daeed0f41296c2c3d2473df",
+      "expiry": "2027-06-24T00:00:00.000Z",
+      "underlyingAsset": "0x0a1a1a107e45b7ced86833863f482bc5f4ed82ef"
+    },
+    {
+      "chainId": 42161,
+      "address": "0x5edcbc20cac67adc2e724d4348ff85132b085b82",
+      "symbol": "SY-USDai",
+      "name": "SY USDai",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0xdf8c542a772a3a6a5daeed0f41296c2c3d2473df",
+      "expiry": "2027-06-24T00:00:00.000Z",
+      "underlyingAsset": "0x0a1a1a107e45b7ced86833863f482bc5f4ed82ef"
+    },
+    {
+      "chainId": 42161,
+      "address": "0x9f3c962c7ab12cc823164e2b87e8eeddbf7400c6",
+      "symbol": "PT-sUSDai-24JUN2027",
+      "name": "PT sUSDai 24JUN2027",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x37fcd69d332a92a967194016b57ef4ff42bb4607",
+      "expiry": "2027-06-24T00:00:00.000Z",
+      "underlyingAsset": "0x0b2b2b2076d95dda7817e785989fe353fe955ef9"
+    },
+    {
+      "chainId": 42161,
+      "address": "0xf2578bc76de874b054c55844d5f4079f4b095476",
+      "symbol": "YT-sUSDai-24JUN2027",
+      "name": "YT sUSDai 24JUN2027",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x37fcd69d332a92a967194016b57ef4ff42bb4607",
+      "expiry": "2027-06-24T00:00:00.000Z",
+      "underlyingAsset": "0x0b2b2b2076d95dda7817e785989fe353fe955ef9"
+    },
+    {
+      "chainId": 42161,
+      "address": "0x30ccf4bbee313fcd19f3e295b3ba2920a24e2f62",
+      "symbol": "SY-sUSDai",
+      "name": "SY sUSDai",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x37fcd69d332a92a967194016b57ef4ff42bb4607",
+      "expiry": "2027-06-24T00:00:00.000Z",
+      "underlyingAsset": "0x0b2b2b2076d95dda7817e785989fe353fe955ef9"
     }
   ],
   "80094": []
