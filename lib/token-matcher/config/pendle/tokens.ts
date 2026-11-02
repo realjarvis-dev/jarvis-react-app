@@ -1663,6 +1663,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0xf037cb48fe2ca1cf785df2c34f4efec96fab8be8",
       "expiry": "2026-12-31T00:00:00.000Z",
       "underlyingAsset": "0x385c279445581a186a4182a5503094ebb652ec71"
+    },
+    {
+      "chainId": 56,
+      "address": "0x7dfbebc2bcbc3e754d64c12f0fbb64f59d9e96e0",
+      "symbol": "PT-slisBNB-15APR2027",
+      "name": "PT slisBNB 15APR2027",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x3974b474f33e00fe177b54206726a8d33fc87a57",
+      "expiry": "2027-04-15T00:00:00.000Z",
+      "underlyingAsset": "0xb0b84d294e0c75a6abe60171b70edeb2efd14a1b"
+    },
+    {
+      "chainId": 56,
+      "address": "0x434d5f584c51c729b7dba69f3033ad37c41318f0",
+      "symbol": "YT-slisBNB-15APR2027",
+      "name": "YT slisBNB 15APR2027",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x3974b474f33e00fe177b54206726a8d33fc87a57",
+      "expiry": "2027-04-15T00:00:00.000Z",
+      "underlyingAsset": "0xb0b84d294e0c75a6abe60171b70edeb2efd14a1b"
+    },
+    {
+      "chainId": 56,
+      "address": "0x27faf900007b4cba7803000251ec96bc69ff1bea",
+      "symbol": "SY-slisBNB",
+      "name": "SY slisBNB",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x3974b474f33e00fe177b54206726a8d33fc87a57",
+      "expiry": "2027-04-15T00:00:00.000Z",
+      "underlyingAsset": "0xb0b84d294e0c75a6abe60171b70edeb2efd14a1b"
     }
   ],
   "146": [],
