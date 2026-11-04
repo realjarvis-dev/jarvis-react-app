@@ -1997,6 +1997,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0x6c23193128f7907a3570234a6f6f1c2932f1e84b",
       "expiry": "2026-11-26T00:00:00.000Z",
       "underlyingAsset": "0xaaa0008c8cf3a7dca931adaf04336a5d808c82cc"
+    },
+    {
+      "chainId": 8453,
+      "address": "0xf89b533340627166734fd40ace16832205cfb273",
+      "symbol": "PT-yGOOGLc-07JAN2027",
+      "name": "PT yGOOGLc 07JAN2027",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0xe0c105dd9382e3b9ec197f573cc06ca912238bca",
+      "expiry": "2027-01-07T00:00:00.000Z",
+      "underlyingAsset": "0x4face8a423fc7c99e10c0dfe92fbd9633aa863fd"
+    },
+    {
+      "chainId": 8453,
+      "address": "0x438ce3f1c11ae7397c8323a85ee5e405ae907b02",
+      "symbol": "YT-yGOOGLc-07JAN2027",
+      "name": "YT yGOOGLc 07JAN2027",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0xe0c105dd9382e3b9ec197f573cc06ca912238bca",
+      "expiry": "2027-01-07T00:00:00.000Z",
+      "underlyingAsset": "0x4face8a423fc7c99e10c0dfe92fbd9633aa863fd"
+    },
+    {
+      "chainId": 8453,
+      "address": "0x10c5e7711eaddc1b6b64e40ef1976fc462666409",
+      "symbol": "SY-yGOOGLc",
+      "name": "SY yGOOGLc",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0xe0c105dd9382e3b9ec197f573cc06ca912238bca",
+      "expiry": "2027-01-07T00:00:00.000Z",
+      "underlyingAsset": "0x4face8a423fc7c99e10c0dfe92fbd9633aa863fd"
     }
   ],
   "42161": [
