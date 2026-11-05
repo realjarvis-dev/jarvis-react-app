@@ -113,72 +113,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
     },
     {
       "chainId": 1,
-      "address": "0x44db865cc6d5768703fb5bf73dfb7a5a0f95c1fc",
-      "symbol": "PT-srRoyAPYUSD-05NOV2026",
-      "name": "PT srRoyAPYUSD 05NOV2026",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0x0e201d27ded56cf4a0da8853d7604743de217435",
-      "expiry": "2026-11-05T00:00:00.000Z",
-      "underlyingAsset": "0xbd373c9d3d8976a4fecc504a93c768bbe8c3227c"
-    },
-    {
-      "chainId": 1,
-      "address": "0x7cf9ea7bc05c6b3f8517b71f8d87feecb006def4",
-      "symbol": "YT-srRoyAPYUSD-05NOV2026",
-      "name": "YT srRoyAPYUSD 05NOV2026",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0x0e201d27ded56cf4a0da8853d7604743de217435",
-      "expiry": "2026-11-05T00:00:00.000Z",
-      "underlyingAsset": "0xbd373c9d3d8976a4fecc504a93c768bbe8c3227c"
-    },
-    {
-      "chainId": 1,
-      "address": "0xa99a50d95003e7687d7962f29aad6cdd3655d411",
-      "symbol": "SY-srRoyAPYUSD",
-      "name": "SY srRoyAPYUSD",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0x0e201d27ded56cf4a0da8853d7604743de217435",
-      "expiry": "2026-11-05T00:00:00.000Z",
-      "underlyingAsset": "0xbd373c9d3d8976a4fecc504a93c768bbe8c3227c"
-    },
-    {
-      "chainId": 1,
-      "address": "0xd70be760f0bc3009db4563fe0b9eee54883adb50",
-      "symbol": "PT-jrRoyAPYUSD-05NOV2026",
-      "name": "PT jrRoyAPYUSD 05NOV2026",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0x5949c3bfdf9babd759170a3a75c4fe52b03e6797",
-      "expiry": "2026-11-05T00:00:00.000Z",
-      "underlyingAsset": "0xab2ab53e1e2e2c5d7202918ec8c873712bcc4a2d"
-    },
-    {
-      "chainId": 1,
-      "address": "0x56467eef9be9bcd025c24d4437525e02acbe310b",
-      "symbol": "YT-jrRoyAPYUSD-05NOV2026",
-      "name": "YT jrRoyAPYUSD 05NOV2026",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0x5949c3bfdf9babd759170a3a75c4fe52b03e6797",
-      "expiry": "2026-11-05T00:00:00.000Z",
-      "underlyingAsset": "0xab2ab53e1e2e2c5d7202918ec8c873712bcc4a2d"
-    },
-    {
-      "chainId": 1,
-      "address": "0x464a2b93b6633707470bcd2c81d34519f38e1e9c",
-      "symbol": "SY-jrRoyAPYUSD",
-      "name": "SY jrRoyAPYUSD",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0x5949c3bfdf9babd759170a3a75c4fe52b03e6797",
-      "expiry": "2026-11-05T00:00:00.000Z",
-      "underlyingAsset": "0xab2ab53e1e2e2c5d7202918ec8c873712bcc4a2d"
-    },
-    {
-      "chainId": 1,
       "address": "0xeccde3a92f8ad4884a2613d9ef1556103c26728f",
       "symbol": "PT-WOUSD-17DEC2026",
       "name": "PT WOUSD 17DEC2026",
@@ -242,72 +176,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0x9c560ebaf78e596cbcc27411d633a74d628dd7dc",
       "expiry": "2026-11-26T00:00:00.000Z",
       "underlyingAsset": "0xa3931d71877c0e7a3148cb7eb4463524fec27fbd"
-    },
-    {
-      "chainId": 1,
-      "address": "0xb5be35d8ff83d431899b95851cb17a2b4bcef150",
-      "symbol": "PT-apyUSD-05NOV2026",
-      "name": "PT apyUSD 05NOV2026",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0xc5f938a8ef5f3bf9e72f5aa094baf5e03f4727d3",
-      "expiry": "2026-11-05T00:00:00.000Z",
-      "underlyingAsset": "0x38eeb52f0771140d10c4e9a9a72349a329fe8a6a"
-    },
-    {
-      "chainId": 1,
-      "address": "0x85cc1b74fc95abb6b9b6060c56334ba3e4b88ed4",
-      "symbol": "YT-apyUSD-05NOV2026",
-      "name": "YT apyUSD 05NOV2026",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0xc5f938a8ef5f3bf9e72f5aa094baf5e03f4727d3",
-      "expiry": "2026-11-05T00:00:00.000Z",
-      "underlyingAsset": "0x38eeb52f0771140d10c4e9a9a72349a329fe8a6a"
-    },
-    {
-      "chainId": 1,
-      "address": "0x04f8dca7bccd8997ac57ca6fef7c705e17d6bcb6",
-      "symbol": "SY-apyUSD",
-      "name": "SY apyUSD",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0xc5f938a8ef5f3bf9e72f5aa094baf5e03f4727d3",
-      "expiry": "2026-11-05T00:00:00.000Z",
-      "underlyingAsset": "0x38eeb52f0771140d10c4e9a9a72349a329fe8a6a"
-    },
-    {
-      "chainId": 1,
-      "address": "0xaf687b5ecb525ccea96115088999b4ed80c388b6",
-      "symbol": "PT-apxUSD-05NOV2026",
-      "name": "PT apxUSD 05NOV2026",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0xaf0349fb9b1ba07d34381870c59b560b31412660",
-      "expiry": "2026-11-05T00:00:00.000Z",
-      "underlyingAsset": "0x98a878b1cd98131b271883b390f68d2c90674665"
-    },
-    {
-      "chainId": 1,
-      "address": "0x7fbc01c63b0ac372ec75907f3a1d8adc8cf28e1f",
-      "symbol": "YT-apxUSD-05NOV2026",
-      "name": "YT apxUSD 05NOV2026",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0xaf0349fb9b1ba07d34381870c59b560b31412660",
-      "expiry": "2026-11-05T00:00:00.000Z",
-      "underlyingAsset": "0x98a878b1cd98131b271883b390f68d2c90674665"
-    },
-    {
-      "chainId": 1,
-      "address": "0x4f116ee5bcd227d1a1c4f57918d694a4abe7b3fc",
-      "symbol": "SY-apxUSD",
-      "name": "SY apxUSD",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0xaf0349fb9b1ba07d34381870c59b560b31412660",
-      "expiry": "2026-11-05T00:00:00.000Z",
-      "underlyingAsset": "0x98a878b1cd98131b271883b390f68d2c90674665"
     },
     {
       "chainId": 1,
@@ -1534,39 +1402,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
   "56": [
     {
       "chainId": 56,
-      "address": "0x71f3408b1493eddf283e53e7bae6d36463e12737",
-      "symbol": "PT-apxUSD-05NOV2026",
-      "name": "PT apxUSD 05NOV2026",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0x34a1caef9f303a33e5d15bc5bc85064a39b7d1df",
-      "expiry": "2026-11-05T00:00:00.000Z",
-      "underlyingAsset": "0x6b3788fd6604bbf03c5378d24e57bb334baad4af"
-    },
-    {
-      "chainId": 56,
-      "address": "0xc8ea9a8672ea5a61487cd596cc6dac7e288f7655",
-      "symbol": "YT-apxUSD-05NOV2026",
-      "name": "YT apxUSD 05NOV2026",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0x34a1caef9f303a33e5d15bc5bc85064a39b7d1df",
-      "expiry": "2026-11-05T00:00:00.000Z",
-      "underlyingAsset": "0x6b3788fd6604bbf03c5378d24e57bb334baad4af"
-    },
-    {
-      "chainId": 56,
-      "address": "0x1a375dea39acad9a0625b92338e72112cab7f886",
-      "symbol": "SY-apxUSD",
-      "name": "SY apxUSD",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0x34a1caef9f303a33e5d15bc5bc85064a39b7d1df",
-      "expiry": "2026-11-05T00:00:00.000Z",
-      "underlyingAsset": "0x6b3788fd6604bbf03c5378d24e57bb334baad4af"
-    },
-    {
-      "chainId": 56,
       "address": "0x476aa4205b4eac187011fd8fa07e53d445f213fc",
       "symbol": "PT-USDat-14JAN2027",
       "name": "PT USDat 14JAN2027",
@@ -1701,39 +1536,6 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
   "146": [],
   "5000": [],
   "8453": [
-    {
-      "chainId": 8453,
-      "address": "0x45099d137c7a1f5b28bdc4443fdfecd842e1ddee",
-      "symbol": "PT-apxUSD-05NOV2026",
-      "name": "PT apxUSD 05NOV2026",
-      "decimals": 18,
-      "tokenType": "pt",
-      "marketAddress": "0xf5e6cf47ee975600786248cae0a80ab99daf0350",
-      "expiry": "2026-11-05T00:00:00.000Z",
-      "underlyingAsset": "0xd993935e13851dd7517af10687ec7e5022127228"
-    },
-    {
-      "chainId": 8453,
-      "address": "0x66b8f8b61de9fc36b592c9b8abe0d6d03a5b3e6d",
-      "symbol": "YT-apxUSD-05NOV2026",
-      "name": "YT apxUSD 05NOV2026",
-      "decimals": 18,
-      "tokenType": "yt",
-      "marketAddress": "0xf5e6cf47ee975600786248cae0a80ab99daf0350",
-      "expiry": "2026-11-05T00:00:00.000Z",
-      "underlyingAsset": "0xd993935e13851dd7517af10687ec7e5022127228"
-    },
-    {
-      "chainId": 8453,
-      "address": "0x65c3faaf6a25cb0311a29cce4b79bf8d37474342",
-      "symbol": "SY-apxUSD",
-      "name": "SY apxUSD",
-      "decimals": 18,
-      "tokenType": "sy",
-      "marketAddress": "0xf5e6cf47ee975600786248cae0a80ab99daf0350",
-      "expiry": "2026-11-05T00:00:00.000Z",
-      "underlyingAsset": "0xd993935e13851dd7517af10687ec7e5022127228"
-    },
     {
       "chainId": 8453,
       "address": "0x5137c0505dde0e7f104ab96b41ebc55fc2057e5d",
