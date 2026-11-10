@@ -120,14 +120,6 @@ export const chains = [
     "mainnet": false
   },
   {
-    "key": "lsk",
-    "chainType": "EVM",
-    "name": "Lisk",
-    "coin": "ETH",
-    "id": 1135,
-    "mainnet": true
-  },
-  {
     "key": "fus",
     "chainType": "EVM",
     "name": "FUSE",
@@ -181,14 +173,6 @@ export const chains = [
     "name": "Vana",
     "coin": "VAN",
     "id": 1480,
-    "mainnet": true
-  },
-  {
-    "key": "gra",
-    "chainType": "EVM",
-    "name": "Gravity",
-    "coin": "G",
-    "id": 1625,
     "mainnet": true
   },
   {
@@ -517,6 +501,14 @@ export const chains = [
     "name": "Plume",
     "coin": "PLUME",
     "id": 98866,
+    "mainnet": true
+  },
+  {
+    "key": "ely",
+    "chainType": "EVM",
+    "name": "Elysium",
+    "coin": "HYPE",
+    "id": 99901,
     "mainnet": true
   }
 ]
