@@ -1727,6 +1727,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0x112cca7dd98fd26ff3cc8b873d15ee217eac8fc1",
       "expiry": "2027-03-25T00:00:00.000Z",
       "underlyingAsset": "0xeb892628d1e58bc475a6dcb7f5dbc4f591632aa4"
+    },
+    {
+      "chainId": 1,
+      "address": "0xb5272aae13303907259f911bb1960518f5dd4781",
+      "symbol": "PT-superWETH-27MAY2027",
+      "name": "PT superWETH 27MAY2027",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0xb42140a7e8d9b6f5dd0af431cff37fd5c33f157b",
+      "expiry": "2027-05-27T00:00:00.000Z",
+      "underlyingAsset": "0xa036823b9a24f63c32553367bf181ee04229c3ac"
+    },
+    {
+      "chainId": 1,
+      "address": "0xf9e818cff9455276f7e45d42680df62dd4ef0416",
+      "symbol": "YT-superWETH-27MAY2027",
+      "name": "YT superWETH 27MAY2027",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0xb42140a7e8d9b6f5dd0af431cff37fd5c33f157b",
+      "expiry": "2027-05-27T00:00:00.000Z",
+      "underlyingAsset": "0xa036823b9a24f63c32553367bf181ee04229c3ac"
+    },
+    {
+      "chainId": 1,
+      "address": "0x3aecaedfb92efbbac95e5c458c56e94070cb9179",
+      "symbol": "SY-superWETH",
+      "name": "SY superWETH",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0xb42140a7e8d9b6f5dd0af431cff37fd5c33f157b",
+      "expiry": "2027-05-27T00:00:00.000Z",
+      "underlyingAsset": "0xa036823b9a24f63c32553367bf181ee04229c3ac"
     }
   ],
   "56": [
