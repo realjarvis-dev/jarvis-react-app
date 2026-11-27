@@ -1529,6 +1529,39 @@ export const pendleTokensByChain: Record<string, PendleToken[]> = {
       "marketAddress": "0xd4be2148f177c538bedb438029662f97f6e7b06d",
       "expiry": "2027-02-25T00:00:00.000Z",
       "underlyingAsset": "0xc5d6a7b61d18afa11435a889557b068bb9f29930"
+    },
+    {
+      "chainId": 1,
+      "address": "0x5b3f63ed08649da363a1a86bf9ac11cd2a80ad0a",
+      "symbol": "PT-stcUSD-18MAR2027",
+      "name": "PT stcUSD 18MAR2027",
+      "decimals": 18,
+      "tokenType": "pt",
+      "marketAddress": "0x0a215d6032a73c3fe9022365f10ff76a977b9dd0",
+      "expiry": "2027-03-18T00:00:00.000Z",
+      "underlyingAsset": "0x88887be419578051ff9f4eb6c858a951921d8888"
+    },
+    {
+      "chainId": 1,
+      "address": "0x1114c3a315c7c3fd183c4e7a11e4e46b53f32c8d",
+      "symbol": "YT-stcUSD-18MAR2027",
+      "name": "YT stcUSD 18MAR2027",
+      "decimals": 18,
+      "tokenType": "yt",
+      "marketAddress": "0x0a215d6032a73c3fe9022365f10ff76a977b9dd0",
+      "expiry": "2027-03-18T00:00:00.000Z",
+      "underlyingAsset": "0x88887be419578051ff9f4eb6c858a951921d8888"
+    },
+    {
+      "chainId": 1,
+      "address": "0x25fc71c5db3feee24c404883b77c6a30fae93246",
+      "symbol": "SY-stcUSD",
+      "name": "SY stcUSD",
+      "decimals": 18,
+      "tokenType": "sy",
+      "marketAddress": "0x0a215d6032a73c3fe9022365f10ff76a977b9dd0",
+      "expiry": "2027-03-18T00:00:00.000Z",
+      "underlyingAsset": "0x88887be419578051ff9f4eb6c858a951921d8888"
     }
   ],
   "56": [
